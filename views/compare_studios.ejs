@@ -1,0 +1,122 @@
+<%- include('partials/header') %>
+<div class="container">
+  <div class="header-section">
+    <h1>Compare Studios</h1>
+    <p class="subtitle">Side-by-side comparison to identify duplicates</p>
+  </div>
+
+  <div class="card glass-card" style="margin-bottom: 2rem;">
+    <form method="GET" action="/admin/compare/studios" style="display: flex; gap: 1rem; align-items: flex-end;">
+      <datalist id="all-studios">
+        <% allStudios.forEach(s => { %>
+          <option value="<%= s.id %>"><%= s.name %></option>
+        <% }); %>
+      </datalist>
+      <div style="flex: 1;">
+        <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Studio 1 ID</label>
+        <input type="text" name="id1" value="<%= id1 || '' %>" list="all-studios" class="premium-input" style="width: 100%;">
+      </div>
+      <div style="flex: 1;">
+        <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Studio 2 ID</label>
+        <input type="text" name="id2" value="<%= id2 || '' %>" list="all-studios" class="premium-input" style="width: 100%;">
+      </div>
+      <button type="submit" class="btn btn-primary" style="height: 42px;">Compare</button>
+    </form>
+  </div>
+
+  <% if (s1 && s2) { %>
+    <div style="display: flex; gap: 1rem; margin-bottom: 2rem;">
+      <button class="btn btn-secondary" onclick="mergeStudios(<%= s1.id %>, <%= s2.id %>)" style="flex: 1; border-color: #ef4444; color: #ef4444;">
+        Merge <%= s1.name %> ➡️ <%= s2.name %>
+      </button>
+      <button class="btn btn-secondary" onclick="mergeStudios(<%= s2.id %>, <%= s1.id %>)" style="flex: 1; border-color: #ef4444; color: #ef4444;">
+        Merge <%= s2.name %> ➡️ <%= s1.name %>
+      </button>
+    </div>
+
+    <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 2rem;">
+      <!-- Studio 1 Column -->
+      <div>
+        <div class="card glass-card" style="margin-bottom: 1rem;">
+          <h2 style="color: var(--primary);"><%= s1.name %> <span class="badge">ID: <%= s1.id %></span></h2>
+          <p class="sub-text"><%= s1.address || 'No location' %></p>
+        </div>
+        
+        <div class="card glass-card" style="margin-bottom: 1rem;">
+          <h3 style="margin-bottom: 1rem;">Top Dancers</h3>
+          <ul style="list-style: none; padding: 0; margin: 0;">
+            <% s1Dancers.forEach(d => { %>
+              <li style="padding: 0.25rem 0; color: var(--text-muted);"><%= d.name %> <span class="badge"><%= d.award_count %> awards</span></li>
+            <% }); %>
+          </ul>
+        </div>
+        
+        <div class="card glass-card">
+          <h3 style="margin-bottom: 1rem;">Events Attended (<%= s1Events.length %>)</h3>
+          <ul style="list-style: none; padding: 0; margin: 0;">
+            <% s1Events.forEach(e => { %>
+              <li style="padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <strong><%= e.year %></strong> - <%= e.org_name %> <%= e.name %>
+              </li>
+            <% }); %>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Studio 2 Column -->
+      <div>
+        <div class="card glass-card" style="margin-bottom: 1rem;">
+          <h2 style="color: var(--primary);"><%= s2.name %> <span class="badge">ID: <%= s2.id %></span></h2>
+          <p class="sub-text"><%= s2.address || 'No location' %></p>
+        </div>
+        
+        <div class="card glass-card" style="margin-bottom: 1rem;">
+          <h3 style="margin-bottom: 1rem;">Top Dancers</h3>
+          <ul style="list-style: none; padding: 0; margin: 0;">
+            <% s2Dancers.forEach(d => { %>
+              <li style="padding: 0.25rem 0; color: var(--text-muted);"><%= d.name %> <span class="badge"><%= d.award_count %> awards</span></li>
+            <% }); %>
+          </ul>
+        </div>
+        
+        <div class="card glass-card">
+          <h3 style="margin-bottom: 1rem;">Events Attended (<%= s2Events.length %>)</h3>
+          <ul style="list-style: none; padding: 0; margin: 0;">
+            <% s2Events.forEach(e => { %>
+              <li style="padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <strong><%= e.year %></strong> - <%= e.org_name %> <%= e.name %>
+              </li>
+            <% }); %>
+          </ul>
+        </div>
+      </div>
+    </div>
+  <% } else if (id1 || id2) { %>
+    <p style="text-align: center; margin-top: 2rem;">Please enter valid Studio IDs for both fields.</p>
+  <% } %>
+</div>
+
+<script>
+async function mergeStudios(sourceId, targetId) {
+  if (!confirm('Are you absolutely sure? The source studio will be deleted forever.')) return;
+
+  try {
+    const res = await fetch('/api/merge/studios', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sourceId, targetId })
+    });
+    const data = await res.json();
+    if (data.success) {
+      alert('Studios merged successfully!');
+      window.location.href = '/admin';
+    } else {
+      alert('Error: ' + data.error);
+    }
+  } catch (e) {
+    alert('Failed to merge studios: ' + e.message);
+  }
+}
+</script>
+
+<%- include('partials/footer') %>

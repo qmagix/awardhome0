@@ -1,0 +1,159 @@
+<%- include('partials/header') %>
+<div class="container">
+  <div class="header-section">
+    <h1>Admin Studio Directory</h1>
+    <p class="subtitle">Select up to 2 studios to compare side-by-side</p>
+  </div>
+
+  <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; align-items: center;">
+    <form action="/admin/studios" method="GET" style="display: flex; gap: 0.5rem;">
+      <input type="text" name="search" placeholder="Search studio by name..." value="<%= typeof search !== 'undefined' ? search : '' %>" style="padding: 0.5rem 1rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white; width: 300px;">
+      <button type="submit" class="btn" style="background: var(--primary); color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer;">Search</button>
+      <% if (typeof search !== 'undefined' && search) { %>
+        <a href="/admin/studios" class="btn btn-secondary" style="display: flex; align-items: center; text-decoration: none;">Clear</a>
+      <% } %>
+    </form>
+  </div>
+
+  <div class="card glass-card" style="margin-top: 2rem; position: relative;">
+    <div style="overflow-x: auto;">
+      <table class="premium-table sortable-table">
+        <thead>
+          <tr>
+            <th class="no-sort" style="width: 50px; text-align: center;">Compare</th>
+            <th>Studio Name</th>
+            <th>Location</th>
+            <th>Events Attended</th>
+            <th>Total Awards</th>
+            <th>Status</th>
+            <th class="no-sort" style="width: 50px; text-align: center;">Featured</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% studios.forEach(function(studio) { %>
+            <tr class="<%= studio.needs_investigation ? 'investigate-row' : '' %>">
+              <td style="text-align: center;">
+                <input type="checkbox" class="compare-checkbox" value="<%= studio.id %>" onchange="handleSelection()" style="transform: scale(1.2); accent-color: var(--primary);">
+              </td>
+              <td>
+                <a href="/studio/<%= studio.id %>" style="color: var(--primary); font-weight: 600; text-decoration: none;">
+                  <%= studio.name %>
+                </a>
+              </td>
+              <td><%= studio.address || 'Unknown' %></td>
+              <td><%= studio.total_events %></td>
+              <td><span class="badge"><%= studio.total_awards %></span></td>
+              <td>
+                <% if (studio.needs_investigation) { %>
+                  <span class="badge" style="background: rgba(239, 68, 68, 0.2); color: #ef4444;">Needs Review</span>
+                <% } else { %>
+                  <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">Active</span>
+                <% } %>
+              </td>
+              <td style="text-align: center;">
+                <input type="checkbox" class="feature-checkbox" value="<%= studio.id %>" <%= studio.is_featured ? 'checked' : '' %> onchange="toggleFeature(<%= studio.id %>, this.checked)" style="transform: scale(1.2); accent-color: #10b981;">
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- Pagination -->
+    <% if (totalPages > 1) { %>
+      <div class="pagination" style="display: flex; justify-content: center; gap: 1rem; margin-top: 2rem;">
+        <% if (currentPage > 1) { %>
+          <a href="/admin/studios?page=<%= currentPage - 1 %><%= typeof search !== 'undefined' && search ? '&search=' + encodeURIComponent(search) : '' %>" class="btn btn-secondary">Previous</a>
+        <% } %>
+        
+        <span style="display: flex; align-items: center; color: var(--text-muted);">
+          Page <%= currentPage %> of <%= totalPages %>
+        </span>
+        
+        <% if (currentPage < totalPages) { %>
+          <a href="/admin/studios?page=<%= currentPage + 1 %><%= typeof search !== 'undefined' && search ? '&search=' + encodeURIComponent(search) : '' %>" class="btn btn-secondary">Next</a>
+        <% } %>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<!-- Floating Action Button -->
+<div id="floating-compare" style="display: none; position: fixed; bottom: 2.5rem; left: 50%; transform: translateX(-50%); z-index: 1000; background: rgba(15,23,42,0.95); backdrop-filter: blur(10px); padding: 1rem 2rem; border-radius: 50px; border: 1px solid rgba(59, 130, 246, 0.4); box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 20px rgba(59, 130, 246, 0.2); align-items: center; gap: 1.5rem;">
+  <span style="color: white; font-weight: 600; font-size: 1.1rem; letter-spacing: 0.5px;"><span id="selected-count">0</span> Selected</span>
+  <button id="compare-btn" class="btn" onclick="launchComparison()" disabled style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; border: none; padding: 0.6rem 1.8rem; font-weight: 600; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); transition: all 0.3s ease;">Compare Selected</button>
+</div>
+
+<script>
+function handleSelection() {
+  const checkboxes = document.querySelectorAll('.compare-checkbox:checked');
+  const count = checkboxes.length;
+  
+  const floatingBar = document.getElementById('floating-compare');
+  const countSpan = document.getElementById('selected-count');
+  const compareBtn = document.getElementById('compare-btn');
+  
+  // Update UI
+  countSpan.innerText = count;
+  if (count > 0) {
+    floatingBar.style.display = 'flex';
+  } else {
+    floatingBar.style.display = 'none';
+  }
+  
+  // Enable button only if exactly 2 are selected
+  if (count === 2) {
+    compareBtn.disabled = false;
+  } else {
+    compareBtn.disabled = true;
+  }
+  
+  // Prevent selecting more than 2
+  const allCheckboxes = document.querySelectorAll('.compare-checkbox');
+  if (count >= 2) {
+    allCheckboxes.forEach(cb => {
+      if (!cb.checked) cb.disabled = true;
+    });
+  } else {
+    allCheckboxes.forEach(cb => {
+      cb.disabled = false;
+    });
+  }
+}
+
+function launchComparison() {
+  const checkboxes = document.querySelectorAll('.compare-checkbox:checked');
+  if (checkboxes.length === 2) {
+    const id1 = checkboxes[0].value;
+    const id2 = checkboxes[1].value;
+    window.location.href = `/admin/compare/studios?id1=${id1}&id2=${id2}`;
+  }
+}
+
+async function toggleFeature(studioId, isFeatured) {
+  try {
+    const res = await fetch(`/api/studios/${studioId}/feature`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ feature: isFeatured })
+    });
+    if (!res.ok) {
+      alert("Failed to toggle feature status.");
+    }
+  } catch (e) {
+    console.error('Failed to toggle feature status:', e);
+    alert("Error communicating with server.");
+  }
+}
+</script>
+
+<style>
+  .investigate-row {
+    background-color: rgba(239, 68, 68, 0.05) !important;
+  }
+  .investigate-row td {
+    border-color: rgba(239, 68, 68, 0.1) !important;
+  }
+</style>
+
+<%- include('partials/footer') %>

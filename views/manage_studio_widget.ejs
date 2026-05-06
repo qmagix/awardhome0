@@ -1,0 +1,160 @@
+<%- include('partials/header') %>
+
+<div class="container" style="margin-top: 4rem; display: flex; gap: 2rem;">
+  
+  <!-- Sidebar Navigation -->
+  <div style="width: 250px; flex-shrink: 0;">
+    <div class="card glass-card" style="padding: 1.5rem; position: sticky; top: 2rem;">
+      <h3 style="margin-top: 0; color: var(--primary); font-size: 1.1rem;">Management</h3>
+      <ul style="list-style: none; padding: 0; margin: 1rem 0 0 0; display: flex; flex-direction: column; gap: 0.5rem;">
+        <li>
+          <a href="/manage/studio/<%= studio.id %>" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: var(--text-muted); transition: background 0.2s;">
+            👤 Profile & Customization
+          </a>
+        </li>
+        <li>
+          <a href="/manage/studio/<%= studio.id %>/awards" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: var(--text-muted); transition: background 0.2s;">
+            🏆 Awards Editor
+          </a>
+        </li>
+        <li>
+          <a href="/manage/studio/<%= studio.id %>/widget" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: white; background: rgba(236, 72, 153, 0.1); border-left: 3px solid var(--primary); font-weight: 600;">
+            📈 Widget Builder
+          </a>
+        </li>
+      </ul>
+      
+      <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
+        <a href="/studio/<%= studio.id %>" style="color: var(--primary); text-decoration: none; font-size: 0.9rem;">&larr; Back to Public Profile</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Area -->
+  <div style="flex-grow: 1;">
+    <div class="header-section" style="margin-bottom: 2rem;">
+      <h1>Widget Builder</h1>
+      <p class="subtitle">Embed your studio's latest awards directly on your website.</p>
+    </div>
+
+    <div style="display: flex; gap: 2rem;">
+      
+      <!-- Controls -->
+      <div class="card glass-card" style="flex: 1; height: fit-content;">
+        <h3 style="margin-top: 0;">Customize Theme</h3>
+        
+        <div style="margin-bottom: 1.5rem;">
+          <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Text Theme</label>
+          <select id="themeSelect" style="width: 100%; padding: 0.5rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 4px;">
+            <option value="dark">Dark Mode (Light Text)</option>
+            <option value="light">Light Mode (Dark Text)</option>
+          </select>
+        </div>
+
+        <div style="margin-bottom: 1.5rem;">
+          <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Background Color (Hex)</label>
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span>#</span>
+            <input type="text" id="bgInput" value="000000" style="width: 100px; padding: 0.5rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 4px;">
+            <input type="color" id="bgPicker" value="#000000" style="background: none; border: none; width: 40px; height: 40px; cursor: pointer;">
+          </div>
+        </div>
+
+        <div style="margin-bottom: 2rem;">
+          <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Primary Brand Color (Hex)</label>
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span>#</span>
+            <input type="text" id="primaryInput" value="ec4899" style="width: 100px; padding: 0.5rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 4px;">
+            <input type="color" id="primaryPicker" value="#ec4899" style="background: none; border: none; width: 40px; height: 40px; cursor: pointer;">
+          </div>
+        </div>
+
+        <h3 style="margin-top: 0; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">Embed Code</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Copy and paste this HTML snippet into your website builder (Wix, Squarespace, WordPress).</p>
+        
+        <div style="position: relative;">
+          <textarea id="embedCode" readonly style="width: 100%; height: 100px; padding: 1rem; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: #10b981; font-family: monospace; font-size: 0.8rem; border-radius: 6px; resize: none;"></textarea>
+          <button onclick="copyCode()" class="btn" style="position: absolute; top: 0.5rem; right: 0.5rem; padding: 0.2rem 0.5rem; font-size: 0.8rem;">Copy</button>
+        </div>
+      </div>
+
+      <!-- Live Preview -->
+      <div style="flex: 1;">
+        <h3 style="margin-top: 0;">Live Preview</h3>
+        <div style="border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; overflow: hidden; background: #fff;">
+          <iframe id="widgetPreview" src="/widget/studio/<%= studio.id %>?theme=dark&bg=000000&primary=ec4899" width="100%" height="600px" frameborder="0"></iframe>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const themeSelect = document.getElementById('themeSelect');
+  const bgInput = document.getElementById('bgInput');
+  const bgPicker = document.getElementById('bgPicker');
+  const primaryInput = document.getElementById('primaryInput');
+  const primaryPicker = document.getElementById('primaryPicker');
+  const widgetPreview = document.getElementById('widgetPreview');
+  const embedCode = document.getElementById('embedCode');
+  const studioId = <%= studio.id %>;
+  const baseUrl = window.location.origin;
+
+  function updateWidget() {
+    const theme = themeSelect.value;
+    const bg = bgInput.value.replace('#', '');
+    const primary = primaryInput.value.replace('#', '');
+    
+    const widgetUrl = `${baseUrl}/widget/studio/${studioId}?theme=${theme}&bg=${bg}&primary=${primary}`;
+    widgetPreview.src = widgetUrl;
+    
+    embedCode.value = `<iframe src="${widgetUrl}" width="100%" height="600px" frameborder="0" style="border: none; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></iframe>`;
+  }
+
+  // Sync text inputs and color pickers
+  bgPicker.addEventListener('input', (e) => {
+    bgInput.value = e.target.value.substring(1);
+    updateWidget();
+  });
+  bgInput.addEventListener('input', (e) => {
+    if(e.target.value.length === 6) {
+      bgPicker.value = '#' + e.target.value;
+      updateWidget();
+    }
+  });
+
+  primaryPicker.addEventListener('input', (e) => {
+    primaryInput.value = e.target.value.substring(1);
+    updateWidget();
+  });
+  primaryInput.addEventListener('input', (e) => {
+    if(e.target.value.length === 6) {
+      primaryPicker.value = '#' + e.target.value;
+      updateWidget();
+    }
+  });
+
+  themeSelect.addEventListener('change', () => {
+    if (themeSelect.value === 'light' && bgInput.value === '000000') {
+      bgInput.value = 'ffffff';
+      bgPicker.value = '#ffffff';
+    } else if (themeSelect.value === 'dark' && bgInput.value === 'ffffff') {
+      bgInput.value = '000000';
+      bgPicker.value = '#000000';
+    }
+    updateWidget();
+  });
+
+  function copyCode() {
+    embedCode.select();
+    document.execCommand('copy');
+    alert('Copied to clipboard!');
+  }
+
+  // Initial generation
+  updateWidget();
+</script>
+
+<%- include('partials/footer') %>

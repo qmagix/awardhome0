@@ -1,0 +1,117 @@
+<%- include('partials/header') %>
+
+<div class="container" style="margin-top: 4rem; display: flex; gap: 2rem;">
+  
+  <!-- Sidebar Navigation -->
+  <div style="width: 250px; flex-shrink: 0;">
+    <div class="card glass-card" style="padding: 1.5rem; position: sticky; top: 2rem;">
+      <h3 style="margin-top: 0; color: var(--primary); font-size: 1.1rem;">Management</h3>
+      <ul style="list-style: none; padding: 0; margin: 1rem 0 0 0; display: flex; flex-direction: column; gap: 0.5rem;">
+        <li>
+          <a href="/manage/studio/<%= studio.id %>" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: white; background: rgba(236, 72, 153, 0.1); border-left: 3px solid var(--primary); font-weight: 600;">
+            👤 Profile & Customization
+          </a>
+        </li>
+        <li>
+          <a href="/manage/studio/<%= studio.id %>/awards" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: var(--text-muted); transition: background 0.2s;">
+            🏆 Awards Editor
+          </a>
+        </li>
+        <li>
+          <a href="/manage/studio/<%= studio.id %>/widget" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: var(--text-muted); transition: background 0.2s;">
+            📈 Widget Builder
+          </a>
+        </li>
+      </ul>
+      
+      <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
+        <a href="/studio/<%= studio.id %>" style="color: var(--primary); text-decoration: none; font-size: 0.9rem;">&larr; Back to Public Profile</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Area -->
+  <div style="flex-grow: 1;">
+    <div class="header-section" style="margin-bottom: 2rem;">
+      <h1>Profile Customization</h1>
+      <p class="subtitle">Update your studio's public information and appearance.</p>
+    </div>
+
+    <!-- Analytics Quick Look -->
+    <div class="card glass-card" style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <h4 style="margin: 0; color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase;">Total Profile Views</h4>
+        <p style="margin: 0.25rem 0 0 0; font-size: 2rem; font-weight: 800; color: white;"><%= studio.view_count %></p>
+      </div>
+      <div style="font-size: 2rem;">👁️</div>
+    </div>
+
+    <% if (typeof success !== 'undefined' && success) { %>
+      <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); color: #10b981; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem;">
+        <%= success %>
+      </div>
+    <% } %>
+
+    <div class="card glass-card">
+      <form action="/manage/studio/<%= studio.id %>/profile" method="POST" style="display: flex; flex-direction: column; gap: 1.5rem;">
+        
+        <!-- Basic Info -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-muted);">Studio Name</label>
+            <input type="text" name="name" value="<%= studio.name %>" required style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;">
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-muted);">Website URL</label>
+            <input type="text" name="website_url" value="<%= studio.website_url || '' %>" placeholder="www.yourstudio.com" style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-muted);">Public Email</label>
+            <input type="email" name="email" value="<%= studio.email || '' %>" style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;">
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-muted);">Phone Number</label>
+            <input type="tel" name="phone" value="<%= studio.phone || '' %>" style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-muted);">Instagram Handle</label>
+            <div style="display: flex; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px;">
+              <span style="padding: 0.75rem; color: var(--text-muted); border-right: 1px solid rgba(255,255,255,0.1);">@</span>
+              <input type="text" name="instagram_handle" value="<%= studio.instagram_handle ? studio.instagram_handle.replace(/^@/, '') : '' %>" placeholder="username" style="width: 100%; padding: 0.75rem; border: none; background: transparent; color: white; outline: none;">
+            </div>
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-muted);">TikTok Handle</label>
+            <div style="display: flex; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px;">
+              <span style="padding: 0.75rem; color: var(--text-muted); border-right: 1px solid rgba(255,255,255,0.1);">@</span>
+              <input type="text" name="tiktok_handle" value="<%= studio.tiktok_handle ? studio.tiktok_handle.replace(/^@/, '') : '' %>" placeholder="username" style="width: 100%; padding: 0.75rem; border: none; background: transparent; color: white; outline: none;">
+            </div>
+          </div>
+        </div>
+
+        <!-- Branding -->
+        <div>
+          <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-muted);">Logo Image URL</label>
+          <input type="text" name="logo_url" value="<%= studio.logo_url || '' %>" placeholder="https://example.com/logo.png" style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;">
+          <p style="margin: 0.5rem 0 0 0; font-size: 0.8rem; color: var(--text-muted);">Must be a direct link to an image file (e.g. .jpg, .png)</p>
+        </div>
+
+        <div>
+          <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-muted);">Studio Bio</label>
+          <textarea name="bio" rows="5" placeholder="Tell everyone what makes your studio special..." style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;"><%= studio.bio || '' %></textarea>
+        </div>
+
+        <button type="submit" class="btn" style="background: var(--primary); color: white; border: none; padding: 1rem; font-weight: 600; border-radius: 6px; cursor: pointer; margin-top: 1rem;">Save Profile Changes</button>
+      </form>
+    </div>
+
+  </div>
+</div>
+
+<%- include('partials/footer') %>

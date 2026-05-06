@@ -1,0 +1,67 @@
+<%- include('partials/header') %>
+<div class="container" style="margin-top: 4rem;">
+  <div class="header-section" style="display: flex; justify-content: space-between; align-items: flex-end;">
+    <div>
+      <h1>User Management</h1>
+      <p class="subtitle">Promote or demote administrators.</p>
+    </div>
+  </div>
+
+  <div class="card glass-card" style="margin-top: 2rem; overflow-x: auto;">
+    <table class="premium-table">
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Status</th>
+          <th>Role</th>
+          <th>Registered</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (users.length === 0) { %>
+          <tr><td colspan="5" style="text-align: center;">No users found.</td></tr>
+        <% } else { %>
+          <% users.forEach(function(u) { %>
+            <tr>
+              <td><%= u.email %></td>
+              <td>
+                <% if (u.is_verified) { %>
+                  <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">Verified</span>
+                <% } else { %>
+                  <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b;">Unverified</span>
+                <% } %>
+              </td>
+              <td>
+                <% if (u.role === 'superadmin') { %>
+                  <span class="badge" style="background: var(--primary); color: white;">Superadmin</span>
+                <% } else if (u.role === 'admin') { %>
+                  <span class="badge" style="background: #3b82f6; color: white;">Admin</span>
+                <% } else if (u.role === 'studio_owner') { %>
+                  <span class="badge" style="background: #8b5cf6; color: white;">Studio Owner</span>
+                <% } else { %>
+                  <span class="badge" style="background: rgba(255,255,255,0.1); color: var(--text-muted);">User</span>
+                <% } %>
+              </td>
+              <td><%= new Date(u.created_at).toLocaleDateString() %></td>
+              <td>
+                <% if (u.role !== 'superadmin') { %>
+                  <form action="/admin/users/<%= u.id %>/toggle-role" method="POST" style="margin: 0;">
+                    <% if (u.role === 'admin') { %>
+                      <button type="submit" class="btn btn-secondary" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.4rem 0.8rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">Revoke Admin</button>
+                    <% } else { %>
+                      <button type="submit" class="btn" style="background: #10b981; color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">Make Admin</button>
+                    <% } %>
+                  </form>
+                <% } else { %>
+                  <span style="color: var(--text-muted); font-size: 0.85rem;"><em>Locked</em></span>
+                <% } %>
+              </td>
+            </tr>
+          <% }); %>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<%- include('partials/footer') %>

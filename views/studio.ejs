@@ -1,0 +1,277 @@
+<%- include('partials/header') %>
+  <div class="container">
+    <div class="header-section" style="display: flex; justify-content: space-between; align-items: flex-start;">
+      <div style="display: flex; gap: 1.5rem; align-items: center;">
+        <% if (studio.logo_url) { %>
+          <img src="<%= studio.logo_url %>" alt="<%= studio.name %> logo" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary);">
+        <% } %>
+        <div>
+          <h1 style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; margin-top: 0;">
+            <%= studio.name %>
+              <% if (studio.is_claimed) { %>
+                <span class="badge"
+                  style="background: rgba(16, 185, 129, 0.2); color: #10b981; font-size: 0.8rem; font-weight: 600; vertical-align: middle;">✓
+                  Claimed</span>
+                <% } %>
+          </h1>
+          <% if (studio.bio) { %>
+            <p style="color: var(--text-muted); max-width: 600px; line-height: 1.5; margin: 0 0 0.5rem 0;"><%= studio.bio %></p>
+          <% } else { %>
+            <p class="subtitle" style="margin: 0 0 0.5rem 0;">Studio Award History</p>
+          <% } %>
+          <div style="font-size: 0.85rem; color: var(--text-muted); display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+            <span>👁️ <%= studio.view_count %> profile views</span>
+            <% if (studio.website_url) { %>
+              <span>🌐 <a href="<%= studio.website_url.startsWith('http') ? studio.website_url : 'https://' + studio.website_url %>" target="_blank" style="color: var(--primary);">Website</a></span>
+            <% } %>
+            <% if (studio.instagram_handle) { %>
+              <% const igHandle = studio.instagram_handle.replace(/^@/, ''); %>
+              <a href="https://instagram.com/<%= igHandle %>" target="_blank" style="text-decoration: none; display: inline-flex; align-items: center; gap: 0.2rem; color: white; background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 600; font-size: 0.75rem;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                IG
+              </a>
+            <% } %>
+            <% if (studio.tiktok_handle) { %>
+              <% const ttHandle = studio.tiktok_handle.replace(/^@/, ''); %>
+              <a href="https://tiktok.com/@<%= ttHandle %>" target="_blank" style="text-decoration: none; display: inline-flex; align-items: center; gap: 0.2rem; color: white; background: #000000; border: 1px solid rgba(255,255,255,0.2); padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 600; font-size: 0.75rem;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
+                TikTok
+              </a>
+            <% } %>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top: 0.5rem;">
+        <% if (studio.is_claimed) { %>
+          <% if (typeof user !== 'undefined' && user && user.id === studio.owner_id) { %>
+            <a href="/manage/studio/<%= studio.id %>" class="btn btn-secondary"
+              style="display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none; border-color: var(--primary); color: white; background: rgba(236, 72, 153, 0.1);">
+              Manage Studio
+            </a>
+          <% } else if (typeof user === 'undefined' || !user) { %>
+            <a href="/login" class="btn btn-secondary"
+              style="display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none;">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z" />
+              </svg>
+              Owner Login
+            </a>
+          <% } %>
+          <% } else { %>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+              <a href="#" onclick="openBenefitsModal(event)"
+                style="color: var(--primary); text-decoration: underline; font-size: 0.95rem; font-weight: 600; transition: color 0.2s;">Why
+                Claim?</a>
+              <a href="/claim/studio/<%= studio.id %>" class="btn"
+                style="background: var(--primary); color: white; border: none; padding: 0.5rem 1.5rem; font-weight: 600; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3); text-decoration: none; display: inline-block;">Claim
+                Studio</a>
+            </div>
+            <% } %>
+      </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="quick-stats grid"
+      style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 3rem;">
+      <div class="card glass-card" style="text-align: center; min-height: auto; padding: 1.5rem;">
+        <h4 style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase;">Total Awards</h4>
+        <p style="font-size: 2.5rem; font-weight: 800; color: white; margin: 0.5rem 0 0;">
+          <%= quickStats.totalAwards %>
+        </p>
+      </div>
+      <div class="card glass-card" style="text-align: center; min-height: auto; padding: 1.5rem;">
+        <h4 style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase;">Events Attended</h4>
+        <p style="font-size: 2.5rem; font-weight: 800; color: white; margin: 0.5rem 0 0;">
+          <%= quickStats.totalEvents %>
+        </p>
+      </div>
+      <div class="card glass-card" style="text-align: center; min-height: auto; padding: 1.5rem;">
+        <h4 style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase;">Active Years</h4>
+        <p style="font-size: 1.5rem; font-weight: 800; color: var(--primary); margin: 1.25rem 0 0;">
+          <%= quickStats.activeYearsStr %>
+        </p>
+      </div>
+    </div>
+
+    <div class="awards-list">
+      <% if (groupedData.length===0) { %>
+        <div class="card glass-card">
+          <p style="text-align: center;">No awards found for this studio yet.</p>
+        </div>
+        <% } else { %>
+
+          <!-- Yearly Tabs -->
+          <div class="tabs-container">
+            <ul class="year-tabs" id="yearTabs">
+              <% groupedData.forEach(function(yearGroup, index) { %>
+                <li class="tab-item <%= index === 0 ? 'active' : '' %>" data-target="year-<%= yearGroup.year %>">
+                  <%= yearGroup.year %>
+                </li>
+                <% }); %>
+            </ul>
+          </div>
+
+          <!-- Year Content Sections -->
+          <div class="tab-content-container" style="margin-top: 2rem;">
+            <% groupedData.forEach(function(yearGroup, index) { %>
+              <div class="tab-pane <%= index === 0 ? 'active' : '' %>" id="year-<%= yearGroup.year %>">
+
+                <% yearGroup.events.forEach(function(event, eIndex) { %>
+                  <div class="accordion glass-card" style="margin-bottom: 1rem; padding: 0; overflow: hidden;">
+                    <div class="accordion-header <%= eIndex === 0 ? 'active' : '' %>"
+                      style="padding: 1.5rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02);">
+                      <h3 style="margin: 0; color: var(--text-color); font-size: 1.2rem;">🏆 <%= event.title %>
+                      </h3>
+                      <div style="display: flex; align-items: center; gap: 1rem;">
+                        <span class="badge" style="background: rgba(236, 72, 153, 0.2); color: #f472b6;">
+                          <%= event.awards.length %> Awards
+                        </span>
+                        <span class="accordion-icon">▼</span>
+                      </div>
+                    </div>
+
+                    <div class="accordion-body">
+                      <div style="overflow-x: auto; margin-top: 1rem;">
+                        <table class="premium-table sortable-table">
+                          <thead>
+                            <tr>
+                              <th>Routine</th>
+                              <th>Award Type</th>
+                              <th>Place</th>
+                              <th>Category</th>
+                              <th>Dancer(s)</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <% event.awards.forEach(function(award) { %>
+                              <tr>
+                                <td><strong>
+                                    <%= award.performance_name %>
+                                  </strong> <span class="sub-text">
+                                    <%= award.performance_number ? '#' + award.performance_number : '' %>
+                                  </span></td>
+                                <td>
+                                  <%= award.award_type %>
+                                </td>
+                                <td><span class="badge">
+                                    <%= award.place %>
+                                  </span></td>
+                                <td>
+                                  <%= award.category || '-' %>
+                                </td>
+                                <td>
+                                  <% if (award.unique_id) { %>
+                                    <a href="/dancer/<%= award.unique_id %>" class="dancer-link">
+                                      <%= award.dancer_name %>
+                                    </a>
+                                    <% } else if (award.dancer_name) { %>
+                                      <%= award.dancer_name %>
+                                        <% } else { %>
+                                          <em>Company / Group</em>
+                                          <% } %>
+                                </td>
+                              </tr>
+                              <% }); %>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                  <% }); %>
+
+              </div>
+              <% }); %>
+          </div>
+
+          <% } %>
+    </div>
+  </div>
+
+  <!-- Benefits Modal -->
+  <div id="benefits-modal"
+    style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 9999; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;">
+    <div class="card glass-card"
+      style="position: relative; max-width: 500px; width: 90%; padding: 2.5rem; transform: scale(0.95); transition: transform 0.3s ease;">
+      <button onclick="closeBenefitsModal()"
+        style="position: absolute; top: 1rem; right: 1rem; background: transparent; border: none; color: white; font-size: 1.5rem; cursor: pointer;">&times;</button>
+      <h2
+        style="margin-top: 0; margin-bottom: 1.5rem; color: var(--primary); display: flex; align-items: center; gap: 0.5rem;">
+        ✨ Why Claim Your Studio?</h2>
+
+      <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 1.25rem;">
+        <li style="display: flex; align-items: flex-start; gap: 1rem;">
+          <span style="font-size: 1.5rem;">📈</span>
+          <div>
+            <strong style="display: block; font-size: 1.1rem; margin-bottom: 0.25rem; color: white;">Embed Awards on
+              Your Site</strong>
+            <span style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.4; display: block;">Showcase your
+              dancers' achievements directly on your own website using our customizable widget.</span>
+          </div>
+        </li>
+        <li style="display: flex; align-items: flex-start; gap: 1rem;">
+          <span style="font-size: 1.5rem;">🎨</span>
+          <div>
+            <strong style="display: block; font-size: 1.1rem; margin-bottom: 0.25rem; color: white;">Customize Your
+              Profile</strong>
+            <span style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.4; display: block;">Add your
+              studio's logo, cover photo, bio, contact details, and social media links to stand out.</span>
+          </div>
+        </li>
+        <li style="display: flex; align-items: flex-start; gap: 1rem;">
+          <span style="font-size: 1.5rem;">📝</span>
+          <div>
+            <strong style="display: block; font-size: 1.1rem; margin-bottom: 0.25rem; color: white;">Manage Your
+              Awards</strong>
+            <span style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.4; display: block;">Correct any
+              mistakes in award records, add missing records, update missing dancer names, and keep your history
+              accurate.</span>
+          </div>
+        </li>
+        <li style="display: flex; align-items: flex-start; gap: 1rem;">
+          <span style="font-size: 1.5rem;">📊</span>
+          <div>
+            <strong style="display: block; font-size: 1.1rem; margin-bottom: 0.25rem; color: white;">Access Exclusive
+              Analytics</strong>
+            <span style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.4; display: block;">See how many
+              people are viewing your studio's profile and tracking your success.</span>
+          </div>
+        </li>
+      </ul>
+
+      <div style="margin-top: 2.5rem; text-align: center;">
+        <button class="btn" onclick="closeBenefitsModal(); alert('Claim process coming soon!')"
+          style="background: var(--primary); color: white; border: none; padding: 0.75rem 2rem; font-size: 1.1rem; font-weight: 600; border-radius: 8px; cursor: pointer; width: 100%; box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4);">Claim
+          Your Studio Now</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function openBenefitsModal(e) {
+      e.preventDefault();
+      const modal = document.getElementById('benefits-modal');
+      modal.style.display = 'flex';
+      setTimeout(() => {
+        modal.style.opacity = '1';
+        modal.querySelector('.card').style.transform = 'scale(1)';
+      }, 10);
+    }
+
+    function closeBenefitsModal() {
+      const modal = document.getElementById('benefits-modal');
+      modal.style.opacity = '0';
+      modal.querySelector('.card').style.transform = 'scale(0.95)';
+      setTimeout(() => {
+        modal.style.display = 'none';
+      }, 300);
+    }
+
+    window.onclick = function (event) {
+      const modal = document.getElementById('benefits-modal');
+      if (event.target === modal) {
+        closeBenefitsModal();
+      }
+    }
+  </script>
+
+  <%- include('partials/footer') %>

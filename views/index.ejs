@@ -1,0 +1,46 @@
+<%- include('partials/header') %>
+<section class="hero">
+  <h1>Discover the Stars</h1>
+  <p>Explore award-winning studios and dancers from top competitions.</p>
+</section>
+<div class="container">
+  <h2>Competitions & Organizations</h2>
+  <div class="grid" style="margin-bottom: 3rem;">
+    <% orgs.forEach(function(org) { %>
+      <a href="/org/<%= org.slug %>" class="card glass-card hover-zoom" style="border-color: rgba(236, 72, 153, 0.3);">
+        <h3><%= org.name %></h3>
+        <span class="btn btn-warning">View Events &rarr;</span>
+      </a>
+    <% }); %>
+  </div>
+
+  <h2>Featured Studios</h2>
+  <div class="grid">
+    <% featuredStudios.forEach(function(s) { %>
+      <a href="/studio/<%= s.id %>" class="card glass-card hover-zoom" style="border-color: rgba(16, 185, 129, 0.4); box-shadow: 0 0 15px rgba(16, 185, 129, 0.1);">
+        <h3 style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">
+          <%= s.name %> 
+          <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981; font-size: 0.7rem;">★ Featured</span>
+        </h3>
+        <div style="margin-bottom: 1.5rem;">
+          <span class="badge"><%= s.total_awards %> Awards</span>
+        </div>
+        <span class="btn" style="width: 100%; text-align: center;">View Awards &rarr;</span>
+      </a>
+    <% }); %>
+
+    <% topStudios.forEach(function(s) { %>
+      <a href="/studio/<%= s.id %>" class="card glass-card hover-zoom">
+        <h3><%= s.name %></h3>
+        <div style="margin-bottom: 1.5rem;">
+          <span class="badge"><%= s.total_awards %> Awards</span>
+        </div>
+        <span class="btn" style="width: 100%; text-align: center;">View Awards &rarr;</span>
+      </a>
+    <% }); %>
+  </div>
+</div>
+
+
+
+<%- include('partials/footer') %>

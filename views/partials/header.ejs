@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dance Awards</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <nav class="glass-nav">
+    <div class="nav-content" style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+      <a href="/" class="brand">🌟 Dance Awards</a>
+      <div style="display: flex; gap: 1rem; align-items: center;">
+        <% if (typeof user !== 'undefined' && user) { %>
+          <% if (user.role === 'admin' || user.role === 'superadmin') { %>
+            <a href="/admin/claims" style="color: white; text-decoration: none; font-weight: 600;">Admin Claims</a>
+          <% } %>
+          <% if (user.role === 'superadmin') { %>
+            <a href="/admin/users" style="color: white; text-decoration: none; font-weight: 600;">User Mgmt</a>
+          <% } %>
+          <% if (user.role === 'studio_owner') { %>
+            <a href="/my-studio" style="color: white; text-decoration: none; font-weight: 600;">My Studio</a>
+          <% } %>
+          <span style="color: var(--text-muted); font-size: 0.9rem;"><%= user.email %></span>
+          <a href="/logout" style="color: var(--primary); text-decoration: none; font-weight: 600;">Logout</a>
+        <% } else { %>
+          <a href="/login" style="color: white; text-decoration: none; font-weight: 600;">Login</a>
+          <a href="/register" class="btn" style="padding: 0.4rem 1rem; font-size: 0.9rem; background: var(--primary); color: white; border-radius: 4px; text-decoration: none;">Register</a>
+        <% } %>
+      </div>
+    </div>
+  </nav>
+  <main>

@@ -1,0 +1,98 @@
+<%- include('partials/header') %>
+<div class="container">
+  <div class="header-section">
+    <h1>Studio Directory</h1>
+    <p class="subtitle">Browse and manage all registered dance studios</p>
+  </div>
+
+  <div class="card glass-card" style="margin-top: 2rem;">
+    <div style="overflow-x: auto;">
+      <table class="premium-table sortable-table">
+        <thead>
+          <tr>
+            <th>Studio Name</th>
+            <th>Location</th>
+            <th>Events Attended</th>
+            <th>Total Awards</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% studios.forEach(function(studio) { %>
+            <tr class="<%= studio.needs_investigation ? 'investigate-row' : '' %>">
+              <td>
+                <a href="/studio/<%= studio.id %>" style="color: var(--primary); font-weight: 600; text-decoration: none;">
+                  <%= studio.name %>
+                </a>
+              </td>
+              <td><%= studio.address || 'Unknown' %></td>
+              <td><%= studio.total_events %></td>
+              <td><span class="badge"><%= studio.total_awards %></span></td>
+              <td>
+                <% if (studio.needs_investigation) { %>
+                  <span class="badge" style="background: rgba(239, 68, 68, 0.2); color: #ef4444;">Needs Review</span>
+                <% } else { %>
+                  <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">Active</span>
+                <% } %>
+              </td>
+              <td>
+                <button 
+                  class="btn <%= studio.needs_investigation ? 'btn-secondary' : 'btn-primary' %>" 
+                  style="padding: 0.25rem 0.75rem; font-size: 0.8rem;"
+                  onclick="toggleInvestigation(<%= studio.id %>, <%= !studio.needs_investigation %>)">
+                  <%= studio.needs_investigation ? 'Clear Flag' : 'Flag' %>
+                </button>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- Pagination -->
+    <% if (totalPages > 1) { %>
+      <div class="pagination" style="display: flex; justify-content: center; gap: 1rem; margin-top: 2rem;">
+        <% if (currentPage > 1) { %>
+          <a href="/studios?page=<%= currentPage - 1 %>" class="btn btn-secondary">Previous</a>
+        <% } %>
+        
+        <span style="display: flex; align-items: center; color: var(--text-muted);">
+          Page <%= currentPage %> of <%= totalPages %>
+        </span>
+        
+        <% if (currentPage < totalPages) { %>
+          <a href="/studios?page=<%= currentPage + 1 %>" class="btn btn-secondary">Next</a>
+        <% } %>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<script>
+async function toggleInvestigation(studioId, investigateState) {
+  try {
+    const res = await fetch(`/api/studios/${studioId}/investigate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ investigate: investigateState })
+    });
+    if (res.ok) {
+      window.location.reload();
+    }
+  } catch (e) {
+    console.error('Failed to toggle flag:', e);
+  }
+}
+</script>
+
+<style>
+  .investigate-row {
+    background-color: rgba(239, 68, 68, 0.05) !important;
+  }
+  .investigate-row td {
+    border-color: rgba(239, 68, 68, 0.1) !important;
+  }
+</style>
+
+<%- include('partials/footer') %>

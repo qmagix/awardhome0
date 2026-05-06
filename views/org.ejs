@@ -1,0 +1,27 @@
+<%- include('partials/header') %>
+<div class="container">
+  <div class="header-section">
+    <h1><%= org.name %></h1>
+    <p class="subtitle">Events & Competitions</p>
+    <% if (org.website) { %>
+      <a href="<%= org.website %>" target="_blank" style="color: var(--primary);">Visit Official Website</a>
+    <% } %>
+  </div>
+  
+  <h2>Events</h2>
+  <div class="grid">
+    <% if (events.length === 0) { %>
+      <p>No events found for this organization yet.</p>
+    <% } else { %>
+      <% events.forEach(function(event) { %>
+        <div class="card glass-card">
+          <h3><%= event.name %></h3>
+          <p style="color: var(--text-muted); margin-bottom: 1rem;">Year: <%= event.year %></p>
+          <p style="color: var(--text-muted); margin-bottom: 1rem;"><%= event.date_string %></p>
+          <a href="/event/<%= event.id %>" class="btn">View Event Awards &rarr;</a>
+        </div>
+      <% }); %>
+    <% } %>
+  </div>
+</div>
+<%- include('partials/footer') %>

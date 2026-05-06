@@ -1,0 +1,31 @@
+<%- include('partials/header') %>
+<div class="container" style="max-width: 400px; margin-top: 4rem;">
+  <div class="card glass-card" style="padding: 2.5rem;">
+    <h2 style="text-align: center; margin-top: 0; color: var(--primary);">Register</h2>
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #ef4444; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem; text-align: center;">
+        <%= error %>
+      </div>
+    <% } %>
+    <% if (typeof message !== 'undefined' && message) { %>
+      <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); color: #10b981; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem; text-align: center;">
+        <%= message %>
+      </div>
+    <% } %>
+    <form action="/register" method="POST" style="display: flex; flex-direction: column; gap: 1.25rem;">
+      <div>
+        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-muted);">Email</label>
+        <input type="email" name="email" required style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;">
+      </div>
+      <div>
+        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-muted);">Password</label>
+        <input type="password" name="password" required style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;">
+      </div>
+      <button type="submit" class="btn" style="background: var(--primary); color: white; border: none; padding: 0.75rem; font-weight: 600; border-radius: 6px; cursor: pointer; margin-top: 0.5rem;">Register</button>
+    </form>
+    <p style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">
+      Already have an account? <a href="/login" style="color: var(--primary);">Login</a>
+    </p>
+  </div>
+</div>
+<%- include('partials/footer') %>

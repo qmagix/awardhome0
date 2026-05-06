@@ -1,0 +1,135 @@
+<%- include('partials/header') %>
+<div class="container">
+  <div class="header-section">
+    <h1>Admin Dashboard</h1>
+    <p class="subtitle">Data Integrity & Investigation Tools</p>
+  </div>
+
+  <div class="grid">
+    <!-- Flagged Studios -->
+    <div class="card glass-card">
+      <h3 style="color: #ef4444; margin-bottom: 1rem;">Studios Flagged for Investigation (<%= flaggedStudios.length %>)</h3>
+      <% if (flaggedStudios.length === 0) { %>
+        <p class="sub-text">No studios flagged.</p>
+      <% } else { %>
+        <ul style="list-style: none; padding: 0; margin: 0;">
+          <% flaggedStudios.forEach(s => { %>
+            <li style="padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between;">
+              <a href="/studio/<%= s.id %>" style="color: var(--text-color);"><%= s.name %> (ID: <%= s.id %>)</a>
+            </li>
+          <% }); %>
+        </ul>
+      <% } %>
+    </div>
+
+    <!-- Merge Studios Tool -->
+    <div class="card glass-card">
+      <h3 style="color: var(--primary); margin-bottom: 1rem;">Merge Duplicate Studios</h3>
+      <p class="sub-text" style="margin-bottom: 1.5rem;">Merge a duplicate studio into a primary studio. The duplicate will be deleted and all its history transferred.</p>
+      
+      <datalist id="studio-list">
+        <% allStudios.forEach(s => { %>
+          <option value="<%= s.id %>"><%= s.name %></option>
+        <% }); %>
+      </datalist>
+
+      <div style="display: flex; flex-direction: column; gap: 1rem;">
+        <div>
+          <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Duplicate Studio ID (to be deleted)</label>
+          <input type="text" id="merge-studio-source" list="studio-list" class="premium-input" placeholder="e.g. 124" style="width: 100%;">
+        </div>
+        <div>
+          <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Primary Studio ID (to keep)</label>
+          <input type="text" id="merge-studio-target" list="studio-list" class="premium-input" placeholder="e.g. 15" style="width: 100%;">
+        </div>
+        <button class="btn btn-primary" onclick="mergeStudios()" style="margin-top: 1rem;">Merge Studios</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid" style="margin-top: 2rem;">
+    <!-- Compare Studios Tool -->
+    <div class="card glass-card">
+      <h3 style="color: var(--primary); margin-bottom: 1rem;">Compare Studios</h3>
+      <p class="sub-text" style="margin-bottom: 1.5rem;">Launch the Selection Directory to pick two studios and view their full event histories side-by-side.</p>
+      <a href="/admin/studios" class="btn btn-primary" style="display: block; text-align: center;">Launch Selection Directory</a>
+    </div>
+
+    <!-- Merge Dancers Tool -->
+    <div class="card glass-card">
+      <h3 style="color: var(--primary); margin-bottom: 1rem;">Merge Duplicate Dancers</h3>
+      <p class="sub-text" style="margin-bottom: 1.5rem;">Merge two dancers together by their Database IDs. The duplicate will be deleted.</p>
+      
+      <div style="display: flex; flex-direction: column; gap: 1rem;">
+        <div>
+          <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Duplicate Dancer ID (to be deleted)</label>
+          <input type="text" id="merge-dancer-source" class="premium-input" placeholder="e.g. 5002" style="width: 100%;">
+        </div>
+        <div>
+          <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Primary Dancer ID (to keep)</label>
+          <input type="text" id="merge-dancer-target" class="premium-input" placeholder="e.g. 5001" style="width: 100%;">
+        </div>
+        <button class="btn btn-primary" onclick="mergeDancers()" style="margin-top: 1rem;">Merge Dancers</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+async function mergeStudios() {
+  const sourceId = document.getElementById('merge-studio-source').value;
+  const targetId = document.getElementById('merge-studio-target').value;
+  
+  if (!sourceId || !targetId || sourceId === targetId) {
+    return alert('Please enter valid, distinct IDs.');
+  }
+  if (!confirm('Are you absolutely sure? This action cannot be undone. The source studio will be deleted forever.')) return;
+
+  try {
+    const res = await fetch('/api/merge/studios', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sourceId, targetId })
+    });
+    const data = await res.json();
+    if (data.success) {
+      alert('Studios merged successfully!');
+      window.location.reload();
+    } else {
+      alert('Error: ' + data.error);
+    }
+  } catch (e) {
+    alert('Failed to merge studios: ' + e.message);
+  }
+}
+
+async function mergeDancers() {
+  const sourceId = document.getElementById('merge-dancer-source').value;
+  const targetId = document.getElementById('merge-dancer-target').value;
+  
+  if (!sourceId || !targetId || sourceId === targetId) {
+    return alert('Please enter valid, distinct IDs.');
+  }
+  if (!confirm('Are you absolutely sure? This action cannot be undone. The source dancer will be deleted forever.')) return;
+
+  try {
+    const res = await fetch('/api/merge/dancers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sourceId, targetId })
+    });
+    const data = await res.json();
+    if (data.success) {
+      alert('Dancers merged successfully!');
+      window.location.reload();
+    } else {
+      alert('Error: ' + data.error);
+    }
+  } catch (e) {
+    alert('Failed to merge dancers: ' + e.message);
+  }
+}
+</script>
+
+<%- include('partials/footer') %>

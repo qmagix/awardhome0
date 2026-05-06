@@ -1,0 +1,244 @@
+<%- include('partials/header') %>
+
+<div class="container" style="margin-top: 4rem; display: flex; gap: 2rem;">
+  
+  <!-- Sidebar Navigation -->
+  <div style="width: 250px; flex-shrink: 0;">
+    <div class="card glass-card" style="padding: 1.5rem; position: sticky; top: 2rem;">
+      <h3 style="margin-top: 0; color: var(--primary); font-size: 1.1rem;">Management</h3>
+      <ul style="list-style: none; padding: 0; margin: 1rem 0 0 0; display: flex; flex-direction: column; gap: 0.5rem;">
+        <li>
+          <a href="/manage/studio/<%= studio.id %>" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: var(--text-muted); transition: background 0.2s;">
+            👤 Profile & Customization
+          </a>
+        </li>
+        <li>
+          <a href="/manage/studio/<%= studio.id %>/awards" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: white; background: rgba(236, 72, 153, 0.1); border-left: 3px solid var(--primary); font-weight: 600;">
+            🏆 Awards Editor
+          </a>
+        </li>
+        <li>
+          <a href="/manage/studio/<%= studio.id %>/widget" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: var(--text-muted); transition: background 0.2s;">
+            📈 Widget Builder
+          </a>
+        </li>
+      </ul>
+      
+      <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
+        <a href="/studio/<%= studio.id %>" style="color: var(--primary); text-decoration: none; font-size: 0.9rem;">&larr; Back to Public Profile</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Area -->
+  <div style="flex-grow: 1;">
+    <div class="header-section" style="margin-bottom: 2rem;">
+      <h1>Awards Editor</h1>
+      <p class="subtitle">Fix missing performance names, awards, and add group dancers.</p>
+    </div>
+
+    <!-- Year Tabs -->
+    <% if (availableYears && availableYears.length > 0) { %>
+      <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; overflow-x: auto; padding-bottom: 0.5rem;">
+        <% availableYears.forEach(year => { %>
+          <% if (selectedYear === year) { %>
+            <a href="?year=<%= year %>" class="btn" style="padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; background: var(--primary); color: white;">
+              <%= year %>
+            </a>
+          <% } else { %>
+            <a href="?year=<%= year %>" class="btn" style="padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.1);">
+              <%= year %>
+            </a>
+          <% } %>
+        <% }) %>
+      </div>
+    <% } %>
+
+    <div class="card glass-card" style="overflow-x: auto;">
+      <table class="premium-table" style="width: 100%; min-width: 800px;">
+        <thead>
+          <tr>
+            <th>Event</th>
+            <th>Performance Name</th>
+            <th>Place</th>
+            <th>Award Type</th>
+            <th>Primary Dancer</th>
+            <th>Group Dancers</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (awards.length === 0) { %>
+            <tr><td colspan="7" style="text-align: center;">No awards found for this year.</td></tr>
+          <% } else { %>
+            <% awards.forEach(function(award) { %>
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                <td>
+                  <strong><%= award.event_name %></strong><br>
+                  <span style="font-size: 0.8rem; color: var(--text-muted);"><%= award.event_year %></span>
+                </td>
+                
+                <td>
+                  <% if (award.performance_name) { %>
+                    <%= award.performance_name %>
+                  <% } else { %>
+                    <span style="color: var(--text-muted); font-style: italic;">Missing</span>
+                  <% } %>
+                </td>
+                
+                <td>
+                  <% if (award.place) { %>
+                    <%= award.place %>
+                  <% } else { %>
+                    <span style="color: var(--text-muted); font-style: italic;">Missing</span>
+                  <% } %>
+                </td>
+                
+                <td>
+                  <% if (award.award_type) { %>
+                    <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981;"><%= award.award_type %></span>
+                  <% } else { %>
+                    <span style="color: var(--text-muted); font-style: italic;">Missing</span>
+                  <% } %>
+                </td>
+                
+                <td>
+                  <% if (award.dancer_name) { %>
+                    <span style="color: var(--primary);"><%= award.dancer_name %></span>
+                  <% } else { %>
+                    <span style="color: var(--text-muted);">-</span>
+                  <% } %>
+                </td>
+
+                <td>
+                  <!-- List existing group dancers -->
+                  <% if (groupedDancers[award.id] && groupedDancers[award.id].length > 0) { %>
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.2rem; margin-bottom: 0.5rem;">
+                      <% groupedDancers[award.id].forEach(d => { %>
+                        <span class="badge" style="background: rgba(255,255,255,0.1); font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.3rem;">
+                          <%= d.name %>
+                          <form action="/manage/studio/<%= studio.id %>/awards/<%= award.id %>/dancers/<%= d.id %>/remove" method="POST" style="margin: 0; padding: 0;">
+                            <button type="submit" style="background: none; border: none; color: #ef4444; font-size: 0.8rem; cursor: pointer; padding: 0; line-height: 1;">&times;</button>
+                          </form>
+                        </span>
+                      <% }) %>
+                    </div>
+                  <% } else { %>
+                    <span style="color: var(--text-muted); font-style: italic;">None</span>
+                  <% } %>
+                </td>
+
+                <td>
+                  <button type="button" class="btn btn-secondary edit-btn" 
+                    data-id="<%= award.id %>"
+                    data-perf="<%= award.performance_name || '' %>"
+                    data-place="<%= award.place || '' %>"
+                    data-type="<%= award.award_type || '' %>"
+                    style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">
+                    Edit
+                  </button>
+                </td>
+              </tr>
+            <% }); %>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<!-- Single Edit Modal -->
+<div id="editModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center;">
+  <div class="card glass-card" style="width: 100%; max-width: 500px; padding: 2rem; position: relative;">
+    <button type="button" id="closeModal" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer;">&times;</button>
+    <h2 style="margin-top: 0;">Edit Award</h2>
+    
+    <!-- Update Fields Form -->
+    <form id="updateForm" method="POST" style="margin-bottom: 2rem;">
+      <div style="margin-bottom: 1rem;">
+        <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Performance Name</label>
+        <input type="text" id="perfInput" name="performance_name" style="width: 100%; padding: 0.5rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 4px;">
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+        <div>
+          <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Place</label>
+          <input type="text" id="placeInput" name="place" style="width: 100%; padding: 0.5rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 4px;">
+        </div>
+        <div>
+          <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Award Type</label>
+          <input type="text" id="typeInput" name="award_type" style="width: 100%; padding: 0.5rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 4px;">
+        </div>
+      </div>
+      <button type="submit" class="btn" style="width: 100%; background: var(--primary); color: white; border: none; padding: 0.75rem; border-radius: 4px; cursor: pointer;">Save Changes</button>
+    </form>
+
+    <h3 style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1.5rem; margin-top: 0;">Add Group Dancer</h3>
+    <form id="dancerForm" method="POST" style="display: flex; gap: 0.5rem;">
+      <input type="text" name="dancer_name" list="globalDancersList" placeholder="Type or select dancer..." style="flex-grow: 1; padding: 0.5rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 4px;" required>
+      <datalist id="globalDancersList">
+        <% studioDancers.forEach(d => { %>
+          <option value="<%= d.name %>">
+        <% }) %>
+      </datalist>
+      <button type="submit" class="btn btn-secondary" style="padding: 0.5rem 1rem; border: 1px solid rgba(255,255,255,0.3); background: transparent; color: white; border-radius: 4px; cursor: pointer;">Add</button>
+    </form>
+  </div>
+</div>
+
+<div id="serverData" data-studio-id="<%= studio.id %>" data-selected-year="<%= selectedYear || '' %>" style="display: none;"></div>
+
+<script>
+  const modal = document.getElementById('editModal');
+  const updateForm = document.getElementById('updateForm');
+  const dancerForm = document.getElementById('dancerForm');
+  const closeBtn = document.getElementById('closeModal');
+  
+  const serverData = document.getElementById('serverData');
+  const studioId = serverData.getAttribute('data-studio-id');
+  const selectedYear = serverData.getAttribute('data-selected-year');
+
+  document.querySelectorAll('.edit-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const id = btn.getAttribute('data-id');
+      const perf = btn.getAttribute('data-perf');
+      const place = btn.getAttribute('data-place');
+      const type = btn.getAttribute('data-type');
+
+      // Set action URLs
+      const yearQuery = selectedYear ? `?year=${selectedYear}` : '';
+      updateForm.action = `/manage/studio/${studioId}/awards/${id}/update${yearQuery}`;
+      dancerForm.action = `/manage/studio/${studioId}/awards/${id}/dancers${yearQuery}`;
+
+      // Populate inputs and disable if they already have data
+      const perfInput = document.getElementById('perfInput');
+      perfInput.value = perf;
+      perfInput.readOnly = !!perf;
+      perfInput.style.opacity = !!perf ? '0.5' : '1';
+
+      const placeInput = document.getElementById('placeInput');
+      placeInput.value = place;
+      placeInput.readOnly = !!place;
+      placeInput.style.opacity = !!place ? '0.5' : '1';
+
+      const typeInput = document.getElementById('typeInput');
+      typeInput.value = type;
+      typeInput.readOnly = !!type;
+      typeInput.style.opacity = !!type ? '0.5' : '1';
+
+      modal.style.display = 'flex';
+    });
+  });
+
+  closeBtn.addEventListener('click', () => {
+    modal.style.display = 'none';
+  });
+
+  window.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.style.display = 'none';
+    }
+  });
+</script>
+
+<%- include('partials/footer') %>
