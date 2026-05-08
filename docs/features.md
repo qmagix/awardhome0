@@ -50,3 +50,7 @@
 ### Studio Social Media Integration
 - **Social Links**: Studios can now add their Instagram and TikTok handles to their profile via the Management Dashboard.
 - **Profile Badges**: Sleek, branded social media badges dynamically render on the public studio page alongside the website link, driving direct engagement to the studio's social channels.
+
+### Automated Data Bootstrapping Pipeline
+- **Web Scraper Script**: A standalone node script automatically searches the internet for websites and contact information of studios missing data in the database.
+- **Staging Table & Admin Review**: Scraped data is placed in a secure staging table. Admins have access to a dedicated Data Drafts dashboard to review side-by-side comparisons of scraped data vs current data, edit the scraped data if necessary, and approve or reject it before it merges into the live database.

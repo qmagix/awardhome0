@@ -1,0 +1,121 @@
+<%- include('partials/header') %>
+<div class="container">
+  <div class="header-section">
+    <h1>Manage Organizations</h1>
+    <p class="subtitle">View, Add, and Edit Competition Organizations</p>
+  </div>
+
+  <div class="grid">
+    <div class="card glass-card" style="grid-column: 1 / -1;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3 style="color: var(--primary);">Organizations</h3>
+        <button class="btn btn-primary" onclick="showAddOrgModal()">Add Organization</button>
+      </div>
+
+      <table style="width: 100%; text-align: left; border-collapse: collapse; margin-top: 1rem;">
+        <thead>
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+            <th style="padding: 0.5rem 0; color: var(--text-muted);">ID</th>
+            <th style="padding: 0.5rem 0; color: var(--text-muted);">Name</th>
+            <th style="padding: 0.5rem 0; color: var(--text-muted);">Slug</th>
+            <th style="padding: 0.5rem 0; color: var(--text-muted);">Website</th>
+            <th style="padding: 0.5rem 0; color: var(--text-muted);">Events</th>
+            <th style="padding: 0.5rem 0; color: var(--text-muted); text-align: right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% orgs.forEach(org => { %>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+              <td style="padding: 0.5rem 0;"><%= org.id %></td>
+              <td style="padding: 0.5rem 0;"><strong><%= org.name %></strong></td>
+              <td style="padding: 0.5rem 0;"><code><%= org.slug %></code></td>
+              <td style="padding: 0.5rem 0;">
+                <% if (org.website) { %>
+                  <a href="<%= org.website %>" target="_blank" style="color: var(--secondary);"><%= org.website %></a>
+                <% } else { %>
+                  -
+                <% } %>
+              </td>
+              <td style="padding: 0.5rem 0;"><%= org.event_count || 0 %></td>
+              <td style="padding: 0.5rem 0; text-align: right; display: flex; justify-content: flex-end; gap: 0.5rem;">
+                <button class="btn btn-secondary" onclick="showEditOrgModal('<%= org.id %>', '<%= org.name.replace(/'/g, "\\'") %>', '<%= org.slug %>', '<%= (org.website || '').replace(/'/g, "\\'") %>')">Edit</button>
+                <form action="/admin/orgs/<%= org.id %>/delete" method="POST" onsubmit="return confirm('Are you sure you want to delete this organization? This cannot be undone.');">
+                  <button type="submit" class="btn" style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #ef4444;">Delete</button>
+                </form>
+              </td>
+            </tr>
+          <% }); %>
+          <% if (orgs.length === 0) { %>
+            <tr><td colspan="6" style="text-align: center; padding: 1rem;">No organizations found.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal for Add/Edit -->
+<div id="orgModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center;">
+  <div class="card glass-card" style="width: 100%; max-width: 500px;">
+    <h2 id="modalTitle" style="margin-top: 0; margin-bottom: 1.5rem;">Add Organization</h2>
+    <form id="orgForm" method="POST" action="/admin/orgs">
+      <input type="hidden" name="id" id="orgId">
+      
+      <div style="margin-bottom: 1rem;">
+        <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Name</label>
+        <input type="text" name="name" id="orgName" class="premium-input" style="width: 100%;" required>
+      </div>
+      
+      <div style="margin-bottom: 1rem;">
+        <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Slug</label>
+        <input type="text" name="slug" id="orgSlug" class="premium-input" style="width: 100%;" required>
+      </div>
+
+      <div style="margin-bottom: 1.5rem;">
+        <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Website</label>
+        <input type="url" name="website" id="orgWebsite" class="premium-input" style="width: 100%;" placeholder="https://...">
+      </div>
+      
+      <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+        <button type="button" class="btn btn-secondary" onclick="hideModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="modalSubmitBtn">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function showAddOrgModal() {
+  document.getElementById('modalTitle').textContent = 'Add Organization';
+  document.getElementById('orgForm').action = '/admin/orgs';
+  document.getElementById('orgId').value = '';
+  document.getElementById('orgName').value = '';
+  document.getElementById('orgSlug').value = '';
+  document.getElementById('orgWebsite').value = '';
+  document.getElementById('orgModal').style.display = 'flex';
+}
+
+function showEditOrgModal(id, name, slug, website) {
+  document.getElementById('modalTitle').textContent = 'Edit Organization';
+  document.getElementById('orgForm').action = '/admin/orgs/' + id + '/edit';
+  document.getElementById('orgId').value = id;
+  document.getElementById('orgName').value = name;
+  document.getElementById('orgSlug').value = slug;
+  document.getElementById('orgWebsite').value = website;
+  document.getElementById('orgModal').style.display = 'flex';
+}
+
+function hideModal() {
+  document.getElementById('orgModal').style.display = 'none';
+}
+
+// Auto-fill slug when name is typed (only for new orgs)
+document.getElementById('orgName').addEventListener('input', function(e) {
+  if (document.getElementById('orgId').value === '') {
+    const slug = e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    document.getElementById('orgSlug').value = slug;
+  }
+});
+</script>
+
+<%- include('partials/footer') %>

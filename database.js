@@ -114,6 +114,19 @@ async function initDb() {
       FOREIGN KEY (dancer_id) REFERENCES dancers(id),
       UNIQUE(award_id, dancer_id)
     );
+
+    CREATE TABLE IF NOT EXISTS studio_info_drafts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      studio_id INTEGER REFERENCES studios(id),
+      scraped_name TEXT,
+      scraped_address TEXT,
+      scraped_phone TEXT,
+      scraped_email TEXT,
+      scraped_website_url TEXT,
+      source_url TEXT,
+      status TEXT DEFAULT 'pending',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
   `);
   
   // Migrations

@@ -160,15 +160,18 @@
                                   <%= award.category || '-' %>
                                 </td>
                                 <td>
-                                  <% if (award.unique_id) { %>
-                                    <a href="/dancer/<%= award.unique_id %>" class="dancer-link">
-                                      <%= award.dancer_name %>
-                                    </a>
-                                    <% } else if (award.dancer_name) { %>
-                                      <%= award.dancer_name %>
-                                        <% } else { %>
-                                          <em>Company / Group</em>
-                                          <% } %>
+                                  <% if (award.dancers && award.dancers.length > 0) { %>
+                                    <% award.dancers.forEach(function(d, index) { %>
+                                      <% if (d.unique_id) { %>
+                                        <a href="/dancer/<%= d.unique_id %>" class="dancer-link"><%= d.name %></a>
+                                      <% } else { %>
+                                        <%= d.name %>
+                                      <% } %>
+                                      <%- index < award.dancers.length - 1 ? ', ' : '' %>
+                                    <% }); %>
+                                  <% } else { %>
+                                    <em>Company / Group</em>
+                                  <% } %>
                                 </td>
                               </tr>
                               <% }); %>

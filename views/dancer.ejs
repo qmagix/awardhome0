@@ -17,12 +17,42 @@
 
   <h2>Solo Awards</h2>
   <div class="awards-grid">
-    <% if (awards.length === 0) { %>
+    <% if (soloAwards.length === 0) { %>
       <p>No solo awards found.</p>
     <% } else { %>
-      <% awards.forEach(function(award) { %>
+      <% soloAwards.forEach(function(award) { %>
         <div class="award-card glass-card">
-          <div class="award-place"><%= award.place %></div>
+          <div class="award-place">
+            <%= award.place %>
+            <% if (award.is_self_added) { %>
+              <span class="badge" style="background: rgba(234, 179, 8, 0.2); color: #eab308; font-size: 0.6rem; margin-left: 0.5rem;" title="Unverified manually reported award">Self-Reported</span>
+            <% } %>
+          </div>
+          <h3><%= award.performance_name || 'N/A' %></h3>
+          <p class="category"><%= award.award_type %></p>
+          <% if (award.category) { %>
+            <p class="sub-category">Category: <%= award.category %></p>
+          <% } %>
+          <p class="sub-category">🏆 <%= award.event_name %> (<%= award.event_year %>)</p>
+          <span class="perf-num">Routine <%= award.performance_number ? '#' + award.performance_number : 'N/A' %></span>
+        </div>
+      <% }); %>
+    <% } %>
+  </div>
+
+  <h2 style="margin-top: 3rem;">Group Awards</h2>
+  <div class="awards-grid">
+    <% if (groupAwards.length === 0) { %>
+      <p>No group awards found.</p>
+    <% } else { %>
+      <% groupAwards.forEach(function(award) { %>
+        <div class="award-card glass-card">
+          <div class="award-place">
+            <%= award.place %>
+            <% if (award.is_self_added) { %>
+              <span class="badge" style="background: rgba(234, 179, 8, 0.2); color: #eab308; font-size: 0.6rem; margin-left: 0.5rem;" title="Unverified manually reported award">Self-Reported</span>
+            <% } %>
+          </div>
           <h3><%= award.performance_name || 'N/A' %></h3>
           <p class="category"><%= award.award_type %></p>
           <% if (award.category) { %>

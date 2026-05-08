@@ -89,3 +89,10 @@ By default, the server will be available at `http://localhost:3000`.
 2. Scroll down to the contact section to find the **Instagram Handle** and **TikTok Handle** fields.
 3. Enter your usernames (e.g., `@yourstudio`) and click **Save Profile Changes**.
 4. Vibrant, clickable Instagram and TikTok buttons will automatically appear on your public studio page!
+
+### Admin: Reviewing Automated Studio Data
+1. Run the bootstrapper script via terminal (`node bootstrap_studios.js`) to automatically search the internet for missing studio websites.
+2. In the platform, click **Data Drafts** in the top navigation bar (requires Admin/Superadmin).
+3. You will see a list of scraped data drafts. Each draft shows the current database info on the left, and the newly scraped info on the right.
+4. You can freely edit the scraped information in the text boxes to fix any formatting errors.
+5. Click **Merge & Approve** to overwrite the current database with the new data, or **Reject Bad Data** to delete the scrape.

@@ -15,6 +15,7 @@
         <% if (typeof user !== 'undefined' && user) { %>
           <% if (user.role === 'admin' || user.role === 'superadmin') { %>
             <a href="/admin/claims" style="color: white; text-decoration: none; font-weight: 600;">Admin Claims</a>
+            <a href="/admin/studio-drafts" style="color: white; text-decoration: none; font-weight: 600;">Data Drafts</a>
           <% } %>
           <% if (user.role === 'superadmin') { %>
             <a href="/admin/users" style="color: white; text-decoration: none; font-weight: 600;">User Mgmt</a>

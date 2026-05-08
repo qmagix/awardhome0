@@ -1,0 +1,124 @@
+<%- include('partials/header') %>
+
+<div class="container" style="margin-top: 4rem;">
+  <div class="header-section" style="margin-bottom: 2rem;">
+    <a href="/manage/studio/<%= studio.id %>/roster" style="color: var(--primary); text-decoration: none; margin-bottom: 1rem; display: inline-block;">&larr; Cancel Import</a>
+    <h1>CSV Import Resolution</h1>
+    <p class="subtitle">Review the imported dancers. If they already exist in the database, link them to avoid duplicates.</p>
+  </div>
+
+  <div class="card glass-card">
+    <form action="/manage/studio/<%= studio.id %>/roster/csv-commit" method="POST" id="csvCommitForm">
+      <!-- Hidden input to store JSON resolution data -->
+      <input type="hidden" name="resolution_data" id="resolutionData">
+
+      <table style="width: 100%; border-collapse: collapse; text-align: left;">
+        <thead>
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-muted);">
+            <th style="padding: 1rem 0;">Import Data</th>
+            <th style="padding: 1rem 0;">Resolution Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% previewData.forEach((item, index) => { %>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);" class="resolution-row" data-index="<%= index %>">
+              
+              <!-- Column 1: The CSV Data -->
+              <td style="padding: 1.5rem 0; vertical-align: top; width: 40%;">
+                <div style="font-weight: 600; color: white; font-size: 1.1rem;"><%= item.csv_row.name %></div>
+                <div style="font-size: 0.9rem; color: var(--text-muted); margin-top: 0.25rem;">
+                  <% if (item.csv_row.birthday) { %> DOB: <%= item.csv_row.birthday %><br> <% } %>
+                  <% if (item.csv_row.graduation_year) { %> Grad: <%= item.csv_row.graduation_year %><br> <% } %>
+                  <% if (item.csv_row.status) { %> Status: <%= item.csv_row.status %><br> <% } %>
+                </div>
+                <!-- Store the row data -->
+                <textarea class="raw-data" style="display: none;"><%= JSON.stringify(item.csv_row) %></textarea>
+              </td>
+
+              <!-- Column 2: Action Dropdown & Matches -->
+              <td style="padding: 1.5rem 0; vertical-align: top;">
+                <select class="action-select" style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.5); border: 1px solid var(--primary); color: white; border-radius: 6px; font-weight: bold; margin-bottom: 1rem;">
+                  <% if (item.matches && item.matches.length > 0) { %>
+                    <option value="link">LINK to existing profile ⬇️</option>
+                  <% } %>
+                  <option value="create" <%= (!item.matches || item.matches.length === 0) ? 'selected' : '' %>>CREATE new dancer profile</option>
+                  <option value="skip">SKIP importing this row</option>
+                </select>
+
+                <!-- Match Selection (Only shows if "Link" is selected) -->
+                <div class="matches-container" style="<%= (!item.matches || item.matches.length === 0) ? 'display: none;' : '' %>">
+                  <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">Select which database profile to link to:</div>
+                  <% if (item.matches && item.matches.length > 0) { %>
+                    <% item.matches.forEach((match, mIdx) => { %>
+                      <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 0.75rem; border-radius: 6px; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 1rem; cursor: pointer;">
+                        <input type="radio" name="match_for_<%= index %>" value="<%= match.id %>" id="m_<%= index %>_<%= match.id %>" <%= mIdx === 0 ? 'checked' : '' %> style="transform: scale(1.2);">
+                        <label for="m_<%= index %>_<%= match.id %>" style="cursor: pointer; width: 100%;">
+                          <div style="color: white; font-weight: 600;"><%= match.name %></div>
+                          <div style="color: var(--text-muted); font-size: 0.8rem;">
+                            ID: <%= match.id %> | <%= match.award_count %> total awards
+                          </div>
+                        </label>
+                      </div>
+                    <% }) %>
+                  <% } else { %>
+                    <div style="color: var(--text-muted); font-style: italic;">No matches found. Must select "Create new".</div>
+                  <% } %>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+
+      <div style="margin-top: 2rem; display: flex; justify-content: flex-end;">
+        <button type="button" class="btn btn-primary" onclick="submitImport()" style="font-size: 1.1rem; padding: 1rem 2rem;">Finalize Import</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  // Toggle matches container based on action select
+  document.querySelectorAll('.action-select').forEach(select => {
+    select.addEventListener('change', (e) => {
+      const container = e.target.closest('td').querySelector('.matches-container');
+      if (e.target.value === 'link') {
+        container.style.display = 'block';
+      } else {
+        container.style.display = 'none';
+      }
+    });
+  });
+
+  function submitImport() {
+    const resolutionData = [];
+    
+    document.querySelectorAll('.resolution-row').forEach(row => {
+      const index = row.getAttribute('data-index');
+      const action = row.querySelector('.action-select').value;
+      const csvRowData = JSON.parse(row.querySelector('.raw-data').value);
+      
+      let dancerId = null;
+      if (action === 'link') {
+        const selectedRadio = row.querySelector(`input[name="match_for_${index}"]:checked`);
+        if (selectedRadio) {
+          dancerId = selectedRadio.value;
+        } else {
+          alert('You selected "LINK" but did not select a profile to link to for ' + csvRowData.name);
+          throw new Error('Missing link selection');
+        }
+      }
+
+      resolutionData.push({
+        action: action,
+        dancer_id: dancerId,
+        csv_row: csvRowData
+      });
+    });
+
+    document.getElementById('resolutionData').value = JSON.stringify(resolutionData);
+    document.getElementById('csvCommitForm').submit();
+  }
+</script>
+
+<%- include('partials/footer') %>

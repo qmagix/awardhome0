@@ -1,0 +1,506 @@
+Fetching https://db-all-prod-p.s3.us-east-2.amazonaws.com/comps/326/118057/results-all-results--1-.html...
+Event metadata extracted: San Jose, CA, US April 17, 2026 San Jose Center for the Performing Arts
+Event DB Record ID: 1373 (Year: 2026)
+
+Parsing Category: Premier Title - Little Mr Dance America
+
+Parsing Category: Premier Title - Petite Miss Dance America
+
+Parsing Category: Premier Title - Junior Miss Dance America
+
+Parsing Category: Premier Title - Teen Mr Dance America
+
+Parsing Category: Premier Title - Teen Miss Dance America
+
+Parsing Category: Premier Title - Mr Dance America
+
+Parsing Category: Premier Title - Miss Dance America
+
+Parsing Category: Title - Petite Miss Dance America
+
+Parsing Category: Title - Junior Miss Dance America
+
+Parsing Category: Title - Teen Miss Dance America
+
+Parsing Category: Title - Mr Dance America
+
+Parsing Category: Title - Miss Dance America
+
+Parsing Category: Showcase 8 & Under Solo
+
+Parsing Category: Showcase 9-11 Solos
+
+Parsing Category: Showcase 12-14 Solo
+
+Parsing Category: Showcase 15-19 Solo
+
+Parsing Category: Competitive - 8 & Under Solo
+
+Parsing Category: Competitive - 9-11 Solos
+
+Parsing Category: Competitive - 12-14 Solo
+
+Parsing Category: Competitive - 15-19 Solo
+
+Parsing Category: Elite - 8 & Under Solo
+
+Parsing Category: Elite - 9-11 Solos
+
+Parsing Category: Elite - 3 12-14 Solo
+
+Parsing Category: Elite - 15-19 Solo
+
+Parsing Category: Showcase 8 & Under Duets/Trios
+
+Parsing Category: Showcase 9-11 Duets/Trios
+
+Parsing Category: Showcase 12-14 Duets/Trios
+
+Parsing Category: Showcase 15-19 Duets/Trios
+
+Parsing Category: Competitive - 8 & Under Duets/Trios
+
+Parsing Category: Competitive - 9-11 Duets/Trios
+
+Parsing Category: Competitive - 12-14 Duets/Trios
+
+Parsing Category: Competitive - 15-19 Duets/Trios
+
+Parsing Category: Elite - 9-11 Duets/Trios
+
+Parsing Category: Elite - 12-14 Duets/Trios
+
+Parsing Category: Elite - 15-19 Duets/Trios
+
+Parsing Category: Showcase 8 & Under Small Groups
+
+Parsing Category: Showcase 9-11 Small Groups
+
+Parsing Category: Showcase 12-14 Small Groups
+
+Parsing Category: Showcase 15-19 Small Groups
+
+Parsing Category: Competitive - 8 & Under Small Groups
+
+Parsing Category: Competitive - 9-11 Small Groups
+
+Parsing Category: Competitive - 12-14 Small Groups
+
+Parsing Category: Competitive - 15-19 Small Groups
+
+Parsing Category: Elite 9-11 Small Groups
+
+Parsing Category: Elite - 12-14 Small Groups
+
+Parsing Category: Elite - 15-19 Small Groups
+
+Parsing Category: 20 & Over Groups
+
+Parsing Category: Showcase 8 & Under Large Groups
+
+Parsing Category: Showcase 9-11 Large Groups
+
+Parsing Category: Showcase 12-14 Large Groups
+
+Parsing Category: Competitive - 8 & Under Large Groups
+
+Parsing Category: Competitive - 9-11 Large Groups
+
+Parsing Category: Competitive - 12-14 Large Groups
+
+Parsing Category: Competitive - 15-19 Large Groups
+
+Parsing Category: Elite - 8 & Under Large Groups
+
+Parsing Category: Elite - 9-11 Large Groups
+
+Parsing Category: Elite - 12-14 Large Groups
+
+Parsing Category: Elite - 15-19 Large Groups
+
+Parsing Category: Showcase 8 & Under Lines
+
+Parsing Category: Showcase 9-11 Lines
+
+Parsing Category: Competitive - 8 & Under Lines
+
+Parsing Category: Competitive - 9-11 Lines
+
+Parsing Category: Competitive - 12-14 Lines
+
+Parsing Category: Competitive - 15-19 Lines
+
+Parsing Category: Elite - 12-14 Lines
+
+Parsing Category: Elite - 15-19 Lines
+
+Parsing Category: Competitive - 11 & Under Grand Lines
+
+Parsing Category: Competitive - 12 & Over Grand Lines
+
+Parsing Category: Showcase - 8 & Under SDA Regional Champion
+
+Parsing Category: Showcase - 9-11 SDA Regional Champion
+
+Parsing Category: Competitive - 8 & Under SDA Regional Champion
+
+Parsing Category: Competitive - 9-11 SDA Regional Champion
+
+Parsing Category: Competitive - 11 & Under Grand Lines SDA Champion
+
+Parsing Category: Elite - 8 & Under SDA Regional Champion
+
+Parsing Category: Elite - 9-11 SDA Regional Champion
+
+Parsing Category: Competitive - 12 & Over Grand Lines SDA Champion
+
+Parsing Category: Showcase - 12 - 14 SDA Regional Champion
+
+Parsing Category: Showcase - 15-19 SDA Regional Champion
+
+Parsing Category: Competitive - 12-14 SDA Regional Champion
+
+Parsing Category: Competitive - 15-19 SDA Regional Champion
+
+Parsing Category: Elite - 12-14 SDA Regional Champion
+
+Parsing Category: Elite - 15-19 SDA Regional Champion
+
+Parsing Category: Costume - 11 & Under Solo
+
+Parsing Category: Costume - 12 & Over Solo
+
+Parsing Category: Group Costume
+
+Parsing Category: Showcase - 8 & Under Golden Tickets
+
+Parsing Category: Showcase- 9-11 Golden Tickets
+
+Parsing Category: Competitive - 8 & Under Golden Tickets
+
+Parsing Category: Competitive - 9-11 Golden Tickets
+
+Parsing Category: Competitive - 11 & Under Grand Lines Golden Tickets
+
+Parsing Category: Elite - 8 & Under Golden Tickets
+
+Parsing Category: Elite - 9-11 Golden Tickets
+
+Parsing Category: Showcase- 12-14 Golden Tickets
+
+Parsing Category: Showcase - 15 - 19 Golden Tickets
+
+Parsing Category: Competitive - 12-14 Golden Tickets
+
+Parsing Category: Competitive - 15-19 Golden Tickets
+
+Parsing Category: Competitive - 12 & Over Grand Lines Golden Tickets
+
+Parsing Category: Elite - 12-14 Golden Tickets
+
+Parsing Category: Elite - 15-19 Golden Tickets
+
+Parsing Category: Showcase - 8 & Under SDA Regional Champion
+
+Parsing Category: Showcase - 9-11 SDA Regional Champion
+
+Parsing Category: Competitive - 8 & Under SDA Regional Champion
+
+Parsing Category: Competitive - 9-11 SDA Regional Champion
+
+Parsing Category: Competitive - 11 & Under Grand Lines SDA Champion
+
+Parsing Category: Elite - 8 & Under SDA Regional Champion
+
+Parsing Category: Elite - 9-11 SDA Regional Champion
+
+Parsing Category: Competitive - 12 & Over Grand Lines SDA Champion
+
+Parsing Category: Showcase - 12 - 14 SDA Regional Champion
+
+Parsing Category: Showcase - 15-19 SDA Regional Champion
+
+Parsing Category: Competitive - 12-14 SDA Regional Champion
+
+Parsing Category: Competitive - 15-19 SDA Regional Champion
+
+Parsing Category: Elite - 12-14 SDA Regional Champion
+
+Parsing Category: Elite - 15-19 SDA Regional Champion
+
+Parsing Category: Costume - 11 & Under Solo
+
+Parsing Category: Costume - 12 & Over Solo
+
+Parsing Category: Group Costume
+
+Parsing Choice Category: Choreography 11 & Under
+    [+] Created new dancer: Angela Gong
+    [+] Created new dancer: Ruijia Rebecca Xu
+    [+] Created new dancer: Catherlyn Yu
+    [+] Created new dancer: Evelyn Wan
+    [+] Created new dancer: Kristina Pacheco
+    [+] Created new dancer: Yilin Liu
+    [+] Created new dancer: Allison Wan
+    [+] Created new dancer: Khaleesi Zheng
+    [+] Created new dancer: Joanna Wang
+    [+] Created new dancer: Katelyn Wong
+    [+] Created new dancer: Emma Lin
+    [+] Created new dancer: Grace Guo
+    [+] Created new dancer: Angela Sihan Lin
+    [+] Created new dancer: Chloe Lee
+    [+] Created new dancer: Smiley An
+    [+] Created new dancer: Stella Wu
+    [+] Created new dancer: Zoe Chen
+    [+] Created new dancer: Guoran Chen
+    [+] Created new dancer: Anastasia Lin
+    [+] Created new dancer: Chloe Guo
+    [+] Created new dancer: Emma Liu
+    [+] Created new dancer: Hengjie Xu
+    [+] Created new dancer: Ella Zhu
+    [+] Created new dancer: Mia Zhu
+    [+] Created new dancer: Emily Zhu
+    [+] Created new dancer: Arianna App
+    [+] Created new dancer: Chloe Contreras
+    [+] Created new dancer: Mathias Fortes Stallings
+    [+] Created new dancer: Sofia Rivas
+    [+] Created new dancer: Camila Ruiz-Mondragon
+    [+] Created new dancer: Audrey Clark
+    [+] Created new dancer: Abigail Gutierrez
+    [+] Created new dancer: Gwen Miller
+    [+] Created new dancer: Ciel Weichers
+
+Parsing Choice Category: Choreography 12 & Over
+    [+] Created new dancer: Lauren Carlson
+    [+] Created new dancer: Ella Meskimen
+    [+] Created new dancer: Sofia Martin
+    [+] Created new dancer: Meghann Eisenman
+    [+] Created new dancer: Teresa Sun
+    [+] Created new dancer: Riley Chu
+    [+] Created new dancer: Abigail Nguyen
+    [+] Created new dancer: Rileigh Helms
+    [+] Created new dancer: Chelsea Sit
+    [+] Created new dancer: INDY KADRIC
+    [+] Created new dancer: Kaelyn Calixtro
+    [+] Created new dancer: Natalee Reynolds
+    [+] Created new dancer: Nora Nguyen
+    [+] Created new dancer: Sydney Zerbini
+    [+] Created new dancer: Camila Hernandez
+    [+] Created new dancer: Cadence Carreon
+    [+] Created new dancer: Aubrey Scheid
+    [+] Created new dancer: Nina Haghnazari
+    [+] Created new dancer: Dahlia Leal
+    [+] Created new dancer: Keiran Ferguson
+    [+] Created new dancer: Sabrina Vargas-Faria
+    [+] Created new dancer: Amy Yang
+    [+] Created new dancer: Elena Luo
+    [+] Created new dancer: Joelyn Luo
+    [+] Created new dancer: Rosie Liu
+    [+] Created new dancer: Victoria Vu
+    [+] Created new dancer: Olivia Liu
+    [+] Created new dancer: Sylvia Han
+    [+] Created new dancer: Sharon Zhao
+    [+] Created new dancer: Cassie Wang
+    [+] Created new dancer: Elaina Zhao
+    [+] Created new dancer: Ivy Yi
+    [+] Created new dancer: Annie Qu
+    [+] Created new dancer: Jessica Xue
+
+Parsing Choice Category: Dancer Palooza $150 Voucher
+    [+] Created new dancer: Matteo Alafranji
+    [+] Created new dancer: Sana Ramalingam
+    [+] Created new dancer: Daisy Zhao
+    [+] Created new dancer: Niko Smith
+    [+] Created new dancer: Mariska Goldstein
+
+Parsing Choice Category: Entertainment 11 & Under
+    [+] Created new dancer: Elizabeth Patterson
+    [+] Created new dancer: Avery Helms
+    [+] Created new dancer: Joanna Zhang
+    [+] Created new dancer: Naina Nayak
+    [+] Created new dancer: Brielle Storch
+    [+] Created new dancer: Taylor Edwards
+    [+] Created new dancer: Cameron Cloud
+    [+] Created new dancer: Hosanna Kwan
+    [+] Created new dancer: Assal Hawa
+    [+] Created new dancer: Ellie Tu
+    [+] Created new dancer: Caroline Liang
+    [+] Created new dancer: Jemma Jin
+    [+] Created new dancer: Mia Li
+    [+] Created new dancer: Mia Yang
+    [+] Created new dancer: Rylee Men
+    [+] Created new dancer: Ellie Yang
+    [+] Created new dancer: Callie Sun
+    [+] Created new dancer: Claire Wei Yi
+    [+] Created new dancer: Elaine Zhang
+    [+] Created new dancer: Felicia Chiang
+    [+] Created new dancer: Stella Zhu
+    [+] Created new dancer: ALEXA WANG
+    [+] Created new dancer: Liv Zhang
+    [+] Created new dancer: Megan Mo
+    [+] Created new dancer: Colleen Yu
+    [+] Created new dancer: Olivia Yu
+    [+] Created new dancer: Evelyn Liu
+    [+] Created new dancer: Mia Liu
+    [+] Created new dancer: Sophia Li
+    [+] Created new dancer: Chloe17 Wu
+    [+] Created new dancer: Callie Ding
+    [+] Created new dancer: Chloe Ding
+    [+] Created new dancer: Leyi Hao
+    [+] Created new dancer: Ella Hu
+    [+] Created new dancer: Michelle Li
+    [+] Created new dancer: Callie Lin
+    [+] Created new dancer: Grace Qi
+    [+] Created new dancer: Ashley Ren
+    [+] Created new dancer: Karina Shi
+    [+] Created new dancer: Elaine Xu
+    [+] Created new dancer: Laurie Yang
+    [+] Created new dancer: Claire Yu
+    [+] Created new dancer: Zoey Zhang
+    [+] Created new dancer: Amber Zheng
+    [+] Created new dancer: Daisy Chen
+    [+] Created new dancer: Julia He
+    [+] Created new dancer: Crystal Zhou
+    [+] Created new dancer: Vickie Chou
+    [+] Created new dancer: Alyssa Hong
+    [+] Created new dancer: Julia Yang
+
+Parsing Choice Category: Entertainment 12 & Over
+    [+] Created new dancer: Evelyn Lee
+    [+] Created new dancer: AMBER LIAO
+    [+] Created new dancer: VIVIANN MCCUSKER
+    [+] Created new dancer: Andrea Fuentes
+    [+] Created new dancer: Nikoh Yueng
+    [+] Created new dancer: Melody Wong
+    [+] Created new dancer: Lawrence Lee
+    [+] Created new dancer: Searcy Molina
+    [+] Created new dancer: Maia Muradyants
+    [+] Created new dancer: Ayanna Becerra
+    [+] Created new dancer: Zahra Sayed
+    [+] Created new dancer: Elle Harris
+    [+] Created new dancer: Helo Horn
+    [+] Created new dancer: Mila Alves
+    [+] Created new dancer: Torie Vickers
+    [+] Created new dancer: Jazmyne Yorks
+    [+] Created new dancer: Brielle Ruiz
+    [+] Created new dancer: Priscilla Calderon
+    [+] Created new dancer: Jaxon Schirmer
+    [+] Created new dancer: Emily Lockwood
+    [+] Created new dancer: Charlotte Serafin
+    [+] Created new dancer: Ariah Pointer
+    [+] Created new dancer: Layla Moore
+    [+] Created new dancer: Jianna Ware
+    [+] Created new dancer: Adrienne Hazard-Quintanar
+    [+] Created new dancer: Delilah Garduno
+    [+] Created new dancer: Avery Harbinson
+    [+] Created new dancer: Brielle Anderson
+    [+] Created new dancer: Kylie Madrid
+    [+] Created new dancer: Mackenzie Owens
+    [+] Created new dancer: Marianna Gonzales
+    [+] Created new dancer: Sebastian Reyes
+    [+] Created new dancer: Savaya Perez
+    [+] Created new dancer: Janelle Suen
+    [+] Created new dancer: Taveon Miller
+    [+] Created new dancer: Layla Levario
+    [+] Created new dancer: Malcolm Bergado
+    [+] Created new dancer: Kayla Long
+    [+] Created new dancer: Daylon Seegmiller
+    [+] Created new dancer: Yaretzi Contreras
+    [+] Created new dancer: Hope Barreto
+    [+] Created new dancer: Ehvalynn Topete
+    [+] Created new dancer: Makenzie Windham
+    [+] Created new dancer: Trinity Martinez
+    [+] Created new dancer: Amy Pascoal
+
+Parsing Choice Category: KAOS
+    [+] Created new dancer: BLAKE LOBACZ
+    [+] Created new dancer: Jaselle Suen
+    [+] Created new dancer: Nevaeh Martinez
+    [+] Created new dancer: Zamarah Martinez
+    [+] Created new dancer: Olivia Cid
+    [+] Created new dancer: Naya Singh
+    [+] Created new dancer: Sydney Zaporta
+    [+] Created new dancer: Kaydence Galloway
+    [+] Created new dancer: Emily Malinowski
+    [+] Created new dancer: Ellie Fonda
+    [+] Created new dancer: Harper Kim
+    [+] Created new dancer: Nova Lagpacan
+    [+] Created new dancer: Skylar Washington
+    [+] Created new dancer: Mylea Sumpter
+    [+] Created new dancer: Francisco Martinez
+    [+] Created new dancer: Micah Sumpter
+    [+] Created new dancer: Tacari Miller
+    [+] Created new dancer: Penny Menbari
+    [+] Created new dancer: Melina Vaquera
+    [+] Created new dancer: Ximena Romero
+    [+] Created new dancer: Victoria Dominguez
+    [+] Created new dancer: Kamilla Eyvazova
+    [+] Created new dancer: Audrey Covarrubias
+    [+] Created new dancer: Amina Eyvazova
+    [+] Created new dancer: Bella Garcia
+    [+] Created new dancer: August Green
+    [+] Created new dancer: Aubrey Jantz
+    [+] Created new dancer: Camila Molina
+    [+] Created new dancer: Alexa Ortiz
+    [+] Created new dancer: Ava Sepulveda
+    [+] Created new dancer: Grace Cerda
+    [+] Created new dancer: Tatiana Johnson
+    [+] Created new dancer: Tristine Lee
+    [+] Created new dancer: Neveah Levario
+    [+] Created new dancer: Jurnee Perkins
+    [+] Created new dancer: Eden-Grace Pierce
+    [+] Created new dancer: Heaven Rodriguez
+    [+] Created new dancer: Millie Sonneman
+    [+] Created new dancer: VALLILLIAN BURNS
+    [+] Created new dancer: Khi Turk
+    [+] Created new dancer: Charles Mixon
+    [+] Created new dancer: Janessa Rudolph
+    [+] Created new dancer: Kendra Kitchen
+    [+] Created new dancer: LAYLA TATE
+    [+] Created new dancer: AUTUMN BELGARDE
+
+Parsing Choice Category: Ovation Scholarship
+    [+] Created new dancer: Joanne Tu
+    [+] Created new dancer: Riley Wooden
+    [+] Created new dancer: Cooper Nohrden
+
+Parsing Choice Category: The Class Act Award 11
+    [+] Created new dancer: Abigail Ripaldi
+    [+] Created new dancer: Gabriella Cazares
+    [+] Created new dancer: Xylah DeLeon
+    [+] Created new dancer: Ella Rickett
+    [+] Created new dancer: Skylar Tran
+    [+] Created new dancer: Tinsley Truong
+    [+] Created new dancer: Sabrina Hsu
+    [+] Created new dancer: Sophia Hsu
+    [+] Created new dancer: Riley Olivia Benigno
+    [+] Created new dancer: Jasmine Nguyen
+
+Parsing Choice Category: The Class Act Award 12
+    [+] Created new dancer: Camilla Borrego
+    [+] Created new dancer: Summer Wenger
+    [+] Created new dancer: Savannah Waltrip
+    [+] Created new dancer: Eliana Klein
+    [+] Created new dancer: Sophia Acevedo
+    [+] Created new dancer: Charlotte Barros
+    [+] Created new dancer: London Cunningham
+    [+] Created new dancer: Alessandra Delgadillo
+    [+] Created new dancer: Dominique Delgadillo
+    [+] Created new dancer: Onawa Hernandez
+    [+] Created new dancer: Jocelyn Kajihara
+    [+] Created new dancer: Kayla Kajihara
+    [+] Created new dancer: Avery Leighton
+    [+] Created new dancer: Sydney Leighton
+    [+] Created new dancer: Aaliyah Martinez
+    [+] Created new dancer: Kaisa Palmquist
+    [+] Created new dancer: Hayden Price
+    [+] Created new dancer: Jaiden Smith
+    [+] Created new dancer: Camila Trujillo
+    [+] Created new dancer: Brooklyn Victory
+    [+] Created new dancer: Addison Forbes
+    [+] Created new dancer: Arianna Richardson
+    [+] Created new dancer: Francesca Work
+    [+] Created new dancer: Audrey Forbes
+
+--- Import Complete ---
+Inserted 426 awards successfully!

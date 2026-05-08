@@ -2,26 +2,74 @@
 <div class="container">
   <div class="header-section">
     <h1><%= org.name %></h1>
-    <p class="subtitle">Events & Competitions</p>
+    <p class="subtitle">Events & Competitions (<%= eventsCount %> Total)</p>
     <% if (org.website) { %>
       <a href="<%= org.website %>" target="_blank" style="color: var(--primary);">Visit Official Website</a>
     <% } %>
   </div>
   
-  <h2>Events</h2>
-  <div class="grid">
-    <% if (events.length === 0) { %>
-      <p>No events found for this organization yet.</p>
-    <% } else { %>
-      <% events.forEach(function(event) { %>
-        <div class="card glass-card">
-          <h3><%= event.name %></h3>
-          <p style="color: var(--text-muted); margin-bottom: 1rem;">Year: <%= event.year %></p>
-          <p style="color: var(--text-muted); margin-bottom: 1rem;"><%= event.date_string %></p>
-          <a href="/event/<%= event.id %>" class="btn">View Event Awards &rarr;</a>
+  <h2 style="margin-bottom: 1.5rem;">Events Archive</h2>
+  
+  <% if (eventsCount === 0) { %>
+    <p>No events found for this organization yet.</p>
+  <% } else { %>
+    <!-- Yearly Tabs -->
+    <div class="tabs-container">
+      <ul class="year-tabs" id="yearTabs">
+        <% groupedData.forEach(function(yearGroup, index) { %>
+          <li class="tab-item <%= index === 0 ? 'active' : '' %>" data-target="year-<%= yearGroup.year %>">
+            <%= yearGroup.year %> (<%= yearGroup.events.length %>)
+          </li>
+        <% }); %>
+      </ul>
+    </div>
+
+    <!-- Year Content Sections -->
+    <div class="tab-content-container" style="margin-top: 2rem;">
+      <% groupedData.forEach(function(yearGroup, index) { %>
+        <div class="tab-pane <%= index === 0 ? 'active' : '' %>" id="year-<%= yearGroup.year %>">
+          <div class="grid">
+            <% yearGroup.events.forEach(function(event) { %>
+              <div class="card glass-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                  <h3 style="margin-top: 0;"><%= event.name %></h3>
+                  <p style="color: var(--text-muted); margin-bottom: 0.5rem;"><i class="fas fa-calendar-alt"></i> <%= event.date_string %></p>
+                </div>
+                <div style="margin-top: 1.5rem;">
+                  <a href="/event/<%= event.id %>" class="btn" style="width: 100%; text-align: center;">View Event Awards &rarr;</a>
+                </div>
+              </div>
+            <% }); %>
+          </div>
         </div>
       <% }); %>
-    <% } %>
-  </div>
+    </div>
+  <% } %>
 </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const tabs = document.querySelectorAll('.tab-item');
+    const panes = document.querySelectorAll('.tab-pane');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        // Remove active class from all tabs & panes
+        tabs.forEach(t => t.classList.remove('active'));
+        panes.forEach(p => p.classList.remove('active'));
+
+        // Add active class to clicked tab
+        tab.classList.add('active');
+        
+        // Show corresponding pane
+        const targetId = tab.getAttribute('data-target');
+        const targetPane = document.getElementById(targetId);
+        if (targetPane) {
+          targetPane.classList.add('active');
+        }
+      });
+    });
+  });
+</script>
+
 <%- include('partials/footer') %>

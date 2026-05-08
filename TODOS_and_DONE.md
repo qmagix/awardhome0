@@ -32,3 +32,5 @@
 - [x] Integrate Instagram and TikTok handles into Studio Profiles and Management Dashboard.
 
 - [x] Create a `.gitignore` file for the repository.
+
+- [x] Build automated ETL Studio Data Bootstrapping pipeline with staging tables and admin review dashboard.
