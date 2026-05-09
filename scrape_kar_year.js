@@ -177,7 +177,8 @@ async function scrapeKarYear(year) {
 }
 
 if (require.main === module) {
-  scrapeKarYear(2026).then(() => {
+  const year = process.argv[2] ? parseInt(process.argv[2], 10) : 2026;
+  scrapeKarYear(year).then(() => {
     process.exit(0);
   }).catch(err => {
     console.error(err);
