@@ -7,6 +7,15 @@
 - [ ] Build `server.js` and Express routes
 - [ ] Build EJS views (`layout`, `index`, `studio`, `dancer`)
 - [ ] Style the application to be premium and modern
+- [ ] Implement Dancer Public Profile Pages (`/dancer/:unique_id`) with verified awards and stats.
+- [ ] Add optional Email-Backed Accounts for dancers to secure their unique IDs.
+- [ ] Set up Email Notifications for Studio Admins when new pending claims arrive.
+- [ ] Add Bulk Actions (Approve/Deny All) to the Studio Verification Dashboard.
+- [ ] Implement Roster Export to CSV for Studio Admins.
+- [ ] Add Composite Indexes to the SQLite database (e.g., `event_id, performance_name, studio_id`) to optimize backfill and search queries at scale.
+- [ ] Implement Server-side Pagination/Lazy Loading for studio awards lists to prevent browser freezing for mega-studios.
+- [ ] Create automated nightly backups (cron job) for the SQLite database.
+- [ ] Add API Rate Limiting to `/api/claim-award` to prevent brute-forcing of Join Codes.
 
 ## DONE
 - [x] Create project documentation files
@@ -34,3 +43,4 @@
 - [x] Create a `.gitignore` file for the repository.
 
 - [x] Build automated ETL Studio Data Bootstrapping pipeline with staging tables and admin review dashboard.
+- [x] Design for dancers ease of use: view/search dancers by name, join studio via code, claim group award via unique ID, color-coded badges.

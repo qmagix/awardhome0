@@ -1,0 +1,5 @@
+Fetching YAGP Results from https://yagp.org/yagp-2025-tampa-fl-finals-winners...
+
+Event: YAGP 2025 TAMPA FL FINALS
+====================================================
+Successfully inserted 3 new awards. Skipped 281 existing awards.

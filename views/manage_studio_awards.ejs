@@ -27,6 +27,11 @@
             📈 Widget Builder
           </a>
         </li>
+        <li>
+          <a href="/manage/studio/<%= studio.id %>/verifications" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: var(--text-muted); transition: background 0.2s;">
+            ✅ Pending Verifications
+          </a>
+        </li>
       </ul>
       
       <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
@@ -35,6 +40,10 @@
     </div>
   </div>
 
+  <style>
+    .btn-blue { background-color: #3b82f6; color: white; border: none; transition: background-color 0.2s; }
+    .btn-blue:hover { background-color: #2563eb; cursor: pointer; }
+  </style>
   <!-- Main Content Area -->
   <div style="flex-grow: 1;">
     <div class="header-section" style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: flex-end;">
@@ -42,7 +51,7 @@
         <h1>Awards Editor</h1>
         <p class="subtitle">Fix missing performance names, awards, and add group dancers.</p>
       </div>
-      <button class="btn btn-primary" onclick="document.getElementById('reportAwardModal').style.display='block'">+ Self-Report Missing Award</button>
+      <button class="btn btn-blue" onclick="document.getElementById('reportAwardModal').style.display='block'">+ Self-Report Missing Award</button>
     </div>
 
     <!-- Year Tabs -->
@@ -99,7 +108,7 @@
                 
                 <td>
                   <% if (award.place) { %>
-                    <%= award.place %>
+                    <%= formatPlacement(award.place) %>
                   <% } else { %>
                     <span style="color: var(--text-muted); font-style: italic;">Missing</span>
                   <% } %>

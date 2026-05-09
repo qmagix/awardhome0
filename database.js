@@ -12,15 +12,7 @@ async function openDb() {
 async function initDb() {
   const db = await openDb();
   
-  // Drop tables for migration
-  await db.exec(`
-    DROP TABLE IF EXISTS awards;
-    DROP TABLE IF EXISTS dancer_studios;
-    DROP TABLE IF EXISTS dancers;
-    DROP TABLE IF EXISTS studios;
-    DROP TABLE IF EXISTS events;
-    DROP TABLE IF EXISTS organizations;
-  `);
+  // Tables are created IF NOT EXISTS below. We do NOT drop them.
 
   await db.exec(`
     CREATE TABLE IF NOT EXISTS organizations (
@@ -61,7 +53,14 @@ async function initDb() {
       owner_id INTEGER REFERENCES users(id),
       bio TEXT,
       logo_url TEXT,
-      view_count INTEGER DEFAULT 0
+      view_count INTEGER DEFAULT 0,
+      instagram_handle TEXT,
+      tiktok_handle TEXT,
+      join_code TEXT,
+      aka TEXT,
+      status TEXT DEFAULT 'active',
+      merged_into_id INTEGER REFERENCES studios(id),
+      rejected_merges TEXT
     );
     CREATE TABLE IF NOT EXISTS studio_claims (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -99,9 +98,13 @@ async function initDb() {
       performance_number TEXT,
       award_type TEXT,
       category TEXT,
+      age_division TEXT,
       dancer_id INTEGER,
       studio_id INTEGER,
       notes TEXT,
+      is_self_added BOOLEAN DEFAULT 0,
+      verification_status TEXT DEFAULT 'unverified',
+      merged_from_studio_id INTEGER REFERENCES studios(id),
       FOREIGN KEY (event_id) REFERENCES events(id),
       FOREIGN KEY (dancer_id) REFERENCES dancers(id),
       FOREIGN KEY (studio_id) REFERENCES studios(id)
@@ -110,6 +113,7 @@ async function initDb() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       award_id INTEGER NOT NULL,
       dancer_id INTEGER NOT NULL,
+      status TEXT DEFAULT 'imported',
       FOREIGN KEY (award_id) REFERENCES awards(id),
       FOREIGN KEY (dancer_id) REFERENCES dancers(id),
       UNIQUE(award_id, dancer_id)
@@ -132,6 +136,9 @@ async function initDb() {
   // Migrations
   try { await db.exec('ALTER TABLE studios ADD COLUMN instagram_handle TEXT'); } catch(e) {}
   try { await db.exec('ALTER TABLE studios ADD COLUMN tiktok_handle TEXT'); } catch(e) {}
+  try { await db.exec('ALTER TABLE studios ADD COLUMN join_code TEXT'); } catch(e) {}
+  try { await db.exec("ALTER TABLE award_dancers ADD COLUMN status TEXT DEFAULT 'imported'"); } catch(e) {}
+  try { await db.exec("ALTER TABLE awards ADD COLUMN age_division TEXT"); } catch(e) {}
 
   console.log("Database initialized.");
   return db;

@@ -252,3 +252,14 @@ Ha, found an issue with dreammaker event, the table format the different the oth
 
 ## User Request - 2026-05-07
 Please top the background script since the result still wrong, take a look at the ones newlly scaped here: http://127.0.0.1:3000/org/dreammaker, the location part still are dates
+
+## User Request - 2026-05-08
+Please write an instruction on how to use the import scripts for all 8 competitions we have so far
+
+## User Request - 2026-05-08
+Now I am thinking about design for dancers ease of use: (1) view or search dancers by name in a specific studio. (2) add themselves (dancer) to a studio (admin will verify later), to avoid spam, maybe using a studio specifc unique code register? (3) dancer can add themselves to an group award using their  unique ID (for admin to verify later, veried and unverified dancers in a group number will be displayed in different color, also different from those verified by event organizer data, imported data).  Any thoughts? anything else?  
+
+## User Request - 2026-05-08
+Comments on artifact URI: file:///Users/q/.gemini/antigravity/brain/39f56569-3111-4674-b9cb-31442c68852a/implementation_plan.md
+The user has approved this document.
+[Provided feedback to finalize manual admin approval for studio join codes, removed the public roster tab due to privacy concerns, and implemented an "Add Me" button on awards where dancers can claim with a unique ID and studio code or create a new profile with name and birthday.]

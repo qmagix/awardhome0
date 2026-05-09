@@ -27,6 +27,11 @@
             📈 Widget Builder
           </a>
         </li>
+        <li>
+          <a href="/manage/studio/<%= studio.id %>/verifications" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: var(--text-muted); transition: background 0.2s;">
+            ✅ Pending Verifications
+          </a>
+        </li>
       </ul>
       
       <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
@@ -36,6 +41,15 @@
   </div>
 
   <!-- Main Content Area -->
+  <style>
+    .roster-status-active { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+    .roster-status-inactive { background: rgba(255,255,255,0.1); color: var(--text-muted); }
+    .roster-status-common { padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; }
+    .btn-blue { background-color: #3b82f6; color: white; border: none; transition: background-color 0.2s; }
+    .btn-blue:hover { background-color: #2563eb; cursor: pointer; }
+    .btn-primary-white { background-color: var(--primary); color: white; border: none; transition: filter 0.2s; }
+    .btn-primary-white:hover { filter: brightness(1.1); cursor: pointer; }
+  </style>
   <div style="flex-grow: 1;">
     <div class="header-section" style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: flex-end;">
       <div>
@@ -44,8 +58,8 @@
       </div>
       <div style="display: flex; gap: 1rem;">
         <button id="mergeBtn" class="btn" style="display: none; background: var(--primary); color: white;" onclick="openMergeModal()">Compare & Merge (2)</button>
-        <button class="btn btn-secondary" onclick="document.getElementById('csvUploadModal').style.display='block'">Upload CSV</button>
-        <button class="btn btn-primary" onclick="document.getElementById('claimDancerModal').style.display='block'">+ Add/Claim Dancer</button>
+        <button class="btn btn-blue" onclick="document.getElementById('csvUploadModal').style.display='block'">Upload CSV</button>
+        <button class="btn btn-blue" onclick="document.getElementById('claimDancerModal').style.display='block'">+ Add/Claim Dancer</button>
       </div>
     </div>
 
@@ -77,7 +91,7 @@
                   <input type="checkbox" class="merge-checkbox" value="<%= dancer.id %>" data-name="<%= dancer.name %>" data-dob="<%= dancer.birthday || '' %>" data-awards="<%= dancer.total_awards %>" style="transform: scale(1.2);">
                 </td>
                 <td style="padding: 1rem 0;">
-                  <a href="/dancer/<%= dancer.id %>" style="color: white; text-decoration: none; font-weight: 600;"><%= dancer.name %></a>
+                  <a href="/dancer/<%= dancer.unique_id %>" style="color: white; text-decoration: none; font-weight: 600;"><%= dancer.name %></a>
                 </td>
                 <td style="padding: 1rem 0;">
                   <% if (dancer.headshot_url) { %>
@@ -87,8 +101,9 @@
                   <% } %>
                 </td>
                 <td style="padding: 1rem 0;">
-                  <span style="padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; <%= dancer.status === 'active' ? 'background: rgba(16, 185, 129, 0.1); color: #10b981;' : 'background: rgba(255,255,255,0.1); color: var(--text-muted);' %>">
-                    <%= dancer.status.toUpperCase() %>
+                  <% const statusClass = (dancer.status === 'active') ? 'roster-status-active' : 'roster-status-inactive'; %>
+                  <span class="roster-status-common <%= statusClass %>">
+                    <%= (dancer.status || 'active').toUpperCase() %>
                   </span>
                 </td>
                 <td style="padding: 1rem 0; color: var(--text-muted);">
@@ -98,7 +113,13 @@
                   <%= dancer.total_awards %>
                 </td>
                 <td style="padding: 1rem 0; text-align: right;">
-                  <button class="btn" style="padding: 0.3rem 0.6rem; font-size: 0.85rem;" onclick='openEditModal(<%- JSON.stringify(dancer) %>)'>Edit</button>
+                  <button class="btn" style="padding: 0.3rem 0.6rem; font-size: 0.85rem;" 
+                    data-id="<%= dancer.id %>"
+                    data-name="<%= dancer.name %>"
+                    data-headshot="<%= dancer.headshot_url || '' %>"
+                    data-grad="<%= dancer.graduation_year || '' %>"
+                    data-status="<%= dancer.status || 'active' %>"
+                    onclick="openEditModal(this)">Edit</button>
                 </td>
               </tr>
             <% }) %>
@@ -130,7 +151,7 @@
       <h4 style="margin: 0 0 1rem 0;">Can't find them? Create new profile</h4>
       <form action="/manage/studio/<%= studio.id %>/roster/claim" method="POST" style="display: flex; gap: 1rem;">
         <input type="text" name="new_dancer_name" placeholder="New Dancer Name" required style="flex-grow: 1; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
-        <button type="submit" class="btn btn-primary">Create & Add</button>
+        <button type="submit" class="btn btn-primary-white">Create & Add</button>
       </form>
     </div>
   </div>
@@ -350,7 +371,7 @@
               </div>
               <form action="/manage/studio/<%= studio.id %>/roster/claim" method="POST" style="margin-left: 1rem;">
                 <input type="hidden" name="dancer_id" value="${d.id}">
-                <button type="submit" class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; border-color: var(--primary); color: var(--primary);">Claim to Roster</button>
+                <button type="submit" class="btn btn-primary-white" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Claim to Roster</button>
               </form>
             </div>
           `;
@@ -362,12 +383,12 @@
     }, 300);
   });
 
-  function openEditModal(dancer) {
-    document.getElementById('editDancerName').innerText = dancer.name;
-    document.getElementById('editHeadshot').value = dancer.headshot_url || '';
-    document.getElementById('editGradYear').value = dancer.graduation_year || '';
-    document.getElementById('editStatus').value = dancer.status || 'active';
-    document.getElementById('editDancerForm').action = `/manage/studio/<%= studio.id %>/roster/${dancer.id}/update`;
+  function openEditModal(btn) {
+    document.getElementById('editDancerName').innerText = btn.getAttribute('data-name');
+    document.getElementById('editHeadshot').value = btn.getAttribute('data-headshot');
+    document.getElementById('editGradYear').value = btn.getAttribute('data-grad');
+    document.getElementById('editStatus').value = btn.getAttribute('data-status');
+    document.getElementById('editDancerForm').action = `/manage/studio/<%= studio.id %>/roster/${btn.getAttribute('data-id')}/update`;
     document.getElementById('editDancerModal').style.display = 'block';
   }
 </script>

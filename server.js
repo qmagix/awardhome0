@@ -7,6 +7,8 @@ const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
 const { parse } = require('csv-parse/sync');
+const { generateDancerId, generateStudioId } = require('./utils');
+const { runBackfillForEvent } = require('./backfill_utils');
 
 const upload = multer({ dest: 'uploads/' });
 
@@ -14,6 +16,7 @@ const app = express();
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.json()); // Added for JSON parsing
 app.use(express.urlencoded({ extended: true })); // Added for form parsing
 app.use(session({
   secret: 'dance-awards-secret-key-123', // In production, use env variable
@@ -21,6 +24,20 @@ app.use(session({
   saveUninitialized: false,
   cookie: { secure: false } // Set to true if using https
 }));
+
+app.locals.formatPlacement = function(place) {
+  if (!place) return '';
+  const strPlace = String(place).trim();
+  const num = parseInt(strPlace, 10);
+  if (!isNaN(num) && num.toString() === strPlace) {
+    const j = num % 10, k = num % 100;
+    if (j == 1 && k != 11) return num + "st";
+    if (j == 2 && k != 12) return num + "nd";
+    if (j == 3 && k != 13) return num + "rd";
+    return num + "th";
+  }
+  return place;
+};
 
 // Global middleware to pass user to templates
 app.use((req, res, next) => {
@@ -185,12 +202,49 @@ app.post('/claim/studio/:id', requireAuth, async (req, res) => {
 // Studio Management Routes
 app.get('/manage/studio/:id', requireAuth, async (req, res) => {
   const db = await openDb();
-  const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
+  let studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
   
   if (!studio) return res.status(404).send('Studio not found');
   if (studio.owner_id !== req.session.user.id) return res.status(403).send('Forbidden: Not the owner');
   
-  res.render('manage_studio', { studio });
+  if (!studio.join_code) {
+    const crypto = require('crypto');
+    const newCode = crypto.randomBytes(3).toString('hex').toUpperCase();
+    await db.run('UPDATE studios SET join_code = ? WHERE id = ?', [newCode, studio.id]);
+    studio.join_code = newCode;
+  }
+  
+  const baseName = studio.name.split(',')[0].trim();
+  const searchName = `%${baseName}%`;
+  const rejectedArray = studio.rejected_merges ? studio.rejected_merges.split(',') : [];
+  
+  const similarStudios = await db.all(`
+    SELECT id, name, aka, status 
+    FROM studios 
+    WHERE (name LIKE ? OR aka LIKE ?)
+      AND id != ?
+      AND status != 'merged'
+  `, [searchName, searchName, studio.id]);
+
+  const potentialDuplicates = similarStudios.filter(s => !rejectedArray.includes(s.id.toString()));
+  
+  res.render('manage_studio', { studio, potentialDuplicates });
+});
+
+app.post('/manage/studio/:id/reset-code', requireAuth, async (req, res) => {
+  const db = await openDb();
+  // Ensure user owns this studio
+  if (req.session.user.role !== 'superadmin') {
+    const studio = await db.get('SELECT id FROM studios WHERE id = ? AND owner_id = ?', [req.params.id, req.session.user.id]);
+    if (!studio) return res.status(403).send('Forbidden');
+  }
+
+  // Generate new 6-character code
+  const crypto = require('crypto');
+  const newCode = crypto.randomBytes(3).toString('hex').toUpperCase();
+
+  await db.run('UPDATE studios SET join_code = ? WHERE id = ?', [newCode, req.params.id]);
+  res.redirect(`/manage/studio/${req.params.id}`);
 });
 
 app.post('/manage/studio/:id/profile', requireAuth, async (req, res) => {
@@ -218,7 +272,7 @@ app.get('/manage/studio/:id/roster', requireAuth, async (req, res) => {
   if (studio.owner_id !== req.session.user.id) return res.status(403).send('Forbidden: Not the owner');
 
   const roster = await db.all(`
-    SELECT d.id, d.name, d.birthday, ds.status, ds.headshot_url, ds.graduation_year,
+    SELECT d.id, d.unique_id, d.name, d.birthday, ds.status, ds.headshot_url, ds.graduation_year,
            (SELECT COUNT(*) FROM award_dancers ad JOIN awards a ON ad.award_id = a.id WHERE ad.dancer_id = d.id AND a.studio_id = ds.studio_id) as total_awards
     FROM dancers d
     JOIN dancer_studios ds ON d.id = ds.dancer_id
@@ -432,7 +486,7 @@ app.post('/manage/studio/:id/roster/csv-commit', requireAuth, async (req, res) =
       let dancerId = item.dancer_id;
 
       if (item.action === 'create') {
-        const uniqueId = 'DNC-' + crypto.randomBytes(8).toString('hex');
+        const uniqueId = generateDancerId(item.csv_row.name);
         await db.run('INSERT INTO dancers (unique_id, name, birthday) VALUES (?, ?, ?)', [uniqueId, item.csv_row.name, item.csv_row.birthday || null]);
         const newDancer = await db.get('SELECT id FROM dancers ORDER BY id DESC LIMIT 1');
         dancerId = newDancer.id;
@@ -473,8 +527,7 @@ app.post('/manage/studio/:id/roster/claim', requireAuth, async (req, res) => {
 
   if (new_dancer_name) {
     // Create new dancer
-    const crypto = require('crypto');
-    const uniqueId = 'DNC-' + crypto.randomBytes(8).toString('hex');
+    const uniqueId = generateDancerId(new_dancer_name);
     await db.run('INSERT INTO dancers (unique_id, name) VALUES (?, ?)', [uniqueId, new_dancer_name]);
     const newDancer = await db.get('SELECT id FROM dancers ORDER BY id DESC LIMIT 1');
     finalDancerId = newDancer.id;
@@ -485,6 +538,53 @@ app.post('/manage/studio/:id/roster/claim', requireAuth, async (req, res) => {
   }
 
   res.redirect(`/manage/studio/${req.params.id}/roster`);
+});
+
+app.get('/manage/studio/:id/verifications', requireAuth, async (req, res) => {
+  const db = await openDb();
+  const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
+  
+  if (!studio) return res.status(404).send('Studio not found');
+  if (studio.owner_id !== req.session.user.id) return res.status(403).send('Forbidden: Not the owner');
+  
+  const pendingAwards = await db.all(`
+    SELECT ad.id as link_id, ad.award_id, d.name as dancer_name, d.unique_id, a.performance_name, a.award_type, e.name as event_name, e.year
+    FROM award_dancers ad
+    JOIN dancers d ON ad.dancer_id = d.id
+    JOIN awards a ON ad.award_id = a.id
+    JOIN events e ON a.event_id = e.id
+    WHERE ad.status = 'pending' AND a.studio_id = ?
+  `, [studio.id]);
+
+  res.render('manage_studio_verifications', { studio, pendingAwards });
+});
+
+app.post('/manage/studio/:id/verifications/award/:link_id/approve', requireAuth, async (req, res) => {
+  const db = await openDb();
+  const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
+  if (!studio || studio.owner_id !== req.session.user.id) return res.status(403).send('Forbidden');
+  
+  const link = await db.get('SELECT dancer_id FROM award_dancers WHERE id = ?', [req.params.link_id]);
+  if (link) {
+    await db.run("UPDATE award_dancers SET status = 'verified' WHERE id = ?", [req.params.link_id]);
+    await db.run("UPDATE dancer_studios SET status = 'active' WHERE dancer_id = ? AND studio_id = ?", [link.dancer_id, studio.id]);
+  }
+  
+  res.redirect(`/manage/studio/${studio.id}/verifications`);
+});
+
+app.post('/manage/studio/:id/verifications/award/:link_id/deny', requireAuth, async (req, res) => {
+  const db = await openDb();
+  const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
+  if (!studio || studio.owner_id !== req.session.user.id) return res.status(403).send('Forbidden');
+  
+  const link = await db.get('SELECT dancer_id FROM award_dancers WHERE id = ?', [req.params.link_id]);
+  if (link) {
+    await db.run("DELETE FROM award_dancers WHERE id = ?", [req.params.link_id]);
+    // Optionally delete from dancer_studios if this was the only award and they were pending... 
+    // but for now, just deleting the award claim is enough.
+  }
+  res.redirect(`/manage/studio/${studio.id}/verifications`);
 });
 
 app.get('/manage/studio/:id/awards', requireAuth, async (req, res) => {
@@ -594,10 +694,7 @@ app.post('/manage/studio/:id/awards/:awardId/dancers', requireAuth, async (req, 
     }
     
     if (!dancer) {
-      const crypto = require('crypto');
-      const uuid = crypto.randomBytes(16).toString('hex');
-      const slug = dancer_name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-      const unique_id = `${uuid}-${slug}`;
+      const unique_id = generateDancerId(dancer_name);
       const result = await db.run('INSERT INTO dancers (unique_id, name) VALUES (?, ?)', [unique_id, dancer_name]);
       dancer = { id: result.lastID };
     }
@@ -664,6 +761,14 @@ app.get('/my-studio', requireAuth, async (req, res) => {
   } else {
     res.redirect('/');
   }
+});
+
+app.get('/faq/admin', (req, res) => {
+  res.render('faq_admin');
+});
+
+app.get('/faq/dancer', (req, res) => {
+  res.render('faq_dancer');
 });
 
 app.get('/', async (req, res) => {
@@ -1021,7 +1126,12 @@ app.post('/api/merge/studios', express.json(), async (req, res) => {
   if (!sourceId || !targetId || sourceId === targetId) return res.status(400).json({ error: "Invalid IDs" });
   
   try {
-    await db.run(`UPDATE awards SET studio_id = ? WHERE studio_id = ?`, [targetId, sourceId]);
+    await db.run('BEGIN TRANSACTION');
+    
+    // Update awards with traceability
+    await db.run(`UPDATE awards SET studio_id = ?, merged_from_studio_id = ? WHERE studio_id = ?`, [targetId, sourceId, sourceId]);
+    
+    // Transfer dancer associations
     const links = await db.all(`SELECT dancer_id FROM dancer_studios WHERE studio_id = ?`, [sourceId]);
     for (const link of links) {
       const exists = await db.get(`SELECT id FROM dancer_studios WHERE dancer_id = ? AND studio_id = ?`, [link.dancer_id, targetId]);
@@ -1031,7 +1141,30 @@ app.post('/api/merge/studios', express.json(), async (req, res) => {
          await db.run(`DELETE FROM dancer_studios WHERE dancer_id = ? AND studio_id = ?`, [link.dancer_id, sourceId]);
       }
     }
-    await db.run(`DELETE FROM studios WHERE id = ?`, [sourceId]);
+    
+    // Mark source studio as merged, do NOT delete it
+    await db.run(`UPDATE studios SET status = 'merged', merged_into_id = ? WHERE id = ?`, [targetId, sourceId]);
+    
+    await db.run('COMMIT');
+    res.json({ success: true });
+  } catch (e) {
+    await db.run('ROLLBACK');
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/reject-merge/studios', express.json(), async (req, res) => {
+  const db = await openDb();
+  const { sourceId, targetId } = req.body;
+  if (!sourceId || !targetId) return res.status(400).json({ error: "Invalid IDs" });
+  
+  try {
+    const studio = await db.get('SELECT rejected_merges FROM studios WHERE id = ?', [targetId]);
+    let rejected = studio.rejected_merges ? studio.rejected_merges.split(',') : [];
+    if (!rejected.includes(sourceId.toString())) {
+      rejected.push(sourceId.toString());
+      await db.run('UPDATE studios SET rejected_merges = ? WHERE id = ?', [rejected.join(','), targetId]);
+    }
     res.json({ success: true });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -1069,6 +1202,11 @@ app.get('/studio/:id', async (req, res) => {
   const studio = await db.get(`SELECT * FROM studios WHERE id = ?`, [req.params.id]);
   if (!studio) return res.status(404).send('Studio not found');
 
+  let mergedIntoStudio = null;
+  if (studio.status === 'merged' && studio.merged_into_id) {
+    mergedIntoStudio = await db.get('SELECT id, name FROM studios WHERE id = ?', [studio.merged_into_id]);
+  }
+
   const awards = await db.all(`
     SELECT a.*, d.name as dancer_name, d.unique_id, e.name as event_name, e.year as event_year, e.date_string, o.name as org_name 
     FROM awards a
@@ -1080,7 +1218,7 @@ app.get('/studio/:id', async (req, res) => {
   `, [req.params.id]);
 
   const awardDancers = await db.all(`
-    SELECT ad.award_id, d.name, d.unique_id
+    SELECT ad.award_id, d.name, d.unique_id, ad.status
     FROM award_dancers ad
     JOIN dancers d ON ad.dancer_id = d.id
     WHERE ad.award_id IN (SELECT id FROM awards WHERE studio_id = ?)
@@ -1089,7 +1227,7 @@ app.get('/studio/:id', async (req, res) => {
   const awardDancersMap = {};
   for (const ad of awardDancers) {
     if (!awardDancersMap[ad.award_id]) awardDancersMap[ad.award_id] = [];
-    awardDancersMap[ad.award_id].push({ name: ad.name, unique_id: ad.unique_id });
+    awardDancersMap[ad.award_id].push({ name: ad.name, unique_id: ad.unique_id, status: ad.status });
   }
 
   // Group by Year -> Event
@@ -1146,7 +1284,7 @@ app.get('/studio/:id', async (req, res) => {
     activeYearsStr
   };
 
-  res.render('studio', { studio, groupedData, quickStats });
+  res.render('studio', { studio, mergedIntoStudio, groupedData, quickStats, hasAwards: awards.length > 0 });
 });
 
 app.get('/dancer/:unique_id', async (req, res) => {
@@ -1250,70 +1388,107 @@ app.post('/admin/backfill-dancers/:event_id', async (req, res) => {
   const db = await openDb();
   const eventId = req.params.event_id;
   
-  // Find all awards for this event that have NO dancer mapped
-  const missingDancers = await db.all(`
-    SELECT id, performance_number, performance_name, studio_id 
-    FROM awards 
-    WHERE event_id = ? 
-      AND dancer_id IS NULL 
-      AND id NOT IN (SELECT award_id FROM award_dancers)
-  `, [eventId]);
-  
-  let backfilledCount = 0;
-
-  for (const award of missingDancers) {
-    let matchQuery = `
-      SELECT a.id as match_id
-      FROM awards a
-      JOIN award_dancers ad ON a.id = ad.award_id
-      WHERE a.event_id = ? AND a.studio_id = ? 
-    `;
-    let params = [eventId, award.studio_id];
-
-    if (award.performance_number) {
-        matchQuery += ` AND a.performance_number = ?`;
-        params.push(award.performance_number);
-    } else if (award.performance_name) {
-        matchQuery += ` AND LOWER(a.performance_name) = LOWER(?)`;
-        params.push(award.performance_name);
-    } else {
-        continue;
-    }
-    matchQuery += ` LIMIT 1`;
-
-    const match = await db.get(matchQuery, params);
-
-    if (match) {
-      // Get all dancers for the matched award and copy to the missing award
-      const dancers = await db.all(`SELECT dancer_id FROM award_dancers WHERE award_id = ?`, [match.match_id]);
-      for (const d of dancers) {
-        await db.run(`INSERT OR IGNORE INTO award_dancers (award_id, dancer_id) VALUES (?, ?)`, [award.id, d.dancer_id]);
-      }
-      backfilledCount++;
-    } else {
-      // Fallback: check legacy dancer_id column
-      let legacyMatchQuery = `SELECT dancer_id FROM awards WHERE event_id = ? AND studio_id = ? AND dancer_id IS NOT NULL`;
-      let legacyParams = [eventId, award.studio_id];
-      if (award.performance_number) {
-          legacyMatchQuery += ` AND performance_number = ?`;
-          legacyParams.push(award.performance_number);
-      } else if (award.performance_name) {
-          legacyMatchQuery += ` AND LOWER(performance_name) = LOWER(?)`;
-          legacyParams.push(award.performance_name);
-      } else {
-          continue;
-      }
-      legacyMatchQuery += ` LIMIT 1`;
-      
-      const legacyMatch = await db.get(legacyMatchQuery, legacyParams);
-      if (legacyMatch) {
-         await db.run(`UPDATE awards SET dancer_id = ? WHERE id = ?`, [legacyMatch.dancer_id, award.id]);
-         backfilledCount++;
-      }
-    }
+  try {
+    const backfilledCount = await runBackfillForEvent(db, eventId);
+    res.send(`<script>alert("Successfully backfilled ${backfilledCount} dancer records for this event."); window.location.href='/event/${eventId}';</script>`);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error running backfill");
   }
+});
 
-  res.send(`<script>alert("Successfully backfilled ${backfilledCount} dancer records for this event."); window.location.href='/event/${eventId}';</script>`);
+app.get('/api/check-dancer-studio', async (req, res) => {
+  const { unique_id, studio_id } = req.query;
+  const db = await openDb();
+  
+  if (!unique_id || !studio_id) return res.json({ linked: false });
+  
+  const dancer = await db.get('SELECT id FROM dancers WHERE unique_id = ?', [unique_id]);
+  if (!dancer) return res.json({ linked: false });
+  
+  const link = await db.get('SELECT id FROM dancer_studios WHERE dancer_id = ? AND studio_id = ?', [dancer.id, studio_id]);
+  return res.json({ linked: !!link });
+});
+
+app.post('/api/claim-award', async (req, res) => {
+  const { award_id, studio_id, join_code, unique_id, name, birthday } = req.body;
+  const db = await openDb();
+
+  try {
+    let dancerId = null;
+    let isLinked = false;
+    let generatedUniqueId = null;
+    let dancerName = name;
+    let finalUniqueId = null;
+
+    if (unique_id) {
+      const dancer = await db.get('SELECT id, name, unique_id FROM dancers WHERE unique_id = ?', [unique_id]);
+      if (!dancer) return res.status(404).json({ error: 'Dancer with that Unique ID not found.' });
+      dancerId = dancer.id;
+      dancerName = dancer.name;
+      finalUniqueId = dancer.unique_id;
+      const link = await db.get('SELECT id FROM dancer_studios WHERE dancer_id = ? AND studio_id = ?', [dancerId, studio_id]);
+      if (link) isLinked = true;
+    } else if (name) {
+      // Create new unverified dancer
+      generatedUniqueId = generateDancerId(name);
+      const result = await db.run(
+        'INSERT INTO dancers (unique_id, name, birthday, needs_investigation) VALUES (?, ?, ?, 1)', 
+        [generatedUniqueId, name, birthday || null]
+      );
+      dancerId = result.lastID;
+    } else {
+      return res.status(400).json({ error: 'Must provide Unique ID or Name.' });
+    }
+
+    // If not already linked to the studio, they MUST provide the correct join_code
+    if (!isLinked) {
+      const studio = await db.get('SELECT id, join_code FROM studios WHERE id = ?', [studio_id]);
+      if (!studio || studio.join_code !== join_code) {
+        return res.status(400).json({ error: 'The Studio Secret Code you entered is incorrect. Please double check with your Studio Director.' });
+      }
+      // Insert dancer_studios pending
+      await db.run("INSERT INTO dancer_studios (dancer_id, studio_id, status) VALUES (?, ?, 'pending')", [dancerId, studio_id]);
+    }
+
+    // Fetch target award to get performance_name and event_id
+    const targetAward = await db.get('SELECT event_id, performance_name FROM awards WHERE id = ?', [award_id]);
+
+    // Insert award_dancers pending for the main award
+    const existingAwardLink = await db.get('SELECT id FROM award_dancers WHERE dancer_id = ? AND award_id = ?', [dancerId, award_id]);
+    if (!existingAwardLink) {
+      await db.run("INSERT INTO award_dancers (award_id, dancer_id, status) VALUES (?, ?, 'pending')", [award_id, dancerId]);
+    } else {
+      return res.status(400).json({ error: 'You are already linked to this award.' });
+    }
+
+    let backfilledAwards = [parseInt(award_id)];
+
+    // Backfill other awards with the same performance_name at the same event
+    if (targetAward && targetAward.performance_name && targetAward.event_id) {
+      const relatedAwards = await db.all(
+        'SELECT id FROM awards WHERE event_id = ? AND performance_name = ? AND studio_id = ? AND id != ?',
+        [targetAward.event_id, targetAward.performance_name, studio_id, award_id]
+      );
+      
+      for (let rel of relatedAwards) {
+        const exist = await db.get('SELECT id FROM award_dancers WHERE dancer_id = ? AND award_id = ?', [dancerId, rel.id]);
+        if (!exist) {
+          await db.run("INSERT INTO award_dancers (award_id, dancer_id, status) VALUES (?, ?, 'pending')", [rel.id, dancerId]);
+          backfilledAwards.push(rel.id);
+        }
+      }
+    }
+
+    if (name && !unique_id) {
+      finalUniqueId = generatedUniqueId;
+    }
+
+    res.json({ success: true, newUniqueId: generatedUniqueId, dancerName, dancerUniqueId: finalUniqueId, backfilledAwards });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 });
 
 const PORT = process.env.PORT || 3000;

@@ -136,7 +136,7 @@
         <div class="performance"><%= award.performance_name || 'Routine' %></div>
         <div class="dancer"><%= award.dancer_name || 'Group' %></div>
         <div class="badges">
-          <% if (award.place) { %><span class="badge badge-place"><%= award.place %></span><% } %>
+          <% if (award.place) { %><span class="badge badge-place"><%= formatPlacement(award.place) %></span><% } %>
           <% if (award.award_type) { %><span class="badge badge-type"><%= award.award_type %></span><% } %>
         </div>
       </div>

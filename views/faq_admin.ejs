@@ -1,0 +1,57 @@
+<%- include('partials/header', { title: 'Studio Admin FAQ' }) %>
+
+<main class="container">
+  <h1>Studio Admin FAQ & Instructions</h1>
+
+  <section class="faq-section">
+    <h2>1. Getting Started: Claiming Your Studio</h2>
+    <p>To claim your studio profile and unlock admin features, search for your studio name on the homepage. Click on your studio, and then click the "Claim Studio" button next to the title. Once approved by our team, you will receive full access to the Management Dashboard.</p>
+  </section>
+
+  <section class="faq-section">
+    <h2>2. Customizing Your Profile</h2>
+    <p>From the Management Dashboard, you can update your public profile. This includes:</p>
+    <ul>
+      <li>Uploading a Studio Logo</li>
+      <li>Writing a Bio</li>
+      <li>Linking your Instagram and TikTok handles</li>
+    </ul>
+    <p>These details will immediately reflect on your public studio page, helping dancers and parents find your official links.</p>
+  </section>
+
+  <section class="faq-section">
+    <h2>3. Managing Your Dancer Roster & Secret Join Code</h2>
+    <p>To protect the privacy and integrity of your studio, dancers must provide your <strong>Secret Join Code</strong> to officially link themselves to your studio. You can find this 6-character code in your Management Dashboard.</p>
+    <p>If you suspect the code has been leaked or misused, you can instantly cycle it by clicking the "Reset Code" button. Existing verified dancers will not be affected.</p>
+  </section>
+
+  <section class="faq-section">
+    <h2>4. Approving Dancer Claims</h2>
+    <p>When a dancer uses your Secret Join Code to claim an award or link to your studio, they enter a <em>Pending</em> state. Navigate to the <strong>Verifications</strong> tab in your dashboard to review their request.</p>
+    <ul>
+      <li><strong>Approve:</strong> The dancer is officially added to your roster, and the pending badge on their awards turns into a verified blue link.</li>
+      <li><strong>Deny:</strong> The claim is rejected, and the dancer is not added to your roster.</li>
+    </ul>
+  </section>
+
+  <section class="faq-section">
+    <h2>5. The "Pseudo-Studio" Edge Case (Multi-Studio Collabs)</h2>
+    <p><strong>Q: What happens if two dancers from two DIFFERENT studios compete together in a Pas De Deux or Group (e.g., at YAGP)?</strong></p>
+    <p><strong>A:</strong> Our system handles this by creating a "Pseudo-Studio" that literally combines both studio names (e.g., "Studio A & Studio B"). This keeps the database fast and prevents structural errors.</p>
+    <p>Because it is technically a new combined entity, the award won't automatically appear on your main standalone dashboard. However, the award <strong>will</strong> perfectly appear on the individual Dancer's profile. If you want the award to also show up on your standalone Studio Widget, you can manually use the <strong>"Add Award"</strong> tool in your dashboard to self-report it onto your roster.</p>
+  </section>
+
+  <section class="faq-section">
+    <h2>6. Embedding the Website Widget</h2>
+    <p>Showcase your studio's achievements natively on your own website! Go to the <strong>Widget Builder</strong> in your dashboard. You can customize the background and text colors to match your branding, and simply copy-paste the generated <code>&lt;iframe&gt;</code> HTML code directly into your website builder (Wix, Squarespace, Wordpress, etc.).</p>
+  </section>
+</main>
+
+<style>
+  .faq-section { margin-bottom: 2rem; background: #fff; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+  .faq-section h2 { margin-top: 0; color: #2c3e50; font-size: 1.3rem; border-bottom: 2px solid #eef2f5; padding-bottom: 0.5rem; }
+  .faq-section ul { margin-left: 1.5rem; margin-top: 0.5rem; color: #555; }
+  .faq-section p { line-height: 1.6; color: #444; }
+</style>
+
+<%- include('partials/footer') %>

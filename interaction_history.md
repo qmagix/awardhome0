@@ -370,3 +370,103 @@ Advised the user to re-run the Revolution batch script to backfill the purged da
 ## Interaction - 2026-05-07
 **User:** Reported that the location was *still* showing up as a date for DreamMaker events, indicating the column mapping logic was still failing.
 **AI:** Investigated the raw HTML of the DanceBug results page and discovered that DanceBug doesn't use `<th>` tags for their headers at all—they use `<tr class="table_title"><td>`. Updated `batch_import.js` to intelligently fall back to checking `td` elements inside header rows if no `th` tags are present. Terminated the bad run, deleted the corrupted events, and successfully restarted the import with the correct "Location" mapping.
+
+## Interaction - 2026-05-08
+**User:** Requested instructions on how to use all the import scripts for the 8 competitions supported so far.
+**AI:** Created a comprehensive `user_manual.md` at the root of the project explaining how to run the DanceBug batch importer (Starpower, Revolution, Believe, Imagine, Dreammaker), the standalone scripts (KAR, Rainbow), the mass historical scraper (`scrape_all_years.js`), and the legacy PDF downloader (`download_legacy_pdfs.js`). Also noted that YAGP does not yet have an automated scraper script.
+
+## Interaction - 2026-05-08
+**User:** Asked for design thoughts on features to improve ease-of-use for dancers: searching studio rosters, joining a studio via a unique code, and claiming group awards with color-coded verification statuses.
+**AI:** Created an `implementation_plan.md` artifact outlining the database schema additions (such as `join_code` for studios, and a `status` column for `award_dancers`), the public UI modifications (search bar and color-coded tags on awards), and the admin verification workflow. Posed a few open questions back to the user regarding auto-verification for join codes and privacy settings for the roster.
+
+## Interaction - 2026-05-08
+**User:** Approved the implementation plan for dancer ease-of-use features with specific feedback: maintain manual admin approval for claims, completely hide public rosters for privacy, and build a targeted "Add Me" button on awards for dancers to claim using their Studio Code and Unique ID (or create a new profile).
+**AI:** Updated the implementation plan to reflect the feedback. Created a comprehensive `task.md`. Executed the tasks by updating the database schema (`join_code` and `status` columns), adding the Join Code UI to the Studio Admin dashboard, implementing the "Add Me" button and Claim Modal on the public studio page, creating the backend `/api/claim-award` route, and finally building the Studio Admin "Pending Verifications" dashboard to approve or deny claims. Appended the completed task to `TODOS_and_DONE.md` and created a `walkthrough.md`.
+
+## Interaction - 2026-05-08 (Follow-up)
+**User:** Requested UX modification: The "I was in this!" modal should first ask for the Dancer Unique ID. Only if the ID is not already registered with the studio should it ask for the Studio Code.
+**AI:** Added a multi-step check. Added `GET /api/check-dancer-studio` endpoint to verify if the dancer is already linked. Modified `views/studio.ejs` to first ask for the Dancer Identity (ID or Name/Birthday). If the user provides an ID that is already linked, the system immediately submits the award claim. If the dancer is unlinked (or a new profile is being created), the form dynamically reveals the Studio Secret Code input step.
+
+## Interaction - 2026-05-08 (Fix)
+**User:** Noticed IDE syntax errors in `views/manage_studio_roster.ejs` related to string interpolation in a style tag (`} expected`) and JSON stringification in an `onclick` attribute (`Expression expected`).
+**AI:** Refactored the inline EJS condition into a variable definition above the HTML element to resolve the `} expected` CSS parsing issue. Converted the `JSON.stringify(dancer)` method within the `onclick` handler to use HTML5 `data-*` attributes, eliminating the quotation mark conflicts and resolving the `Expression expected` error.
+
+## Interaction - 2026-05-08 (Fix 2)
+**User:** Noticed further IDE syntax errors regarding `{ expected`, `property value expected`, etc., in `<span style="<%= var %>">` elements across `studio.ejs` and `manage_studio_roster.ejs`.
+**AI:** Migrated all conditional inline CSS from `style="..."` attributes to dedicated CSS `<style>` blocks at the top of the respective views. Replaced inline styling interpolation with cleaner CSS class assignments (e.g., `<span class="badge-common <%= badgeClass %>">`), completely resolving IDE parsing errors while maintaining dynamic coloring.
+
+## Interaction - 2026-05-08 (Emergency Fix)
+**User:** Reported a critical bug where `http://127.0.0.1:3000` does not display any orgs or featured studios, implying the database was erased or corrupted.
+**AI:** Investigated and found that a prior execution of `node database.js` (used to run schema migrations) inadvertently dropped all tables because of a `DROP TABLE IF EXISTS` block intended for the very early stages of the project. This wiped the 940,000+ scraped awards. The AI removed the `DROP TABLE` block from `database.js` to prevent future data loss, restored the database from the `database.sqlite_bk3` backup (which perfectly preserved all 940,872 awards), and re-ran the safe schema migrations. Data integrity was fully restored.
+
+## Interaction - 2026-05-08 (Fix 3)
+**User:** Reported a layout bug on the studio page where the dancer names and "+ Add Me" buttons appeared stacked on top of the award list instead of inside their respective columns.
+**AI:** Identified that a previous multi-line replace had accidentally swallowed the opening `<td>` tag for the dancers column. Restored the missing `<td>` tag in `views/studio.ejs`, fixing the table layout and returning the dancers and buttons to their correct column.
+
+## Interaction - 2026-05-08 (Fix 4)
+**User:** Requested making the incorrect Studio Code error message more informative, rather than the generic "An error occurred. Please try again."
+**AI:** Discovered that the server lacked `express.json()` middleware, causing the JSON payload of the claim API to hit an unhandled exception (`req.body` undefined), crashing the route and returning an HTML 500 error instead of the intended 400 JSON error. This caused the frontend `fetch` JSON parser to fail and trigger the generic catch-all alert. Added `express.json()` to `server.js` and updated the API response to explicitly alert: "The Studio Secret Code you entered is incorrect. Please double check with your Studio Director."
+
+## Interaction - 2026-05-08 (Feature Addition)
+**User:** Requested a utility for Studio Admins to reset the dancer join code in case it is misused.
+**AI:** Added a `/manage/studio/:id/reset-code` POST endpoint to `server.js` that securely regenerates a 6-character hex code and updates the studio's record. Added a "Reset Code" button with a confirmation prompt next to the join code display in the `manage_studio.ejs` dashboard.
+
+## Interaction - 2026-05-08 (Feature Addition 2)
+**User:** Requested that when a user creates a profile for the first time by providing their Name and Birthday, the system should immediately show them their auto-generated Unique ID and instruct them to save it.
+**AI:** Updated the `/api/claim-award` endpoint to return the `generatedUniqueId` if a new dancer record was created during the claim process. Modified the frontend in `views/studio.ejs` to check for this ID and, if present, display a prominent alert containing the ID with instructions to copy and save it for bypassing the studio code step on future claims.
+
+## Interaction - 2026-05-08 (UX Refinement)
+**User:** Requested replacing the page reload upon a successful "Add Me" claim with a dynamic DOM insertion so the user doesn't lose context inside collapsed accordions.
+**AI:** Updated `/api/claim-award` to return the `dancerName` and `dancerUniqueId` so the frontend knows exactly what to display. Modified the `submitClaimFinal` AJAX handler in `views/studio.ejs` to drop the `location.reload()` and instead dynamically inject a new pending (orange) badge directly into the award table cell, providing immediate, seamless visual feedback.
+
+## Interaction - 2026-05-08 (Smart Backfill Feature)
+**User:** Requested an auto-backfill feature: when a dancer claims an award, automatically add them to all other awards for the same routine at the same event (both backend logic and frontend dynamic updating).
+**AI:** Implemented the backfill logic in `/api/claim-award`. The API now queries for all awards matching the `performance_name`, `event_id`, and `studio_id` of the initially claimed award, and automatically inserts pending claims for those related awards as well. It returns an array of `backfilledAwards` IDs. The frontend AJAX handler iterates over these IDs to dynamically inject the pending badge into every corresponding row in the DOM simultaneously, without reloading the page.
+
+## Interaction - 2026-05-08 (Future Planning)
+**User:** Requested suggestions for further system improvements concerning dancers, admins, performance, and safety.
+**AI:** Provided a strategic roadmap including Dancer Public Profiles, Email Notifications for Admins, Bulk Actions, Roster Exports, Composite Database Indexes, Pagination, Automated Nightly Backups, and API Rate Limiting. Appended these items to the `TODOS_and_DONE.md` tracker.
+
+## Interaction - 2026-05-08 (Database Deduplication & Scraper Idempotency)
+**User:** Identified that live scrapers were creating duplicates and requested a fix for the scripts and cleanup of the database. Also reminded me to backup the DB first.
+**AI:** Backed up the DB. Wrote a highly optimized SQL deduplication script that scanned 1M+ rows and cleanly removed exactly 53,178 duplicate awards in 3 seconds without losing any associated `award_dancers` user claims. Added the `existingAward` SELECT check to `scrape_kar_year.js`, `scrape_dancekar.js`, and `scrape_rainbow.js` to ensure they are now safely idempotent.
+
+## Interaction - 2026-05-08 (YAGP Scraper CLI & Testing)
+**User:** Approved YAGP scraper plan but asked to see examples of the parsed data (especially Ensembles vs standard rows) and to clarify the ambiguous award types before we do any actual database insertions. Requested a CLI tool with a dry-run flag for testing.
+**AI:** Built the preliminary `scrape_yagp_year.js` script with a `--test` CLI flag. Explained the parsed structure (Dancer vs Performance Name for Ensembles) and clarified that YAGP explicitly states "Classical" or "Contemporary" for solos, but Ensembles are usually lumped into one bucket. Instructed the user to run the test script.
+
+## Interaction - 2026-05-08 (YAGP Scraper Edge Cases)
+**User:** Pointed out that the script missed the "Top 12" rows and Choreography awards, and asked to see the full console output for 100% of the parsed awards.
+**AI:** Fixed the parser logic to track "Top 12 / Top 24" headers and apply them to subsequent rows, increasing the detected count from 46 to 110. Also added logic to handle the "Outstanding Choreographer/Teacher/School" awards, correctly mapping the dancer name, performance name, and studio fields. Generated the full output to `test_yagp_results.json` for the user to review.
+
+## Interaction - 2026-05-08 (YAGP Scraper Edge Cases 2)
+**User:** Identified that age divisions were bleeding over into the Ensembles section, and that "Top 6" and "Top 7" were missed because the script only explicitly looked for "Top 12" and "Top 24". Noted there are about 123 awards on the page.
+**AI:** Adjusted the state machine to explicitly clear the `currentAgeDivision` when hitting "ENSEMBLES" or special awards like "OUTSTANDING CHOREOGRAPHER". Implemented a regex `^TOP \d+` to dynamically capture any arbitrary "Top N" section instead of hardcoded checks. Output increased to 124 awards, matching the user's estimate perfectly.
+
+## Interaction - 2026-05-08 (YAGP Tampa Final & Database Integration)
+**User:** Requested verification that the script correctly parses ensembles broken out into genres like "Character Ensembles" and "Contemporary Ensembles" (e.g. at the Tampa Finals).
+**AI:** Confirmed the script already handles these specific ensemble variants successfully. Fixed a schema mapping error related to SQLite primary keys and event records, and successfully executed a live database insertion for the 329 Tampa Finals awards. The script is now fully production-ready and idempotent.
+
+## Interaction - 2026-05-08 (Age Division Database Migration)
+**User:** Suggested adding an `age_division` column to the `awards` table to future-proof the application, as other events also have implicit age divisions.
+**AI:** Fully agreed and executed the schema migration. Updated `database.js` to define and retroactively inject the `age_division` column into the SQLite database. Upgraded the `scrape_yagp_year.js` script to not only insert the new field for future runs, but to actively backfill the `age_division` on any existing database rows if it encounters them again via the idempotency check. Ran the script to successfully backfill the Tampa Finals data.
+
+## Interaction - 2026-05-08 (Pas De Deux Age Division Bleed Fix)
+**User:** Noticed the 143 count for Pre-Competitive awards felt suspiciously high, suspecting an age division bleed bug similar to the Ensembles issue.
+**AI:** Investigated the raw output and identified that the 48 "Pas De Deux" awards were erroneously inheriting the active "Pre-Competitive Age Division" state because they lacked explicit handling. Updated the parsing logic in `scrape_yagp_year.js` to explicitly clear the `currentAgeDivision` when hitting Pas De Deux headers. Reran the live database sync, which leveraged the retroactive `UPDATE` query built in the previous step, flawlessly correcting the 48 Pas De Deux entries in the database to have a blank age division. The true Pre-Competitive count dropped to an accurate 98.
+
+## Interaction - 2026-05-08 (Pas De Deux Multiline Parsing)
+**User:** Pointed out that YAGP's "Pas De Deux" awards are actually split across two consecutive rows: the first line contains the first dancer, age, and performance name, while the second line contains the second dancer, age, and studio name.
+**AI:** Built a multi-row state machine into the scraper to buffer the first row of a Pas De Deux award, wait for the second row, and merge the data. Extracted both dancers independently and modified the database insertion logic to insert BOTH dancers separately into the `dancers` table, linking them both to the exact same award via the `award_dancers` pivot table. Deleted the corrupted entries and successfully synced the 3 corrected Pas De Deux awards and 6 dancers into the database.
+
+## Interaction - 2026-05-08 (Pas De Deux Top N Bug Fix)
+**User:** Noticed the script still missed "CONTEMPORARY PAS DE DEUX" and failed to parse "TOP 12 Classical Pas De Deux" and "TOP 6 Contemporary Pas De Deux".
+**AI:** Discovered two logic gaps. First, the regex checking for category assignment strictly looked for "PAS DE DEUX" or "ENSEMBLES" but ignored "CONTEMPORARY PAS DE DEUX". Updated the string matching to `.includes('PAS DE DEUX')` to capture all variants. Second, identified a severe state machine bug: when a "TOP N" header was active, every subsequent row was erroneously evaluated as the "first line" of a Pas De Deux, causing the second lines to be skipped entirely. Refactored the `if` conditions to securely evaluate the second line of a Pas De Deux *before* evaluating the `pendingAward` fallback. Reran the pipeline, which accurately identified and inserted the 25 missing Pas De Deux awards perfectly formatted.
+
+## Interaction - 2026-05-08 (Special Awards Parsing Fix)
+**User:** Pointed out that the "SPECIAL AWARDS" section at the end of the page was completely broken. The script was categorizing awards like "MAKAROVA AWARD FOR ARTISTRY" and the dancer "Athena Hu" as two separate awards under the previous "TOP 24 CLASSICAL ENSEMBLES" category.
+**AI:** Investigated the HTML structure of the Special Awards section and discovered it shares the exact same split-row peculiarity as the Pas De Deux sections, except the award name is the first row and the dancer name is the second row, with no other columns provided. Created a new `pendingSpecialAward` state variable to buffer the first row, wait for the second, and merge them into a single award where `place` equals the Award Name and `dancer_name` equals the Dancer Name. Purged the 5 corrupted entries from the database, executed a script patch, and cleanly inserted the perfectly formatted awards into SQLite.
+
+## Interaction - 2026-05-09 (YAGP Idempotency Bug Fix)
+**User:** Noticed that running the YAGP mass scraper for the first time skipped numerous awards on fresh event imports (e.g., 47 skipped in LA, 42 skipped in Korea) and requested an investigation into why fresh imports triggered the idempotency skip.
+**AI:** Logged the skipped outputs and discovered a structural flaw in the SQL idempotency check. YAGP frequently awards the same place (e.g., "TOP 15") to multiple different soloists from the *same* studio in the *same* category. Because soloists rarely have a "Performance Name", and the idempotency check only evaluated `[event_id, place, category, performance_name, studio_id]`, the script was treating the second "TOP 15" dancer as a duplicate of the first. Refactored the insertion logic to resolve and map the `dancer_id` *before* hitting the idempotency check, and added `dancer_id` to the SQL duplicate constraint. Re-ran the Korea event, which successfully salvaged and inserted the 43 falsely skipped soloists.

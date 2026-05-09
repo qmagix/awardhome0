@@ -27,6 +27,11 @@
             📈 Widget Builder
           </a>
         </li>
+        <li>
+          <a href="/manage/studio/<%= studio.id %>/verifications" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: var(--text-muted); transition: background 0.2s;">
+            ✅ Pending Verifications
+          </a>
+        </li>
       </ul>
       
       <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
@@ -42,13 +47,84 @@
       <p class="subtitle">Update your studio's public information and appearance.</p>
     </div>
 
-    <!-- Analytics Quick Look -->
-    <div class="card glass-card" style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
-      <div>
-        <h4 style="margin: 0; color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase;">Total Profile Views</h4>
-        <p style="margin: 0.25rem 0 0 0; font-size: 2rem; font-weight: 800; color: white;"><%= studio.view_count %></p>
+    <!-- Merge Suggestions -->
+    <% if (typeof potentialDuplicates !== 'undefined' && potentialDuplicates.length > 0) { %>
+      <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem;">
+        <h3 style="margin: 0 0 1rem 0; color: #fbbf24; display: flex; align-items: center; gap: 0.5rem;">
+          🔀 Merge Suggestions
+        </h3>
+        <p style="margin: 0 0 1rem 0; color: var(--text-muted); font-size: 0.95rem;">
+          We found other studios that might be duplicates of yours. If they are, you can merge their awards into your studio.
+        </p>
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+          <% potentialDuplicates.forEach(dup => { %>
+            <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); padding: 1rem; border-radius: 6px; display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <strong><%= dup.name %></strong>
+                <% if (dup.aka) { %> <br><small style="color: var(--text-muted);">Also known as: <%= dup.aka %></small> <% } %>
+              </div>
+              <div style="display: flex; gap: 0.5rem;">
+                <button onclick="rejectMerge(<%= dup.id %>)" class="btn" style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: var(--text-muted); padding: 0.5rem 1rem;">Not My Studio</button>
+                <button onclick="acceptMerge(<%= dup.id %>)" class="btn" style="background: var(--primary); border: none; color: white; padding: 0.5rem 1rem;">Merge into Mine</button>
+              </div>
+            </div>
+          <% }) %>
+        </div>
       </div>
-      <div style="font-size: 2rem;">👁️</div>
+      
+      <script>
+      async function rejectMerge(sourceId) {
+        if (!confirm('Are you sure? This will hide this suggestion permanently.')) return;
+        const res = await fetch('/api/reject-merge/studios', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sourceId, targetId: <%= studio.id %> })
+        });
+        if (res.ok) window.location.reload();
+        else alert('Failed to reject merge.');
+      }
+
+      async function acceptMerge(sourceId) {
+        if (!confirm('Are you absolutely sure? This will permanently merge their awards into your studio.')) return;
+        const res = await fetch('/api/merge/studios', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sourceId, targetId: <%= studio.id %> })
+        });
+        if (res.ok) {
+          alert('Merge successful!');
+          window.location.reload();
+        } else {
+          const data = await res.json();
+          alert('Failed to merge: ' + (data.error || 'Unknown error'));
+        }
+      }
+      </script>
+    <% } %>
+
+    <!-- Analytics Quick Look -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+      <div class="card glass-card" style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h4 style="margin: 0; color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase;">Total Profile Views</h4>
+          <p style="margin: 0.25rem 0 0 0; font-size: 2rem; font-weight: 800; color: white;"><%= studio.view_count %></p>
+        </div>
+        <div style="font-size: 2rem;">👁️</div>
+      </div>
+
+      <div class="card glass-card" style="display: flex; justify-content: space-between; align-items: center; border-color: rgba(236, 72, 153, 0.3);">
+        <div style="flex-grow: 1;">
+          <h4 style="margin: 0; color: var(--primary); font-size: 0.9rem; text-transform: uppercase;">Dancer Join Code</h4>
+          <div style="display: flex; align-items: center; gap: 1rem; margin-top: 0.25rem;">
+            <p style="margin: 0; font-size: 2rem; font-weight: 800; color: white; letter-spacing: 2px;"><%= studio.join_code %></p>
+            <form action="/manage/studio/<%= studio.id %>/reset-code" method="POST" onsubmit="return confirm('Are you sure you want to reset this code? The old code will immediately stop working.')" style="margin: 0;">
+              <button type="submit" class="btn" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: var(--text-muted); cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.2)'; this.style.color='white'; this.style.borderColor='rgba(239, 68, 68, 0.4)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'; this.style.color='var(--text-muted)'; this.style.borderColor='rgba(255,255,255,0.2)'">Reset Code</button>
+            </form>
+          </div>
+          <small style="color: var(--text-muted); font-size: 0.75rem;">Share this code with your students to claim awards.</small>
+        </div>
+        <div style="font-size: 2rem;">🔑</div>
+      </div>
     </div>
 
     <% if (typeof success !== 'undefined' && success) { %>

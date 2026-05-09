@@ -3,7 +3,7 @@ const cheerio = require('cheerio');
 const sqlite3 = require('sqlite3').verbose();
 const { promisify } = require('util');
 const crypto = require('crypto');
-
+const { generateDancerId, generateStudioId } = require('./utils');
 // Promisify SQLite methods
 const db = new sqlite3.Database('./database.sqlite');
 db.runAsync = promisify(db.run.bind(db));
@@ -35,16 +35,13 @@ async function getOrCreateEvent(orgId, orgName, url, dateString, location) {
   return event;
 }
 
-function generateUniqueId() {
-  return crypto.randomBytes(8).toString('hex');
-}
 
 async function getOrCreateStudio(studioName) {
   if (!studioName || studioName.trim() === '') return null;
   const name = studioName.trim();
   let studio = await db.getAsync('SELECT * FROM studios WHERE LOWER(name) = LOWER(?)', [name]);
   if (!studio) {
-    const uniqueId = 'STU-' + generateUniqueId();
+    const uniqueId = generateStudioId(name);
     await db.runAsync('INSERT INTO studios (unique_id, name) VALUES (?, ?)', [uniqueId, name]);
     studio = await db.getAsync('SELECT * FROM studios WHERE LOWER(name) = LOWER(?)', [name]);
     console.log(`    [+] Created new studio: ${name}`);
@@ -226,7 +223,7 @@ async function run() {
               for (const dancerName of dancers) {
                 let dancer = await db.getAsync('SELECT * FROM dancers WHERE LOWER(name) = LOWER(?)', [dancerName]);
                 if (!dancer) {
-                  const uniqueId = 'DNC-' + generateUniqueId();
+                  const uniqueId = generateDancerId(dancerName);
                   await db.runAsync('INSERT INTO dancers (unique_id, name) VALUES (?, ?)', [uniqueId, dancerName]);
                   dancer = await db.getAsync('SELECT * FROM dancers WHERE LOWER(name) = LOWER(?)', [dancerName]);
                   console.log(`    [+] Created new dancer: ${dancerName}`);

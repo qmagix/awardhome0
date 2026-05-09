@@ -30,6 +30,7 @@
           </div>
           <h3><%= award.performance_name || 'N/A' %></h3>
           <p class="category"><%= award.award_type %></p>
+          <p class="sub-category" style="color: #fbbf24; font-weight: 600; margin-bottom: 0.25rem;">Placement: <%= formatPlacement(award.place) %></p>
           <% if (award.category) { %>
             <p class="sub-category">Category: <%= award.category %></p>
           <% } %>
@@ -55,6 +56,7 @@
           </div>
           <h3><%= award.performance_name || 'N/A' %></h3>
           <p class="category"><%= award.award_type %></p>
+          <p class="sub-category" style="color: #fbbf24; font-weight: 600; margin-bottom: 0.25rem;">Placement: <%= formatPlacement(award.place) %></p>
           <% if (award.category) { %>
             <p class="sub-category">Category: <%= award.category %></p>
           <% } %>

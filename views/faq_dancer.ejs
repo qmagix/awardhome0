@@ -1,0 +1,59 @@
+<%- include('partials/header', { title: 'Dancer FAQ' }) %>
+
+<main class="container">
+  <h1>Dancer FAQ & Instructions</h1>
+
+  <section class="faq-section">
+    <h2>1. How do I build my Dancer Profile?</h2>
+    <p>You build your profile by claiming your awards! Search for your dance studio on the homepage, browse through the event results, and look for your routines. When you find one, click the green <strong>"+ Add Me"</strong> button next to the routine name.</p>
+  </section>
+
+  <section class="faq-section">
+    <h2>2. How do I claim an award for the first time?</h2>
+    <p>When you click "+ Add Me" for the first time, you will be prompted to enter your <strong>Name and Birthday</strong>. This creates your official Dancer Profile. </p>
+    <p>Next, you will be asked for a <strong>Studio Secret Code</strong>. Because awards are legally affiliated with the studio that registered them, you must obtain this 6-character secret code directly from your Studio Director or Dance Teacher. Enter it to submit your claim!</p>
+  </section>
+
+  <section class="faq-section">
+    <h2>3. What is my Dancer Unique ID?</h2>
+    <p>After you successfully submit your first claim using your Name and Birthday, the system will auto-generate a <strong>Unique Dancer ID</strong> (e.g., <code>1a2b3c4d-your-name</code>) and show it to you in a green alert box. </p>
+    <p><strong>Save this ID!</strong> On all future claims, you can simply paste this Unique ID into the first step. If you use your ID, you get to skip the Studio Secret Code step entirely, making claiming awards lightning fast!</p>
+  </section>
+
+  <section class="faq-section">
+    <h2>4. What do the colored badge statuses mean?</h2>
+    <p>When you look at an award, you might see your name with different colors:</p>
+    <ul>
+      <li><span class="badge-common pending">Pending Verification</span> You have claimed the award, but your Studio Director has not yet logged in to approve it.</li>
+      <li><span class="badge-common link-active">Verified (Blue Link)</span> Your Studio Director has approved your claim! Your name is now a clickable link that leads straight to your public Dancer Profile.</li>
+    </ul>
+  </section>
+
+  <section class="faq-section">
+    <h2>5. Smart Auto-Backfill</h2>
+    <p>We know claiming every single award at a competition can be tedious. That's why we built <strong>Smart Auto-Backfill</strong>. When you claim one award for a routine, our system automatically searches the entire event and submits a claim for you on <em>every other award</em> won by that exact same routine at that exact same competition!</p>
+  </section>
+  
+  <section class="faq-section">
+    <h2>6. Privacy Notice</h2>
+    <p>To protect the privacy of our dancers, full studio rosters are completely hidden from the public. Your name will only appear publicly on the specific awards you have claimed, or on your standalone Dancer Profile if you share the link.</p>
+  </section>
+
+  <section class="faq-section">
+    <h2>7. What if I competed as an Independent?</h2>
+    <p>If you registered and competed without a studio affiliation, the competition likely listed you as "Independent". You can find all of your awards by searching for the <strong>"Independent"</strong> studio on the homepage and claiming them from there!</p>
+  </section>
+</main>
+
+<style>
+  .faq-section { margin-bottom: 2rem; background: #fff; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+  .faq-section h2 { margin-top: 0; color: #2c3e50; font-size: 1.3rem; border-bottom: 2px solid #eef2f5; padding-bottom: 0.5rem; }
+  .faq-section ul { margin-left: 1.5rem; margin-top: 0.5rem; color: #555; }
+  .faq-section p { line-height: 1.6; color: #444; }
+  
+  .badge-common { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.85rem; margin-right: 0.5rem; }
+  .pending { background-color: #ffeeba; color: #856404; }
+  .link-active { background-color: #cce5ff; color: #004085; }
+</style>
+
+<%- include('partials/footer') %>

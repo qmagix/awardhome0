@@ -10,9 +10,9 @@ async function scrapeRainbowYear(year) {
   console.log(`Fetching events list from ${baseUrl}...`);
   const { data: listData } = await axios.get(baseUrl);
   const $list = cheerio.load(listData);
-  
+
   const eventUrls = new Set();
-  
+
   $list('a').each((i, el) => {
     const href = $list(el).attr('href');
     // Ensure it matches results path and is not a generic photogenic or top level link
@@ -29,23 +29,23 @@ async function scrapeRainbowYear(year) {
 
   for (let i = 0; i < urlsToScrape.length; i++) {
     const url = urlsToScrape[i];
-    console.log(`[${i+1}/${urlsToScrape.length}] Scraping ${url}...`);
-    
+    console.log(`[${i + 1}/${urlsToScrape.length}] Scraping ${url}...`);
+
     try {
       await scrapeRainbow(url, year);
     } catch (e) {
       console.error(`  -> Failed to scrape ${url}: ${e.message}`);
     }
-    
+
     // Sleep to be polite to the server
     await sleep(1000);
   }
-  
+
   console.log(`Finished scraping all Rainbow ${year} events.`);
 }
 
 if (require.main === module) {
-  scrapeRainbowYear(2025).then(() => {
+  scrapeRainbowYear(2026).then(() => {
     process.exit(0);
   }).catch(err => {
     console.error(err);

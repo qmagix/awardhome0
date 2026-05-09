@@ -1,5 +1,22 @@
 <%- include('partials/header') %>
+
+<style>
+.badge-imported { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.2); }
+.badge-pending { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.2); }
+.badge-verified { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.2); }
+.badge-common { padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; display: inline-block; margin-right: 4px; margin-bottom: 4px; }
+</style>
   <div class="container">
+    <% if (mergedIntoStudio) { %>
+      <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); color: #60a5fa; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; display: flex; align-items: center; gap: 1rem;">
+        <span style="font-size: 2rem;">🔀</span>
+        <div>
+          <h3 style="margin: 0 0 0.25rem 0; color: white;">This studio profile has been merged.</h3>
+          <p style="margin: 0;">This studio's records have been officially merged into <a href="/studio/<%= mergedIntoStudio.id %>" style="color: #93c5fd; font-weight: bold; text-decoration: underline;"><%= mergedIntoStudio.name %></a>. For a more complete picture, please view the main studio profile.</p>
+        </div>
+      </div>
+    <% } %>
+    
     <div class="header-section" style="display: flex; justify-content: space-between; align-items: flex-start;">
       <div style="display: flex; gap: 1.5rem; align-items: center;">
         <% if (studio.logo_url) { %>
@@ -154,24 +171,31 @@
                                   <%= award.award_type %>
                                 </td>
                                 <td><span class="badge">
-                                    <%= award.place %>
+                                    <%= formatPlacement(award.place) %>
                                   </span></td>
                                 <td>
                                   <%= award.category || '-' %>
                                 </td>
-                                <td>
+                                <td id="dancers-cell-<%= award.id %>">
                                   <% if (award.dancers && award.dancers.length > 0) { %>
                                     <% award.dancers.forEach(function(d, index) { %>
-                                      <% if (d.unique_id) { %>
-                                        <a href="/dancer/<%= d.unique_id %>" class="dancer-link"><%= d.name %></a>
-                                      <% } else { %>
-                                        <%= d.name %>
-                                      <% } %>
-                                      <%- index < award.dancers.length - 1 ? ', ' : '' %>
+                                      <% 
+                                        let badgeClass = 'badge-imported';
+                                        if (d.status === 'pending') badgeClass = 'badge-pending';
+                                        if (d.status === 'verified') badgeClass = 'badge-verified';
+                                      %>
+                                      <span class="badge-common <%= badgeClass %>">
+                                        <% if (d.unique_id) { %>
+                                          <a href="/dancer/<%= d.unique_id %>" style="color: inherit; text-decoration: none;"><%= d.name %></a>
+                                        <% } else { %>
+                                          <%= d.name %>
+                                        <% } %>
+                                      </span>
                                     <% }); %>
                                   <% } else { %>
-                                    <em>Company / Group</em>
+                                    <em style="color: var(--text-muted); margin-right: 8px;">Company / Group</em>
                                   <% } %>
+                                  <button onclick="openClaimModal('<%= award.id %>')" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; color: var(--text-muted); font-size: 0.75rem; padding: 2px 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(236,72,153,0.2)'; this.style.color='white'" onmouseout="this.style.background='rgba(255,255,255,0.1)'; this.style.color='var(--text-muted)'">+ Add Me</button>
                                 </td>
                               </tr>
                               <% }); %>
@@ -249,9 +273,57 @@
     </div>
   </div>
 
+  <!-- Dancer Claim Modal -->
+  <div id="claim-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 9999; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;">
+    <div class="card glass-card" style="position: relative; max-width: 500px; width: 90%; padding: 2.5rem; transform: scale(0.95); transition: transform 0.3s ease;">
+      <button onclick="closeClaimModal()" style="position: absolute; top: 1rem; right: 1rem; background: transparent; border: none; color: white; font-size: 1.5rem; cursor: pointer;">&times;</button>
+      <h2 style="margin-top: 0; margin-bottom: 1.5rem; color: var(--primary);">Claim Award</h2>
+      <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Enter your studio's secret join code to request verification from your studio director.</p>
+      
+      <form id="claim-form" style="display: flex; flex-direction: column; gap: 1.5rem;">
+        <input type="hidden" id="claim_award_id" name="award_id">
+        <input type="hidden" name="studio_id" value="<%= studio.id %>">
+        
+        <div id="step-1-identity">
+          <div style="background: rgba(255,255,255,0.05); padding: 1.5rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+            <h4 style="margin: 0 0 1rem 0; color: white;">Your Identity</h4>
+            <div>
+              <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-weight: 600;">Dancer Unique ID (Optional)</label>
+              <input type="text" id="claim_unique_id" name="unique_id" placeholder="If you already have a profile" style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white; margin-bottom: 1rem;">
+            </div>
+            
+            <div style="text-align: center; color: var(--text-muted); margin-bottom: 1rem;">— OR CREATE NEW —</div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div>
+                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-weight: 600;">Full Name</label>
+                <input type="text" id="claim_name" name="name" placeholder="First Last" style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;">
+              </div>
+              <div>
+                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-weight: 600;">Birthday</label>
+                <input type="date" id="claim_birthday" name="birthday" style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white; color-scheme: dark;">
+              </div>
+            </div>
+          </div>
+          <button type="button" onclick="checkIdentity()" style="margin-top: 1.5rem; background: var(--primary); color: white; border: none; padding: 0.75rem; font-size: 1rem; font-weight: 600; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4); width: 100%;">Continue</button>
+        </div>
+
+        <div id="step-2-code" style="display: none;">
+          <h4 style="margin: 0 0 1rem 0; color: white;">Verification Required</h4>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">It looks like you are not yet a verified member of this studio. Please provide the secret Join Code from your Studio Director.</p>
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-weight: 600;">Studio Secret Code</label>
+            <input type="text" id="claim_code" name="join_code" placeholder="e.g. A8F9K2" style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white; font-family: monospace; letter-spacing: 2px;">
+          </div>
+          <button type="button" onclick="submitClaimFinal()" style="margin-top: 1.5rem; background: #10b981; color: white; border: none; padding: 0.75rem; font-size: 1rem; font-weight: 600; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); width: 100%;">Submit Claim</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script>
     function openBenefitsModal(e) {
-      e.preventDefault();
+      if(e) e.preventDefault();
       const modal = document.getElementById('benefits-modal');
       modal.style.display = 'flex';
       setTimeout(() => {
@@ -269,10 +341,119 @@
       }, 300);
     }
 
+    function openClaimModal(awardId) {
+      document.getElementById('claim_award_id').value = awardId;
+      const modal = document.getElementById('claim-modal');
+      modal.style.display = 'flex';
+      setTimeout(() => {
+        modal.style.opacity = '1';
+        modal.querySelector('.card').style.transform = 'scale(1)';
+      }, 10);
+    }
+
+    function closeClaimModal() {
+      const modal = document.getElementById('claim-modal');
+      modal.style.opacity = '0';
+      modal.querySelector('.card').style.transform = 'scale(0.95)';
+      setTimeout(() => {
+        modal.style.display = 'none';
+      }, 300);
+    }
+
     window.onclick = function (event) {
-      const modal = document.getElementById('benefits-modal');
-      if (event.target === modal) {
-        closeBenefitsModal();
+      const bModal = document.getElementById('benefits-modal');
+      const cModal = document.getElementById('claim-modal');
+      if (event.target === bModal) closeBenefitsModal();
+      if (event.target === cModal) closeClaimModal();
+    }
+    
+    async function checkIdentity() {
+      const form = document.getElementById('claim-form');
+      const uniqueId = document.getElementById('claim_unique_id').value.trim();
+      const name = document.getElementById('claim_name').value.trim();
+      const studioId = form.studio_id.value;
+
+      if (!uniqueId && !name) {
+        alert("Please provide either your Unique ID or your Full Name.");
+        return;
+      }
+
+      if (uniqueId) {
+        // Check if already linked
+        try {
+          const response = await fetch(`/api/check-dancer-studio?unique_id=${encodeURIComponent(uniqueId)}&studio_id=${studioId}`);
+          const result = await response.json();
+          if (result.linked) {
+            // Already linked, submit final immediately
+            submitClaimFinal();
+          } else {
+            // Not linked, show code step
+            document.getElementById('step-1-identity').style.display = 'none';
+            document.getElementById('step-2-code').style.display = 'block';
+          }
+        } catch (e) {
+          alert('Error checking identity.');
+        }
+      } else {
+        // New profile, definitely not linked
+        document.getElementById('step-1-identity').style.display = 'none';
+        document.getElementById('step-2-code').style.display = 'block';
+      }
+    }
+
+    async function submitClaimFinal() {
+      const form = document.getElementById('claim-form');
+      const formData = new FormData(form);
+      const data = Object.fromEntries(formData.entries());
+      
+      try {
+        const response = await fetch('/api/claim-award', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        
+        if (response.ok) {
+          if (result.newUniqueId) {
+            alert(`Claim submitted! \n\nIMPORTANT: Your new Dancer Unique ID is:\n\n${result.newUniqueId}\n\nPlease copy and save this ID. You can use it to instantly claim other awards without needing the Studio Code again.`);
+          } else {
+            alert('Claim submitted successfully! It is now pending admin approval.');
+          }
+          closeClaimModal();
+          
+          // Dynamically insert the badge into all backfilled DOM cells
+          const awardsToUpdate = result.backfilledAwards || [data.award_id];
+          
+          awardsToUpdate.forEach(a_id => {
+            const cell = document.getElementById('dancers-cell-' + a_id);
+            if (cell) {
+              // Remove 'Company / Group' placeholder if present
+              const em = cell.querySelector('em');
+              if (em) em.remove();
+              
+              const badge = document.createElement('span');
+              badge.className = 'badge-common badge-pending';
+              if (result.dancerUniqueId) {
+                badge.innerHTML = `<a href="/dancer/${result.dancerUniqueId}" style="color: inherit; text-decoration: none;">${result.dancerName}</a>`;
+              } else {
+                badge.textContent = result.dancerName;
+              }
+              
+              // Insert before the '+ Add Me' button
+              const btn = cell.querySelector('button');
+              if (btn) {
+                cell.insertBefore(badge, btn);
+              } else {
+                cell.appendChild(badge);
+              }
+            }
+          });
+        } else {
+          alert(result.error || 'Failed to submit claim.');
+        }
+      } catch (err) {
+        alert('An error occurred. Please try again.');
       }
     }
   </script>
