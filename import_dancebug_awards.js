@@ -221,11 +221,17 @@ async function run() {
             if (dancerNames && award) {
               const dancers = dancerNames.split(',').map(d => d.trim()).filter(d => d.length > 0);
               for (const dancerName of dancers) {
-                let dancer = await db.getAsync('SELECT * FROM dancers WHERE LOWER(name) = LOWER(?)', [dancerName]);
+                let dancer = null;
+                if (studioId) {
+                  dancer = await db.getAsync('SELECT d.* FROM dancers d JOIN dancer_studios ds ON d.id = ds.dancer_id WHERE LOWER(d.name) = LOWER(?) AND ds.studio_id = ?', [dancerName, studioId]);
+                } else {
+                  dancer = await db.getAsync('SELECT * FROM dancers WHERE LOWER(name) = LOWER(?) LIMIT 1', [dancerName]);
+                }
+                
                 if (!dancer) {
                   const uniqueId = generateDancerId(dancerName);
                   await db.runAsync('INSERT INTO dancers (unique_id, name) VALUES (?, ?)', [uniqueId, dancerName]);
-                  dancer = await db.getAsync('SELECT * FROM dancers WHERE LOWER(name) = LOWER(?)', [dancerName]);
+                  dancer = await db.getAsync('SELECT * FROM dancers WHERE unique_id = ?', [uniqueId]);
                   console.log(`    [+] Created new dancer: ${dancerName}`);
                 }
                 await db.runAsync('INSERT OR IGNORE INTO award_dancers (award_id, dancer_id) VALUES (?, ?)', [award.id, dancer.id]);
