@@ -284,7 +284,7 @@ app.get('/manage/studio/:id/roster', requireAuth, async (req, res) => {
 });
 
 app.post('/manage/studio/:id/roster/:dancerId/update', requireAuth, async (req, res) => {
-  const { headshot_url, graduation_year, status } = req.body;
+  const { headshot_url, graduation_year, status, birthday } = req.body;
   const db = await openDb();
   
   const studio = await db.get('SELECT owner_id FROM studios WHERE id = ?', [req.params.id]);
@@ -295,6 +295,10 @@ app.post('/manage/studio/:id/roster/:dancerId/update', requireAuth, async (req, 
     SET headshot_url = ?, graduation_year = ?, status = ?
     WHERE studio_id = ? AND dancer_id = ?
   `, [headshot_url || null, graduation_year || null, status || 'active', req.params.id, req.params.dancerId]);
+  
+  if (birthday !== undefined) {
+    await db.run(`UPDATE dancers SET birthday = ? WHERE id = ?`, [birthday || null, req.params.dancerId]);
+  }
   
   res.redirect(`/manage/studio/${req.params.id}/roster`);
 });
@@ -334,7 +338,11 @@ app.get('/api/dancers/search', requireAuth, async (req, res) => {
   
   const dancers = await db.all(`
     SELECT d.id, d.name, 
-           (SELECT COUNT(*) FROM award_dancers ad WHERE ad.dancer_id = d.id) as award_count
+           (SELECT COUNT(*) FROM award_dancers ad WHERE ad.dancer_id = d.id) as award_count,
+           (SELECT GROUP_CONCAT(s.name, ', ') 
+            FROM dancer_studios ds 
+            JOIN studios s ON ds.studio_id = s.id 
+            WHERE ds.dancer_id = d.id) as studio_names
     FROM dancers d
     WHERE d.name LIKE ?
     ORDER BY award_count DESC
@@ -517,7 +525,7 @@ app.post('/manage/studio/:id/roster/csv-commit', requireAuth, async (req, res) =
 });
 
 app.post('/manage/studio/:id/roster/claim', requireAuth, async (req, res) => {
-  const { dancer_id, new_dancer_name } = req.body;
+  const { dancer_id, new_dancer_name, birthday } = req.body;
   const db = await openDb();
   
   const studio = await db.get('SELECT owner_id FROM studios WHERE id = ?', [req.params.id]);
@@ -528,7 +536,7 @@ app.post('/manage/studio/:id/roster/claim', requireAuth, async (req, res) => {
   if (new_dancer_name) {
     // Create new dancer
     const uniqueId = generateDancerId(new_dancer_name);
-    await db.run('INSERT INTO dancers (unique_id, name) VALUES (?, ?)', [uniqueId, new_dancer_name]);
+    await db.run('INSERT INTO dancers (unique_id, name, birthday) VALUES (?, ?, ?)', [uniqueId, new_dancer_name, birthday || null]);
     const newDancer = await db.get('SELECT id FROM dancers ORDER BY id DESC LIMIT 1');
     finalDancerId = newDancer.id;
   }

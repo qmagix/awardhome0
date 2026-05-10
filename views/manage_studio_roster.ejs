@@ -119,6 +119,7 @@
                     data-headshot="<%= dancer.headshot_url || '' %>"
                     data-grad="<%= dancer.graduation_year || '' %>"
                     data-status="<%= dancer.status || 'active' %>"
+                    data-birthday="<%= dancer.birthday || '' %>"
                     onclick="openEditModal(this)">Edit</button>
                 </td>
               </tr>
@@ -149,8 +150,9 @@
 
     <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1.5rem;">
       <h4 style="margin: 0 0 1rem 0;">Can't find them? Create new profile</h4>
-      <form action="/manage/studio/<%= studio.id %>/roster/claim" method="POST" style="display: flex; gap: 1rem;">
+      <form action="/manage/studio/<%= studio.id %>/roster/claim" method="POST" style="display: flex; gap: 1rem; flex-wrap: wrap;">
         <input type="text" name="new_dancer_name" placeholder="New Dancer Name" required style="flex-grow: 1; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+        <input type="date" name="birthday" placeholder="Birthday" style="padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
         <button type="submit" class="btn btn-primary-white">Create & Add</button>
       </form>
     </div>
@@ -168,6 +170,10 @@
       <div>
         <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Studio Headshot URL</label>
         <input type="url" name="headshot_url" id="editHeadshot" placeholder="https://..." style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+      </div>
+      <div>
+        <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Birthday (Optional)</label>
+        <input type="date" name="birthday" id="editBirthday" style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
       </div>
       <div>
         <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Graduation Year</label>
@@ -362,14 +368,20 @@
             </div>`;
           }
 
+          let studiosHtml = '';
+          if (d.studio_names) {
+            studiosHtml = `<div style="font-size: 0.85rem; color: #fbbf24; margin-top: 0.25rem;">🏫 ${d.studio_names}</div>`;
+          }
+
           html += `
-            <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 1rem; border-radius: 6px; display: flex; justify-content: space-between; align-items: flex-start;">
+            <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 1rem; border-radius: 6px; display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;">
               <div style="flex-grow: 1;">
                 <div style="font-weight: 600; color: white;">${d.name}</div>
-                <div style="font-size: 0.8rem; color: var(--text-muted);">${d.award_count} awards recorded globally</div>
+                ${studiosHtml}
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">${d.award_count} awards recorded globally</div>
                 ${routinesHtml}
               </div>
-              <form action="/manage/studio/<%= studio.id %>/roster/claim" method="POST" style="margin-left: 1rem;">
+              <form action="/manage/studio/<%= studio.id %>/roster/claim" method="POST" style="margin-left: 1rem; flex-shrink: 0;">
                 <input type="hidden" name="dancer_id" value="${d.id}">
                 <button type="submit" class="btn btn-primary-white" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Claim to Roster</button>
               </form>
@@ -388,6 +400,7 @@
     document.getElementById('editHeadshot').value = btn.getAttribute('data-headshot');
     document.getElementById('editGradYear').value = btn.getAttribute('data-grad');
     document.getElementById('editStatus').value = btn.getAttribute('data-status');
+    document.getElementById('editBirthday').value = btn.getAttribute('data-birthday');
     document.getElementById('editDancerForm').action = `/manage/studio/<%= studio.id %>/roster/${btn.getAttribute('data-id')}/update`;
     document.getElementById('editDancerModal').style.display = 'block';
   }
