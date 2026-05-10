@@ -79,7 +79,21 @@ To scrape an entire year's worth of YAGP results simultaneously, use the `scrape
 node scrape_all_yagp.js 2024
 ```
 
-## 4. Studio Deduplication & Normalization
+## 4. Offline-First HTML Caching System
+To prevent rate limits and dramatically speed up subsequent imports or bug-fixing reruns, all scraper scripts (DanceBug, KAR, Rainbow, YAGP) utilize an **Offline-First HTML Caching System**.
+
+When a script fetches an event page or event list for the first time, it automatically saves the raw HTML response to the `./raw/<org_slug>/<year>/` directory on your local machine. Any subsequent runs of the import script will automatically trigger a **[Cache Hit]** and load the local file instantly without making a network request.
+
+### Forcing a Network Refetch
+If you need to bypass the local cache and force the scraper to download fresh HTML from the internet, simply prepend the `REFETCH=true` environment variable to your command.
+
+**Example:**
+```bash
+REFETCH=true ./import_all_years.sh
+REFETCH=true node batch_import.js starpower 2026
+```
+
+## 5. Studio Deduplication & Normalization
 YAGP frequently appends geographic codes (e.g., `, CA`, `, China`) to studio names, causing the database to spawn duplicate entries for the same studio (e.g., `Studio X` and `Studio X, CA`). 
 
 To resolve this without deleting or destroying cross-event data, run the `dedup_studios.js` script periodically after large ingestions.
@@ -93,20 +107,36 @@ This script will:
 - Store the longer, comma-appended name in the base studio's new `aka` field to preserve the alias.
 - Delete the duplicate studio record.
 
----
-
-## 5. Downloading Legacy PDFs
+## 6. Downloading Legacy PDFs
 For older years (typically pre-2022), DanceBug competitions often published their results as static PDF files rather than HTML pages. These cannot be automatically parsed into the database. 
 
 However, you can automatically bulk-download all of these legacy PDFs to your local machine for offline archiving using the `download_legacy_pdfs.js` script.
 
 **How to run:**
 ```bash
-- `node download_legacy_pdfs.js`
+node download_legacy_pdfs.js
+```
+This script will loop through all 5 DanceBug competitions, scan their historical archives, and download any PDF results it finds into the `/tobeprocessed/pdf/<competition_slug>/` directory, along with a handy JSON metadata file for each PDF.
+
+## 7. Studio Contact Information Bootstrapping
+You can auto-populate missing website, email, phone, and address data for studios by running the bootstrapper:
+```bash
+node bootstrap_studios.js
+```
+This script acts strictly as a gap-filler. It searches your database for studios that **do not have** a website, email, or phone number, and searches DuckDuckGo for matching contact info. It skips any studios that already have contact info stored.
+
+## 8. Full Database Reset Workflow
+If you need to completely wipe the database and perform a clean multi-year ingestion (e.g., refreshing all data from 2022-2026), follow this safe workflow to preserve your manually curated studio contact info:
+
+1. **Backup Contacts**: Run `node export_studio_contacts.js` to create `studio_contacts_backup.json`.
+2. **Wipe Database**: Delete `database.sqlite`.
+3. **Initialize Schema**: Start the server briefly (`node server.js`) to auto-create the empty schema, then stop the server.
+4. **Seed Organizations**: Run `node seed_orgs.js` to populate the 8 root organizations.
+5. **Mass Import**: Run `./import_all_years.sh` to ingest all events and trigger the auto-backfill mapping.
+6. **Restore Contacts**: Run `node import_studio_contacts.js` to restore the emails, phones, and websites.
+7. **Fill Gaps**: Run `node bootstrap_studios.js` to find contact info for any brand new studios discovered during the mass import.
 
 ## Platform Documentation
 To assist users in navigating the platform, two standalone FAQ pages are hosted on the application itself:
 - **Studio Admin FAQ (`/faq/admin`)**: A comprehensive guide for Studio Directors on how to claim their studio, customize their public profile, embed the iframe widget, and manage their dancer roster securely using the Secret Join Code. It also details the "Pseudo-Studio" architecture for handling multi-studio collaborations (e.g. YAGP Pas De Deux).
 - **Dancer FAQ (`/faq/dancer`)**: A guide for students/parents explaining how to claim awards using their Studio Secret Code, how to reuse their auto-generated Unique ID for faster claiming, what the verification badges mean, and the platform's privacy protections.
-```
-This script will loop through all 5 DanceBug competitions, scan their historical archives, and download any PDF results it finds into the `/tobeprocessed/pdf/<competition_slug>/` directory, along with a handy JSON metadata file for each PDF.

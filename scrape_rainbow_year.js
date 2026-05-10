@@ -1,5 +1,5 @@
-const axios = require('axios');
 const cheerio = require('cheerio');
+const { fetchWithCache } = require('./fetch_cache');
 const { scrapeRainbow } = require('./scrape_rainbow');
 
 // Add a simple sleep function to prevent rate-limiting
@@ -8,7 +8,7 @@ const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 async function scrapeRainbowYear(year) {
   const baseUrl = `https://rainbowdance.com/results/${year}`;
   console.log(`Fetching events list from ${baseUrl}...`);
-  const { data: listData } = await axios.get(baseUrl);
+  const { data: listData } = await fetchWithCache(baseUrl, 'rainbow', year, 'event_list');
   const $list = cheerio.load(listData);
 
   const eventUrls = new Set();

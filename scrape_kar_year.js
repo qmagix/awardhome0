@@ -1,5 +1,5 @@
-const axios = require('axios');
 const cheerio = require('cheerio');
+const { fetchWithCache } = require('./fetch_cache');
 const { openDb } = require('./database');
 const crypto = require('crypto');
 const slugify = require('slugify');
@@ -11,7 +11,7 @@ const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 async function scrapeKarYear(year) {
   const baseUrl = `https://dancekar.com/competition/results/${year}`;
   console.log(`Fetching events list from ${baseUrl}...`);
-  const { data: listData } = await axios.get(baseUrl);
+  const { data: listData } = await fetchWithCache(baseUrl, 'kar', year, 'event_list');
   const $list = cheerio.load(listData);
 
   const eventUrls = new Set();
@@ -43,7 +43,7 @@ async function scrapeKarYear(year) {
     console.log(`[${i + 1}/${urlsToScrape.length}] Scraping ${url}...`);
 
     try {
-      const { data } = await axios.get(url);
+      const { data } = await fetchWithCache(url, 'kar', year);
       const $ = cheerio.load(data);
 
       let event = await db.get(`SELECT id FROM events WHERE url = ?`, [url]);

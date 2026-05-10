@@ -1,5 +1,5 @@
-const axios = require('axios');
 const cheerio = require('cheerio');
+const { fetchWithCache } = require('./fetch_cache');
 const { openDb } = require('./database');
 const crypto = require('crypto');
 const slugify = require('slugify');
@@ -8,7 +8,9 @@ const { generateDancerId, generateStudioId } = require('./utils');
 async function scrapeYagp(url, dryRun = true) {
   console.log(`Fetching YAGP Results from ${url}...`);
   try {
-    const { data } = await axios.get(url);
+    const yearMatch = url.match(/yagp-(\d{4})-/i);
+    const year = yearMatch ? yearMatch[1] : 'all';
+    const { data } = await fetchWithCache(url, 'yagp', year);
     const $ = cheerio.load(data);
     
     const table = $('table').first();

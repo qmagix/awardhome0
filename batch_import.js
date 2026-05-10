@@ -1,6 +1,7 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
 const { spawnSync } = require('child_process');
+const { fetchWithCache } = require('./fetch_cache');
 
 const YEARS_MAP = {
   2026: 2054,
@@ -30,8 +31,10 @@ const BASE_URL = 'https://www.dancebug.com/rf/events_list.php?ifid=';
 async function fetchLinksForYear(yearValue, ifid, retries = 3) {
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
-      const res = await axios.get(`${BASE_URL}${ifid}&d_year=${yearValue}`, { timeout: 15000 });
-      const $ = cheerio.load(res.data);
+      // Look up compSlug based on ifid
+      const compSlug = Object.keys(COMPETITIONS).find(key => COMPETITIONS[key].ifid === ifid) || 'unknown';
+      const { data } = await fetchWithCache(`${BASE_URL}${ifid}&d_year=${yearValue}`, compSlug, yearValue, 'event_list');
+      const $ = cheerio.load(data);
       
       let dateIdx = 0;
       let locIdx = 1;

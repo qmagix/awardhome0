@@ -1,5 +1,5 @@
-const axios = require('axios');
 const cheerio = require('cheerio');
+const { fetchWithCache } = require('./fetch_cache');
 const { openDb } = require('./database');
 const crypto = require('crypto');
 const slugify = require('slugify');
@@ -10,7 +10,7 @@ async function scrapeRainbow(url, year = 2026) {
     url = `https://rainbowdance.com/results/${year}/824`;
   }
   console.log(`Fetching data from ${url}...`);
-  const { data } = await axios.get(url);
+  const { data } = await fetchWithCache(url, 'rainbow', year);
   const $ = cheerio.load(data);
   const db = await openDb();
 

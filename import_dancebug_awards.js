@@ -1,6 +1,6 @@
-const axios = require('axios');
 const cheerio = require('cheerio');
 const sqlite3 = require('sqlite3').verbose();
+const { fetchWithCache } = require('./fetch_cache');
 const { promisify } = require('util');
 const crypto = require('crypto');
 const { generateDancerId, generateStudioId } = require('./utils');
@@ -62,7 +62,8 @@ async function run() {
   console.log(`Fetching ${url}...`);
   let data;
   try {
-    const response = await axios.get(url);
+    const orgSlug = passedOrgName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const response = await fetchWithCache(url, orgSlug, year);
     data = response.data;
   } catch (err) {
     console.error(`Failed to fetch ${url} - Status: ${err.response ? err.response.status : 'Unknown'} - It may be broken or require authentication.`);

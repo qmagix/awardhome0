@@ -1,5 +1,5 @@
-const axios = require('axios');
 const cheerio = require('cheerio');
+const { fetchWithCache } = require('./fetch_cache');
 const { scrapeYagp } = require('./scrape_yagp_year');
 
 async function scrapeYagpByYear(targetYear) {
@@ -10,7 +10,7 @@ async function scrapeYagpByYear(targetYear) {
 
   console.log(`Fetching YAGP sitemap to find events for ${targetYear}...`);
   try {
-    const r = await axios.get('https://yagp.org/page-sitemap.xml');
+    const r = await fetchWithCache('https://yagp.org/page-sitemap.xml', 'yagp', targetYear, 'sitemap');
     const $ = cheerio.load(r.data, { xmlMode: true });
     
     let eventUrls = [];
