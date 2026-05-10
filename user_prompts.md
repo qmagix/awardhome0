@@ -263,3 +263,18 @@ Now I am thinking about design for dancers ease of use: (1) view or search dance
 Comments on artifact URI: file:///Users/q/.gemini/antigravity/brain/39f56569-3111-4674-b9cb-31442c68852a/implementation_plan.md
 The user has approved this document.
 [Provided feedback to finalize manual admin approval for studio join codes, removed the public roster tab due to privacy concerns, and implemented an "Add Me" button on awards where dancers can claim with a unique ID and studio code or create a new profile with name and birthday.]
+
+## User Request - 2026-05-09
+what is the command to install needed modules for this repo?
+
+## User Request - 2026-05-09
+I want to run import_all_years.sh to create a fresh sqlite3 db, do I need to init a db first?
+
+## User Request - 2026-05-09
+Then we should put thsoe two lines in import_all_years.sh to make it self contained?
+
+## User Request - 2026-05-09
+Wait just found seed_orgs missing believe imagine and dreammaker, will that be a problem? will these new orgs be automatically created by the scripts?
+
+## User Request - 2026-05-10
+I ran import_all_years.sh, but all dancebug related file fetch all failed? ...

@@ -13,6 +13,13 @@ echo "=========================================================="
 echo "    Starting Mass Database Import (2022 - 2026)"
 echo "=========================================================="
 
+echo ""
+echo ">>> Initializing Database Schema..."
+node database.js
+
+echo ">>> Seeding Organizations..."
+node seed_orgs.js
+
 for YEAR in "${YEARS[@]}"; do
     echo ""
     echo "----------------------------------------------------------"

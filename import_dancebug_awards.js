@@ -63,10 +63,14 @@ async function run() {
   let data;
   try {
     const orgSlug = passedOrgName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    const response = await fetchWithCache(url, orgSlug, year);
+    const explicitYear = parseInt(process.argv[5]);
+    const yearMatch = passedLocation ? passedLocation.match(/\b(20[1-3][0-9])\b/) : null;
+    const resolvedYear = explicitYear || (yearMatch ? parseInt(yearMatch[1]) : new Date().getFullYear());
+    const response = await fetchWithCache(url, orgSlug, resolvedYear);
     data = response.data;
   } catch (err) {
-    console.error(`Failed to fetch ${url} - Status: ${err.response ? err.response.status : 'Unknown'} - It may be broken or require authentication.`);
+    console.error(`Failed to fetch ${url} - Status: ${err.response ? err.response.status : 'Unknown'} - Error: ${err.message} (${err.code})`);
+    console.error(err);
     process.exit(1);
   }
   const $ = cheerio.load(data);

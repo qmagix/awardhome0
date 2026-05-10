@@ -470,3 +470,23 @@ Advised the user to re-run the Revolution batch script to backfill the purged da
 ## Interaction - 2026-05-09 (YAGP Idempotency Bug Fix)
 **User:** Noticed that running the YAGP mass scraper for the first time skipped numerous awards on fresh event imports (e.g., 47 skipped in LA, 42 skipped in Korea) and requested an investigation into why fresh imports triggered the idempotency skip.
 **AI:** Logged the skipped outputs and discovered a structural flaw in the SQL idempotency check. YAGP frequently awards the same place (e.g., "TOP 15") to multiple different soloists from the *same* studio in the *same* category. Because soloists rarely have a "Performance Name", and the idempotency check only evaluated `[event_id, place, category, performance_name, studio_id]`, the script was treating the second "TOP 15" dancer as a duplicate of the first. Refactored the insertion logic to resolve and map the `dancer_id` *before* hitting the idempotency check, and added `dancer_id` to the SQL duplicate constraint. Re-ran the Korea event, which successfully salvaged and inserted the 43 falsely skipped soloists.
+
+## Interaction - 2026-05-09 (Install Modules Command)
+**User:** Asked for the command to install the needed modules for this repo.
+**AI:** Directed the user to use `npm install`, as this is a Node.js project.
+
+## Interaction - 2026-05-09 (Database Initialization Query)
+**User:** Asked if they need to initialize the database before running `import_all_years.sh` to create a fresh sqlite3 db.
+**AI:** Confirmed that they must initialize the database and seed the organizations first, as the import scripts expect the tables and organization records to already exist. Instructed the user to run `node database.js` followed by `node seed_orgs.js` before running the bash script.
+
+## Interaction - 2026-05-09 (Script Self-Containment)
+**User:** Suggested adding the database initialization commands directly into the `import_all_years.sh` script to make it self-contained.
+**AI:** Updated `import_all_years.sh` to automatically run `node database.js` and `node seed_orgs.js` before beginning the scrape loops.
+
+## Interaction - 2026-05-09 (Missing Organizations Query)
+**User:** Noticed that `seed_orgs.js` was missing Believe, Imagine, and DreamMaker, and asked if that would be a problem or if they would be automatically created.
+**AI:** Checked the import scripts and confirmed that `import_dancebug_awards.js` contains a `getOrCreateOrg` function. Reassured the user that these organizations will be automatically created, though their URL slugs will be derived from their full names (e.g., `believe-talent-competition`).
+
+## Interaction - 2026-05-10 (Fix DanceBug Fetch Error)
+**User:** Reported that the mass import script was failing on all DanceBug Amazon S3 URLs with an Unknown status.
+**AI:** Discovered a ReferenceError where `year` was undefined during the `fetchWithCache` call. Fixed the script to properly resolve and define the year before fetching. Recommended the user to let the script finish and rerun it, or stop and restart, since the scripts are idempotent.
