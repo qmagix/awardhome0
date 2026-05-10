@@ -246,7 +246,9 @@ async function run() {
     LEFT JOIN studio_info_drafts d ON s.id = d.studio_id AND d.status = 'pending'
     JOIN awards a ON a.studio_id = s.id
     JOIN events e ON a.event_id = e.id
-    WHERE (s.website_url IS NULL OR s.website_url = '') 
+    WHERE (s.website_url IS NULL OR s.website_url = '')
+      AND (s.email IS NULL OR s.email = '')
+      AND (s.phone IS NULL OR s.phone = '')
       AND d.id IS NULL
     GROUP BY s.id, s.name
     HAVING COUNT(a.id) > 10 AND MAX(e.year) >= 2023
