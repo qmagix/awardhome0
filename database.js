@@ -85,6 +85,8 @@ async function initDb() {
       dancer_id INTEGER NOT NULL,
       studio_id INTEGER NOT NULL,
       status TEXT DEFAULT 'active',
+      headshot_url TEXT,
+      graduation_year INTEGER,
       notes TEXT,
       FOREIGN KEY (dancer_id) REFERENCES dancers(id),
       FOREIGN KEY (studio_id) REFERENCES studios(id),
