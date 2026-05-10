@@ -89,7 +89,7 @@
 
     <!-- Quick Stats -->
     <div class="quick-stats grid"
-      style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 3rem;">
+      style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 3rem;">
       <div class="card glass-card" style="text-align: center; min-height: auto; padding: 1.5rem;">
         <h4 style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase;">Total Awards</h4>
         <p style="font-size: 2.5rem; font-weight: 800; color: white; margin: 0.5rem 0 0;">
@@ -107,6 +107,26 @@
         <p style="font-size: 1.5rem; font-weight: 800; color: var(--primary); margin: 1.25rem 0 0;">
           <%= quickStats.activeYearsStr %>
         </p>
+      </div>
+      <div class="card glass-card" style="text-align: center; min-height: auto; padding: 1.5rem;">
+        <h4 style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase;">1st Place Finishes</h4>
+        <p style="font-size: 2.5rem; font-weight: 800; color: #fbbf24; margin: 0.5rem 0 0;">
+          <%= quickStats.firstPlaceCount %>
+        </p>
+      </div>
+      <div class="card glass-card" style="text-align: center; min-height: auto; padding: 1.5rem;">
+        <h4 style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase;">Past 5 Years</h4>
+        <p style="font-size: 1.25rem; font-weight: 700; color: white; margin: 0.5rem 0 0.25rem 0;">
+          <%= quickStats.awardsPast5Years %> Awards
+        </p>
+        <p style="font-size: 0.9rem; color: var(--text-muted); margin: 0;">across <%= quickStats.eventsPast5Years %> events</p>
+      </div>
+      <div class="card glass-card" style="text-align: center; min-height: auto; padding: 1.5rem; background: rgba(236, 72, 153, 0.05); border-color: rgba(236, 72, 153, 0.2);">
+        <h4 style="color: var(--primary); font-size: 0.85rem; text-transform: uppercase;">This Year</h4>
+        <p style="font-size: 1.5rem; font-weight: 800; color: white; margin: 0.5rem 0 0.25rem 0;">
+          <%= quickStats.awardsThisYear %> Awards
+        </p>
+        <p style="font-size: 0.9rem; color: var(--text-muted); margin: 0;">across <%= quickStats.eventsThisYear %> events</p>
       </div>
     </div>
 

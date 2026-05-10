@@ -1235,6 +1235,14 @@ app.get('/studio/:id', async (req, res) => {
   let totalAwards = 0;
   const eventsAttended = new Set();
   
+  const currentYear = new Date().getFullYear();
+  let awardsThisYear = 0;
+  let awardsPast5Years = 0;
+  const eventsThisYear = new Set();
+  const eventsPast5Years = new Set();
+  let firstPlaceCount = 0;
+  const uniqueDancers = new Set();
+  
   for (const award of awards) {
     if (awardDancersMap[award.id]) {
       award.dancers = awardDancersMap[award.id];
@@ -1244,10 +1252,32 @@ app.get('/studio/:id', async (req, res) => {
       award.dancers = [];
     }
     
+    award.dancers.forEach(d => {
+      if (d.unique_id) uniqueDancers.add(d.unique_id);
+      else if (d.name) uniqueDancers.add(d.name.toLowerCase().trim());
+    });
+    
     totalAwards++;
-    const year = award.event_year || 'Unknown Year';
+    const year = award.event_year;
     const eventKey = `${award.org_name} - ${award.event_name} (${award.date_string})`;
     eventsAttended.add(eventKey);
+
+    const yearNum = parseInt(year, 10);
+    if (!isNaN(yearNum)) {
+      if (yearNum === currentYear) {
+        awardsThisYear++;
+        eventsThisYear.add(eventKey);
+      }
+      if (yearNum >= currentYear - 4) {
+        awardsPast5Years++;
+        eventsPast5Years.add(eventKey);
+      }
+    }
+
+    const placeStr = String(award.place || '').trim().toLowerCase();
+    if (placeStr === '1' || placeStr === '1st') {
+      firstPlaceCount++;
+    }
 
     if (!yearsMap.has(year)) {
       yearsMap.set(year, new Map());
@@ -1281,7 +1311,13 @@ app.get('/studio/:id', async (req, res) => {
   const quickStats = {
     totalAwards,
     totalEvents: eventsAttended.size,
-    activeYearsStr
+    activeYearsStr,
+    awardsThisYear,
+    eventsThisYear: eventsThisYear.size,
+    awardsPast5Years,
+    eventsPast5Years: eventsPast5Years.size,
+    firstPlaceCount,
+    uniqueDancersCount: uniqueDancers.size
   };
 
   res.render('studio', { studio, mergedIntoStudio, groupedData, quickStats, hasAwards: awards.length > 0 });
