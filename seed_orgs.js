@@ -8,7 +8,10 @@ async function seedOrgs() {
     { name: 'Rainbow National Dance Competition', slug: 'rainbow', website: 'https://rainbowdance.com' },
     { name: 'Revolution Talent Competition', slug: 'revolution', website: 'https://revolutiontalent.com' },
     { name: 'Starpower Talent Competition', slug: 'starpower', website: 'https://starpowertalent.com' },
-    { name: 'Youth America Grand Prix', slug: 'yagp', website: 'https://yagp.org' }
+    { name: 'Youth America Grand Prix', slug: 'yagp', website: 'https://yagp.org' },
+    { name: 'Believe Talent Competition', slug: 'believe', website: 'https://believetalent.com' },
+    { name: 'Imagine Dance Challenge', slug: 'imagine', website: 'https://imaginedancechallenge.com' },
+    { name: 'DreamMaker Dance Competition', slug: 'dreammaker', website: 'https://dreammakerdance.com' }
   ];
 
   console.log('Seeding organizations...');
