@@ -27,9 +27,9 @@ async function scrapeYagp(url, dryRun = true) {
     
     // Some event names are in the page title or URL
     const eventMatch = url.match(/yagp-(\d{4})-(.+)-winners/);
-    const year = eventMatch ? eventMatch[1] : 'Unknown';
+    const eventYear = eventMatch ? eventMatch[1] : 'Unknown';
     const location = eventMatch ? eventMatch[2].replace(/-/g, ' ').toUpperCase() : 'Unknown';
-    const eventName = `YAGP ${year} ${location}`;
+    const eventName = `YAGP ${eventYear} ${location}`;
     
     console.log(`\nEvent: ${eventName}`);
     console.log('====================================================');
