@@ -49,7 +49,7 @@
       <p>No group awards found.</p>
     <% } else { %>
       <% groupAwards.forEach(function(award) { %>
-        <div class="premium-trophy-card">
+        <div class="premium-trophy-card <%= isPremiumAward(award) ? 'premium-award-border' : '' %>">
           <% if (!award.is_self_added) { %>
             <div class="verified-badge" title="Official Verified Award">
               <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" width="14" height="14"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
@@ -69,7 +69,9 @@
               const pLowerGroup = placeTextGroup.toLowerCase();
               const typeLowerGroup = (award.award_type || '').toLowerCase();
               
-              if (pLowerGroup.includes('1st') || pLowerGroup === 'winner' || pLowerGroup.includes('first') || pLowerGroup === 'champion') {
+              if (isPremiumAward(award)) {
+                tierGroup = 'tier-gold'; iconGroup = getPremiumDetails(award).icon;
+              } else if (pLowerGroup.includes('1st') || pLowerGroup === 'winner' || pLowerGroup.includes('first') || pLowerGroup === 'champion') {
                 tierGroup = 'tier-gold'; iconGroup = '🏆';
               } else if (pLowerGroup.includes('2nd') || pLowerGroup.includes('second')) {
                 tierGroup = 'tier-silver'; iconGroup = '🏆';
@@ -102,7 +104,6 @@
         </div>
       <% }); %>
     <% } %>
-  </div>
   </div>
 
   <div class="awards-view-table card glass-card" style="display: none; overflow-x: auto; margin-top: 1rem;">
@@ -140,7 +141,6 @@
       </tbody>
     </table>
   </div>
-</div>
 
 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 3rem;">
     <h2>Solo Awards</h2>
@@ -150,7 +150,7 @@
       <p>No solo awards found.</p>
     <% } else { %>
       <% soloAwards.forEach(function(award) { %>
-        <div class="premium-trophy-card">
+        <div class="premium-trophy-card <%= isPremiumAward(award) ? 'premium-award-border' : '' %>">
           <% if (!award.is_self_added) { %>
             <div class="verified-badge" title="Official Verified Award">
               <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" width="14" height="14"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
@@ -170,7 +170,9 @@
               const pLower = placeText.toLowerCase();
               const typeLower = (award.award_type || '').toLowerCase();
               
-              if (pLower.includes('1st') || pLower === 'winner' || pLower.includes('first') || pLower === 'champion') {
+              if (isPremiumAward(award)) {
+                tier = 'tier-gold'; icon = getPremiumDetails(award).icon;
+              } else if (pLower.includes('1st') || pLower === 'winner' || pLower.includes('first') || pLower === 'champion') {
                 tier = 'tier-gold'; icon = '🏆';
               } else if (pLower.includes('2nd') || pLower.includes('second')) {
                 tier = 'tier-silver'; icon = '🏆';
@@ -203,8 +205,6 @@
         </div>
       <% }); %>
     <% } %>
-  </div>
-
   </div>
 
   <div class="awards-view-table card glass-card" style="display: none; overflow-x: auto; margin-top: 1rem;">
@@ -242,6 +242,7 @@
       </tbody>
     </table>
   </div>
+</div>
 
   <script>
 function setView(viewMode) {

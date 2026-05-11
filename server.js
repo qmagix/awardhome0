@@ -39,6 +39,20 @@ app.locals.formatPlacement = function(place) {
   return place;
 };
 
+app.locals.getPremiumDetails = function(award) {
+  const text = [award.category, award.award_type, award.performance_name].filter(Boolean).join(' ').toLowerCase();
+  
+  if (text.includes('scholarship')) return { isPremium: true, icon: '🎓' };
+  if (text.includes('invite') || text.includes('invitation')) return { isPremium: true, icon: '💌' };
+  if (text.includes('title') || text.includes('photogenic') || text.match(/\bdoy\b/) || text.includes('dancer of the year')) return { isPremium: true, icon: '👑' };
+  
+  return { isPremium: false, icon: '' };
+};
+
+app.locals.isPremiumAward = function(award) {
+  return app.locals.getPremiumDetails(award).isPremium;
+};
+
 // Global middleware to pass user to templates
 app.use((req, res, next) => {
   res.locals.user = req.session.user || null;
@@ -800,8 +814,9 @@ app.get('/widget/studio/:id', async (req, res) => {
   const theme = req.query.theme || 'dark';
   const primaryColor = req.query.primary || 'ec4899';
   const bg = req.query.bg || (theme === 'dark' ? '000000' : 'ffffff');
+  const layout = req.query.layout || 'list';
   
-  res.render('widget', { studio, awards, theme, primaryColor, bg });
+  res.render('widget', { studio, awards, theme, primaryColor, bg, layout });
 });
 
 app.get('/my-studio', requireAuth, async (req, res) => {

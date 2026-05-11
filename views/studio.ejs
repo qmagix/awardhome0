@@ -208,7 +208,7 @@
                           </thead>
                           <tbody>
                             <% event.awards.forEach(function(award) { %>
-                              <tr>
+                              <tr class="<%= isPremiumAward(award) ? 'premium-award-border' : '' %>">
                                 <td><strong>
                                     <%= award.performance_name %>
                                   </strong> <span class="sub-text">
@@ -217,8 +217,8 @@
                                 <td>
                                   <%= award.award_type %>
                                 </td>
-                                <td><span class="badge">
-                                    <%= formatPlacement(award.place) %>
+                                <td><span class="badge <%= isPremiumAward(award) ? 'badge-premium' : '' %>">
+                                    <%= isPremiumAward(award) ? getPremiumDetails(award).icon + ' ' : '' %><%= formatPlacement(award.place) %>
                                   </span></td>
                                 <td>
                                   <%= award.category || '-' %>
