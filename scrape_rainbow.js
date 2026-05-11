@@ -41,6 +41,9 @@ async function scrapeRainbow(url, year = 2026) {
        }
     }
 
+    if (!eventName.toLowerCase().startsWith('rainbow')) {
+      eventName = `Rainbow - ${eventName}`;
+    }
     const res = await db.run(`INSERT INTO events (org_id, name, year, date_string, url) VALUES (?, ?, ?, ?, ?)`, [org.id, eventName, year, dateStr, url]);
     event = { id: res.lastID };
   }
@@ -139,7 +142,7 @@ async function scrapeRainbow(url, year = 2026) {
 
       // Insert award if it doesn't already exist
       const existingAward = await db.get(
-        'SELECT id FROM awards WHERE event_id = ? AND category = ? AND performance_name = ? AND place = ?',
+        'SELECT id FROM awards WHERE event_id = ? AND category = ? AND performance_name = ? AND IFNULL(place, "") = IFNULL(?, "")',
         [event.id, category, perfName, place]
       );
 

@@ -12,7 +12,11 @@
       </div>
     <% } %>
 
-    <form action="/claim/studio/<%= studio.id %>" method="POST" style="display: flex; flex-direction: column; gap: 1.5rem;">
+    <form action="/claim/studio/<%= studio.id %>" method="POST" style="display: flex; flex-direction: column; gap: 1.5rem;"
+      <% if (user && user.role === 'superadmin') { %>
+        onsubmit="return confirm('You are a superadmin! Are you sure you want to claim this studio? (It is better to use a regular test account if you need to test this flow).');"
+      <% } %>
+    >
       <div>
         <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Your Role / Affiliation</label>
         <input type="text" name="role" required placeholder="e.g. Studio Director, Owner" style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;">

@@ -40,5 +40,46 @@
       </tbody>
     </table>
   </div>
+
+  <div class="header-section" style="margin-top: 4rem;">
+    <h2>Pending Dancer Claims</h2>
+    <p class="subtitle">Review and verify ownership requests for dancer profiles.</p>
+  </div>
+
+  <div class="card glass-card" style="margin-top: 2rem; overflow-x: auto; margin-bottom: 4rem;">
+    <table class="premium-table">
+      <thead>
+        <tr>
+          <th>User Email</th>
+          <th>Dancer</th>
+          <th>Proof Provided</th>
+          <th>Date Submitted</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (dancerClaims && dancerClaims.length === 0) { %>
+          <tr><td colspan="5" style="text-align: center;">No pending dancer claims at this time.</td></tr>
+        <% } else if (dancerClaims) { %>
+          <% dancerClaims.forEach(function(claim) { %>
+            <tr>
+              <td><%= claim.user_email %></td>
+              <td><a href="/dancer/<%= claim.dancer_unique_id %>" style="color: var(--primary);"><%= claim.dancer_name %></a></td>
+              <td style="white-space: pre-wrap; font-size: 0.9rem;"><%= claim.proof_text %></td>
+              <td><%= new Date(claim.created_at).toLocaleDateString() %></td>
+              <td style="display: flex; gap: 0.5rem;">
+                <form action="/admin/claims/dancer/<%= claim.id %>/approve" method="POST">
+                  <button type="submit" class="btn" style="background: #10b981; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">Approve</button>
+                </form>
+                <form action="/admin/claims/dancer/<%= claim.id %>/reject" method="POST">
+                  <button type="submit" class="btn btn-secondary" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">Reject</button>
+                </form>
+              </td>
+            </tr>
+          <% }); %>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
 </div>
 <%- include('partials/footer') %>

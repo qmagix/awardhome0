@@ -72,6 +72,16 @@ async function initDb() {
       FOREIGN KEY(user_id) REFERENCES users(id),
       FOREIGN KEY(studio_id) REFERENCES studios(id)
     );
+    CREATE TABLE IF NOT EXISTS dancer_claims (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      dancer_id INTEGER NOT NULL,
+      proof_text TEXT,
+      status TEXT DEFAULT 'pending',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(user_id) REFERENCES users(id),
+      FOREIGN KEY(dancer_id) REFERENCES dancers(id)
+    );
     CREATE TABLE IF NOT EXISTS dancers (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       unique_id TEXT UNIQUE NOT NULL,
@@ -133,6 +143,14 @@ async function initDb() {
       status TEXT DEFAULT 'pending',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
+
+    -- Performance Indexes
+    CREATE INDEX IF NOT EXISTS idx_awards_event ON awards(event_id);
+    CREATE INDEX IF NOT EXISTS idx_awards_studio ON awards(studio_id);
+    CREATE INDEX IF NOT EXISTS idx_awards_backfill ON awards(event_id, studio_id, performance_name COLLATE NOCASE);
+    CREATE INDEX IF NOT EXISTS idx_award_dancers_award ON award_dancers(award_id);
+    CREATE INDEX IF NOT EXISTS idx_award_dancers_dancer ON award_dancers(dancer_id);
+    CREATE INDEX IF NOT EXISTS idx_events_org ON events(org_id);
   `);
   
   // Migrations
@@ -141,6 +159,8 @@ async function initDb() {
   try { await db.exec('ALTER TABLE studios ADD COLUMN join_code TEXT'); } catch(e) {}
   try { await db.exec("ALTER TABLE award_dancers ADD COLUMN status TEXT DEFAULT 'imported'"); } catch(e) {}
   try { await db.exec("ALTER TABLE awards ADD COLUMN age_division TEXT"); } catch(e) {}
+  try { await db.exec("ALTER TABLE dancers ADD COLUMN is_claimed BOOLEAN DEFAULT 0"); } catch(e) {}
+  try { await db.exec("ALTER TABLE dancers ADD COLUMN claimed_by_user_id INTEGER REFERENCES users(id)"); } catch(e) {}
 
   console.log("Database initialized.");
   return db;

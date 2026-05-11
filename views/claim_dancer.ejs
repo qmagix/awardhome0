@@ -1,0 +1,33 @@
+<%- include('partials/header') %>
+<div class="container" style="max-width: 600px; margin-top: 2rem;">
+  <h2>Claim Dancer Profile</h2>
+  <p class="text-muted">You are claiming ownership of the profile for <strong><%= dancer.name %></strong>.</p>
+  
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="alert alert-danger"><%= error %></div>
+  <% } %>
+
+  <div class="card" style="margin-top: 1.5rem;">
+    <div class="card-body">
+      <form action="/claim/dancer/<%= dancer.id %>" method="POST">
+        <div class="mb-3">
+          <label for="relationship" class="form-label">Relationship to Dancer</label>
+          <select class="form-select" id="relationship" name="relationship" required>
+            <option value="">Select...</option>
+            <option value="Parent/Guardian">I am the Parent/Guardian</option>
+            <option value="Self">I am the Dancer</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="proof" class="form-label">Proof of Identity</label>
+          <textarea class="form-control" id="proof" name="proof" rows="4" placeholder="Please provide details (e.g. your studio affiliation, Instagram handle, etc.) so we can verify your claim." required></textarea>
+        </div>
+        <div class="alert alert-info">
+          <strong>Note:</strong> All dancer claims are manually reviewed by our administrators to ensure profile security.
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Submit Claim Request</button>
+      </form>
+    </div>
+  </div>
+</div>
+<%- include('partials/footer') %>

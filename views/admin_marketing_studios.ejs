@@ -1,0 +1,75 @@
+<%- include('partials/header') %>
+<div class="container">
+  <div class="header-section">
+    <a href="/admin" class="btn btn-outline" style="margin-bottom: 1rem; display: inline-block;">&larr; Back to Dashboard</a>
+    <h1>Marketing Target Studios</h1>
+    <p class="subtitle">Studios with an email address and > 15 awards (<%= studios.length %> total)</p>
+  </div>
+
+  <div class="card glass-card" style="overflow-x: auto;">
+    <table class="data-table" id="marketingTable" style="width: 100%; text-align: left; border-collapse: collapse;">
+      <thead>
+        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+          <th style="padding: 1rem; cursor: pointer;" onclick="sortTable(0, 'number')">ID &#x21D5;</th>
+          <th style="padding: 1rem; cursor: pointer;" onclick="sortTable(1, 'string')">Studio Name &#x21D5;</th>
+          <th style="padding: 1rem; cursor: pointer;" onclick="sortTable(2, 'string')">Email &#x21D5;</th>
+          <th style="padding: 1rem; cursor: pointer;" onclick="sortTable(3, 'number')">Award Count &#x21D5;</th>
+          <th style="padding: 1rem;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% studios.forEach(s => { %>
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+            <td style="padding: 1rem;"><%= s.id %></td>
+            <td style="padding: 1rem; font-weight: 600;"><%= s.name %></td>
+            <td style="padding: 1rem; color: #10b981;"><a href="mailto:<%= s.email %>" style="color: #10b981; text-decoration: none;"><%= s.email %></a></td>
+            <td style="padding: 1rem;"><span class="badge"><%= s.award_count %></span></td>
+            <td style="padding: 1rem;"><a href="/studio/<%= s.id %>" class="btn btn-outline" style="padding: 0.25rem 0.75rem; font-size: 0.8rem;" target="_blank">View</a></td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+let sortDirections = [true, true, true, true];
+
+function sortTable(columnIndex, type) {
+  const table = document.getElementById("marketingTable");
+  const tbody = table.querySelector("tbody");
+  const rows = Array.from(tbody.querySelectorAll("tr"));
+  
+  const isAsc = sortDirections[columnIndex];
+  sortDirections[columnIndex] = !isAsc;
+
+  rows.sort((a, b) => {
+    let valA = a.cells[columnIndex].innerText.trim();
+    let valB = b.cells[columnIndex].innerText.trim();
+    
+    if (type === 'number') {
+      valA = parseInt(valA) || 0;
+      valB = parseInt(valB) || 0;
+      return isAsc ? valA - valB : valB - valA;
+    } else {
+      return isAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+    }
+  });
+
+  rows.forEach(row => tbody.appendChild(row));
+}
+</script>
+
+<style>
+.badge {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-weight: bold;
+}
+.data-table th:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+</style>
+
+<%- include('partials/footer') %>

@@ -5,6 +5,51 @@
     <p class="subtitle">Data Integrity & Investigation Tools</p>
   </div>
 
+  <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 2rem;">
+    <div class="card glass-card" style="text-align: center; padding: 1.5rem;">
+      <h3 style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 1px;">Organizations</h3>
+      <p style="font-size: 2rem; font-weight: 800; color: var(--primary); margin: 0;"><%= stats.orgs.toLocaleString() %></p>
+    </div>
+    <div class="card glass-card" style="text-align: center; padding: 1.5rem;">
+      <h3 style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 1px;">Total Events</h3>
+      <p style="font-size: 2rem; font-weight: 800; color: var(--primary); margin: 0;"><%= stats.events.toLocaleString() %></p>
+    </div>
+    <div class="card glass-card" style="text-align: center; padding: 1.5rem;">
+      <h3 style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 1px;">Total Studios</h3>
+      <p style="font-size: 2rem; font-weight: 800; color: var(--primary); margin: 0;"><%= stats.studios.toLocaleString() %></p>
+      <p style="font-size: 0.8rem; color: #10b981; margin-top: 0.5rem;"><%= stats.claimedStudios.toLocaleString() %> Claimed</p>
+    </div>
+    <div class="card glass-card" style="text-align: center; padding: 1.5rem;">
+      <h3 style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 1px;">Total Dancers</h3>
+      <p style="font-size: 2rem; font-weight: 800; color: var(--primary); margin: 0;"><%= stats.dancers.toLocaleString() %></p>
+      <p style="font-size: 0.8rem; color: #10b981; margin-top: 0.5rem;"><%= stats.claimedDancers.toLocaleString() %> Claimed</p>
+    </div>
+    <div class="card glass-card" style="text-align: center; padding: 1.5rem;">
+      <h3 style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 1px;">Total Awards</h3>
+      <p style="font-size: 2rem; font-weight: 800; color: var(--primary); margin: 0;"><%= stats.awards.toLocaleString() %></p>
+    </div>
+    <div class="card glass-card" <%- `style="text-align: center; padding: 1.5rem; border-color: ${stats.pendingClaims > 0 ? 'rgba(239, 68, 68, 0.4)' : 'rgba(255,255,255,0.1)'};"` %>>
+      <h3 style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 1px;">Pending Claims</h3>
+      <p <%- `style="font-size: 2rem; font-weight: 800; margin: 0; color: ${stats.pendingClaims > 0 ? '#ef4444' : 'var(--text-color)'};"` %>><%= stats.pendingClaims %></p>
+      <% if (stats.pendingClaims > 0) { %>
+        <a href="/admin/claims" style="font-size: 0.8rem; color: #ef4444; display: block; margin-top: 0.5rem; text-decoration: none;">Review Now &rarr;</a>
+      <% } %>
+    </div>
+    <div class="card glass-card" style="text-align: center; padding: 1.5rem;">
+      <h3 style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 1px;">Studios > 15 Awards</h3>
+      <p style="font-size: 2rem; font-weight: 800; color: var(--primary); margin: 0;"><%= stats.studiosWithManyAwards.toLocaleString() %></p>
+    </div>
+    <div class="card glass-card" style="text-align: center; padding: 1.5rem;">
+      <h3 style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 1px;">Studios w/ Email</h3>
+      <p style="font-size: 2rem; font-weight: 800; color: var(--primary); margin: 0;"><%= stats.studiosWithEmail.toLocaleString() %></p>
+    </div>
+    <div class="card glass-card" style="text-align: center; padding: 1.5rem;">
+      <h3 style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 1px;">Marketing Target</h3>
+      <p style="font-size: 2rem; font-weight: 800; color: var(--primary); margin: 0;"><%= stats.marketingStudiosCount.toLocaleString() %></p>
+      <a href="/admin/marketing/studios" style="font-size: 0.8rem; color: #10b981; display: block; margin-top: 0.5rem; text-decoration: none;">View List &rarr;</a>
+    </div>
+  </div>
+
   <div class="grid">
     <!-- Flagged Studios -->
     <div class="card glass-card">

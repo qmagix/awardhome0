@@ -12,10 +12,13 @@
 - [ ] Set up Email Notifications for Studio Admins when new pending claims arrive.
 - [ ] Add Bulk Actions (Approve/Deny All) to the Studio Verification Dashboard.
 - [ ] Implement Roster Export to CSV for Studio Admins.
-- [ ] Add Composite Indexes to the SQLite database (e.g., `event_id, performance_name, studio_id`) to optimize backfill and search queries at scale.
+- [x] Add Composite Indexes to the SQLite database (e.g., `event_id, performance_name, studio_id`) to optimize backfill and search queries at scale.
 - [ ] Implement Server-side Pagination/Lazy Loading for studio awards lists to prevent browser freezing for mega-studios.
 - [ ] Create automated nightly backups (cron job) for the SQLite database.
 - [ ] Add API Rate Limiting to `/api/claim-award` to prevent brute-forcing of Join Codes.
+
+- [x] add to superadmin dashboard: number of studios have more than 15 awards, number of studios have email addresses. 
+
 
 ## DONE
 - [x] Create project documentation files

@@ -10,25 +10,9 @@
             <strong><a href="/studio/<%= s.id %>"><%= s.name %></a></strong><%= idx < dancer.studios.length - 1 ? ', ' : '' %>
           <% }); %>
         </p>
-        <p class="unique-id" style="margin-bottom: 0.5rem;">ID: <code><%= dancer.unique_id %></code></p>
-        
-        <div class="stats-pills" style="display: flex; gap: 1rem; margin-top: 0.5rem; margin-bottom: 1rem;">
-          <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981; font-size: 0.8rem; padding: 0.3rem 0.6rem;">
-            Total Awards: <%= soloAwards.length + groupAwards.length %>
-          </span>
-          <span class="badge" style="background: rgba(139, 92, 246, 0.2); color: #8b5cf6; font-size: 0.8rem; padding: 0.3rem 0.6rem;">
-            Groups: <%= groupAwards.length %>
-          </span>
-          <span class="badge" style="background: rgba(236, 72, 153, 0.2); color: #ec4899; font-size: 0.8rem; padding: 0.3rem 0.6rem;">
-            Solos: <%= soloAwards.length %>
-          </span>
-        </div>
-
+        <p class="unique-id">ID: <code><%= dancer.unique_id %></code></p>
         <% if (!dancer.is_claimed) { %>
-          <div style="margin-top: 1rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-left: 4px solid #3b82f6; border-radius: 4px;">
-            <p style="margin-bottom: 0.75rem; font-size: 0.9rem; color: var(--text-color);">
-              <strong>Notice:</strong> Our AI awards detective may occasionally miss awards and get things wrong for various reasons. You can add awards and fix issues by claiming this account for yourself or your dancer.
-            </p>
+          <div style="margin-top: 1rem;">
             <a href="/claim/dancer/<%= dancer.id %>" class="btn btn-outline-primary btn-sm">Claim this Dancer</a>
           </div>
         <% } %>
@@ -37,13 +21,112 @@
   </div>
 
   <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2rem;">
-    <h2>Group Awards</h2>
+    <h2>Solo Awards</h2>
     <div class="view-toggle">
       <button id="btn-grid-view" class="btn btn-primary btn-sm" onclick="setView('grid')">Grid View</button>
       <button id="btn-table-view" class="btn btn-outline btn-sm" onclick="setView('table')" style="margin-left: 0.5rem;">Table View</button>
     </div>
   </div>
 
+  <div class="awards-view-grid awards-grid">
+    <% if (soloAwards.length === 0) { %>
+      <p>No solo awards found.</p>
+    <% } else { %>
+      <% soloAwards.forEach(function(award) { %>
+        <div class="premium-trophy-card">
+          <% if (!award.is_self_added) { %>
+            <div class="verified-badge" title="Official Verified Award">
+              <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" width="14" height="14"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            </div>
+          <% } %>
+            <% 
+              const placeText = formatPlacement(award.place);
+              let placeClass = 'award-place award-place-large';
+              if (placeText.length > 25) {
+                placeClass = 'award-place award-place-small';
+              } else if (placeText.length > 12) {
+                placeClass = 'award-place award-place-medium';
+              }
+              
+              let tier = 'tier-star';
+              let icon = '⭐';
+              const pLower = placeText.toLowerCase();
+              const typeLower = (award.award_type || '').toLowerCase();
+              
+              if (pLower.includes('1st') || pLower === 'winner' || pLower.includes('first') || pLower === 'champion') {
+                tier = 'tier-gold'; icon = '🏆';
+              } else if (pLower.includes('2nd') || pLower.includes('second')) {
+                tier = 'tier-silver'; icon = '🏆';
+              } else if (pLower.includes('3rd') || pLower.includes('third')) {
+                tier = 'tier-bronze'; icon = '🏆';
+              } else if (pLower.includes('4th') || pLower.includes('5th') || pLower.includes('6th') || pLower.includes('7th') || pLower.includes('8th') || pLower.includes('9th') || pLower.includes('10th')) {
+                // keep as star
+              } else if (pLower.includes('miss') || typeLower.includes('miss') || pLower.includes('mr ') || typeLower.includes('mr ')) {
+                tier = 'tier-gold'; icon = '🏆';
+              }
+              
+              if (pLower.includes('1st runner')) { tier = 'tier-silver'; icon = '🏆'; }
+              else if (pLower.includes('2nd runner')) { tier = 'tier-bronze'; icon = '🏆'; }
+            %>
+          <div class="content-wrapper <%= tier %>">
+            <div class="trophy-icon"><%= icon %></div>
+            <div class="<%= placeClass %>">
+              <%= placeText %>
+            </div>
+            <% if (award.is_self_added) { %>
+              <span class="badge" style="background: rgba(234, 179, 8, 0.2); color: #eab308; font-size: 0.6rem; margin-bottom: 0.5rem;" title="Unverified manually reported award">Self-Reported</span>
+            <% } %>
+            <p class="category"><%= award.award_type %></p>
+            <h3><%= award.performance_name || 'N/A' %></h3>
+            <% if (award.category) { %>
+              <p class="sub-category"><%= award.category %></p>
+            <% } %>
+            <p class="sub-category" style="color: #a5b4fc; font-weight: 600; margin-top: 0.5rem;"><%= award.event_name %> (<%= award.event_year %>)</p>
+          </div>
+        </div>
+      <% }); %>
+    <% } %>
+  </div>
+
+  </div>
+
+  <div class="awards-view-table card glass-card" style="display: none; overflow-x: auto; margin-top: 1rem;">
+    <table class="data-table" id="soloTable" style="width: 100%; text-align: left; border-collapse: collapse;">
+      <thead>
+        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+          <th style="padding: 1rem; cursor: pointer;" onclick="sortTable('soloTable', 0, 'string')">Placement &#x21D5;</th>
+          <th style="padding: 1rem; cursor: pointer;" onclick="sortTable('soloTable', 1, 'string')">Performance Name &#x21D5;</th>
+          <th style="padding: 1rem; cursor: pointer;" onclick="sortTable('soloTable', 2, 'string')">Category &#x21D5;</th>
+          <th style="padding: 1rem; cursor: pointer;" onclick="sortTable('soloTable', 3, 'string')">Event &#x21D5;</th>
+          <th style="padding: 1rem; cursor: pointer;" onclick="sortTable('soloTable', 4, 'number')">Year &#x21D5;</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (soloAwards.length === 0) { %>
+          <tr><td colspan="5" style="padding: 1rem; text-align: center;">No solo awards found.</td></tr>
+        <% } else { %>
+          <% soloAwards.forEach(function(award) { %>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+              <td style="padding: 1rem;">
+                <%= formatPlacement(award.place) %>
+                <% if (!award.is_self_added) { %>
+                  <svg viewBox="0 0 24 24" fill="#10b981" stroke="currentColor" stroke-width="0" width="14" height="14" style="display:inline-block; margin-left:4px;" title="Official Verified Award"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                <% } else { %>
+                  <span style="font-size: 0.6rem; color: #eab308; margin-left: 4px;" title="Self-Reported">(Self)</span>
+                <% } %>
+              </td>
+              <td style="padding: 1rem; font-weight: 600;"><%= award.performance_name || 'N/A' %></td>
+              <td style="padding: 1rem;"><%= award.award_type %><br><span style="font-size: 0.8rem; color: var(--text-muted);"><%= award.category %></span></td>
+              <td style="padding: 1rem;"><%= award.event_name %></td>
+              <td style="padding: 1rem;"><%= award.event_year %></td>
+            </tr>
+          <% }); %>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 style="margin-top: 3rem;">Group Awards</h2>
   <div class="awards-view-grid awards-grid">
     <% if (groupAwards.length === 0) { %>
       <p>No group awards found.</p>
@@ -142,108 +225,7 @@
   </div>
 </div>
 
-<div style="display: flex; justify-content: space-between; align-items: center; margin-top: 3rem;">
-    <h2>Solo Awards</h2>
-  </div>
-<div class="awards-view-grid awards-grid">
-    <% if (soloAwards.length === 0) { %>
-      <p>No solo awards found.</p>
-    <% } else { %>
-      <% soloAwards.forEach(function(award) { %>
-        <div class="premium-trophy-card">
-          <% if (!award.is_self_added) { %>
-            <div class="verified-badge" title="Official Verified Award">
-              <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" width="14" height="14"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-            </div>
-          <% } %>
-            <% 
-              const placeText = formatPlacement(award.place);
-              let placeClass = 'award-place award-place-large';
-              if (placeText.length > 25) {
-                placeClass = 'award-place award-place-small';
-              } else if (placeText.length > 12) {
-                placeClass = 'award-place award-place-medium';
-              }
-              
-              let tier = 'tier-star';
-              let icon = '⭐';
-              const pLower = placeText.toLowerCase();
-              const typeLower = (award.award_type || '').toLowerCase();
-              
-              if (pLower.includes('1st') || pLower === 'winner' || pLower.includes('first') || pLower === 'champion') {
-                tier = 'tier-gold'; icon = '🏆';
-              } else if (pLower.includes('2nd') || pLower.includes('second')) {
-                tier = 'tier-silver'; icon = '🏆';
-              } else if (pLower.includes('3rd') || pLower.includes('third')) {
-                tier = 'tier-bronze'; icon = '🏆';
-              } else if (pLower.includes('4th') || pLower.includes('5th') || pLower.includes('6th') || pLower.includes('7th') || pLower.includes('8th') || pLower.includes('9th') || pLower.includes('10th')) {
-                // keep as star
-              } else if (pLower.includes('miss') || typeLower.includes('miss') || pLower.includes('mr ') || typeLower.includes('mr ')) {
-                tier = 'tier-gold'; icon = '🏆';
-              }
-              
-              if (pLower.includes('1st runner')) { tier = 'tier-silver'; icon = '🏆'; }
-              else if (pLower.includes('2nd runner')) { tier = 'tier-bronze'; icon = '🏆'; }
-            %>
-          <div class="content-wrapper <%= tier %>">
-            <div class="trophy-icon"><%= icon %></div>
-            <div class="<%= placeClass %>">
-              <%= placeText %>
-            </div>
-            <% if (award.is_self_added) { %>
-              <span class="badge" style="background: rgba(234, 179, 8, 0.2); color: #eab308; font-size: 0.6rem; margin-bottom: 0.5rem;" title="Unverified manually reported award">Self-Reported</span>
-            <% } %>
-            <p class="category"><%= award.award_type %></p>
-            <h3><%= award.performance_name || 'N/A' %></h3>
-            <% if (award.category) { %>
-              <p class="sub-category"><%= award.category %></p>
-            <% } %>
-            <p class="sub-category" style="color: #a5b4fc; font-weight: 600; margin-top: 0.5rem;"><%= award.event_name %> (<%= award.event_year %>)</p>
-          </div>
-        </div>
-      <% }); %>
-    <% } %>
-  </div>
-
-  </div>
-
-  <div class="awards-view-table card glass-card" style="display: none; overflow-x: auto; margin-top: 1rem;">
-    <table class="data-table" id="soloTable" style="width: 100%; text-align: left; border-collapse: collapse;">
-      <thead>
-        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
-          <th style="padding: 1rem; cursor: pointer;" onclick="sortTable('soloTable', 0, 'string')">Placement &#x21D5;</th>
-          <th style="padding: 1rem; cursor: pointer;" onclick="sortTable('soloTable', 1, 'string')">Performance Name &#x21D5;</th>
-          <th style="padding: 1rem; cursor: pointer;" onclick="sortTable('soloTable', 2, 'string')">Category &#x21D5;</th>
-          <th style="padding: 1rem; cursor: pointer;" onclick="sortTable('soloTable', 3, 'string')">Event &#x21D5;</th>
-          <th style="padding: 1rem; cursor: pointer;" onclick="sortTable('soloTable', 4, 'number')">Year &#x21D5;</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% if (soloAwards.length === 0) { %>
-          <tr><td colspan="5" style="padding: 1rem; text-align: center;">No solo awards found.</td></tr>
-        <% } else { %>
-          <% soloAwards.forEach(function(award) { %>
-            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-              <td style="padding: 1rem;">
-                <%= formatPlacement(award.place) %>
-                <% if (!award.is_self_added) { %>
-                  <svg viewBox="0 0 24 24" fill="#10b981" stroke="currentColor" stroke-width="0" width="14" height="14" style="display:inline-block; margin-left:4px;" title="Official Verified Award"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                <% } else { %>
-                  <span style="font-size: 0.6rem; color: #eab308; margin-left: 4px;" title="Self-Reported">(Self)</span>
-                <% } %>
-              </td>
-              <td style="padding: 1rem; font-weight: 600;"><%= award.performance_name || 'N/A' %></td>
-              <td style="padding: 1rem;"><%= award.award_type %><br><span style="font-size: 0.8rem; color: var(--text-muted);"><%= award.category %></span></td>
-              <td style="padding: 1rem;"><%= award.event_name %></td>
-              <td style="padding: 1rem;"><%= award.event_year %></td>
-            </tr>
-          <% }); %>
-        <% } %>
-      </tbody>
-    </table>
-  </div>
-
-  <script>
+<script>
 function setView(viewMode) {
   const grids = document.querySelectorAll('.awards-view-grid');
   const tables = document.querySelectorAll('.awards-view-table');

@@ -172,7 +172,7 @@ async function run() {
           
           // Idempotency check: Only insert if it doesn't already exist
           const existingAward = await db.getAsync(
-            'SELECT id FROM awards WHERE event_id = ? AND category = ? AND performance_name = ? AND place = ?',
+            'SELECT id FROM awards WHERE event_id = ? AND category = ? AND performance_name = ? AND IFNULL(place, "") = IFNULL(?, "")',
             [event.id, categoryTitle, routine, place]
           );
 
@@ -209,7 +209,7 @@ async function run() {
             const studioId = studio ? studio.id : null;
 
             let award = await db.getAsync(
-              'SELECT id FROM awards WHERE event_id = ? AND category = ? AND performance_name = ? AND place = ?',
+              'SELECT id FROM awards WHERE event_id = ? AND category = ? AND performance_name = ? AND IFNULL(place, "") = IFNULL(?, "")',
               [event.id, categoryTitle, routine, 'Winner']
             );
 

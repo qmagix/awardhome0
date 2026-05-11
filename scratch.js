@@ -1,10 +1,9 @@
-const axios = require('axios');
-const cheerio = require('cheerio');
-async function run() {
-  const res = await axios.get('https://www.dancebug.com/rf/events_list.php?ifid=146&d_year=2053');
-  const $ = cheerio.load(res.data);
-  $('table th').each((idx, el) => {
-    console.log(idx, $(el).text().trim().toLowerCase());
-  });
+const sqlite3 = require('sqlite3');
+const { open } = require('sqlite');
+
+async function test() {
+  const db = await open({ filename: 'database.sqlite', driver: sqlite3.Database });
+  const row = await db.get(`SELECT COUNT(*) as count FROM (SELECT studio_id FROM awards GROUP BY studio_id HAVING COUNT(*) > 15)`);
+  console.log('Result:', row);
 }
-run();
+test();

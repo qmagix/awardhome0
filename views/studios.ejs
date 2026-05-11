@@ -5,6 +5,14 @@
     <p class="subtitle">Browse and manage all registered dance studios</p>
   </div>
 
+  <form method="GET" action="/studios" style="margin-top: 2rem; display: flex; gap: 1rem;">
+    <input type="text" name="q" placeholder="Search studios by name..." class="premium-input" style="flex-grow: 1; padding: 0.8rem 1rem;" value="<%= typeof q !== 'undefined' ? q : '' %>">
+    <button type="submit" class="btn btn-primary" style="padding: 0 2rem;">Search</button>
+    <% if (typeof q !== 'undefined' && q) { %>
+      <a href="/studios" class="btn btn-secondary" style="padding: 0.8rem 2rem; display: flex; align-items: center; text-decoration: none;">Clear</a>
+    <% } %>
+  </form>
+
   <div class="card glass-card" style="margin-top: 2rem;">
     <div style="overflow-x: auto;">
       <table class="premium-table sortable-table">
@@ -53,8 +61,9 @@
     <!-- Pagination -->
     <% if (totalPages > 1) { %>
       <div class="pagination" style="display: flex; justify-content: center; gap: 1rem; margin-top: 2rem;">
+        <% const queryStr = (typeof q !== 'undefined' && q) ? '&q=' + encodeURIComponent(q) : '' %>
         <% if (currentPage > 1) { %>
-          <a href="/studios?page=<%= currentPage - 1 %>" class="btn btn-secondary">Previous</a>
+          <a href="/studios?page=<%= currentPage - 1 %><%= queryStr %>" class="btn btn-secondary">Previous</a>
         <% } %>
         
         <span style="display: flex; align-items: center; color: var(--text-muted);">
@@ -62,7 +71,7 @@
         </span>
         
         <% if (currentPage < totalPages) { %>
-          <a href="/studios?page=<%= currentPage + 1 %>" class="btn btn-secondary">Next</a>
+          <a href="/studios?page=<%= currentPage + 1 %><%= queryStr %>" class="btn btn-secondary">Next</a>
         <% } %>
       </div>
     <% } %>

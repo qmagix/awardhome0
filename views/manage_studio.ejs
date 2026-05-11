@@ -188,6 +188,39 @@
           <textarea name="bio" rows="5" placeholder="Tell everyone what makes your studio special..." style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;"><%= studio.bio || '' %></textarea>
         </div>
 
+        <!-- Public Dashboard Visibility -->
+        <div style="margin-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1.5rem;">
+          <h3 style="margin-top: 0; color: white;">Public Dashboard Visibility</h3>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Choose which statistic cards you want to display on your public studio page. Only you and admins can see hidden cards.</p>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <label style="display: flex; align-items: center; gap: 0.75rem; color: white; cursor: pointer; background: rgba(0,0,0,0.2); padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);">
+              <input type="checkbox" name="show_total_awards" <%= studio.prefs && studio.prefs.show_total_awards ? 'checked' : '' %> style="width: 1.2rem; height: 1.2rem; accent-color: var(--primary);">
+              Total Awards
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.75rem; color: white; cursor: pointer; background: rgba(0,0,0,0.2); padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);">
+              <input type="checkbox" name="show_events_attended" <%= studio.prefs && studio.prefs.show_events_attended ? 'checked' : '' %> style="width: 1.2rem; height: 1.2rem; accent-color: var(--primary);">
+              Events Attended
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.75rem; color: white; cursor: pointer; background: rgba(0,0,0,0.2); padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);">
+              <input type="checkbox" name="show_1st_place_finishes" <%= studio.prefs && studio.prefs.show_1st_place_finishes ? 'checked' : '' %> style="width: 1.2rem; height: 1.2rem; accent-color: var(--primary);">
+              1st Place Finishes
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.75rem; color: white; cursor: pointer; background: rgba(0,0,0,0.2); padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);">
+              <input type="checkbox" name="show_1st_place_this_year" <%= studio.prefs && studio.prefs.show_1st_place_this_year ? 'checked' : '' %> style="width: 1.2rem; height: 1.2rem; accent-color: var(--primary);">
+              1st Place (This Year)
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.75rem; color: white; cursor: pointer; background: rgba(0,0,0,0.2); padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);">
+              <input type="checkbox" name="show_past_5_years" <%= studio.prefs && studio.prefs.show_past_5_years ? 'checked' : '' %> style="width: 1.2rem; height: 1.2rem; accent-color: var(--primary);">
+              Past 5 Years Activity
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.75rem; color: white; cursor: pointer; background: rgba(0,0,0,0.2); padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);">
+              <input type="checkbox" name="show_this_year" <%= studio.prefs && studio.prefs.show_this_year ? 'checked' : '' %> style="width: 1.2rem; height: 1.2rem; accent-color: var(--primary);">
+              This Year Activity
+            </label>
+          </div>
+        </div>
+
         <button type="submit" class="btn" style="background: var(--primary); color: white; border: none; padding: 1rem; font-weight: 600; border-radius: 6px; cursor: pointer; margin-top: 1rem;">Save Profile Changes</button>
       </form>
     </div>

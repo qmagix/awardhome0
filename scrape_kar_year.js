@@ -61,6 +61,9 @@ async function scrapeKarYear(year) {
           eventName = titleText.replace('KAR Dance Competition - ', '').replace('Results', '').trim();
         }
 
+        if (!eventName.toLowerCase().startsWith('kar')) {
+          eventName = `KAR - ${eventName}`;
+        }
         const res = await db.run(`INSERT INTO events (org_id, name, year, date_string, url) VALUES (?, ?, ?, ?, ?)`, [org.id, eventName, year, dateStr, url]);
         event = { id: res.lastID };
       }
@@ -153,7 +156,7 @@ async function scrapeKarYear(year) {
           }
 
           const existingAward = await db.get(
-            'SELECT id FROM awards WHERE event_id = ? AND category = ? AND performance_name = ? AND place = ?',
+            'SELECT id FROM awards WHERE event_id = ? AND category = ? AND performance_name = ? AND IFNULL(place, "") = IFNULL(?, "")',
             [event.id, category, perfName, place]
           );
 

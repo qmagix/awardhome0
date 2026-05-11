@@ -22,7 +22,10 @@ async function scrapeDanceKar() {
   // 2. Seed Event
   let event = await db.get(`SELECT id FROM events WHERE url = ?`, [url]);
   if (!event) {
-    const eventName = 'Hayward, CA - 2/13/2026';
+    let eventName = 'Hayward, CA - 2/13/2026';
+    if (!eventName.toLowerCase().startsWith('kar')) {
+      eventName = `KAR - ${eventName}`;
+    }
     const res = await db.run(`INSERT INTO events (org_id, name, year, date_string, url) VALUES (?, ?, ?, ?, ?)`, [org.id, eventName, 2026, '2/13/2026', url]);
     event = { id: res.lastID };
   }
@@ -116,7 +119,7 @@ async function scrapeDanceKar() {
       }
 
       const existingAward = await db.get(
-        'SELECT id FROM awards WHERE event_id = ? AND category = ? AND performance_name = ? AND place = ?',
+        'SELECT id FROM awards WHERE event_id = ? AND category = ? AND performance_name = ? AND IFNULL(place, "") = IFNULL(?, "")',
         [event.id, category, perfName, place]
       );
 

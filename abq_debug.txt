@@ -1,0 +1,215 @@
+Placement  Entry ID                  Studio Name                                    Routine Title
+Novice Gems ~ Senior ~ Duo/Trio
+DIAMOND      66           Dancing Stars Dance Studio                   BREAKIN DISHES
+Placement  Entry ID                  Studio Name                                    Routine Title
+Novice Gems ~ Teen ~ Duo/Trio
+DIAMOND       62                Music Moves Me NM                                RESCUE                               MAXA FLORES  
+Placement  Entry ID                  Studio Name                                    Routine Title                                Soloist Name
+Novice Gems ~ Teen ~ Solo
+DIAMOND      114    Aspire Dance Company of El Paso                   GET READY
+Placement  Entry ID                  Studio Name                                    Routine Title
+Novice Gems ~ Junior ~ Large Group
+DIAMOND      110         Fishback Studio of the Dance                      WAKE ME UP
+Placement  Entry ID                  Studio Name                                    Routine Title
+Novice Gems ~ Junior ~ Small Group
+DIAMOND       22     Aspire Dance Company of El Paso                        DRIVE
+Placement  Entry ID                  Studio Name                                    Routine Title
+Novice Gems ~ Junior ~ Duo/Trio
+SAPPHIRE      18          Fishback Studio of the Dance                       GET HAPPY                    ALLANA SALZBRENNER  
+EMERALD      15              Michaelas Dance Magic              HOLDING ON FOR A HERO               GRACE DANIEL  
+RUBY          12                Music Moves Me NM                               FLOWERS                         KENNADEE GARCIA  
+DIAMOND       14          Fishback Studio of the Dance                           DREAM                               MILA ROBERTS  
+Placement  Entry ID                  Studio Name                                    Routine Title                                Soloist Name
+Novice Gems ~ Junior ~ Solo
+RUBY         111          Dancing Stars Dance Studio                       MEAN GIRLS
+DIAMOND     112    Aspire Dance Company of El Paso           FEEL LIKE A WOMAN
+Placement  Entry ID                  Studio Name                                    Routine Title
+Novice Gems ~ Petite ~ Small Group
+DIAMOND       8            Dancing Stars Dance Studio                           PUSH IT
+Placement  Entry ID                  Studio Name                                    Routine Title
+Novice Gems ~ Petite ~ Duo/Trio
+SAPPHIRE       7                 Music Moves Me NM                              NUEVAYOL                           ABRIELLE CRUZ  
+EMERALD       3            Dancing Stars Dance Studio               I REALLY DONT CARE                APOLLONIA DIMAS  
+RUBY           5                 Music Moves Me NM                          FIX MY CROWN                       EVELYNN SPAKE  
+DIAMOND       6              Rise Up Dance Company               DANCE LIKE YO' DADDY               WESSLYN SMITH  
+Placement  Entry ID                  Studio Name                                    Routine Title                               Soloist Name
+Novice Gems ~ Petite ~ Solo
+Overall Results
+Albuquerque 2026
+----------------Page (0) Break----------------
+DIAMOND      64           Dancing Stars Dance Studio               GIRLS WILL BE GIRLS
+----------------Page (1) Break----------------
+EMERALD     101     Urban Movement Dance Academy                        HOME                                  SOPHIA BAZA  
+RUBY          99      Albuquerque Dance Collaborative                     PRETEND                           AVRIELLE SHANE  
+DIAMOND       98      Albuquerque Dance Collaborative                   COME OVER                       AUBREY MONTANO  
+Placement  Entry ID                  Studio Name                                    Routine Title                                Soloist Name
+Future Gems ~ Teen ~ Solo
+DIAMOND      144               Music Moves Me NM                                ZOMBIES
+Placement  Entry ID                  Studio Name                                    Routine Title
+Future Gems ~ Junior ~ Line
+SAPPHIRE     151                       Dimensions                                   READY TO GO
+EMERALD     137                       Dimensions                                   COLORBLIND
+RUBY         156                       Dimensions                                         MARIA
+DIAMOND      146                       Dimensions                        BOOM! SHAKE THE ROOM
+Placement  Entry ID                  Studio Name                                    Routine Title
+Future Gems ~ Junior ~ Large Group
+SAPPHIRE     125         Fishback Studio of the Dance                         FIRED UP
+EMERALD     143         Fishback Studio of the Dance               RELAX MY BELOVED
+RUBY         149         Fishback Studio of the Dance                     DIABLO ROJO
+DIAMOND      115         Fishback Studio of the Dance                          RECESS
+Placement  Entry ID                  Studio Name                                    Routine Title
+Future Gems ~ Junior ~ Small Group
+SAPPHIRE      46               Evolution dance studio                          K-POP STARS
+EMERALD      53                        Dimensions                              BREAKING DISHES
+RUBY          48          Fishback Studio of the Dance             YOU'VE GOT A FRIEND
+DIAMOND       50                        Dimensions                       SHAKE, RUMBLE, & QUAKE
+Placement  Entry ID                  Studio Name                                    Routine Title
+Future Gems ~ Junior ~ Duo/Trio
+SAPPHIRE      43           Dancing Stars Dance Studio                    LOOKING AT ME                      MADISON SKREK  
+EMERALD      40            Albuquerque Dance Divas                              NO L'S                               ELIANA ARTIAGA  
+RUBY          41          Fishback Studio of the Dance             SHARP DRESSED MAN                 NOAH PASZTOR  
+DIAMOND       39      Albuquerque Dance Collaborative                       CLOWN                           SLOAN BARKHURST  
+Placement  Entry ID                  Studio Name                                    Routine Title                                Soloist Name
+Future Gems ~ Junior ~ Solo
+DIAMOND      127               Music Moves Me NM              WHEN CAN I SEE YOU AGAIN
+Placement  Entry ID                  Studio Name                                    Routine Title
+Future Gems ~ Petite ~ Large Group
+DIAMOND      117              Evolution dance studio                        TRIBAL QUEENS
+Placement  Entry ID                  Studio Name                                    Routine Title
+Future Gems ~ Petite ~ Small Group
+DIAMOND     43.5         Dancing Stars Dance Studio                    CHEETAH GIRLS
+Placement  Entry ID                  Studio Name                                    Routine Title
+Future Gems ~ Petite ~ Duo/Trio
+RUBY          26                Music Moves Me NM                               JACKSON                               JAYMEE RIOS  
+DIAMOND      27                Music Moves Me NM                        WHAT A FEELING                        JAYDEN RIOS  
+Placement  Entry ID                  Studio Name                                    Routine Title                               Soloist Name
+Future Gems ~ Petite ~ Solo
+----------------Page (2) Break----------------
+SAPPHIRE     106    Aspire Dance Company of El Paso                        DIANA                           JULISSA CONTRERAS  
+----------------Page (3) Break----------------
+Placement  Entry ID                  Studio Name                                    Routine Title
+Elite Gems ~ Junior ~ Small Group
+DIAMOND      52      Albuquerque Dance Collaborative                    FABULOUS
+Placement  Entry ID                  Studio Name                                    Routine Title
+Elite Gems ~ Junior ~ Duo/Trio
+RUBY          56           Dancing Stars Dance Studio                    GRAVEDIGGER                         MARIELA CULP  
+DIAMOND      58      Albuquerque Dance Collaborative                        SHINE                       KAYDENCE MONDRAGON  
+Placement  Entry ID                  Studio Name                                    Routine Title                               Soloist Name
+Elite Gems ~ Junior ~ Solo
+DIAMOND     145                       Dimensions                                UMBELIEVEABLE
+Placement  Entry ID                  Studio Name                                    Routine Title
+Future Gems ~ Senior ~ Large Group
+DIAMOND     161          Dancing Stars Dance Studio                       PENNYWISE
+Placement  Entry ID                  Studio Name                                    Routine Title
+Future Gems ~ Senior ~ Small Group
+77.5     Ruidoso Academy Ballet & Dance             DUST IN THE WIND
+EMERALD
+61      Ruidoso Academy Ballet & Dance                  IS THIS LOVE
+RUBY
+63                Music Moves Me NM                                SUIT UP
+DIAMOND
+Placement  Entry ID                  Studio Name                                    Routine Title
+Future Gems ~ Senior ~ Duo/Trio
+10th            87           Dancing Stars Dance Studio                   BIGGER PERSON                   ESTRELLA LITTLES  
+9th            83      Ruidoso Academy Ballet & DanceKITRI'S VARIATION DON QUIXOTE        JEWEL PALMER  
+8th           75.5     Albuquerque Dance Collaborative                       YUMMY                           CHELSEA MOFFATT  
+7th            89      Ruidoso Academy Ballet & Dance                    LANDSLIDE                        GILLIAN STEPHENS  
+6th            85                        Dimensions                                            Y2K                               MARISKA CSERNAK  
+5th            86             Rise Up Dance Company                         WENT AWAY                            EMMA OLIVIER  
+SAPPHIRE      84      Albuquerque Dance Collaborative                     BE MORE                               TRE GAXIOLA  
+EMERALD      90               Evolution dance studio                                 TOXIC                               MARLEE MOLINA  
+RUBY          75      Albuquerque Dance Collaborative                  DELTA DAWN                        BROOKLYN BYRD  
+DIAMOND       88                Music Moves Me NM                                   STILL                               JASIAH ESQUIVEL  
+Placement  Entry ID                  Studio Name                                    Routine Title                                Soloist Name
+Future Gems ~ Senior ~ Solo
+WINNER                                      Aspire Dance Company of El Paso                                JULISSA CONTRERAS  
+Placement                                                      Studio Name                                                           Soloist Name
+Future Gems ~ Teen ~ Title Winner
+SAPPHIRE     155              Evolution dance studio                               NASCAR
+EMERALD     160                       Dimensions                      DO WHAT YOU HAVE TO DO
+RUBY         154                       Dimensions                                     EMOTIONS
+DIAMOND      123                       Dimensions                           NO MORE I LOVE YOUS
+Placement  Entry ID                  Studio Name                                    Routine Title
+Future Gems ~ Teen ~ Small Group
+DIAMOND      68      Albuquerque Dance Collaborative                   BE MY BABY
+Placement  Entry ID                  Studio Name                                    Routine Title
+Future Gems ~ Teen ~ Duo/Trio
+----------------Page (4) Break----------------
+WINNER                                       Albuquerque Dance Collaborative                             KAYDENCE MONDRAGON  
+Placement                                                      Studio Name                                                           Soloist Name
+Elite Gems ~ Junior ~ Title Winner
+DIAMOND     139               Music Moves Me NM                             UPGRADE U
+----------------Page (5) Break----------------
+WINNER                                       Albuquerque Dance Collaborative                                       BELLA DEWITT  
+Placement                                                      Studio Name                                                           Soloist Name
+Elite Gems ~ Senior ~ Title Winner
+DIAMOND     124         Fishback Studio of the Dance                      DISTORTION
+Placement  Entry ID                  Studio Name                                    Routine Title
+Elite Gems ~ Senior ~ Large Group
+SAPPHIRE     118               Music Moves Me NM                       COOLER THAN ME
+EMERALD     130         Fishback Studio of the Dance                      SEPTEMBER
+RUBY         163               Music Moves Me NM                            LAST WORDS
+DIAMOND      159         Fishback Studio of the Dance                THIS BITTER EARTH
+Placement  Entry ID                  Studio Name                                    Routine Title
+Elite Gems ~ Senior ~ Small Group
+SAPPHIRE      80          Fishback Studio of the Dance                   HIDE AND SEEK
+EMERALD     60.5               Music Moves Me NM                           CHERRY WINE
+RUBY          72          Fishback Studio of the Dance                           LUNGS
+DIAMOND       81      Albuquerque Dance Collaborative                      MY LOVE
+Placement  Entry ID                  Studio Name                                    Routine Title
+Elite Gems ~ Senior ~ Duo/Trio
+10th           191         Fishback Studio of the Dance                             LOST                                    LEAH WALL  
+9th           220     Albuquerque Dance Collaborative          WINNER TAKES IT ALL              ISOBELLA HERRERA  
+8th           203         Fishback Studio of the Dance               UNCHAINED MELODY            BROOKLYN GALLEGOS  
+7th           186         Fishback Studio of the Dance                      DESPERADO                            ANAIS KUMAR  
+6th          217.5    Albuquerque Dance Collaborative                      BLOUSE                               BELLA DEWITT  
+5th           221     Albuquerque Dance Collaborative                    THE LAKES                      JASLENE RUVALCABA  
+SAPPHIRE     209         Fishback Studio of the Dance                    SPELL ON YOU                           EMILY ROSS  
+EMERALD     192     Albuquerque Dance Collaborative              KATE MCCANNON                  ALYSSA BOLANDER  
+RUBY         197         Fishback Studio of the Dance                        THE SWAN                          SIENNA ESPINOZA  
+DIAMOND      216               Music Moves Me NM                              HANA HOU                   PHOENIX RYAN SANTELLA  
+Placement  Entry ID                  Studio Name                                    Routine Title                                Soloist Name
+Elite Gems ~ Senior ~ Solo
+WINNER                                       Albuquerque Dance Collaborative                                       NYA ETEEYAN  
+Placement                                                      Studio Name                                                           Soloist Name
+Elite Gems ~ Teen ~ Title Winner
+DIAMOND      158               Music Moves Me NM                                 VIENNA
+Placement  Entry ID                  Studio Name                                    Routine Title
+Elite Gems ~ Teen ~ Small Group
+DIAMOND       71                Music Moves Me NM                                SECRET
+Placement  Entry ID                  Studio Name                                    Routine Title
+Elite Gems ~ Teen ~ Duo/Trio
+SAPPHIRE     177               Music Moves Me NM            YOU MAKE ME FEEL SO YOUNG             LEELA RICE  
+EMERALD    105.5          Rise Up Dance Company                         A LOST LOVE                      SAVANNAH GRIEGO  
+RUBY         176         Fishback Studio of the Dance                     CALLING YOU                      MARINA SANDOVAL  
+DIAMOND     178     Albuquerque Dance Collaborative                        WOES                                 NYA ETEEYAN  
+Placement  Entry ID                  Studio Name                                    Routine Title                               Soloist Name
+Elite Gems ~ Teen ~ Solo
+----------------Page (6) Break----------------
+1st Runner Up                                   Albuquerque Dance Collaborative                                JASLENE RUVALCABA  
+----------------Page (7) Break----------------
+164                  Fishback Studio of the Dance                      NO SERVICE
+Entry ID                            Studio Name                                    Routine Title
+Industry Dance Awards ~ People's Choice
+Music Moves Me NM
+Studio Name
+ADCC Studio of Excellence Winner
+Fishback Studio of the Dance
+Studio Name
+Sweepstakes Winner
+Albuquerque Dance Collaborative
+Studio Name
+Sportsmanship Winner
+Dimensions                             NO ORDINARY LOVE
+Studio Name                                    Routine Title
+Director's Choice Winner
+SENIOR                     Music Moves Me NM                        TULICIA BARRETT
+TEEN                       Music Moves Me NM                           MAXA FLORES
+JUNIOR           Albuquerque Dance Collaborative       KAYDENCE MONDRAGON
+PETITE                      Music Moves Me NM                         EVELYNN SPAKE
+Placement                          Studio Name                                   Dancer Name
+Photogenic Winners
+DIAMOND     164         Fishback Studio of the Dance                      NO SERVICE
+Placement  Entry ID                  Studio Name                                    Routine Title
+Specialty ~ Production
+----------------Page (8) Break----------------

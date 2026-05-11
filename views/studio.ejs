@@ -75,59 +75,86 @@
             </a>
           <% } %>
           <% } else { %>
-            <div style="display: flex; align-items: center; gap: 1rem;">
-              <a href="#" onclick="openBenefitsModal(event)"
-                style="color: var(--primary); text-decoration: underline; font-size: 0.95rem; font-weight: 600; transition: color 0.2s;">Why
-                Claim?</a>
-              <a href="/claim/studio/<%= studio.id %>" class="btn"
-                style="background: var(--primary); color: white; border: none; padding: 0.5rem 1.5rem; font-weight: 600; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3); text-decoration: none; display: inline-block;">Claim
-                Studio</a>
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem;">
+              <div style="display: flex; align-items: center; gap: 1rem;">
+                <a href="#" onclick="openBenefitsModal(event)"
+                  style="color: var(--primary); text-decoration: underline; font-size: 0.95rem; font-weight: 600; transition: color 0.2s;">Why
+                  Claim?</a>
+                <a href="/claim/studio/<%= studio.id %>" class="btn"
+                  style="background: var(--primary); color: white; border: none; padding: 0.5rem 1.5rem; font-weight: 600; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3); text-decoration: none; display: inline-block;">Claim
+                  Studio</a>
+              </div>
+              <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted); max-width: 350px; text-align: right; line-height: 1.4;">Claim this studio to customize your dashboard metrics, update awards, correct dancer names, and embed your achievements!</p>
             </div>
             <% } %>
       </div>
     </div>
 
     <!-- Quick Stats -->
+    <% const isOwnerOrAdmin = typeof user !== 'undefined' && user && (user.role === 'admin' || user.id === studio.owner_id); %>
     <div class="quick-stats grid"
       style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 3rem;">
-      <div class="card glass-card" style="text-align: center; min-height: auto; padding: 1.5rem;">
+      <% if (studio.prefs.show_total_awards || isOwnerOrAdmin) { %>
+      <div class="card glass-card" style="text-align: center; min-height: auto; padding: 1.5rem; position: relative;">
+        <% if (!studio.prefs.show_total_awards && isOwnerOrAdmin) { %><div style="position: absolute; top: 0.5rem; right: 0.5rem; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; background: rgba(239, 68, 68, 0.2); color: #f87171; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.3);" title="Hidden from Public">Hidden</div><% } %>
         <h4 style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase;">Total Awards</h4>
-        <p style="font-size: 2.5rem; font-weight: 800; color: white; margin: 0.5rem 0 0;">
+        <p style="font-size: 1.8rem; font-weight: 800; color: white; margin: 0.5rem 0 0.25rem 0;">
           <%= quickStats.totalAwards %>
         </p>
+        <% if (quickStats.sinceYear) { %>
+          <p style="font-size: 0.9rem; color: var(--text-muted); margin: 0;">since <%= quickStats.sinceYear %></p>
+        <% } %>
       </div>
-      <div class="card glass-card" style="text-align: center; min-height: auto; padding: 1.5rem;">
+      <% } %>
+      <% if (studio.prefs.show_events_attended || isOwnerOrAdmin) { %>
+      <div class="card glass-card" style="text-align: center; min-height: auto; padding: 1.5rem; position: relative;">
+        <% if (!studio.prefs.show_events_attended && isOwnerOrAdmin) { %><div style="position: absolute; top: 0.5rem; right: 0.5rem; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; background: rgba(239, 68, 68, 0.2); color: #f87171; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.3);" title="Hidden from Public">Hidden</div><% } %>
         <h4 style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase;">Events Attended</h4>
         <p style="font-size: 2.5rem; font-weight: 800; color: white; margin: 0.5rem 0 0;">
           <%= quickStats.totalEvents %>
         </p>
       </div>
-      <div class="card glass-card" style="text-align: center; min-height: auto; padding: 1.5rem;">
-        <h4 style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase;">Active Years</h4>
-        <p style="font-size: 1.5rem; font-weight: 800; color: var(--primary); margin: 1.25rem 0 0;">
-          <%= quickStats.activeYearsStr %>
-        </p>
-      </div>
-      <div class="card glass-card" style="text-align: center; min-height: auto; padding: 1.5rem;">
+      <% } %>
+
+      <% if (studio.prefs.show_1st_place_finishes || isOwnerOrAdmin) { %>
+      <div class="card glass-card" style="text-align: center; min-height: auto; padding: 1.5rem; position: relative;">
+        <% if (!studio.prefs.show_1st_place_finishes && isOwnerOrAdmin) { %><div style="position: absolute; top: 0.5rem; right: 0.5rem; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; background: rgba(239, 68, 68, 0.2); color: #f87171; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.3);" title="Hidden from Public">Hidden</div><% } %>
         <h4 style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase;">1st Place Finishes</h4>
         <p style="font-size: 2.5rem; font-weight: 800; color: #fbbf24; margin: 0.5rem 0 0;">
           <%= quickStats.firstPlaceCount %>
         </p>
       </div>
-      <div class="card glass-card" style="text-align: center; min-height: auto; padding: 1.5rem;">
+      <% } %>
+
+      <% if (studio.prefs.show_1st_place_this_year || isOwnerOrAdmin) { %>
+      <div class="card glass-card" style="text-align: center; min-height: auto; padding: 1.5rem; position: relative;">
+        <% if (!studio.prefs.show_1st_place_this_year && isOwnerOrAdmin) { %><div style="position: absolute; top: 0.5rem; right: 0.5rem; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; background: rgba(239, 68, 68, 0.2); color: #f87171; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.3);" title="Hidden from Public">Hidden</div><% } %>
+        <h4 style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase;">1st Place (This Year)</h4>
+        <p style="font-size: 2.5rem; font-weight: 800; color: #fbbf24; margin: 0.5rem 0 0;">
+          <%= quickStats.firstPlaceCountThisYear %>
+        </p>
+      </div>
+      <% } %>
+      <% if (studio.prefs.show_past_5_years || isOwnerOrAdmin) { %>
+      <div class="card glass-card" style="text-align: center; min-height: auto; padding: 1.5rem; position: relative;">
+        <% if (!studio.prefs.show_past_5_years && isOwnerOrAdmin) { %><div style="position: absolute; top: 0.5rem; right: 0.5rem; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; background: rgba(239, 68, 68, 0.2); color: #f87171; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.3);" title="Hidden from Public">Hidden</div><% } %>
         <h4 style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase;">Past 5 Years</h4>
         <p style="font-size: 1.25rem; font-weight: 700; color: white; margin: 0.5rem 0 0.25rem 0;">
           <%= quickStats.awardsPast5Years %> Awards
         </p>
         <p style="font-size: 0.9rem; color: var(--text-muted); margin: 0;">across <%= quickStats.eventsPast5Years %> events</p>
       </div>
-      <div class="card glass-card" style="text-align: center; min-height: auto; padding: 1.5rem; background: rgba(236, 72, 153, 0.05); border-color: rgba(236, 72, 153, 0.2);">
+      <% } %>
+      <% if (studio.prefs.show_this_year || isOwnerOrAdmin) { %>
+      <div class="card glass-card" style="text-align: center; min-height: auto; padding: 1.5rem; background: rgba(236, 72, 153, 0.05); border-color: rgba(236, 72, 153, 0.2); position: relative;">
+        <% if (!studio.prefs.show_this_year && isOwnerOrAdmin) { %><div style="position: absolute; top: 0.5rem; right: 0.5rem; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; background: rgba(239, 68, 68, 0.2); color: #f87171; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.3);" title="Hidden from Public">Hidden</div><% } %>
         <h4 style="color: var(--primary); font-size: 0.85rem; text-transform: uppercase;">This Year</h4>
         <p style="font-size: 1.5rem; font-weight: 800; color: white; margin: 0.5rem 0 0.25rem 0;">
           <%= quickStats.awardsThisYear %> Awards
         </p>
         <p style="font-size: 0.9rem; color: var(--text-muted); margin: 0;">across <%= quickStats.eventsThisYear %> events</p>
       </div>
+      <% } %>
     </div>
 
     <div class="awards-list">
@@ -155,7 +182,7 @@
 
                 <% yearGroup.events.forEach(function(event, eIndex) { %>
                   <div class="accordion glass-card" style="margin-bottom: 1rem; padding: 0; overflow: hidden;">
-                    <div class="accordion-header <%= eIndex === 0 ? 'active' : '' %>"
+                    <div class="accordion-header"
                       style="padding: 1.5rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02);">
                       <h3 style="margin: 0; color: var(--text-color); font-size: 1.2rem;">🏆 <%= event.title %>
                       </h3>
@@ -253,6 +280,13 @@
               Your Site</strong>
             <span style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.4; display: block;">Showcase your
               dancers' achievements directly on your own website using our customizable widget.</span>
+          </div>
+        </li>
+        <li style="display: flex; align-items: flex-start; gap: 1rem;">
+          <span style="font-size: 1.5rem;">🎛️</span>
+          <div>
+            <strong style="display: block; font-size: 1.1rem; margin-bottom: 0.25rem; color: white;">Control Your Dashboard</strong>
+            <span style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.4; display: block;">Choose exactly which statistic cards you want to display on your public studio page.</span>
           </div>
         </li>
         <li style="display: flex; align-items: flex-start; gap: 1rem;">

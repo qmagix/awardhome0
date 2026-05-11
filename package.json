@@ -22,6 +22,8 @@
     "express": "^5.2.1",
     "express-session": "^1.19.0",
     "multer": "^2.1.1",
+    "pdf-parse": "^2.4.5",
+    "pdf2json": "^4.0.3",
     "resend": "^6.12.2",
     "slugify": "^1.6.9",
     "sqlite": "^5.1.1",

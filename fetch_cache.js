@@ -26,9 +26,13 @@ async function fetchWithCache(url, orgSlug, year, extraFilename = null) {
       const parsedUrl = new URL(url);
       let base = path.basename(parsedUrl.pathname);
       if (!base || base === '/' || base === '') {
-        base = crypto.createHash('md5').update(url).digest('hex');
+        base = 'index';
       }
-      filename = base.endsWith('.html') ? base : `${base}.html`;
+      const urlHash = crypto.createHash('md5').update(url).digest('hex').substring(0, 8);
+      
+      // Remove .html from base if it exists, so we can append the hash cleanly
+      base = base.replace(/\.html$/i, '');
+      filename = `${base}-${urlHash}.html`;
     } catch(e) {
       filename = crypto.createHash('md5').update(url).digest('hex') + '.html';
     }

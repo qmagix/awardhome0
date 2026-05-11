@@ -9,6 +9,9 @@
     <% orgs.forEach(function(org) { %>
       <a href="/org/<%= org.slug %>" class="card glass-card hover-zoom" style="border-color: rgba(236, 72, 153, 0.3);">
         <h3><%= org.name %></h3>
+        <div style="margin-bottom: 1.5rem; color: var(--text-muted); font-size: 0.9rem;">
+          <span class="badge" style="background: rgba(255, 255, 255, 0.1);"><%= org.event_count || 0 %> Events</span> <span style="font-size: 0.8rem;">(Since 2022)</span>
+        </div>
         <span class="btn btn-warning">View Events &rarr;</span>
       </a>
     <% }); %>

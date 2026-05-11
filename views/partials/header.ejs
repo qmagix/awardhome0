@@ -14,10 +14,12 @@
       <div style="display: flex; gap: 1rem; align-items: center;">
         <% if (typeof user !== 'undefined' && user) { %>
           <% if (user.role === 'admin' || user.role === 'superadmin') { %>
+            <a href="/admin" style="color: white; text-decoration: none; font-weight: 600;">Dashboard</a>
             <a href="/admin/claims" style="color: white; text-decoration: none; font-weight: 600;">Admin Claims</a>
             <a href="/admin/studio-drafts" style="color: white; text-decoration: none; font-weight: 600;">Data Drafts</a>
           <% } %>
           <% if (user.role === 'superadmin') { %>
+            <a href="/admin/duplicates" style="color: white; text-decoration: none; font-weight: 600;">Studio Duplicates</a>
             <a href="/admin/users" style="color: white; text-decoration: none; font-weight: 600;">User Mgmt</a>
           <% } %>
           <% if (user.role === 'studio_owner') { %>
