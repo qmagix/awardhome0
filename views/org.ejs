@@ -2,7 +2,15 @@
 <div class="container">
   <div class="header-section">
     <h1><%= org.name %></h1>
+    <% if (org.slogan) { %>
+      <p class="subtitle" style="color: var(--accent-gold); font-size: 1.2rem; margin-top: -0.5rem; font-weight: 500;"><%= org.slogan %></p>
+    <% } %>
     <p class="subtitle">Events & Competitions (<%= eventsCount %> Total)</p>
+    <% if (org.description) { %>
+      <div style="max-width: 800px; margin: 1rem auto 1.5rem auto; color: var(--text-color); line-height: 1.6; background: rgba(0,0,0,0.2); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); text-align: left;">
+        <%= org.description %>
+      </div>
+    <% } %>
     <% if (org.website) { %>
       <a href="<%= org.website %>" target="_blank" style="color: var(--primary);">Visit Official Website</a>
     <% } %>

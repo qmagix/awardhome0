@@ -95,8 +95,8 @@
                 <%= iconGroup %>
               <% } %>
             </div>
-            <% if (award.logo_url) { %>
-              <img src="<%= award.logo_url %>" style="position: absolute; top: 0.5rem; right: 0.5rem; width: 24px; height: 24px; object-fit: contain; opacity: 0.6; border-radius: 4px;" title="<%= award.org_name %> Logo">
+            <% if (award.logo_url && !(award.customIconsObj && award.customIconsObj.hide_logo)) { %>
+              <img src="<%= award.logo_url %>" style="position: absolute; top: 0.5rem; left: 0.5rem; width: 24px; height: 24px; object-fit: contain; opacity: 0.6; border-radius: 4px;" title="<%= award.org_name %> Logo">
             <% } %>
             <div class="<%= placeClassGroup %>">
               <%= placeTextGroup %>
@@ -210,8 +210,8 @@
                 <%= icon %>
               <% } %>
             </div>
-            <% if (award.logo_url) { %>
-              <img src="<%= award.logo_url %>" style="position: absolute; top: 0.5rem; right: 0.5rem; width: 24px; height: 24px; object-fit: contain; opacity: 0.6; border-radius: 4px;" title="<%= award.org_name %> Logo">
+            <% if (award.logo_url && !(award.customIconsObj && award.customIconsObj.hide_logo)) { %>
+              <img src="<%= award.logo_url %>" style="position: absolute; top: 0.5rem; left: 0.5rem; width: 24px; height: 24px; object-fit: contain; opacity: 0.6; border-radius: 4px;" title="<%= award.org_name %> Logo">
             <% } %>
             <div class="<%= placeClass %>">
               <%= placeText %>

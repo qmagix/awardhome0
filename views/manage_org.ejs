@@ -23,10 +23,14 @@
             </div>
             
             <nav class="sidebar-nav">
-                <a href="/manage/org/<%= org.id %>" class="active">Overview</a>
-                <a href="#upload-section">Upload Results</a>
-                <a href="#past-events">Past Events</a>
-                <a href="/manage/org/<%= org.id %>/branding">Branding & Icons</a>
+                <a href="/manage/org/<%= org.id %>" class="active" style="margin-bottom: 0;">Overview</a>
+                <div class="sub-nav">
+                    <a href="#stats-section" class="sub-nav-link active-sub" onclick="showTab('stats-section'); return false;">↳ Stats & Examples</a>
+                    <a href="#marketing-profile" class="sub-nav-link" onclick="showTab('marketing-profile'); return false;">↳ Marketing Profile</a>
+                    <a href="#upload-section" class="sub-nav-link" onclick="showTab('upload-section'); return false;">↳ Update Event Results</a>
+                    <a href="#past-events" class="sub-nav-link" onclick="showTab('past-events'); return false;">↳ Past Events</a>
+                </div>
+                <a href="/manage/org/<%= org.id %>/branding" style="margin-top: 1rem;">Branding & Icons</a>
                 <a href="/faq/organizer" class="text-muted" style="margin-top: 2rem;">Organizer FAQ</a>
             </nav>
         </aside>
@@ -37,44 +41,66 @@
                 <p class="text-muted">Welcome to your dashboard. Upload results directly to instantly update dancer portfolios across the platform.</p>
             </header>
 
-            <section class="stats-grid">
-                <div class="stat-card">
-                    <h3>Total Awards Distributed</h3>
-                    <div class="stat-value"><%= stats.total_awards ? stats.total_awards.toLocaleString() : 0 %></div>
-                </div>
-                <div class="stat-card">
-                    <h3>Total Studios Attended</h3>
-                    <div class="stat-value"><%= stats.total_studios ? stats.total_studios.toLocaleString() : 0 %></div>
-                </div>
-                <% if (rank > 1) { %>
-                <div class="stat-card" style="border-top: 4px solid var(--accent-gold);">
-                    <h3>Platform Ranking</h3>
-                    <div class="stat-value">#<%= rank %></div>
-                    <div class="stat-trend" style="color: var(--accent-gold);">Largest Organization</div>
-                </div>
-                <% } %>
-            </section>
+            <div id="stats-section" class="dashboard-tab">
+                <section class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Total Awards Distributed</h3>
+                        <div class="stat-value"><%= stats.total_awards ? stats.total_awards.toLocaleString() : 0 %></div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Studios Attended</h3>
+                        <div class="stat-value"><%= stats.total_studios ? stats.total_studios.toLocaleString() : 0 %></div>
+                    </div>
+                    <% if (rank > 1) { %>
+                    <div class="stat-card" style="border-top: 4px solid var(--accent-gold);">
+                        <h3>Platform Ranking</h3>
+                        <div class="stat-value">#<%= rank %></div>
+                        <div class="stat-trend" style="color: var(--accent-gold);">Largest Organization</div>
+                    </div>
+                    <% } %>
+                </section>
 
-            <section class="card glass-card" style="margin-top: 2rem;">
+                <section class="card glass-card" style="margin-top: 2rem;">
+                    <div class="card-header">
+                        <h2>Live Mockups</h2>
+                        <p class="text-muted">See how your organization's awards look on dancer and studio portfolios.</p>
+                    </div>
+                    <div class="card-body" style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <% if (topDancer) { %>
+                            <a href="/dancer/<%= topDancer.unique_id %>" target="_blank" class="btn btn-outline">
+                                View Dancer Mockup (<%= topDancer.name %>)
+                            </a>
+                        <% } %>
+                        <% if (topStudio) { %>
+                            <a href="/studio/<%= topStudio.id %>" target="_blank" class="btn btn-outline">
+                                View Studio Mockup (<%= topStudio.name %>)
+                            </a>
+                        <% } %>
+                    </div>
+                </section>
+            </div>
+
+            <section id="marketing-profile" class="card glass-card dashboard-tab" style="display: none; margin-top: 2rem; border-color: var(--primary); background: linear-gradient(145deg, rgba(79, 70, 229, 0.1) 0%, rgba(0,0,0,0.2) 100%);">
                 <div class="card-header">
-                    <h2>Live Mockups</h2>
-                    <p class="text-muted">See how your organization's awards look on dancer and studio portfolios.</p>
+                    <h2 style="color: var(--primary);">Marketing Profile</h2>
+                    <p class="text-muted">Enhance your public organization page with a marketing slogan and description to attract studios and dancers.</p>
                 </div>
-                <div class="card-body" style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                    <% if (topDancer) { %>
-                        <a href="/dancer/<%= topDancer.unique_id %>" target="_blank" class="btn btn-outline">
-                            View Dancer Mockup (<%= topDancer.name %>)
-                        </a>
-                    <% } %>
-                    <% if (topStudio) { %>
-                        <a href="/studio/<%= topStudio.id %>" target="_blank" class="btn btn-outline">
-                            View Studio Mockup (<%= topStudio.name %>)
-                        </a>
-                    <% } %>
+                <div class="card-body">
+                    <form action="/manage/org/<%= org.id %>/marketing" method="POST" class="upload-form">
+                        <div class="form-group">
+                            <label>Slogan (Short Marketing Tagline)</label>
+                            <input type="text" name="slogan" placeholder="e.g. 'The Most Prestigious Dance Tour'" value="<%= org.slogan || '' %>" class="form-control" style="background: rgba(0,0,0,0.3); color: white;">
+                        </div>
+                        <div class="form-group" style="margin-top: 1rem;">
+                            <label>Event Description</label>
+                            <textarea name="description" rows="4" placeholder="Describe what makes your competition special..." class="form-control" style="background: rgba(0,0,0,0.3); color: white; resize: vertical;"><%= org.description || '' %></textarea>
+                        </div>
+                        <button type="submit" class="btn save-btn" style="margin-top: 1rem;">Save Marketing Profile</button>
+                    </form>
                 </div>
             </section>
 
-            <section id="upload-section" class="card glass-card" style="margin-top: 2rem;">
+            <section id="upload-section" class="card glass-card dashboard-tab" style="display: none; margin-top: 2rem;">
                 <div class="card-header">
                     <h2>Upload Event Results</h2>
                     <p class="text-muted">Upload your CSV or Excel results. Our AI will process them and update dancer portfolios automatically.</p>
@@ -134,39 +160,143 @@
                 </div>
             </section>
 
-            <section id="past-events" class="card glass-card" style="margin-top: 2rem;">
-                <div class="card-header">
-                    <h2>Published Events</h2>
-                    <p class="text-muted">These events are currently live and verified on the platform.</p>
+    <section id="past-events" class="card glass-card dashboard-tab" style="display: none; margin-top: 2rem;">
+        <div class="card-header">
+            <h2>Published Events</h2>
+            <p class="text-muted">Search by year, city, or event name to locate specific results.</p>
+        </div>
+        <div class="card-body">
+            <% if (events && events.length > 0) { %>
+                <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+                    <div style="flex: 1;">
+                        <label style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.25rem; display: block;">Year (Optional)</label>
+                        <input type="number" id="eventSearchYear" placeholder="e.g. 2025" class="form-control" style="width: 100%; padding: 0.75rem 1rem; border-radius: 8px; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.2); color: white; font-size: 1rem;">
+                    </div>
+                    <div style="flex: 2;">
+                        <label style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.25rem; display: block;">Location / Event Name</label>
+                        <input type="text" id="eventSearchLocation" placeholder="e.g. San Jose" class="form-control" style="width: 100%; padding: 0.75rem 1rem; border-radius: 8px; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.2); color: white; font-size: 1rem;">
+                    </div>
                 </div>
-                <div class="card-body">
-                    <% if (events && events.length > 0) { %>
-                        <table class="data-table" style="width: 100%;">
-                            <thead>
-                                <tr>
-                                    <th>Year</th>
-                                    <th>Event Name</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <% events.forEach(e => { %>
-                                    <tr>
-                                        <td><%= e.year %></td>
-                                        <td><%= e.name %> <%= e.date_string ? '(' + e.date_string + ')' : '' %></td>
-                                        <td><a href="/event/<%= e.id %>" target="_blank" class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">View Public Page</a></td>
-                                    </tr>
-                                <% }) %>
-                            </tbody>
-                        </table>
-                    <% } else { %>
-                        <p>No past events found.</p>
-                    <% } %>
-                </div>
-            </section>
+                
+                <p id="searchPromptMessage" style="color: var(--text-muted); margin-top: 1rem; text-align: center;">There are <%= events.length %> total events. Enter a year and type at least 3 letters of the location to display results.</p>
+
+                <table class="data-table" id="eventTable" style="width: 100%; display: none;">
+                    <thead>
+                        <tr>
+                            <th>Year</th>
+                            <th>Event Name</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="eventTableBody">
+                        <% events.forEach((e) => { %>
+                            <tr class="event-row" data-year="<%= e.year %>" data-search="<%= (e.name + ' ' + (e.date_string || '')).toLowerCase() %>">
+                                <td><%= e.year %></td>
+                                <td><%= e.name %> <%= e.date_string ? '(' + e.date_string + ')' : '' %></td>
+                                <td><a href="/event/<%= e.id %>" target="_blank" class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">View Public Page</a></td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+                <p id="noEventsMessage" style="display: none; color: var(--text-muted); margin-top: 1rem; text-align: center;">No events match your search.</p>
+
+                <script>
+                    const searchYear = document.getElementById('eventSearchYear');
+                    const searchLocation = document.getElementById('eventSearchLocation');
+                    const table = document.getElementById('eventTable');
+                    const promptMsg = document.getElementById('searchPromptMessage');
+                    const noMatchMsg = document.getElementById('noEventsMessage');
+                    const rows = document.querySelectorAll('.event-row');
+
+                    function filterEvents() {
+                        const yearVal = searchYear.value.trim();
+                        const locVal = searchLocation.value.toLowerCase().trim();
+
+                        // Require at least 3 characters in location to show anything
+                        if (locVal.length < 3) {
+                            table.style.display = 'none';
+                            promptMsg.style.display = 'block';
+                            noMatchMsg.style.display = 'none';
+                            return;
+                        }
+
+                        // Hide prompt, prepare table
+                        promptMsg.style.display = 'none';
+                        let visibleCount = 0;
+
+                        rows.forEach(row => {
+                            const rowYear = row.getAttribute('data-year');
+                            const rowSearch = row.getAttribute('data-search');
+                            
+                            let yearMatch = true;
+                            if (yearVal !== '') {
+                                yearMatch = (rowYear === yearVal);
+                            }
+
+                            let locMatch = rowSearch.includes(locVal);
+
+                            if (yearMatch && locMatch) {
+                                row.style.display = '';
+                                visibleCount++;
+                            } else {
+                                row.style.display = 'none';
+                            }
+                        });
+
+                        if (visibleCount === 0) {
+                            noMatchMsg.style.display = 'block';
+                            table.style.display = 'none';
+                        } else {
+                            noMatchMsg.style.display = 'none';
+                            table.style.display = 'table';
+                        }
+                    }
+
+                    searchYear.addEventListener('input', filterEvents);
+                    searchLocation.addEventListener('input', filterEvents);
+                </script>
+            <% } else { %>
+                <p>No past events found.</p>
+            <% } %>
+        </div>
+    </section>
 
         </main>
     </div>
+
+    <script>
+        function showTab(tabId) {
+            // Hide all tabs
+            document.querySelectorAll('.dashboard-tab').forEach(el => el.style.display = 'none');
+            // Show targeted tab
+            const target = document.getElementById(tabId);
+            if (target) {
+                target.style.display = 'block';
+            }
+            
+            // Update active state in sidebar
+            document.querySelectorAll('.sidebar-nav .sub-nav-link').forEach(link => {
+                link.classList.remove('active-sub');
+                link.style.color = 'var(--text-muted)';
+                link.style.fontWeight = 'normal';
+            });
+            const activeLink = document.querySelector(`a[href="#${tabId}"]`);
+            if (activeLink) {
+                activeLink.classList.add('active-sub');
+                activeLink.style.color = 'white';
+                activeLink.style.fontWeight = '600';
+            }
+        }
+
+        // Initialize first sub-nav state
+        document.addEventListener('DOMContentLoaded', () => {
+            const firstLink = document.querySelector('.sub-nav-link.active-sub');
+            if (firstLink) {
+                firstLink.style.color = 'white';
+                firstLink.style.fontWeight = '600';
+            }
+        });
+    </script>
 
     <style>
         .dashboard-container {
@@ -227,6 +357,23 @@
             background: rgba(255, 255, 255, 0.1);
             color: white;
         }
+        .sub-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            padding-left: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .sub-nav a {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            border-radius: 6px;
+        }
+        .sub-nav a:hover {
+            background: rgba(255,255,255,0.05);
+            color: white;
+        }
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -273,13 +420,19 @@
             font-weight: 500;
             color: var(--text-muted);
         }
-        .upload-form input {
+        .upload-form input, .upload-form textarea {
             width: 100%;
             padding: 0.75rem 1rem;
             border-radius: 8px;
             background: rgba(0, 0, 0, 0.2);
             border: 1px solid rgba(255, 255, 255, 0.1);
             color: white;
+            font-family: inherit;
+        }
+        .upload-form input:focus, .upload-form textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
         }
         @media (max-width: 768px) {
             .dashboard-container {

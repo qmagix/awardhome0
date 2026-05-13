@@ -19,7 +19,9 @@ async function initDb() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT UNIQUE NOT NULL,
       slug TEXT UNIQUE NOT NULL,
-      website TEXT
+      website TEXT,
+      description TEXT,
+      slogan TEXT
     );
     CREATE TABLE IF NOT EXISTS events (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -183,6 +185,8 @@ async function initDb() {
   try { await db.exec("ALTER TABLE organizations ADD COLUMN owner_id INTEGER REFERENCES users(id)"); } catch(e) {}
   try { await db.exec("ALTER TABLE organizations ADD COLUMN logo_url TEXT"); } catch(e) {}
   try { await db.exec("ALTER TABLE organizations ADD COLUMN custom_icons TEXT"); } catch(e) {}
+  try { await db.exec("ALTER TABLE organizations ADD COLUMN description TEXT"); } catch(e) {}
+  try { await db.exec("ALTER TABLE organizations ADD COLUMN slogan TEXT"); } catch(e) {}
   try { await db.exec("ALTER TABLE events ADD COLUMN logo_url TEXT"); } catch(e) {}
 
   console.log("Database initialized.");

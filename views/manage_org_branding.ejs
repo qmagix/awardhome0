@@ -27,6 +27,10 @@
         <a href="/manage/org/<%= org.id %>#upload-section">Upload Results</a>
         <a href="/manage/org/<%= org.id %>#past-events">Past Events</a>
         <a href="/manage/org/<%= org.id %>/branding" class="active">Branding & Icons</a>
+        <div style="margin-left: 1.5rem; display: flex; flex-direction: column; gap: 0.25rem;">
+          <a href="#organization-logo" style="padding: 0.25rem 0.5rem; font-size: 0.85rem; color: var(--text-muted);">↳ Organization Logo</a>
+          <a href="#custom-trophy-icons" style="padding: 0.25rem 0.5rem; font-size: 0.85rem; color: var(--text-muted);">↳ Custom Trophy Icons</a>
+        </div>
         <a href="/faq/organizer" class="text-muted" style="margin-top: 2rem;">Organizer FAQ</a>
       </nav>
     </aside>
@@ -39,27 +43,62 @@
 
       <div class="grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 2rem; gap: 2rem;">
         
+        <div style="grid-column: 1 / -1;">
+          <div class="card glass-card" style="border-color: rgba(239, 68, 68, 0.3); background: linear-gradient(145deg, rgba(239, 68, 68, 0.05) 0%, rgba(0,0,0,0.2) 100%); padding: 1.5rem;">
+            <h3 style="color: #ef4444; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">⚖️ Branding Terms of Use</h3>
+            <p class="text-muted" style="font-size: 0.9rem; margin-bottom: 1rem; line-height: 1.5;">
+              By uploading branding graphics (including logos and custom icons), you confirm that you have the legal right to distribute these assets. You hereby grant this platform a non-exclusive license to display, resize, and embed these graphics on public-facing digital dancer portfolios, event archives, and promotional materials.
+            </p>
+            <label style="display: flex; gap: 0.5rem; align-items: center; color: white; cursor: pointer; font-weight: 500;">
+              <input type="checkbox" id="legal-agreement-checkbox" onchange="toggleUploads()">
+              I agree to the Branding Terms of Use to unlock uploads.
+            </label>
+          </div>
+          <script>
+            function toggleUploads() {
+              const isChecked = document.getElementById('legal-agreement-checkbox').checked;
+              const uploadForms = document.querySelectorAll('form[enctype="multipart/form-data"]');
+              uploadForms.forEach(form => {
+                const btn = form.querySelector('button[type="submit"]');
+                const fileInput = form.querySelector('input[type="file"]');
+                if (btn) {
+                  btn.disabled = !isChecked;
+                  btn.style.opacity = isChecked ? '1' : '0.5';
+                  btn.style.cursor = isChecked ? 'pointer' : 'not-allowed';
+                }
+                if (fileInput) {
+                  fileInput.disabled = !isChecked;
+                  fileInput.style.opacity = isChecked ? '1' : '0.5';
+                  fileInput.style.cursor = isChecked ? 'pointer' : 'not-allowed';
+                }
+              });
+            }
+            document.addEventListener('DOMContentLoaded', toggleUploads);
+          </script>
+        </div>
+
         <!-- Upload Logo -->
-        <div class="card glass-card">
+        <div class="card glass-card" id="organization-logo">
           <h3 style="color: var(--primary); margin-bottom: 1rem;">1. Organization Logo</h3>
-          <p class="text-muted" style="margin-bottom: 1.5rem; font-size: 0.9rem;">Upload your official logo. This will be displayed on all your event pages and integrated directly into the trophy cards for dancers.</p>
           
-          <form action="/manage/org/<%= org.id %>/branding/logo" method="POST" enctype="multipart/form-data" style="text-align: center; border: 2px dashed rgba(255,255,255,0.1); padding: 2rem; border-radius: 12px; background: rgba(0,0,0,0.2);">
+          <form action="/manage/org/<%= org.id %>/branding/logo" method="POST" enctype="multipart/form-data" style="text-align: center; border: 2px dashed rgba(255,255,255,0.1); padding: 2rem; border-radius: 12px; background: rgba(0,0,0,0.2); margin-bottom: 1.5rem;">
             <% if (org.logo_url) { %>
               <img src="<%= org.logo_url %>" alt="Current Logo" style="max-height: 100px; margin-bottom: 1rem; border-radius: 8px;">
             <% } %>
             <input type="file" name="logo" accept="image/*" style="width: 100%; margin-bottom: 1rem; padding: 0.5rem; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px;" required>
             <button type="submit" class="btn btn-primary" style="width: 100%;">Upload Logo</button>
           </form>
+
+          <p class="text-muted" style="margin-bottom: 0; font-size: 0.9rem;">Upload your official logo. This will be displayed on all your event pages and integrated directly into the trophy cards for dancers.</p>
         </div>
 
         <!-- Live Preview -->
         <div class="card glass-card" style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
           <h3 style="color: var(--accent-gold); margin-bottom: 1rem;">Live Trophy Preview</h3>
-          <p class="text-muted" style="margin-bottom: 1.5rem; text-align: center; font-size: 0.9rem;">This is exactly how your awards will look on a dancer's digital portfolio.</p>
+          <p class="text-muted" style="margin-bottom: 1rem; text-align: center; font-size: 0.9rem;">This is exactly how your awards will look on a dancer's digital portfolio.</p>
           
           <!-- Mock Trophy Card -->
-          <div class="premium-trophy-card" style="width: 100%; max-width: 300px; margin: 0 auto;">
+          <div class="premium-trophy-card experimental-texture" style="width: 100%; max-width: 300px; margin: 0 auto 1.5rem auto;">
             <div class="content-wrapper tier-gold" style="position: relative;">
               <div class="trophy-icon">
                 <% if (customIcons && customIcons.overall && customIcons.overall['1']) { %>
@@ -68,8 +107,10 @@
                   🏆
                 <% } %>
               </div>
-              <% if (org.logo_url) { %>
-                <img src="<%= org.logo_url %>" style="position: absolute; top: 0.5rem; right: 0.5rem; width: 24px; height: 24px; object-fit: contain; opacity: 0.6; border-radius: 4px;" title="Logo">
+              <% if (org.logo_url && !(customIcons && customIcons.hide_logo)) { %>
+                <img src="<%= org.logo_url %>" class="live-preview-logo" style="position: absolute; top: 0.5rem; left: 0.5rem; width: <%= (customIcons && customIcons.logo_size) || 24 %>px; height: <%= (customIcons && customIcons.logo_size) || 24 %>px; object-fit: contain; opacity: <%= (customIcons && customIcons.logo_opacity !== undefined) ? customIcons.logo_opacity : 0.6 %>; border-radius: 4px;" title="Logo">
+              <% } else if (org.logo_url) { %>
+                <img src="<%= org.logo_url %>" class="live-preview-logo" style="display: none; position: absolute; top: 0.5rem; left: 0.5rem; width: <%= (customIcons && customIcons.logo_size) || 24 %>px; height: <%= (customIcons && customIcons.logo_size) || 24 %>px; object-fit: contain; opacity: <%= (customIcons && customIcons.logo_opacity !== undefined) ? customIcons.logo_opacity : 0.6 %>; border-radius: 4px;" title="Logo">
               <% } %>
               <div class="award-place award-place-large">
                 1st Place
@@ -80,11 +121,56 @@
               <p class="sub-category" style="color: #a5b4fc; font-weight: 600; margin-top: 0.5rem;">Nationals (2026)</p>
             </div>
           </div>
+
+          <form id="logo-settings-form" action="/manage/org/<%= org.id %>/branding/logo-settings" method="POST" style="width: 100%; max-width: 300px; padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+              <span style="font-size: 0.85rem; color: var(--text-muted);">Show Logo on Cards</span>
+              <input type="checkbox" name="show_logo" <%= !(customIcons && customIcons.hide_logo) ? 'checked' : '' %> onchange="updateLivePreview()" style="cursor: pointer;">
+            </div>
+            
+            <div style="margin-bottom: 1rem;">
+              <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">
+                <span>Size</span>
+                <span id="size-val"><%= (customIcons && customIcons.logo_size) || 24 %>px</span>
+              </div>
+              <input type="range" name="logo_size" min="24" max="48" value="<%= (customIcons && customIcons.logo_size) || 24 %>" style="width: 100%; cursor: pointer;" oninput="updateLivePreview()">
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+              <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">
+                <span>Opacity</span>
+                <span id="opacity-val"><%= Math.round(((customIcons && customIcons.logo_opacity !== undefined) ? customIcons.logo_opacity : 0.6) * 100) %>%</span>
+              </div>
+              <input type="range" name="logo_opacity" min="0.1" max="1.0" step="0.1" value="<%= (customIcons && customIcons.logo_opacity !== undefined) ? customIcons.logo_opacity : 0.6 %>" style="width: 100%; cursor: pointer;" oninput="updateLivePreview()">
+            </div>
+
+            <button type="submit" class="btn btn-sm btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: var(--text-muted);">Save Display Settings</button>
+          </form>
+
+          <script>
+            function updateLivePreview() {
+              const form = document.getElementById('logo-settings-form');
+              const showLogo = form.show_logo.checked;
+              const size = form.logo_size.value;
+              const opacity = form.logo_opacity.value;
+              
+              document.getElementById('size-val').innerText = size + 'px';
+              document.getElementById('opacity-val').innerText = Math.round(opacity * 100) + '%';
+              
+              const mockLogos = document.querySelectorAll('.live-preview-logo');
+              mockLogos.forEach(logo => {
+                logo.style.display = showLogo ? 'block' : 'none';
+                logo.style.width = size + 'px';
+                logo.style.height = size + 'px';
+                logo.style.opacity = opacity;
+              });
+            }
+          </script>
         </div>
       </div>
 
       <!-- Taxonomy-Based Award Icons -->
-      <div class="card glass-card">
+      <div class="card glass-card" id="custom-trophy-icons">
         <h3 style="color: var(--primary); margin-bottom: 1rem;">2. Custom Award Icons</h3>
         <p class="text-muted" style="margin-bottom: 1.5rem;">Upload custom icons (like a crown, star, or your unique trophy design) for your award categories. We recommend transparent PNGs (100x100px).</p>
         
@@ -156,18 +242,28 @@
           .icon-preview:hover .trophy-tooltip {
             display: block;
           }
+          .experimental-texture {
+            background-color: #111115 !important;
+            background-image: 
+              radial-gradient(circle at top right, rgba(255, 215, 0, 0.25), transparent 70%),
+              repeating-linear-gradient(45deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 6px) !important;
+            border: 1px solid rgba(255, 215, 0, 0.2) !important;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.9) !important;
+          }
         </style>
 
         <%
+          const tooltipLogoSize = (customIcons && customIcons.logo_size) ? customIcons.logo_size : 24;
+          const tooltipLogoOpacity = (customIcons && customIcons.logo_opacity !== undefined) ? customIcons.logo_opacity : 0.6;
           function renderTooltip(iconUrl, fallbackEmoji, placeStr, categoryStr) {
             return `
               <div class="trophy-tooltip">
-                <div class="premium-trophy-card" style="width: 250px; transform: scale(0.8); transform-origin: left center; background: rgba(15, 15, 20, 0.98); border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 10px 40px rgba(0,0,0,0.9); z-index: 1000; border-radius: 12px; overflow: hidden;">
+                <div class="premium-trophy-card experimental-texture" style="width: 250px; transform: scale(0.8); transform-origin: left center; z-index: 1000; border-radius: 12px; overflow: hidden;">
                   <div class="content-wrapper tier-gold" style="position: relative;">
                     <div class="trophy-icon">
                       ${iconUrl ? '<img src="' + iconUrl + '" style="width: 1.5rem; height: 1.5rem; object-fit: contain;">' : fallbackEmoji}
                     </div>
-                    ${org.logo_url ? '<img src="' + org.logo_url + '" style="position: absolute; top: 0.5rem; right: 0.5rem; width: 24px; height: 24px; object-fit: contain; opacity: 0.6; border-radius: 4px;">' : ''}
+                    ${(org.logo_url && !(customIcons && customIcons.hide_logo)) ? '<img src="' + org.logo_url + '" class="live-preview-logo" style="position: absolute; top: 0.5rem; left: 0.5rem; width: ' + tooltipLogoSize + 'px; height: ' + tooltipLogoSize + 'px; object-fit: contain; opacity: ' + tooltipLogoOpacity + '; border-radius: 4px;">' : (org.logo_url ? '<img src="' + org.logo_url + '" class="live-preview-logo" style="display: none; position: absolute; top: 0.5rem; left: 0.5rem; width: ' + tooltipLogoSize + 'px; height: ' + tooltipLogoSize + 'px; object-fit: contain; opacity: ' + tooltipLogoOpacity + '; border-radius: 4px;">' : '')}
                     <div class="award-place award-place-large" style="font-size: 1.2rem;">${placeStr}</div>
                     <p class="category">${categoryStr}</p>
                     <h3 style="font-size: 1.1rem; margin-top: 0.25rem;">${org.name}</h3>

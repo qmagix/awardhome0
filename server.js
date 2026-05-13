@@ -428,6 +428,19 @@ app.get('/manage/org/:id/branding', requireAuth, async (req, res) => {
   res.render('manage_org_branding', { org, awardTypes, customIcons, user: req.session.user });
 });
 
+app.post('/manage/org/:id/marketing', requireAuth, async (req, res) => {
+  const db = await openDb();
+  const org = await db.get('SELECT * FROM organizations WHERE id = ?', [req.params.id]);
+  if (!org) return res.status(404).send('Org not found');
+  if (req.session.user.role !== 'superadmin' && org.owner_id !== req.session.user.id) return res.status(403).send('Unauthorized');
+
+  const { description, slogan } = req.body;
+  
+  await db.run('UPDATE organizations SET description = ?, slogan = ? WHERE id = ?', [description, slogan, org.id]);
+  
+  res.redirect('/manage/org/' + org.id);
+});
+
 app.post('/manage/org/:id/branding/logo', requireAuth, brandingUpload.single('logo'), async (req, res) => {
   const db = await openDb();
   const org = await db.get('SELECT * FROM organizations WHERE id = ?', [req.params.id]);
@@ -439,6 +452,27 @@ app.post('/manage/org/:id/branding/logo', requireAuth, brandingUpload.single('lo
   const logoUrl = '/uploads/org_branding/' + req.file.filename;
   await db.run('UPDATE organizations SET logo_url = ? WHERE id = ?', [logoUrl, org.id]);
   
+  res.redirect('/manage/org/' + org.id + '/branding');
+});
+
+app.post('/manage/org/:id/branding/logo-settings', requireAuth, async (req, res) => {
+  const db = await openDb();
+  const org = await db.get('SELECT * FROM organizations WHERE id = ?', [req.params.id]);
+  if (!org) return res.status(404).send('Org not found');
+  if (req.session.user.role !== 'superadmin' && org.owner_id !== req.session.user.id) return res.status(403).send('Unauthorized');
+
+  let customIcons = {};
+  if (org.custom_icons) {
+    try { customIcons = JSON.parse(org.custom_icons); } catch (e) {}
+  }
+  
+  customIcons.hide_logo = req.body.show_logo !== 'on'; // Checkbox is 'on' when checked
+  customIcons.logo_size = parseInt(req.body.logo_size) || 24;
+  customIcons.logo_opacity = parseFloat(req.body.logo_opacity);
+  if (isNaN(customIcons.logo_opacity)) customIcons.logo_opacity = 0.6;
+
+  await db.run('UPDATE organizations SET custom_icons = ? WHERE id = ?', [JSON.stringify(customIcons), org.id]);
+
   res.redirect('/manage/org/' + org.id + '/branding');
 });
 

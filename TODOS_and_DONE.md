@@ -49,3 +49,6 @@
 
 - [x] Build automated ETL Studio Data Bootstrapping pipeline with staging tables and admin review dashboard.
 - [x] Design for dancers ease of use: view/search dancers by name, join studio via code, claim group award via unique ID, color-coded badges.
+- [x] Build Organizer Custom Branding Dashboard (Live Trophy Preview, Logo sliders, Taxonomy-Based Custom Icons, Legal Agreements).
+- [x] Implement Organizer Marketing Profile (Slogan and Description).
+- [x] Refactor Organizer Overview to Tabbed UI with Client-Side Search for past events.
