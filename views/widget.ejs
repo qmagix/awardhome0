@@ -177,7 +177,7 @@
           <div class="performance"><%= award.performance_name || 'Routine' %></div>
           <div class="dancer"><%= award.dancer_name || 'Group' %></div>
           <div class="badges">
-            <% if (award.place) { %><span class="badge badge-place <%= isPremiumAward(award) ? 'badge-premium' : '' %>"><%= isPremiumAward(award) ? getPremiumDetails(award).icon + ' ' : '' %><%= formatPlacement(award.place) %></span><% } %>
+            <% if (award.place || award.award_class === 'scholarship' || award.award_class === 'title' || award.award_class === 'special' || award.award_class === 'studio') { %><span class="badge badge-place <%= isPremiumAward(award) ? 'badge-premium' : '' %>"><%= isPremiumAward(award) ? getPremiumDetails(award).icon + ' ' : '' %><%= formatPlacement(award) %></span><% } %>
             <% if (award.award_type) { %><span class="badge badge-type"><%= award.award_type %></span><% } %>
           </div>
         </div>

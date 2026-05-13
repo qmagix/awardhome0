@@ -56,7 +56,7 @@
             </div>
           <% } %>
             <% 
-              const placeTextGroup = formatPlacement(award.place);
+              const placeTextGroup = formatPlacement(award);
               let placeClassGroup = 'award-place award-place-large';
               if (placeTextGroup.length > 25) {
                 placeClassGroup = 'award-place award-place-small';
@@ -87,15 +87,29 @@
               else if (pLowerGroup.includes('2nd runner')) { tierGroup = 'tier-bronze'; iconGroup = '🏆'; }
             %>
           <div class="content-wrapper <%= tierGroup %>">
-            <div class="trophy-icon"><%= iconGroup %></div>
+            <div class="trophy-icon">
+              <% const customIconGroup = getCustomIcon(award, award.customIconsObj); %>
+              <% if (customIconGroup) { %>
+                <img src="<%= customIconGroup %>" alt="Icon" style="width: 1.5rem; height: 1.5rem; object-fit: contain;">
+              <% } else { %>
+                <%= iconGroup %>
+              <% } %>
+            </div>
+            <% if (award.logo_url) { %>
+              <img src="<%= award.logo_url %>" style="position: absolute; top: 0.5rem; right: 0.5rem; width: 24px; height: 24px; object-fit: contain; opacity: 0.6; border-radius: 4px;" title="<%= award.org_name %> Logo">
+            <% } %>
             <div class="<%= placeClassGroup %>">
               <%= placeTextGroup %>
             </div>
             <% if (award.is_self_added) { %>
               <span class="badge" style="background: rgba(234, 179, 8, 0.2); color: #eab308; font-size: 0.6rem; margin-bottom: 0.5rem;" title="Unverified manually reported award">Self-Reported</span>
             <% } %>
-            <p class="category"><%= award.award_type %></p>
-            <h3><%= award.performance_name || 'N/A' %></h3>
+            <% if (award.performance_name) { %>
+              <p class="category"><%= award.award_type %></p>
+              <h3><%= award.performance_name %></h3>
+            <% } else { %>
+              <h3><%= award.award_type %></h3>
+            <% } %>
             <% if (award.category) { %>
               <p class="sub-category"><%= award.category %></p>
             <% } %>
@@ -124,7 +138,7 @@
           <% groupAwards.forEach(function(award) { %>
             <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
               <td style="padding: 1rem;">
-                <%= formatPlacement(award.place) %>
+                <%= formatPlacement(award) %>
                 <% if (!award.is_self_added) { %>
                   <svg viewBox="0 0 24 24" fill="#10b981" stroke="currentColor" stroke-width="0" width="14" height="14" style="display:inline-block; margin-left:4px;" title="Official Verified Award"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
                 <% } else { %>
@@ -157,7 +171,7 @@
             </div>
           <% } %>
             <% 
-              const placeText = formatPlacement(award.place);
+              const placeText = formatPlacement(award);
               let placeClass = 'award-place award-place-large';
               if (placeText.length > 25) {
                 placeClass = 'award-place award-place-small';
@@ -188,15 +202,29 @@
               else if (pLower.includes('2nd runner')) { tier = 'tier-bronze'; icon = '🏆'; }
             %>
           <div class="content-wrapper <%= tier %>">
-            <div class="trophy-icon"><%= icon %></div>
+            <div class="trophy-icon">
+              <% const customIconSolo = getCustomIcon(award, award.customIconsObj); %>
+              <% if (customIconSolo) { %>
+                <img src="<%= customIconSolo %>" alt="Icon" style="width: 1.5rem; height: 1.5rem; object-fit: contain;">
+              <% } else { %>
+                <%= icon %>
+              <% } %>
+            </div>
+            <% if (award.logo_url) { %>
+              <img src="<%= award.logo_url %>" style="position: absolute; top: 0.5rem; right: 0.5rem; width: 24px; height: 24px; object-fit: contain; opacity: 0.6; border-radius: 4px;" title="<%= award.org_name %> Logo">
+            <% } %>
             <div class="<%= placeClass %>">
               <%= placeText %>
             </div>
             <% if (award.is_self_added) { %>
               <span class="badge" style="background: rgba(234, 179, 8, 0.2); color: #eab308; font-size: 0.6rem; margin-bottom: 0.5rem;" title="Unverified manually reported award">Self-Reported</span>
             <% } %>
-            <p class="category"><%= award.award_type %></p>
-            <h3><%= award.performance_name || 'N/A' %></h3>
+            <% if (award.performance_name) { %>
+              <p class="category"><%= award.award_type %></p>
+              <h3><%= award.performance_name %></h3>
+            <% } else { %>
+              <h3><%= award.award_type %></h3>
+            <% } %>
             <% if (award.category) { %>
               <p class="sub-category"><%= award.category %></p>
             <% } %>
@@ -225,7 +253,7 @@
           <% soloAwards.forEach(function(award) { %>
             <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
               <td style="padding: 1rem;">
-                <%= formatPlacement(award.place) %>
+                <%= formatPlacement(award) %>
                 <% if (!award.is_self_added) { %>
                   <svg viewBox="0 0 24 24" fill="#10b981" stroke="currentColor" stroke-width="0" width="14" height="14" style="display:inline-block; margin-left:4px;" title="Official Verified Award"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
                 <% } else { %>

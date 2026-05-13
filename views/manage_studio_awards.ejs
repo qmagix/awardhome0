@@ -107,8 +107,9 @@
                 </td>
                 
                 <td>
-                  <% if (award.place) { %>
-                    <%= formatPlacement(award.place) %>
+                  <% const formattedPlace = formatPlacement(award); %>
+                  <% if (formattedPlace && formattedPlace !== 'N/A') { %>
+                    <%= formattedPlace %>
                   <% } else { %>
                     <span style="color: var(--text-muted); font-style: italic;">Missing</span>
                   <% } %>

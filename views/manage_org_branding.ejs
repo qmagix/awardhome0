@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Organization: <%= org.name %></title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="dashboard-body">
+  <%- include('partials/header') %>
+
+  <div class="dashboard-container container">
+    <aside class="dashboard-sidebar">
+      <div class="sidebar-org-profile">
+        <% if (org.logo_url) { %>
+          <img src="<%= org.logo_url %>" alt="<%= org.name %> Logo" class="sidebar-logo">
+        <% } else { %>
+          <div class="sidebar-avatar-placeholder"><%= org.name.substring(0, 2).toUpperCase() %></div>
+        <% } %>
+        <h2><%= org.name %></h2>
+        <span class="badge badge-premium" style="margin-top: 0.5rem;">Verified Organizer</span>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <a href="/manage/org/<%= org.id %>">Overview</a>
+        <a href="/manage/org/<%= org.id %>#upload-section">Upload Results</a>
+        <a href="/manage/org/<%= org.id %>#past-events">Past Events</a>
+        <a href="/manage/org/<%= org.id %>/branding" class="active">Branding & Icons</a>
+        <a href="/faq/organizer" class="text-muted" style="margin-top: 2rem;">Organizer FAQ</a>
+      </nav>
+    </aside>
+
+    <main class="dashboard-content">
+      <header class="dashboard-header">
+        <h1>Custom Branding</h1>
+        <p class="text-muted">Customize how your awards appear on dancer portfolios across the platform.</p>
+      </header>
+
+      <div class="grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 2rem; gap: 2rem;">
+        
+        <!-- Upload Logo -->
+        <div class="card glass-card">
+          <h3 style="color: var(--primary); margin-bottom: 1rem;">1. Organization Logo</h3>
+          <p class="text-muted" style="margin-bottom: 1.5rem; font-size: 0.9rem;">Upload your official logo. This will be displayed on all your event pages and integrated directly into the trophy cards for dancers.</p>
+          
+          <form action="/manage/org/<%= org.id %>/branding/logo" method="POST" enctype="multipart/form-data" style="text-align: center; border: 2px dashed rgba(255,255,255,0.1); padding: 2rem; border-radius: 12px; background: rgba(0,0,0,0.2);">
+            <% if (org.logo_url) { %>
+              <img src="<%= org.logo_url %>" alt="Current Logo" style="max-height: 100px; margin-bottom: 1rem; border-radius: 8px;">
+            <% } %>
+            <input type="file" name="logo" accept="image/*" style="width: 100%; margin-bottom: 1rem; padding: 0.5rem; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px;" required>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Upload Logo</button>
+          </form>
+        </div>
+
+        <!-- Live Preview -->
+        <div class="card glass-card" style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+          <h3 style="color: var(--accent-gold); margin-bottom: 1rem;">Live Trophy Preview</h3>
+          <p class="text-muted" style="margin-bottom: 1.5rem; text-align: center; font-size: 0.9rem;">This is exactly how your awards will look on a dancer's digital portfolio.</p>
+          
+          <!-- Mock Trophy Card -->
+          <div class="premium-trophy-card" style="width: 100%; max-width: 300px; margin: 0 auto;">
+            <div class="content-wrapper tier-gold" style="position: relative;">
+              <div class="trophy-icon">
+                <% if (customIcons && customIcons.overall && customIcons.overall['1']) { %>
+                  <img src="<%= customIcons.overall['1'] %>" style="width: 1.5rem; height: 1.5rem; object-fit: contain;">
+                <% } else { %>
+                  🏆
+                <% } %>
+              </div>
+              <% if (org.logo_url) { %>
+                <img src="<%= org.logo_url %>" style="position: absolute; top: 0.5rem; right: 0.5rem; width: 24px; height: 24px; object-fit: contain; opacity: 0.6; border-radius: 4px;" title="Logo">
+              <% } %>
+              <div class="award-place award-place-large">
+                1st Place
+              </div>
+              <p class="category">Overall High Score</p>
+              <h3><%= org.name %></h3>
+              <p class="sub-category">Example Category</p>
+              <p class="sub-category" style="color: #a5b4fc; font-weight: 600; margin-top: 0.5rem;">Nationals (2026)</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Taxonomy-Based Award Icons -->
+      <div class="card glass-card">
+        <h3 style="color: var(--primary); margin-bottom: 1rem;">2. Custom Award Icons</h3>
+        <p class="text-muted" style="margin-bottom: 1.5rem;">Upload custom icons (like a crown, star, or your unique trophy design) for your award categories. We recommend transparent PNGs (100x100px).</p>
+        
+        <style>
+          .icon-section { margin-bottom: 2rem; }
+          .icon-table {
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            background: rgba(0,0,0,0.15);
+            /* overflow: hidden removed so tooltips can bleed out */
+          }
+          .icon-row { 
+            display: grid; 
+            grid-template-columns: 1fr 140px 320px; 
+            border-bottom: 1px solid rgba(255,255,255,0.1); 
+            align-items: stretch;
+          }
+          .icon-row:last-child { border-bottom: none; }
+          
+          .icon-cell { 
+            padding: 1rem; 
+            border-right: 1px solid rgba(255,255,255,0.1); 
+            display: flex; 
+            align-items: center; 
+            min-width: 0;
+          }
+          .icon-cell:last-child { border-right: none; }
+          
+          .icon-label { color: white; font-weight: 500; word-break: break-word; }
+          .icon-preview { justify-content: center; font-size: 2.5rem; position: relative; }
+          .icon-preview img { width: 48px; height: 48px; object-fit: contain; }
+          
+          .icon-actions { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
+          .icon-actions form { margin: 0; display: flex; gap: 0.5rem; align-items: center; width: 100%; flex-wrap: wrap; }
+          .icon-actions input[type="file"] { flex: 1; min-width: 150px; padding: 0.25rem; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; background: rgba(0,0,0,0.2); color: white; }
+          
+          .save-btn { border-color: var(--primary) !important; color: var(--primary) !important; }
+          .save-btn:hover { background-color: var(--primary) !important; color: white !important; }
+
+          .icon-header-row { 
+            display: grid; 
+            grid-template-columns: 1fr 140px 320px; 
+            background: rgba(255,255,255,0.08); 
+            border: 1px solid rgba(255,255,255,0.1);
+            border-bottom: 2px solid rgba(255,255,255,0.15); 
+            border-radius: 8px 8px 0 0;
+          }
+          .icon-header-row .icon-cell {
+            font-weight: 600; 
+            text-transform: uppercase; 
+            letter-spacing: 0.05em; 
+            font-size: 0.85rem; 
+            color: var(--text-muted);
+          }
+
+          /* Trophy Tooltip Styles */
+          .trophy-tooltip {
+            display: none;
+            position: absolute;
+            left: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            margin-left: 20px;
+            z-index: 1000;
+            width: max-content;
+            pointer-events: none;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+          }
+          .icon-preview:hover .trophy-tooltip {
+            display: block;
+          }
+        </style>
+
+        <%
+          function renderTooltip(iconUrl, fallbackEmoji, placeStr, categoryStr) {
+            return `
+              <div class="trophy-tooltip">
+                <div class="premium-trophy-card" style="width: 250px; transform: scale(0.8); transform-origin: left center; background: rgba(15, 15, 20, 0.98); border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 10px 40px rgba(0,0,0,0.9); z-index: 1000; border-radius: 12px; overflow: hidden;">
+                  <div class="content-wrapper tier-gold" style="position: relative;">
+                    <div class="trophy-icon">
+                      ${iconUrl ? '<img src="' + iconUrl + '" style="width: 1.5rem; height: 1.5rem; object-fit: contain;">' : fallbackEmoji}
+                    </div>
+                    ${org.logo_url ? '<img src="' + org.logo_url + '" style="position: absolute; top: 0.5rem; right: 0.5rem; width: 24px; height: 24px; object-fit: contain; opacity: 0.6; border-radius: 4px;">' : ''}
+                    <div class="award-place award-place-large" style="font-size: 1.2rem;">${placeStr}</div>
+                    <p class="category">${categoryStr}</p>
+                    <h3 style="font-size: 1.1rem; margin-top: 0.25rem;">${org.name}</h3>
+                  </div>
+                </div>
+              </div>
+            `;
+          }
+        %>
+
+        <div class="icon-header-row" style="margin-bottom: 1.5rem; border-radius: 8px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+          <div class="icon-cell">Award Category</div>
+          <div class="icon-cell icon-preview" style="font-size: 0.85rem;">Current Icon</div>
+          <div class="icon-cell">Upload Custom Icon</div>
+        </div>
+
+        <!-- A. Overall Awards -->
+        <div class="icon-section">
+          <h4 style="color: #fff; margin-bottom: 1rem;">Overall Awards</h4>
+          <div class="icon-table">
+            <div class="icon-row">
+              <div class="icon-cell icon-label">1st Place</div>
+              <div class="icon-cell icon-preview">
+                <% if (customIcons && customIcons.overall && customIcons.overall['1']) { %>
+                  <img src="<%= customIcons.overall['1'] %>">
+                  <%- renderTooltip(customIcons.overall['1'], '🏆', '1st Place', 'Overall High Score') %>
+                <% } else { %>
+                  🏆
+                  <%- renderTooltip(null, '🏆', '1st Place', 'Overall High Score') %>
+                <% } %>
+              </div>
+              <div class="icon-cell icon-actions">
+                <form action="/manage/org/<%= org.id %>/branding/icon" method="POST" enctype="multipart/form-data">
+                  <input type="hidden" name="icon_class" value="overall"><input type="hidden" name="icon_key" value="1">
+                  <input type="file" name="icon" accept="image/*" required>
+                  <button type="submit" class="btn btn-outline btn-sm save-btn">Save</button>
+                </form>
+                <% if (customIcons && customIcons.overall && customIcons.overall['1']) { %>
+                  <form action="/manage/org/<%= org.id %>/branding/icon/delete" method="POST" style="width: auto;"><input type="hidden" name="icon_class" value="overall"><input type="hidden" name="icon_key" value="1"><button type="submit" style="background: transparent; color: #ef4444; border: none; font-size: 0.8rem; cursor: pointer; text-decoration: underline; padding: 0;">Remove</button></form>
+                <% } %>
+              </div>
+            </div>
+            <div class="icon-row">
+              <div class="icon-cell icon-label">2nd Place</div>
+              <div class="icon-cell icon-preview">
+                <% if (customIcons && customIcons.overall && customIcons.overall['2']) { %>
+                  <img src="<%= customIcons.overall['2'] %>">
+                  <%- renderTooltip(customIcons.overall['2'], '🥈', '2nd Place', 'Overall High Score') %>
+                <% } else { %>
+                  🥈
+                  <%- renderTooltip(null, '🥈', '2nd Place', 'Overall High Score') %>
+                <% } %>
+              </div>
+              <div class="icon-cell icon-actions">
+                <form action="/manage/org/<%= org.id %>/branding/icon" method="POST" enctype="multipart/form-data"><input type="hidden" name="icon_class" value="overall"><input type="hidden" name="icon_key" value="2"><input type="file" name="icon" accept="image/*" required><button type="submit" class="btn btn-outline btn-sm save-btn">Save</button></form>
+                <% if (customIcons && customIcons.overall && customIcons.overall['2']) { %><form action="/manage/org/<%= org.id %>/branding/icon/delete" method="POST" style="width: auto;"><input type="hidden" name="icon_class" value="overall"><input type="hidden" name="icon_key" value="2"><button type="submit" style="background: transparent; color: #ef4444; border: none; font-size: 0.8rem; cursor: pointer; text-decoration: underline; padding: 0;">Remove</button></form><% } %>
+              </div>
+            </div>
+            <div class="icon-row">
+              <div class="icon-cell icon-label">3rd Place</div>
+              <div class="icon-cell icon-preview">
+                <% if (customIcons && customIcons.overall && customIcons.overall['3']) { %>
+                  <img src="<%= customIcons.overall['3'] %>">
+                  <%- renderTooltip(customIcons.overall['3'], '🥉', '3rd Place', 'Overall High Score') %>
+                <% } else { %>
+                  🥉
+                  <%- renderTooltip(null, '🥉', '3rd Place', 'Overall High Score') %>
+                <% } %>
+              </div>
+              <div class="icon-cell icon-actions">
+                <form action="/manage/org/<%= org.id %>/branding/icon" method="POST" enctype="multipart/form-data"><input type="hidden" name="icon_class" value="overall"><input type="hidden" name="icon_key" value="3"><input type="file" name="icon" accept="image/*" required><button type="submit" class="btn btn-outline btn-sm save-btn">Save</button></form>
+                <% if (customIcons && customIcons.overall && customIcons.overall['3']) { %><form action="/manage/org/<%= org.id %>/branding/icon/delete" method="POST" style="width: auto;"><input type="hidden" name="icon_class" value="overall"><input type="hidden" name="icon_key" value="3"><button type="submit" style="background: transparent; color: #ef4444; border: none; font-size: 0.8rem; cursor: pointer; text-decoration: underline; padding: 0;">Remove</button></form><% } %>
+              </div>
+            </div>
+            <div class="icon-row">
+              <div class="icon-cell icon-label">Other Placements (4th+)</div>
+              <div class="icon-cell icon-preview">
+                <% if (customIcons && customIcons.overall && customIcons.overall['other']) { %>
+                  <img src="<%= customIcons.overall['other'] %>">
+                  <%- renderTooltip(customIcons.overall['other'], '⭐', 'Top 10', 'Overall High Score') %>
+                <% } else { %>
+                  ⭐
+                  <%- renderTooltip(null, '⭐', 'Top 10', 'Overall High Score') %>
+                <% } %>
+              </div>
+              <div class="icon-cell icon-actions">
+                <form action="/manage/org/<%= org.id %>/branding/icon" method="POST" enctype="multipart/form-data"><input type="hidden" name="icon_class" value="overall"><input type="hidden" name="icon_key" value="other"><input type="file" name="icon" accept="image/*" required><button type="submit" class="btn btn-outline btn-sm save-btn">Save</button></form>
+                <% if (customIcons && customIcons.overall && customIcons.overall['other']) { %><form action="/manage/org/<%= org.id %>/branding/icon/delete" method="POST" style="width: auto;"><input type="hidden" name="icon_class" value="overall"><input type="hidden" name="icon_key" value="other"><button type="submit" style="background: transparent; color: #ef4444; border: none; font-size: 0.8rem; cursor: pointer; text-decoration: underline; padding: 0;">Remove</button></form><% } %>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- B. Title Awards -->
+        <div class="icon-section">
+          <h4 style="color: #fff; margin-bottom: 1rem;">Title Awards</h4>
+          <div class="icon-table">
+            <div class="icon-row">
+              <div class="icon-cell icon-label">Title Winner</div>
+              <div class="icon-cell icon-preview">
+                <% if (customIcons && customIcons.title && customIcons.title['winner']) { %>
+                  <img src="<%= customIcons.title['winner'] %>">
+                  <%- renderTooltip(customIcons.title['winner'], '👑', 'Winner', 'Title Award') %>
+                <% } else { %>
+                  👑
+                  <%- renderTooltip(null, '👑', 'Winner', 'Title Award') %>
+                <% } %>
+              </div>
+              <div class="icon-cell icon-actions">
+                <form action="/manage/org/<%= org.id %>/branding/icon" method="POST" enctype="multipart/form-data"><input type="hidden" name="icon_class" value="title"><input type="hidden" name="icon_key" value="winner"><input type="file" name="icon" accept="image/*" required><button type="submit" class="btn btn-outline btn-sm save-btn">Save</button></form>
+                <% if (customIcons && customIcons.title && customIcons.title['winner']) { %><form action="/manage/org/<%= org.id %>/branding/icon/delete" method="POST" style="width: auto;"><input type="hidden" name="icon_class" value="title"><input type="hidden" name="icon_key" value="winner"><button type="submit" style="background: transparent; color: #ef4444; border: none; font-size: 0.8rem; cursor: pointer; text-decoration: underline; padding: 0;">Remove</button></form><% } %>
+              </div>
+            </div>
+            <div class="icon-row">
+              <div class="icon-cell icon-label">Title Runner-Up</div>
+              <div class="icon-cell icon-preview">
+                <% if (customIcons && customIcons.title && customIcons.title['runnerup']) { %>
+                  <img src="<%= customIcons.title['runnerup'] %>">
+                  <%- renderTooltip(customIcons.title['runnerup'], '👑', 'Runner-Up', 'Title Award') %>
+                <% } else { %>
+                  👑
+                  <%- renderTooltip(null, '👑', 'Runner-Up', 'Title Award') %>
+                <% } %>
+              </div>
+              <div class="icon-cell icon-actions">
+                <form action="/manage/org/<%= org.id %>/branding/icon" method="POST" enctype="multipart/form-data"><input type="hidden" name="icon_class" value="title"><input type="hidden" name="icon_key" value="runnerup"><input type="file" name="icon" accept="image/*" required><button type="submit" class="btn btn-outline btn-sm save-btn">Save</button></form>
+                <% if (customIcons && customIcons.title && customIcons.title['runnerup']) { %><form action="/manage/org/<%= org.id %>/branding/icon/delete" method="POST" style="width: auto;"><input type="hidden" name="icon_class" value="title"><input type="hidden" name="icon_key" value="runnerup"><button type="submit" style="background: transparent; color: #ef4444; border: none; font-size: 0.8rem; cursor: pointer; text-decoration: underline; padding: 0;">Remove</button></form><% } %>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- C. Scholarship Awards -->
+        <div class="icon-section">
+          <h4 style="color: #fff; margin-bottom: 1rem;">Scholarship Awards</h4>
+          <div class="icon-table">
+            <div class="icon-row">
+              <div class="icon-cell icon-label">Default Scholarship</div>
+              <div class="icon-cell icon-preview">
+                <% if (customIcons && customIcons.scholarship && customIcons.scholarship['default']) { %>
+                  <img src="<%= customIcons.scholarship['default'] %>">
+                  <%- renderTooltip(customIcons.scholarship['default'], '🎓', 'Winner', 'Scholarship') %>
+                <% } else { %>
+                  🎓
+                  <%- renderTooltip(null, '🎓', 'Winner', 'Scholarship') %>
+                <% } %>
+              </div>
+              <div class="icon-cell icon-actions">
+                <form action="/manage/org/<%= org.id %>/branding/icon" method="POST" enctype="multipart/form-data"><input type="hidden" name="icon_class" value="scholarship"><input type="hidden" name="icon_key" value="default"><input type="file" name="icon" accept="image/*" required><button type="submit" class="btn btn-outline btn-sm save-btn">Save</button></form>
+                <% if (customIcons && customIcons.scholarship && customIcons.scholarship['default']) { %><form action="/manage/org/<%= org.id %>/branding/icon/delete" method="POST" style="width: auto;"><input type="hidden" name="icon_class" value="scholarship"><input type="hidden" name="icon_key" value="default"><button type="submit" style="background: transparent; color: #ef4444; border: none; font-size: 0.8rem; cursor: pointer; text-decoration: underline; padding: 0;">Remove</button></form><% } %>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- D. Special Awards -->
+        <div class="icon-section">
+          <h4 style="color: #fff; margin-bottom: 1rem;">Special Awards</h4>
+          <div class="icon-table">
+            <div class="icon-row">
+              <div class="icon-cell icon-label">Default Special Award</div>
+              <div class="icon-cell icon-preview">
+                <% if (customIcons && customIcons.special && customIcons.special['default']) { %>
+                  <img src="<%= customIcons.special['default'] %>">
+                  <%- renderTooltip(customIcons.special['default'], '⭐', 'Winner', 'Special Award') %>
+                <% } else { %>
+                  ⭐
+                  <%- renderTooltip(null, '⭐', 'Winner', 'Special Award') %>
+                <% } %>
+              </div>
+              <div class="icon-cell icon-actions">
+                <form action="/manage/org/<%= org.id %>/branding/icon" method="POST" enctype="multipart/form-data"><input type="hidden" name="icon_class" value="special"><input type="hidden" name="icon_key" value="default"><input type="file" name="icon" accept="image/*" required><button type="submit" class="btn btn-outline btn-sm save-btn">Save</button></form>
+                <% if (customIcons && customIcons.special && customIcons.special['default']) { %><form action="/manage/org/<%= org.id %>/branding/icon/delete" method="POST" style="width: auto;"><input type="hidden" name="icon_class" value="special"><input type="hidden" name="icon_key" value="default"><button type="submit" style="background: transparent; color: #ef4444; border: none; font-size: 0.8rem; cursor: pointer; text-decoration: underline; padding: 0;">Remove</button></form><% } %>
+              </div>
+            </div>
+            
+            <% if (customIcons && customIcons.special && customIcons.special.custom) { %>
+              <% Object.keys(customIcons.special.custom).forEach(key => { %>
+                <div class="icon-row">
+                  <div class="icon-cell icon-label">Custom: <%= key %></div>
+                  <div class="icon-cell icon-preview">
+                    <img src="<%= customIcons.special.custom[key] %>">
+                    <%- renderTooltip(customIcons.special.custom[key], '⭐', 'Winner', key) %>
+                  </div>
+                  <div class="icon-cell icon-actions">
+                    <form action="/manage/org/<%= org.id %>/branding/icon/delete" method="POST"><input type="hidden" name="icon_class" value="special"><input type="hidden" name="icon_key" value="<%= key %>"><button type="submit" style="background: transparent; color: #ef4444; border: none; font-size: 0.8rem; cursor: pointer; text-decoration: underline;">Remove custom icon</button></form>
+                  </div>
+                </div>
+              <% }); %>
+            <% } %>
+            
+            <div class="icon-row" style="background: rgba(255,255,255,0.02);">
+              <div class="icon-cell icon-label" style="grid-column: 1 / -1; border-right: none;">
+                <form action="/manage/org/<%= org.id %>/branding/icon" method="POST" enctype="multipart/form-data" style="display: flex; gap: 1rem; align-items: center; width: 100%;">
+                  <input type="hidden" name="icon_class" value="special">
+                  <input type="text" name="icon_key" placeholder="Award Name (e.g., Judges Choice)" style="flex: 1; padding: 0.5rem; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;" required>
+                  <input type="file" name="icon" accept="image/*" style="flex: 1;" required>
+                  <button type="submit" class="btn btn-outline btn-sm save-btn">Add Custom Special</button>
+                </form>
+              </div>
+            </div>
+          </div>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">Have specific special awards? Add them above (e.g., "Judges Choice", "Most Entertaining").</p>
+        </div>
+
+        <!-- E. Adjudication Awards -->
+        <div class="icon-section">
+          <h4 style="color: #fff; margin-bottom: 1rem;">Adjudication Awards</h4>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Define your specific score tiers (e.g., "Double Platinum", "High Gold") and upload an icon for each.</p>
+          
+          <div class="icon-table">
+            <% if (customIcons && customIcons.adjudication) { %>
+              <% Object.keys(customIcons.adjudication).forEach(key => { %>
+                <div class="icon-row">
+                  <div class="icon-cell icon-label"><%= key %></div>
+                  <div class="icon-cell icon-preview">
+                    <img src="<%= customIcons.adjudication[key] %>">
+                    <%- renderTooltip(customIcons.adjudication[key], '⭐', key, 'Adjudication') %>
+                  </div>
+                  <div class="icon-cell icon-actions">
+                    <form action="/manage/org/<%= org.id %>/branding/icon/delete" method="POST"><input type="hidden" name="icon_class" value="adjudication"><input type="hidden" name="icon_key" value="<%= key %>"><button type="submit" style="background: transparent; color: #ef4444; border: none; font-size: 0.8rem; cursor: pointer; text-decoration: underline;">Remove</button></form>
+                  </div>
+                </div>
+              <% }); %>
+            <% } %>
+            
+            <div class="icon-row" style="background: rgba(255,255,255,0.02);">
+              <div class="icon-cell icon-label" style="grid-column: 1 / -1; border-right: none;">
+                <form action="/manage/org/<%= org.id %>/branding/icon" method="POST" enctype="multipart/form-data" style="display: flex; gap: 1rem; align-items: center; width: 100%;">
+                  <input type="hidden" name="icon_class" value="adjudication">
+                  <input type="text" name="icon_key" placeholder="Tier Name (e.g., Double Platinum)" style="flex: 1; padding: 0.5rem; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;" required>
+                  <input type="file" name="icon" accept="image/*" style="flex: 1;" required>
+                  <button type="submit" class="btn btn-outline btn-sm save-btn">Add Adjudication Tier</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+
+  <style>
+    .dashboard-container {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 2rem;
+        margin-top: 2rem;
+        margin-bottom: 4rem;
+    }
+    .dashboard-sidebar {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 2rem 1.5rem;
+        height: fit-content;
+        position: sticky;
+        top: 2rem;
+    }
+    .sidebar-org-profile {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        margin-bottom: 2rem;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .sidebar-logo, .sidebar-avatar-placeholder {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        margin-bottom: 1rem;
+        object-fit: cover;
+        border: 2px solid var(--accent-gold);
+    }
+    .sidebar-avatar-placeholder {
+        background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: bold;
+        color: white;
+    }
+    .sidebar-nav {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    .sidebar-nav a {
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        color: var(--text-light);
+        text-decoration: none;
+        transition: all 0.2s ease;
+        font-weight: 500;
+    }
+    .sidebar-nav a:hover, .sidebar-nav a.active {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+    }
+    .dashboard-header {
+        margin-bottom: 2rem;
+    }
+    .dashboard-header h1 {
+        margin: 0 0 0.5rem 0;
+    }
+    @media (max-width: 768px) {
+        .dashboard-container {
+            grid-template-columns: 1fr;
+        }
+        .dashboard-sidebar {
+            position: static;
+        }
+    }
+  </style>
+
+</body>
+</html>

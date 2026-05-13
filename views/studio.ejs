@@ -215,10 +215,16 @@
                                     <%= award.performance_number ? '#' + award.performance_number : '' %>
                                   </span></td>
                                 <td>
-                                  <%= award.award_type %>
+                                  <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <% const customIconStudio = getCustomIcon(award, award.customIconsObj); %>
+                                    <% if (customIconStudio) { %>
+                                      <img src="<%= customIconStudio %>" alt="Icon" style="width: 20px; height: 20px; object-fit: contain;" title="<%= award.org_name %> Custom Icon">
+                                    <% } %>
+                                    <%= (award.award_type && award.award_type.trim() !== '') ? award.award_type : award.category %>
+                                  </div>
                                 </td>
                                 <td><span class="badge <%= isPremiumAward(award) ? 'badge-premium' : '' %>">
-                                    <%= isPremiumAward(award) ? getPremiumDetails(award).icon + ' ' : '' %><%= formatPlacement(award.place) %>
+                                    <%= isPremiumAward(award) ? getPremiumDetails(award).icon + ' ' : '' %><%= formatPlacement(award) %>
                                   </span></td>
                                 <td>
                                   <%= award.category || '-' %>

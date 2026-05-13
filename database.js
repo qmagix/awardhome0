@@ -144,6 +144,24 @@ async function initDb() {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
+    CREATE TABLE IF NOT EXISTS org_uploads (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      org_id INTEGER REFERENCES organizations(id),
+      event_name TEXT,
+      event_date TEXT,
+      event_location TEXT,
+      file_path TEXT,
+      status TEXT DEFAULT 'pending',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS impersonation_tokens (
+      token TEXT PRIMARY KEY,
+      target_user_id INTEGER REFERENCES users(id),
+      target_url TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
     -- Performance Indexes
     CREATE INDEX IF NOT EXISTS idx_awards_event ON awards(event_id);
     CREATE INDEX IF NOT EXISTS idx_awards_studio ON awards(studio_id);
@@ -161,6 +179,11 @@ async function initDb() {
   try { await db.exec("ALTER TABLE awards ADD COLUMN age_division TEXT"); } catch(e) {}
   try { await db.exec("ALTER TABLE dancers ADD COLUMN is_claimed BOOLEAN DEFAULT 0"); } catch(e) {}
   try { await db.exec("ALTER TABLE dancers ADD COLUMN claimed_by_user_id INTEGER REFERENCES users(id)"); } catch(e) {}
+  
+  try { await db.exec("ALTER TABLE organizations ADD COLUMN owner_id INTEGER REFERENCES users(id)"); } catch(e) {}
+  try { await db.exec("ALTER TABLE organizations ADD COLUMN logo_url TEXT"); } catch(e) {}
+  try { await db.exec("ALTER TABLE organizations ADD COLUMN custom_icons TEXT"); } catch(e) {}
+  try { await db.exec("ALTER TABLE events ADD COLUMN logo_url TEXT"); } catch(e) {}
 
   console.log("Database initialized.");
   return db;

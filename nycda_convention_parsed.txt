@@ -1,0 +1,325 @@
+
+=== PAGE 1 ===
+[Y: 14.45] [x:20.6] Outstanding Artist
+[Y: 15.94] [x:4.2] Kendall Moshay | [x:13.6] TopFlight Dance Conservatory, TX
+[Y: 18.96] [x:19.1] Mini Outstanding Dancers
+[Y: 20.45] [x:4.2] Lyla Lou Longo | [x:13.6] Dance Institute, TX
+[Y: 21.82] [x:4.2] Gatsby Lasala | [x:13.6] Tribe Seven Dance, TX
+[Y: 23.20] [x:4.2] Quincy Wilkinson | [x:13.6] MÜV Dance and Fitness, TX
+
+=== PAGE 2 ===
+[Y: 4.10] [x:20.9] Mini Runners-Up
+[Y: 5.59] [x:4.2] Athena Cato | [x:13.6] The Dance Kollective, TX
+[Y: 6.97] [x:4.2] Sophie Simmons | [x:13.6] The Dallas Conservatory, TX
+[Y: 8.35] [x:4.2] Zia Zieky | [x:13.6] Dance Institute, TX
+[Y: 9.73] [x:4.2] Cali Espadron | [x:13.6] Main Street Dance, LA
+[Y: 11.11] [x:4.2] Maylie Zardes | [x:13.6] Dance Institute, TX
+[Y: 12.49] [x:4.2] Joeruben Garcia | [x:13.6] J Dance Company, TX
+[Y: 13.87] [x:4.2] Sylvia Newsom | [x:13.6] Dance Institute, TX
+[Y: 15.25] [x:4.2] Blair Baker | [x:13.6] The Dallas Conservatory, TX
+[Y: 16.63] [x:4.2] Ivy Page | [x:13.6] Academy of Dance Arts, TX
+[Y: 18.01] [x:4.2] Ximena Castro | [x:13.6] Cindy K's Dance Studio, TX
+[Y: 19.39] [x:4.2] Retta Motl | [x:13.6] The Dallas Conservatory, TX
+[Y: 20.77] [x:4.2] Grace Gerszewski | [x:13.6] Tribe Seven Dance, TX
+[Y: 22.15] [x:4.2] Violet Garrison | [x:13.6] Dance Institute, TX
+[Y: 23.53] [x:4.2] Penelope Ramirez | [x:13.6] J Dance Company, TX
+[Y: 24.91] [x:4.2] Kiera Weston - Brown | [x:13.6] Dance Institute, TX
+[Y: 26.29] [x:4.2] Sky Akintayo | [x:13.6] TopFlight Dance Conservatory, TX
+[Y: 27.67] [x:4.2] Zoey Magee | [x:13.6] Move Dance Family, TX
+[Y: 29.05] [x:4.2] Allie June Siek | [x:13.6] House of Dance, TX
+[Y: 30.43] [x:4.2] Emma Duprey | [x:13.6] The Dallas Conservatory, TX
+[Y: 31.81] [x:4.2] Harper Gibson | [x:13.6] Dance Industry, TX
+[Y: 33.19] [x:4.2] Gianna Marquez | [x:13.6] Novus Dance, TX
+
+=== PAGE 3 ===
+[Y: 3.66] [x:4.2] Brynn Broussard | [x:13.6] Jill Listi Dance Studio, LA
+[Y: 5.04] [x:4.2] Avari Spelmon | [x:13.6] Republic Edge Dance, TX
+[Y: 6.42] [x:4.2] Caroline Stuart | [x:13.6] Dance Dynamics, TX
+
+=== PAGE 4 ===
+[Y: 4.10] [x:18.7] Junior Outstanding Dancers
+[Y: 5.59] [x:4.2] Hannah Fogel | [x:13.6] Dance Institute, TX
+[Y: 6.97] [x:4.2] Chase Castle | [x:13.6] Texas Academy of Dance Arts, TX
+[Y: 8.35] [x:4.2] Aerynn Johnson | [x:13.6] Dance Du Coeur, TX
+
+=== PAGE 5 ===
+[Y: 4.10] [x:20.6] Junior Runners-Up
+[Y: 5.59] [x:4.2] Charlotte Page | [x:13.6] Academy of Dance Arts, TX
+[Y: 6.97] [x:4.2] Sophia Zeng | [x:13.6] Dance Institute, TX
+[Y: 8.35] [x:4.2] Mia Paul | [x:13.6] The Collective PHX, AZ
+[Y: 9.73] [x:4.2] Elly Smith | [x:13.6] Dance Institute, TX
+[Y: 11.11] [x:4.2] Katy Boulet | [x:13.6] Dream Dance Center, TX
+[Y: 12.49] [x:4.2] Landry Pyeatt | [x:13.6] Dance Institute, TX
+[Y: 13.87] [x:4.2] Resi Cooper | [x:13.6] Dance Industry, TX
+[Y: 15.25] [x:4.2] Paige Wilde | [x:13.6] Studio Z Performing Arts Center, AZ
+[Y: 16.63] [x:4.2] Aubrey Bartz | [x:13.6] Dance Institute, TX
+[Y: 18.01] [x:4.2] Estelle Newsom | [x:13.6] Dance Institute, TX
+[Y: 19.39] [x:4.2] Mia Mailandt | [x:13.6] The Dallas Conservatory, TX
+[Y: 20.77] [x:4.2] Skye Griffin | [x:13.6] Center Stage Dance & Gymnastics, TX
+[Y: 22.15] [x:4.2] Avia Ycaza | [x:13.6] The Dance Vault, TX
+[Y: 23.53] [x:4.2] Madison Kinchen | [x:13.6] Main Street Dance, LA
+[Y: 24.91] [x:4.2] Maren Scovell | [x:13.6] Dance Industry, TX
+[Y: 26.29] [x:4.2] Dacey Gaona | [x:13.6] J Dance Company, TX
+[Y: 27.67] [x:4.2] Caroline Ward | [x:13.6] Jill Listi Dance Studio, LA
+[Y: 29.05] [x:4.2] Aviana Manila | [x:13.6] Stacey's Dance Studio, TX
+[Y: 30.43] [x:4.2] Jocelyn Olojo | [x:13.6] Dance Du Coeur, TX
+[Y: 31.81] [x:4.2] Kaleigh Benjamin | [x:13.6] The Dance Kollective, TX
+[Y: 33.19] [x:4.2] Jenna Couch | [x:13.6] TopFlight Dance Conservatory, TX
+
+=== PAGE 6 ===
+[Y: 3.66] [x:4.2] Sydney Sio | [x:13.6] MÜV Dance and Fitness, TX
+[Y: 5.04] [x:4.2] June Mclean | [x:13.6] Vdanse Studios, TX
+[Y: 6.42] [x:4.2] Ava Mayorga | [x:13.6] Stacey's Dance Studio, TX
+[Y: 7.80] [x:4.2] Harper Ruff | [x:13.6] Stacey's Dance Studio, TX
+[Y: 9.18] [x:4.2] Kendall Wilky | [x:13.6] MÜV Dance and Fitness, TX
+[Y: 10.56] [x:4.2] Olivia Mont | [x:13.6] Dance Institute, TX
+[Y: 11.94] [x:4.2] Savannah Stewart | [x:13.6] MÜV Dance and Fitness, TX
+[Y: 13.32] [x:4.2] Madeline Mccormic | [x:13.6] Jill Listi Dance Studio, LA
+
+=== PAGE 7 ===
+[Y: 4.10] [x:19.0] Teen Outstanding Dancers
+[Y: 5.59] [x:4.2] Bella Womeldorph | [x:13.6] Academy of Dance Arts, TX
+[Y: 6.97] [x:4.2] Evan Turnley | [x:13.6] Dance Institute, TX
+[Y: 8.35] [x:4.2] Liv Garcia | [x:13.6] Dance Institute, TX
+
+=== PAGE 8 ===
+[Y: 4.10] [x:20.8] Teen Runners-Up
+[Y: 5.59] [x:4.2] Lauryn Alexander | [x:13.6] The Collective PHX, AZ
+[Y: 6.97] [x:4.2] Mason Luedtke | [x:13.6] Airborne Dance, CO
+[Y: 8.35] [x:4.2] Alyvia Chen | [x:13.6] The Collective PHX, AZ
+[Y: 9.73] [x:4.2] Sophia Chin | [x:13.6] Texas Academy of Dance Arts, TX
+[Y: 11.11] [x:4.2] Esme Chou | [x:13.6] Dmitri Kulev Classical Ballet, CA
+[Y: 12.49] [x:4.2] Harper Hammes | [x:13.6] Dance Institute, TX
+[Y: 13.87] [x:4.2] Dp Haggerty | [x:13.6] MÜV Dance and Fitness, TX
+[Y: 15.25] [x:4.2] Ruby Rosa | [x:13.6] Dance Institute, TX
+[Y: 16.63] [x:4.2] Esther Pi | [x:13.6] MÜV Dance and Fitness, TX
+[Y: 18.01] [x:4.2] Jaci Clendaniel | [x:13.6] Dance Industry, TX
+[Y: 19.39] [x:4.2] Mason Kiker | [x:13.6] Houston Academy Of Dance, TX
+[Y: 20.77] [x:4.2] Joanna Zhang | [x:13.6] The PAC, TX
+[Y: 22.15] [x:4.2] Zoey Reese | [x:13.6] The Dallas Conservatory, TX
+[Y: 23.53] [x:4.2] Gemma Riffel | [x:13.6] EnRich Dance Company, TX
+[Y: 24.91] [x:4.2] Maguire Ferguson | [x:13.6] South Tulsa Dance Company, OK
+[Y: 26.29] [x:4.2] Aubrey Franck | [x:13.6] Moonstar Dance Studio, OR
+[Y: 27.67] [x:4.2] Megan Duffy | [x:13.6] Dance Industry, TX
+[Y: 29.05] [x:4.2] Jett Zeiter | [x:13.6] Dream Dance Center, TX
+[Y: 30.43] [x:4.2] Layla Belvin | [x:13.6] The Dance Kollective, TX
+[Y: 31.81] [x:4.2] Bella Chen | [x:13.6] Mather Dance Company, CA
+[Y: 33.19] [x:4.2] Brynley Crook | [x:13.6] MÜV Dance and Fitness, TX
+
+=== PAGE 9 ===
+[Y: 3.66] [x:4.2] Claire Brown | [x:13.6] MÜV Dance and Fitness, TX
+[Y: 5.04] [x:4.2] Lyla Hughes | [x:13.6] Dance Institute, TX
+[Y: 6.42] [x:4.2] Claire Gonzalez | [x:13.6] MÜV Dance and Fitness, TX
+[Y: 7.80] [x:4.2] Charlotte Landrum | [x:13.6] Dance Center of San Antonio, TX
+[Y: 9.18] [x:4.2] Lily Miller | [x:13.6] The Collective PHX, AZ
+[Y: 10.56] [x:4.2] Sofia Sandoval-Smyrski | [x:13.6] MÜV Dance and Fitness, TX
+[Y: 11.94] [x:4.2] Braelyn Sweed | [x:13.6] Vdanse Studios, TX
+[Y: 13.32] [x:4.2] Lillian Colletti | [x:13.6] Dance Institute, TX
+[Y: 14.70] [x:4.2] Kate Ruff | [x:13.6] Stacey's Dance Studio, TX
+[Y: 16.08] [x:4.2] Ella Speer | [x:13.6] Dance Institute, TX
+[Y: 17.46] [x:4.2] Lily Koltes | [x:13.6] Dance Dynamics, TX
+[Y: 18.84] [x:4.2] Kaylin Gabosch | [x:13.6] Dancezone, TX
+[Y: 20.22] [x:4.2] Liza Fagan | [x:13.6] Main Street Dance, LA
+
+=== PAGE 10 ===
+[Y: 4.10] [x:18.7] Senior Outstanding Dancers
+[Y: 5.59] [x:4.2] Noah Roudreiw | [x:13.6] Tribe Seven Dance, TX
+[Y: 6.97] [x:4.2] Kendall Moshay | [x:13.6] TopFlight Dance Conservatory, TX
+[Y: 8.35] [x:4.2] Hudson Silva-Costa | [x:13.6] The Dallas Conservatory, TX
+[Y: 9.73] [x:4.2] Kasey Blackmon | [x:13.6] The Collective PHX, AZ
+
+=== PAGE 11 ===
+[Y: 4.10] [x:20.5] Senior Runners-Up
+[Y: 5.59] [x:4.2] Addison Haggerty | [x:13.6] MÜV Dance and Fitness, TX
+[Y: 6.97] [x:4.2] Jireh Carias | [x:13.6] Dancezone, TX
+[Y: 8.35] [x:4.2] Kieran Holmes | [x:13.6] The Dance Kollective, TX
+[Y: 9.73] [x:4.2] Kaylia Akintayo | [x:13.6] TopFlight Dance Conservatory, TX
+[Y: 11.11] [x:4.2] Alyssa Park | [x:13.6] CAP The Company, CA
+[Y: 12.49] [x:4.2] Rylee Burns | [x:13.6] Institute of Contemporary Dance, TX
+[Y: 13.87] [x:4.2] Audrey Ha | [x:13.6] The Dallas Conservatory, TX
+[Y: 15.25] [x:4.2] Dilyn Bray | [x:13.6] The Dance Kollective, TX
+[Y: 16.63] [x:4.2] Harper Sherrard | [x:13.6] The Dallas Conservatory, TX
+[Y: 18.01] [x:4.2] Jasmyn Gulley | [x:13.6] Dancescape By Joyce, TX
+[Y: 19.39] [x:4.2] J D Noblin | [x:13.6] Stacey's Dance Studio, TX
+[Y: 20.77] [x:4.2] Tiana Luna | [x:13.6] The Collective PHX, AZ
+[Y: 22.15] [x:4.2] Avery Germany | [x:13.6] TopFlight Dance Conservatory, TX
+[Y: 23.53] [x:4.2] Kavi Seewann | [x:13.6] Dance Institute, TX
+[Y: 24.91] [x:4.2] Halo Ryan | [x:13.6] Dance Institute, TX
+[Y: 26.29] [x:4.2] Stella Stephenson | [x:13.6] The Dallas Conservatory, TX
+[Y: 27.67] [x:4.2] Chloe Lin | [x:13.6] Texas Academy of Dance Arts, TX
+[Y: 29.05] [x:4.2] Alexandra Canahuati | [x:13.6] Progressions Elite, TX
+[Y: 30.43] [x:4.2] Jordan Hetherly | [x:13.6] The Dallas Conservatory, TX
+[Y: 31.81] [x:4.2] Diana Acuna | [x:13.6] Tempe Dance Academy, AZ
+[Y: 33.19] [x:4.2] Gaby Litwinenko | [x:13.6] EnRich Dance Company, TX
+
+=== PAGE 12 ===
+[Y: 3.66] [x:4.2] Ava Harrison | [x:13.6] Houston Academy Of Dance, TX
+[Y: 5.04] [x:4.2] Nevaeh Joseph | [x:13.6] Dancezone, TX
+[Y: 6.42] [x:4.2] Hattie Warfield | [x:13.6] Dance Institute, TX
+[Y: 7.80] [x:4.2] Gavin Warfield | [x:13.6] Dancezone, TX
+[Y: 9.18] [x:4.2] Gregory Richard | [x:13.6] Institute of Contemporary Dance, TX
+[Y: 10.56] [x:4.2] Emmeline Gerardi | [x:13.6] Dance Universe Inc, FL
+[Y: 11.94] [x:4.2] Ally James | [x:13.6] Dance Integrity, TX
+[Y: 13.32] [x:4.2] Olivia Yi | [x:13.6] Institute of Contemporary Dance, TX
+[Y: 14.70] [x:4.2] Ava Hodges | [x:13.6] MÜV Dance and Fitness, TX
+[Y: 16.08] [x:4.2] Calvin Webb | [x:13.6] Institute of Contemporary Dance, TX
+[Y: 17.46] [x:4.2] Alexandra Wong | [x:13.6] West University Dance Centre, TX
+[Y: 18.84] [x:4.2] Zariah Cleveland | [x:13.6] Dancezone, TX
+[Y: 20.22] [x:4.2] Ava Hamilton | [x:13.6] Dance Du Coeur, TX
+[Y: 21.60] [x:4.2] Wendi Zhang | [x:13.6] Dance Institute, TX
+
+=== PAGE 13 ===
+[Y: 4.10] [x:20.2] Jo + Jax Style Award
+[Y: 5.59] [x:4.2] Hannah Fogel | [x:13.6] Dance Institute, TX
+[Y: 6.97] [x:4.2] Evelynn Brown | [x:13.6] MÜV Dance and Fitness, TX
+[Y: 10.17] [x:20.4] NYCDA Spirit Award
+[Y: 11.65] [x:4.2] Sky Akintayo | [x:13.6] TopFlight Dance Conservatory, TX
+[Y: 14.86] [x:20.6] Oustanding Studio
+[Y: 16.39] [x:21.9] Dance Institute, TX
+
+=== PAGE 14 ===
+[Y: 4.10] [x:20.4] Ballet Scholarships
+[Y: 5.59] [x:4.2] Athena Cato | [x:13.6] The Dance Kollective, TX
+[Y: 6.97] [x:4.2] Retta Motl | [x:13.6] The Dallas Conservatory, TX
+[Y: 8.35] [x:4.2] Sophie Simmons | [x:13.6] The Dallas Conservatory, TX
+[Y: 9.73] [x:4.2] Resi Cooper | [x:13.6] Dance Industry, TX
+[Y: 11.11] [x:4.2] Maren Scovell | [x:13.6] Dance Industry, TX
+[Y: 12.49] [x:4.2] Sophia Zeng | [x:13.6] Dance Institute, TX
+[Y: 13.87] [x:4.2] Mia Mailandt | [x:13.6] The Dallas Conservatory, TX
+[Y: 15.25] [x:4.2] Jasmyn Gulley | [x:13.6] Dancescape By Joyce, TX
+[Y: 16.63] [x:4.2] Halo Ryan | [x:13.6] Dance Institute, TX
+[Y: 18.01] [x:4.2] Kavi Seewann | [x:13.6] Dance Institute, TX
+[Y: 19.39] [x:4.2] Zoey Reese | [x:13.6] The Dallas Conservatory, TX
+[Y: 20.77] [x:4.2] Sophia Chin | [x:13.6] Texas Academy of Dance Arts, TX
+[Y: 22.15] [x:4.2] Harper Hammes | [x:13.6] Dance Institute, TX
+
+=== PAGE 15 ===
+[Y: 4.10] [x:20.9] Tap Scholarships
+[Y: 5.59] [x:4.2] Sky Akintayo | [x:13.6] TopFlight Dance Conservatory, TX
+[Y: 6.97] [x:4.2] Kachi Mole | [x:13.6] The Dance Kollective, TX
+[Y: 8.35] [x:4.2] Mikayla Chiobi | [x:13.6] The Dance Kollective, TX
+[Y: 9.73] [x:4.2] Kiera Weston - Brown | [x:13.6] Dance Institute, TX
+[Y: 11.11] [x:4.2] Amere Mabins | [x:13.6] Collective Dance Artistry, TX
+[Y: 12.49] [x:4.2] Sophia Lee | [x:13.6] Texas Academy of Dance Arts, TX
+[Y: 13.87] [x:4.2] Charlotte Page | [x:13.6] Academy of Dance Arts, TX
+[Y: 15.25] [x:4.2] Camelia Zubizarreta | [x:13.6] EnRich Dance Company, TX
+[Y: 16.63] [x:4.2] Mercy Buckland | [x:13.6] Academy of Dance Arts, TX
+[Y: 18.01] [x:4.2] Sofia Martinez | [x:13.6] The Dance Kollective, TX
+[Y: 19.39] [x:4.2] Joanna Zhang | [x:13.6] The PAC, TX
+[Y: 20.77] [x:4.2] Esther Pi | [x:13.6] MÜV Dance and Fitness, TX
+[Y: 22.15] [x:4.2] Alyvia Chen | [x:13.6] The Collective PHX, AZ
+[Y: 23.53] [x:4.2] Nevaeh Joseph | [x:13.6] Dancezone, TX
+[Y: 24.91] [x:4.2] Kate Duffy | [x:13.6] Dance Industry, TX
+[Y: 26.29] [x:4.2] Katia Arras | [x:13.6] D’ansa Jazz Stage, TX
+
+=== PAGE 16 ===
+[Y: 4.10] [x:19.9] Hip-Hop Scholarships
+[Y: 5.59] [x:4.2] Joeruben Garcia | [x:13.6] J Dance Company, TX
+[Y: 6.97] [x:4.2] Grace Reyes | [x:13.6] Tribe Seven Dance, TX
+[Y: 8.35] [x:4.2] Jaycee Lewis | [x:13.6] Main Street Dance, LA
+[Y: 9.73] [x:4.2] Haruhi Tachi | [x:13.6] CKMD Dance and Fitness Studio, TX
+[Y: 11.11] [x:4.2] Addison Reina | [x:13.6] EnRich Dance Company, TX
+[Y: 12.49] [x:4.2] Shea Harding | [x:13.6] MÜV Dance and Fitness, TX
+[Y: 13.87] [x:4.2] Mason Luedtke | [x:13.6] Airborne Dance, CO
+[Y: 15.25] [x:4.2] Dp Haggerty | [x:13.6] MÜV Dance and Fitness, TX
+[Y: 16.63] [x:4.2] Calvin Webb | [x:13.6] Institute of Contemporary Dance, TX
+[Y: 18.01] [x:4.2] Noah Roudreiw | [x:13.6] Tribe Seven Dance, TX
+[Y: 19.39] [x:4.2] Gregory Richard | [x:13.6] Institute of Contemporary Dance, TX
+[Y: 20.77] [x:4.2] Jireh Carias | [x:13.6] Dancezone, TX
+[Y: 22.15] [x:4.2] J D Noblin | [x:13.6] Stacey's Dance Studio, TX
+[Y: 23.53] [x:4.2] Gavin Warfield | [x:13.6] Dancezone, TX
+[Y: 24.91] [x:4.2] Naomi Chiobi | [x:13.6] The Dance Kollective, TX
+[Y: 26.29] [x:4.2] Megan Duffy | [x:13.6] Dance Industry, TX
+[Y: 27.67] [x:4.2] Ava Hamilton | [x:13.6] Dance Du Coeur, TX
+[Y: 29.05] [x:4.2] Kieran Holmes | [x:13.6] The Dance Kollective, TX
+
+=== PAGE 17 ===
+[Y: 4.10] [x:19.4] Future Star Scholarships
+[Y: 5.59] [x:4.2] Kareem Daoud | [x:13.6] The Dance Kollective, TX
+[Y: 6.97] [x:4.2] Sylvia Newsom | [x:13.6] Dance Institute, TX
+[Y: 8.35] [x:4.2] Rosie Charlemagne | [x:13.6] Stacey's Dance Studio, TX
+[Y: 9.73] [x:4.2] Zoey Magee | [x:13.6] Move Dance Family, TX
+[Y: 11.11] [x:4.2] Avari Spelmon | [x:13.6] Republic Edge Dance, TX
+[Y: 12.49] [x:4.2] Gianna Marquez | [x:13.6] Novus Dance, TX
+[Y: 13.87] [x:4.2] Khaled Daoud | [x:13.6] The Dance Kollective, TX
+[Y: 15.25] [x:4.2] Frances Puente | [x:13.6] EnRich Dance Company, TX
+[Y: 16.63] [x:4.2] Quinlyn Lasala | [x:13.6] Tribe Seven Dance, TX
+[Y: 18.01] [x:4.2] Caroline Mrozik | [x:13.6] Texas Academy of Dance Arts, TX
+[Y: 19.39] [x:4.2] Mason Kiker | [x:13.6] Houston Academy Of Dance, TX
+[Y: 20.77] [x:4.2] Jett Zeiter | [x:13.6] Dream Dance Center, TX
+[Y: 22.15] [x:4.2] Gemma Riffel | [x:13.6] EnRich Dance Company, TX
+[Y: 23.53] [x:4.2] Briley Rich | [x:13.6] Dream Dance Center, TX
+[Y: 24.91] [x:4.2] Katelyn Legg | [x:13.6] MÜV Dance and Fitness, TX
+[Y: 26.29] [x:4.2] Maguire Ferguson | [x:13.6] South Tulsa Dance Company, OK
+[Y: 27.67] [x:4.2] Kaylin Gabosch | [x:13.6] Dancezone, TX
+
+=== PAGE 18 ===
+[Y: 4.10] [x:17.6] Junior Intensive Standout Awards
+[Y: 5.59] [x:4.2] Amere Mabins | [x:13.6] Collective Dance Artistry, TX
+[Y: 6.97] [x:4.2] Harlow Walker | [x:13.6] Dance Institute, TX
+[Y: 8.35] [x:4.2] Noelle Lizama | [x:13.6] The Dance Kollective, TX
+[Y: 9.73] [x:4.2] Ellie Callegari | [x:13.6] MÜV Dance and Fitness, TX
+[Y: 11.11] [x:4.2] Kynslee Menard | [x:13.6] Jill Listi Dance Studio, LA
+[Y: 12.49] [x:4.2] Juliana Espinoza | [x:13.6] The Dance Vault, TX
+[Y: 13.87] [x:4.2] Riley Southard | [x:13.6] Dance Industry, TX
+[Y: 15.25] [x:4.2] Yaara Landau | [x:13.6] Dance Industry, TX
+[Y: 16.63] [x:4.2] Avery Siek | [x:13.6] House of Dance, TX
+[Y: 18.01] [x:4.2] Zia Yeiter | [x:13.6] Cindy K's Dance Studio, TX
+[Y: 19.39] [x:4.2] Makenzie Mitchell | [x:13.6] MÜV Dance and Fitness, TX
+[Y: 20.77] [x:4.2] Rylee Guarisco | [x:13.6] Dance Dynamics, TX
+[Y: 22.15] [x:4.2] Madeleine Jordan | [x:13.6] Dance Dynamics, TX
+[Y: 23.53] [x:4.2] Khloe Rojas | [x:13.6] Dance Dynamics, TX
+[Y: 24.91] [x:4.2] Mercy Buckland | [x:13.6] Academy of Dance Arts, TX
+
+=== PAGE 19 ===
+[Y: 4.10] [x:18.9] Intensive Standout Awards
+[Y: 5.59] [x:4.2] Amelia Ziegler | [x:13.6] Texas Academy of Dance Arts, TX
+[Y: 6.97] [x:4.2] Eloise Harrison | [x:13.6] The Dance Kollective, TX
+[Y: 8.35] [x:4.2] Riana Rizoyeva | [x:13.6] CKMD Dance and Fitness Studio, TX
+[Y: 9.73] [x:4.2] Juliana Johnson | [x:13.6] Dream Dance Center, TX
+[Y: 11.11] [x:4.2] Jacie Kasprzak | [x:13.6] MÜV Dance and Fitness, TX
+[Y: 12.49] [x:4.2] Avery Actkinson | [x:13.6] The Dance Kollective, TX
+[Y: 13.87] [x:4.2] Tressa Ahlquist | [x:13.6] West University Dance Centre, TX
+[Y: 15.25] [x:4.2] Bella Axcell | [x:13.6] West University Dance Centre, TX
+[Y: 16.63] [x:4.2] Addison Ballard | [x:13.6] Texas Academy of Dance Arts, TX
+[Y: 18.01] [x:4.2] Sarah Bensimon | [x:13.6] MÜV Dance and Fitness, TX
+[Y: 19.39] [x:4.2] Katelyn Bilski | [x:13.6] Dance Dynamics, TX
+[Y: 20.77] [x:4.2] Katherine Brown | [x:13.6] EnRich Dance Company, TX
+[Y: 22.15] [x:4.2] Zahra Johnson | [x:13.6] Dance Dynamics, TX
+[Y: 23.53] [x:4.2] Abriella Plata | [x:13.6] Dream Dance Center, TX
+[Y: 24.91] [x:4.2] Olivia Holtam | [x:13.6] The Dance Kollective, TX
+[Y: 26.29] [x:4.2] Caitlyn Hankins | [x:13.6] EnRich Dance Company, TX
+[Y: 27.67] [x:4.2] Scarlett Schmitt | [x:13.6] Episcopal High School, TX
+[Y: 29.05] [x:4.2] Hailey Vaval | [x:13.6] Precision Dance Academy, TX
+[Y: 30.43] [x:4.2] Savannah Wilkes | [x:13.6] The Colony, IL
+[Y: 31.81] [x:4.2] Azylia Zack | [x:13.6] Institute of Contemporary Dance, TX
+[Y: 33.19] [x:4.2] Caroline Zazueta | [x:13.6] Houston Academy Of Dance, TX
+
+=== PAGE 20 ===
+[Y: 4.10] [x:16.4] Winter Contemporary Intensive Awards
+[Y: 5.59] [x:4.2] Addison Haggerty | [x:13.6] MÜV Dance and Fitness, TX
+[Y: 6.97] [x:4.2] Kendall Moshay | [x:13.6] TopFlight Dance Conservatory, TX
+[Y: 8.35] [x:4.2] Dilyn Bray | [x:13.6] The Dance Kollective, TX
+[Y: 9.73] [x:4.2] Noah Roudreiw | [x:13.6] Tribe Seven Dance, TX
+[Y: 11.11] [x:4.2] Kieran Holmes | [x:13.6] The Dance Kollective, TX
+
+=== PAGE 21 ===
+[Y: 4.10] [x:20.7] Rising Star Award
+[Y: 5.50] [x:4.3] chosen by  | [x:8.4] JOE
+[Y: 6.83] [x:4.2] Aerynn Johnson | [x:13.6] Dance Du Coeur, TX
+[Y: 8.21] [x:4.2] Kieran Holmes | [x:13.6] The Dance Kollective, TX
+[Y: 9.49] [x:4.3] chosen by  | [x:8.4] SUZI
+[Y: 10.82] [x:4.2] Hannah Fogel | [x:13.6] Dance Institute, TX
+[Y: 12.20] [x:4.2] Taylor Hoke | [x:13.6] The Dance Vault, TX
+[Y: 13.49] [x:4.3] chosen by  | [x:8.4] GRACE
+[Y: 14.82] [x:4.2] Kiera Weston - Brown | [x:13.6] Dance Institute, TX
+[Y: 16.20] [x:4.2] Sophia Chin | [x:13.6] Texas Academy of Dance Arts, TX
+[Y: 17.49] [x:4.3] chosen by  | [x:8.4] KIM
+[Y: 18.82] [x:4.2] Grace Gerszewski | [x:13.6] Tribe Seven Dance, TX
+[Y: 20.20] [x:4.2] Katia Arras | [x:13.6] D’ansa Jazz Stage, TX
+[Y: 21.49] [x:4.3] chosen by | [x:8.2]  JASON
+[Y: 22.82] [x:4.2] Sky Akintayo | [x:13.6] TopFlight Dance Conservatory, TX
+[Y: 24.20] [x:4.2] Alyvia Chen | [x:13.6] The Collective PHX, AZ
+[Y: 25.48] [x:4.3] chosen by | [x:8.2]  BOY BOI
+[Y: 26.81] [x:4.2] Resi Cooper | [x:13.6] Dance Industry, TX
+[Y: 28.19] [x:4.2] Alina Huynh | [x:13.6] The PAC, TX

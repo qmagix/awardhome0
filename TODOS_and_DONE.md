@@ -41,6 +41,8 @@
 
 - [x] Phase 3: Optimize Awards Editor performance using Single Edit Modal and Year-Based Pagination.
 
+- [x] NYCDA PDF Bulk Extraction: Developed coordinate-based parsing script (`categorize_nycda.js`) to parse all 2022+ competition and convention results from NYCDA PDFs into structured text, successfully marking valid files with `GOOD-`.
+
 - [x] Integrate Instagram and TikTok handles into Studio Profiles and Management Dashboard.
 
 - [x] Create a `.gitignore` file for the repository.

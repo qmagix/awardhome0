@@ -38,7 +38,7 @@
               <tr>
                 <td><strong><%= award.performance_name %></strong> <span class="sub-text"><%= award.performance_number ? '#' + award.performance_number : '' %></span></td>
                 <td><%= award.award_type %></td>
-                <td><span class="badge"><%= formatPlacement(award.place) %></span></td>
+                <td><span class="badge"><%= formatPlacement(award) %></span></td>
                 <td><%= award.category || '-' %></td>
                 <td>
                   <% if (award.dancers && award.dancers.length > 0) { %>

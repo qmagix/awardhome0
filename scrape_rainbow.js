@@ -140,16 +140,30 @@ async function scrapeRainbow(url, year = 2026) {
         }
       }
 
+      let awardClass = 'adjudication';
+      const typeLower = awardType.toLowerCase();
+      if (typeLower.includes('high score') || typeLower.includes('overall') || typeLower.includes('champion') || typeLower.includes('place')) {
+        awardClass = 'overall';
+      } else if (typeLower.includes('scholarship') || typeLower.includes('dancer of the year')) {
+        awardClass = 'scholarship';
+      } else if (typeLower.includes('title') || typeLower.includes('miss') || typeLower.includes('mr.')) {
+        awardClass = 'title';
+      } else if (typeLower.includes('studio') || typeLower.includes('sportsmanship')) {
+        awardClass = 'studio';
+      } else if (typeLower.includes('judges') || typeLower.includes('entertaining') || typeLower.includes('choreography')) {
+        awardClass = 'special';
+      }
+
       // Insert award if it doesn't already exist
       const existingAward = await db.get(
-        'SELECT id FROM awards WHERE event_id = ? AND category = ? AND performance_name = ? AND IFNULL(place, "") = IFNULL(?, "")',
-        [event.id, category, perfName, place]
+        'SELECT id FROM awards WHERE event_id = ? AND category = ? AND performance_name = ? AND IFNULL(place, "") = IFNULL(?, "") AND award_class = ?',
+        [event.id, category, perfName, place, awardClass]
       );
 
       if (!existingAward) {
         await db.run(
-          `INSERT INTO awards (event_id, place, performance_name, performance_number, award_type, category, dancer_id, studio_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-          [event.id, place, perfName, perfNumber, awardType, category, dancerId, studio.id]
+          `INSERT INTO awards (event_id, place, performance_name, performance_number, award_class, award_type, category, dancer_id, studio_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [event.id, place, perfName, perfNumber, awardClass, awardType, category, dancerId, studio.id]
         );
       }
     }

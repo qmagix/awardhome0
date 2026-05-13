@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Organization: <%= org.name %></title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="dashboard-body">
+    <%- include('partials/header') %>
+
+    <div class="dashboard-container container">
+        <aside class="dashboard-sidebar">
+            <div class="sidebar-org-profile">
+                <% if (org.logo_url) { %>
+                    <img src="<%= org.logo_url %>" alt="<%= org.name %> Logo" class="sidebar-logo">
+                <% } else { %>
+                    <div class="sidebar-avatar-placeholder"><%= org.name.substring(0, 2).toUpperCase() %></div>
+                <% } %>
+                <h2><%= org.name %></h2>
+                <span class="badge badge-premium" style="margin-top: 0.5rem;">Verified Organizer</span>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="/manage/org/<%= org.id %>" class="active">Overview</a>
+                <a href="#upload-section">Upload Results</a>
+                <a href="#past-events">Past Events</a>
+                <a href="/manage/org/<%= org.id %>/branding">Branding & Icons</a>
+                <a href="/faq/organizer" class="text-muted" style="margin-top: 2rem;">Organizer FAQ</a>
+            </nav>
+        </aside>
+
+        <main class="dashboard-content">
+            <header class="dashboard-header">
+                <h1>Organizer Overview</h1>
+                <p class="text-muted">Welcome to your dashboard. Upload results directly to instantly update dancer portfolios across the platform.</p>
+            </header>
+
+            <section class="stats-grid">
+                <div class="stat-card">
+                    <h3>Total Awards Distributed</h3>
+                    <div class="stat-value"><%= stats.total_awards ? stats.total_awards.toLocaleString() : 0 %></div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Studios Attended</h3>
+                    <div class="stat-value"><%= stats.total_studios ? stats.total_studios.toLocaleString() : 0 %></div>
+                </div>
+                <% if (rank > 1) { %>
+                <div class="stat-card" style="border-top: 4px solid var(--accent-gold);">
+                    <h3>Platform Ranking</h3>
+                    <div class="stat-value">#<%= rank %></div>
+                    <div class="stat-trend" style="color: var(--accent-gold);">Largest Organization</div>
+                </div>
+                <% } %>
+            </section>
+
+            <section class="card glass-card" style="margin-top: 2rem;">
+                <div class="card-header">
+                    <h2>Live Mockups</h2>
+                    <p class="text-muted">See how your organization's awards look on dancer and studio portfolios.</p>
+                </div>
+                <div class="card-body" style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <% if (topDancer) { %>
+                        <a href="/dancer/<%= topDancer.unique_id %>" target="_blank" class="btn btn-outline">
+                            View Dancer Mockup (<%= topDancer.name %>)
+                        </a>
+                    <% } %>
+                    <% if (topStudio) { %>
+                        <a href="/studio/<%= topStudio.id %>" target="_blank" class="btn btn-outline">
+                            View Studio Mockup (<%= topStudio.name %>)
+                        </a>
+                    <% } %>
+                </div>
+            </section>
+
+            <section id="upload-section" class="card glass-card" style="margin-top: 2rem;">
+                <div class="card-header">
+                    <h2>Upload Event Results</h2>
+                    <p class="text-muted">Upload your CSV or Excel results. Our AI will process them and update dancer portfolios automatically.</p>
+                </div>
+                <div class="card-body">
+                    <form action="/manage/org/<%= org.id %>/upload" method="POST" enctype="multipart/form-data" class="upload-form">
+                        <div class="form-group">
+                            <label>Event Name (e.g. Baltimore Nationals)</label>
+                            <input type="text" name="event_name" required>
+                        </div>
+                        <div class="form-group" style="display: flex; gap: 1rem;">
+                            <div style="flex: 1;">
+                                <label>Date</label>
+                                <input type="text" name="event_date" placeholder="May 10-12, 2025" required>
+                            </div>
+                            <div style="flex: 1;">
+                                <label>Location</label>
+                                <input type="text" name="event_location" placeholder="Baltimore, MD" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Results File (CSV, Excel)</label>
+                            <input type="file" name="results_file" accept=".csv,.xlsx,.xls" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">Upload & Process</button>
+                    </form>
+
+                    <% if (uploads && uploads.length > 0) { %>
+                        <h3 style="margin-top: 2rem; margin-bottom: 1rem;">Recent Uploads</h3>
+                        <table class="data-table" style="width: 100%;">
+                            <thead>
+                                <tr>
+                                    <th>Event</th>
+                                    <th>Date Uploaded</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% uploads.forEach(u => { %>
+                                    <tr>
+                                        <td><strong><%= u.event_name %></strong> <span class="text-muted">(<%= u.event_location %>)</span></td>
+                                        <td><%= new Date(u.created_at).toLocaleDateString() %></td>
+                                        <td>
+                                            <% if (u.status === 'pending') { %>
+                                                <span class="badge" style="background: rgba(234, 179, 8, 0.2); color: #eab308;">AI Processing Soon</span>
+                                            <% } else if (u.status === 'processed') { %>
+                                                <span class="badge badge-premium">Processed</span>
+                                            <% } else { %>
+                                                <span class="badge" style="background: rgba(239, 68, 68, 0.2); color: #ef4444;"><%= u.status %></span>
+                                            <% } %>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    <% } %>
+                </div>
+            </section>
+
+            <section id="past-events" class="card glass-card" style="margin-top: 2rem;">
+                <div class="card-header">
+                    <h2>Published Events</h2>
+                    <p class="text-muted">These events are currently live and verified on the platform.</p>
+                </div>
+                <div class="card-body">
+                    <% if (events && events.length > 0) { %>
+                        <table class="data-table" style="width: 100%;">
+                            <thead>
+                                <tr>
+                                    <th>Year</th>
+                                    <th>Event Name</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% events.forEach(e => { %>
+                                    <tr>
+                                        <td><%= e.year %></td>
+                                        <td><%= e.name %> <%= e.date_string ? '(' + e.date_string + ')' : '' %></td>
+                                        <td><a href="/event/<%= e.id %>" target="_blank" class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">View Public Page</a></td>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    <% } else { %>
+                        <p>No past events found.</p>
+                    <% } %>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <style>
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        .dashboard-sidebar {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 2rem 1.5rem;
+            height: fit-content;
+            position: sticky;
+            top: 2rem;
+        }
+        .sidebar-org-profile {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .sidebar-logo, .sidebar-avatar-placeholder {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin-bottom: 1rem;
+            object-fit: cover;
+            border: 2px solid var(--accent-gold);
+        }
+        .sidebar-avatar-placeholder {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: white;
+        }
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .sidebar-nav a {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            color: var(--text-light);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+        .sidebar-nav a:hover, .sidebar-nav a.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+        .stat-card {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(8px);
+            border-radius: 16px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.5);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        .stat-card h3 {
+            font-size: 1rem;
+            color: #cbd5e1;
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .stat-value {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #ffffff;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        .upload-form .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .upload-form label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+        .upload-form input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        @media (max-width: 768px) {
+            .dashboard-container {
+                grid-template-columns: 1fr;
+            }
+            .dashboard-sidebar {
+                position: static;
+            }
+        }
+    </style>
+</body>
+</html>

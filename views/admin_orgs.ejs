@@ -38,6 +38,7 @@
               </td>
               <td style="padding: 0.5rem 0;"><%= org.event_count || 0 %></td>
               <td style="padding: 0.5rem 0; text-align: right; display: flex; justify-content: flex-end; gap: 0.5rem;">
+                <a href="/manage/org/<%= org.id %>" target="_blank" class="btn btn-outline" style="border-color: var(--accent-gold); color: var(--accent-gold); text-decoration: none;">View Dashboard</a>
                 <button class="btn btn-secondary" onclick="showEditOrgModal('<%= org.id %>', '<%= org.name.replace(/'/g, "\\'") %>', '<%= org.slug %>', '<%= (org.website || '').replace(/'/g, "\\'") %>')">Edit</button>
                 <form action="/admin/orgs/<%= org.id %>/delete" method="POST" onsubmit="return confirm('Are you sure you want to delete this organization? This cannot be undone.');">
                   <button type="submit" class="btn" style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #ef4444;">Delete</button>
@@ -116,6 +117,52 @@ document.getElementById('orgName').addEventListener('input', function(e) {
     document.getElementById('orgSlug').value = slug;
   }
 });
+
+async function generateLoginLink(userId, targetUrl) {
+  try {
+    const res = await fetch('/admin/impersonate/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, target_url: targetUrl })
+    });
+    const data = await res.json();
+    
+    if (data.success) {
+      document.getElementById('generated-link-input').value = data.link;
+      document.getElementById('link-modal').style.display = 'flex';
+    } else {
+      alert('Error generating link: ' + data.error);
+    }
+  } catch (e) {
+    alert('Failed to connect to server.');
+  }
+}
+
+function copyToClipboard() {
+  const input = document.getElementById('generated-link-input');
+  input.select();
+  input.setSelectionRange(0, 99999);
+  navigator.clipboard.writeText(input.value)
+    .then(() => alert("Link copied to clipboard! Open an Incognito window and paste it."))
+    .catch(err => alert("Failed to copy. Please copy it manually."));
+}
 </script>
+
+<!-- Modal for displaying the generated link -->
+<div id="link-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
+  <div class="card glass-card" style="max-width: 500px; width: 90%; text-align: center;">
+    <h3 style="margin-bottom: 1rem; color: var(--accent-gold);">One-Time Login Link Generated!</h3>
+    <p class="text-muted" style="margin-bottom: 1.5rem; font-size: 0.9rem;">This link will log you in as the account owner. It expires in 1 hour and can only be used once.</p>
+    
+    <input type="text" id="generated-link-input" class="premium-input" readonly style="width: 100%; margin-bottom: 1rem; text-align: center; font-size: 0.85rem; color: #a5b4fc;">
+    
+    <div style="display: flex; gap: 1rem; justify-content: center;">
+      <button class="btn btn-primary" onclick="copyToClipboard()">Copy to Clipboard</button>
+      <button class="btn btn-outline" onclick="document.getElementById('link-modal').style.display='none'">Close</button>
+    </div>
+    
+    <p style="margin-top: 1rem; font-size: 0.8rem; color: #10b981;">Tip: Paste this link into a new <strong>Incognito Window</strong> so you don't lose your Superadmin session!</p>
+  </div>
+</div>
 
 <%- include('partials/footer') %>
