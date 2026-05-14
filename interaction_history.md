@@ -499,3 +499,11 @@ Advised the user to re-run the Revolution batch script to backfill the purged da
 3. Updated `manage_studio_roster.ejs` with a tabbed interface (Active vs. Inactive) and replaced the text status badge with a 1-click toggle button.
 4. Added the "View" button to the roster rows and built the `summaryModal` which dynamically renders the dancer's info and their 3 most recent awards (fetched efficiently using a unified `db.all` query in `server.js`).
 5. Removed "Grad Year" and "Total Awards" from the summary modal as requested.
+
+## Interaction - 2026-05-13 (Dancer Profile - Special Awards Segregation)
+**User:** Noticed that individual NYCDA convention awards (scholarships/standout dancer) were displaying under "Group Awards" because multiple dancers won them. Requested to classify convention/special awards separately and put Group Awards at the top to emphasize team spirit.
+**AI:**
+1. Modified the `/dancer/:unique_id` backend logic to utilize the `award_class` database column to accurately segregate scholarships, special, studio, and invitation awards into a dedicated `conventionAwards` array.
+2. Rebuilt the Dancer Profile UI layout (`views/dancer.ejs`) to display in the user-requested order: Group Awards -> Solo Awards -> Special / Convention Awards.
+3. Updated the stats pills at the top of the profile to calculate and display the new Special / Convention awards count.
+4. Resolved an EJS rendering syntax error caused by string unescaping during script manipulation.

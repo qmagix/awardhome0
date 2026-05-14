@@ -12,9 +12,9 @@
         </p>
         <p class="unique-id" style="margin-bottom: 0.5rem;">ID: <code><%= dancer.unique_id %></code></p>
         
-        <div class="stats-pills" style="display: flex; gap: 1rem; margin-top: 0.5rem; margin-bottom: 1rem;">
+        <div class="stats-pills" style="display: flex; gap: 1rem; margin-top: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap;">
           <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981; font-size: 0.8rem; padding: 0.3rem 0.6rem;">
-            Total Awards: <%= soloAwards.length + groupAwards.length %>
+            Total Awards: <%= soloAwards.length + groupAwards.length + conventionAwards.length %>
           </span>
           <span class="badge" style="background: rgba(139, 92, 246, 0.2); color: #8b5cf6; font-size: 0.8rem; padding: 0.3rem 0.6rem;">
             Groups: <%= groupAwards.length %>
@@ -22,6 +22,11 @@
           <span class="badge" style="background: rgba(236, 72, 153, 0.2); color: #ec4899; font-size: 0.8rem; padding: 0.3rem 0.6rem;">
             Solos: <%= soloAwards.length %>
           </span>
+          <% if (conventionAwards.length > 0) { %>
+            <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; font-size: 0.8rem; padding: 0.3rem 0.6rem;">
+              Special / Convention: <%= conventionAwards.length %>
+            </span>
+          <% } %>
         </div>
 
         <% if (!dancer.is_claimed) { %>
@@ -36,12 +41,15 @@
     </div>
   </div>
 
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2rem;">
-    <h2>Group Awards</h2>
+    <div style="display: flex; justify-content: flex-end; align-items: center; margin-top: 2rem; margin-bottom: 1rem;">
     <div class="view-toggle">
       <button id="btn-grid-view" class="btn btn-primary btn-sm" onclick="setView('grid')">Grid View</button>
       <button id="btn-table-view" class="btn btn-outline btn-sm" onclick="setView('table')" style="margin-left: 0.5rem;">Table View</button>
     </div>
+  </div>
+<div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
+    <h2>Group Awards</h2>
+
   </div>
 
   <div class="awards-view-grid awards-grid">
@@ -272,7 +280,110 @@
   </div>
 </div>
 
-  <script>
+  
+  <% if (conventionAwards && conventionAwards.length > 0) { %>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 3rem;">
+      <h2>Special / Convention Awards</h2>
+    </div>
+    <div class="awards-view-grid awards-grid">
+      <% conventionAwards.forEach(function(award) { %>
+        <div class="premium-trophy-card <%= isPremiumAward(award) ? 'premium-award-border' : '' %>">
+          <% if (!award.is_self_added) { %>
+            <div class="verified-badge" title="Official Verified Award">
+              <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" width="14" height="14"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            </div>
+          <% } %>
+            <% 
+              const placeTextConv = formatPlacement(award);
+              let placeClassConv = 'award-place award-place-large';
+              if (placeTextConv.length > 25) {
+                placeClassConv = 'award-place award-place-small';
+              } else if (placeTextConv.length > 12) {
+                placeClassConv = 'award-place award-place-medium';
+              }
+
+              let tierConv = 'tier-star';
+              let iconConv = '⭐';
+              const pLowerConv = placeTextConv.toLowerCase();
+              const typeLowerConv = (award.award_type || '').toLowerCase();
+              
+              if (isPremiumAward(award)) {
+                tierConv = 'tier-gold'; iconConv = getPremiumDetails(award).icon;
+              } else if (pLowerConv.includes('1st') || pLowerConv === 'winner' || pLowerConv.includes('first') || pLowerConv === 'champion') {
+                tierConv = 'tier-gold'; iconConv = '🏆';
+              } else if (pLowerConv.includes('2nd') || pLowerConv.includes('second')) {
+                tierConv = 'tier-silver'; iconConv = '🏆';
+              } else if (pLowerConv.includes('3rd') || pLowerConv.includes('third')) {
+                tierConv = 'tier-bronze'; iconConv = '🏆';
+              } else if (pLowerConv.includes('miss') || typeLowerConv.includes('miss') || pLowerConv.includes('mr ') || typeLowerConv.includes('mr ')) {
+                tierConv = 'tier-gold'; iconConv = '🏆';
+              }
+            %>
+          <div class="content-wrapper <%= tierConv %>">
+            <div class="trophy-icon">
+              <% const customIconConv = getCustomIcon(award, award.customIconsObj); %>
+              <% if (customIconConv) { %>
+                <img src="<%= customIconConv %>" alt="Icon" style="width: 1.5rem; height: 1.5rem; object-fit: contain;">
+              <% } else { %>
+                <%= iconConv %>
+              <% } %>
+            </div>
+            <% if (award.logo_url && !(award.customIconsObj && award.customIconsObj.hide_logo)) { %>
+              <img src="<%= award.logo_url %>" style="position: absolute; top: 0.5rem; left: 0.5rem; width: 24px; height: 24px; object-fit: contain; opacity: 0.6; border-radius: 4px;" title="<%= award.org_name %> Logo">
+            <% } %>
+            <div class="<%= placeClassConv %>">
+              <%= placeTextConv %>
+            </div>
+            <% if (award.is_self_added) { %>
+              <span class="badge" style="background: rgba(234, 179, 8, 0.2); color: #eab308; font-size: 0.6rem; margin-bottom: 0.5rem;" title="Unverified manually reported award">Self-Reported</span>
+            <% } %>
+            <% if (award.performance_name) { %>
+              <p class="category"><%= award.award_type %></p>
+              <h3><%= award.performance_name %></h3>
+            <% } else { %>
+              <h3><%= award.award_type %></h3>
+            <% } %>
+            <% if (award.category) { %>
+              <p class="sub-category"><%= award.category %></p>
+            <% } %>
+            <p class="sub-category" style="color: #a5b4fc; font-weight: 600; margin-top: 0.5rem;"><%= award.event_name %> (<%= award.event_year %>)</p>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+    <div class="awards-view-table card glass-card" style="display: none; overflow-x: auto; margin-top: 1rem;">
+      <table class="data-table" id="conventionTable" style="width: 100%; text-align: left; border-collapse: collapse;">
+        <thead>
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+            <th style="padding: 1rem; cursor: pointer;" onclick="sortTable('conventionTable', 0, 'string')">Placement &#x21D5;</th>
+            <th style="padding: 1rem; cursor: pointer;" onclick="sortTable('conventionTable', 1, 'string')">Award Name &#x21D5;</th>
+            <th style="padding: 1rem; cursor: pointer;" onclick="sortTable('conventionTable', 2, 'string')">Category &#x21D5;</th>
+            <th style="padding: 1rem; cursor: pointer;" onclick="sortTable('conventionTable', 3, 'string')">Event &#x21D5;</th>
+            <th style="padding: 1rem; cursor: pointer;" onclick="sortTable('conventionTable', 4, 'number')">Year &#x21D5;</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% conventionAwards.forEach(function(award) { %>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+              <td style="padding: 1rem;">
+                <%= formatPlacement(award) %>
+                <% if (!award.is_self_added) { %>
+                  <svg viewBox="0 0 24 24" fill="#10b981" stroke="currentColor" stroke-width="0" width="14" height="14" style="display:inline-block; margin-left:4px;" title="Official Verified Award"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                <% } else { %>
+                  <span style="font-size: 0.6rem; color: #eab308; margin-left: 4px;" title="Self-Reported">(Self)</span>
+                <% } %>
+              </td>
+              <td style="padding: 1rem; font-weight: 600;"><%= award.performance_name || award.award_type || 'N/A' %></td>
+              <td style="padding: 1rem;"><%= award.award_type %><br><span style="font-size: 0.8rem; color: var(--text-muted);"><%= award.category %></span></td>
+              <td style="padding: 1rem;"><%= award.event_name %></td>
+              <td style="padding: 1rem;"><%= award.event_year %></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+<script>
 function setView(viewMode) {
   const grids = document.querySelectorAll('.awards-view-grid');
   const tables = document.querySelectorAll('.awards-view-table');
@@ -299,6 +410,7 @@ function setView(viewMode) {
 // Store sort directions for both tables independently
 const sortDirs = {
   soloTable: [true, true, true, true, true],
+  conventionTable: [true, true, true, true, true],
   groupTable: [true, true, true, true, true]
 };
 

@@ -2555,10 +2555,14 @@ app.get('/dancer/:unique_id', async (req, res) => {
     }
   });
 
-  const soloAwards = awards.filter(a => a.dancer_count <= 1 && (!a.category || !a.category.toLowerCase().includes('group')));
-  const groupAwards = awards.filter(a => a.dancer_count > 1 || (a.category && a.category.toLowerCase().includes('group')));
+  const specialClassTypes = ['scholarship', 'special', 'studio', 'invitation'];
+  const conventionAwards = awards.filter(a => specialClassTypes.includes(a.award_class) || (!a.performance_name && a.dancer_count > 1));
+  const performanceAwards = awards.filter(a => !conventionAwards.includes(a));
 
-  res.render('dancer', { dancer, soloAwards, groupAwards });
+  const soloAwards = performanceAwards.filter(a => a.dancer_count <= 1 && (!a.category || !a.category.toLowerCase().includes('group')));
+  const groupAwards = performanceAwards.filter(a => a.dancer_count > 1 || (a.category && a.category.toLowerCase().includes('group')));
+
+  res.render('dancer', { dancer, soloAwards, groupAwards, conventionAwards });
 });
 
 app.get('/event/:id', async (req, res) => {

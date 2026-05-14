@@ -290,3 +290,15 @@ For the summary, do not show grad year, rarely someone cares, do not show award 
 
 ## User Request - 2026-05-13
 please summarize recent update and do a git commit
+
+## User Request - 2026-05-13
+Now take a look at this page: http://localhost:3008/dancer/DNC-95d72c05-adria-wu, the three awards under group seems to be all NYCDA concention awards, it is not solo dance awards but is individual awards, not really group awards, should we add convention awards or other awards classification for them? what would be the best approach?
+
+## User Request - 2026-05-13
+Please put title awards under solo, also please put the special / convention section below solo instead of before group
+
+## User Request - 2026-05-13
+Remember I want to emphasize team spirit and put group awards on top?
+
+## User Request - 2026-05-13
+please summarize recent update and do a git commit
