@@ -54,7 +54,7 @@
     <div class="header-section" style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: flex-end;">
       <div>
         <h1>Dancer Roster</h1>
-        <p class="subtitle">Manage your active dancers, headshots, and graduation years.</p>
+        <p class="subtitle">Manage your team (<%= roster.filter(d => d.status !== 'alumni').length %> Active Dancers).</p>
       </div>
       <div style="display: flex; gap: 1rem;">
         <button id="mergeBtn" class="btn" style="display: none; background: var(--primary); color: white;" onclick="openMergeModal()">Compare & Merge (2)</button>
@@ -63,8 +63,56 @@
       </div>
     </div>
 
-    <!-- Roster Table -->
-    <div class="card glass-card">
+    <!-- Suspected Duplicates Widget -->
+    <% if (Object.keys(duplicateSets).length > 0) { %>
+      <div class="card glass-card" style="margin-bottom: 2rem; border-color: rgba(245, 158, 11, 0.3);">
+        <h3 style="color: #f59e0b; margin-top: 0;">⚠️ Suspected Duplicates Detected</h3>
+        <p style="color: var(--text-muted); margin-bottom: 1.5rem;">The following dancers have multiple profiles on your roster. Review and clean them up.</p>
+        
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+          <% for (let name in duplicateSets) { const set = duplicateSets[name]; %>
+            <div id="dupSet-<%= encodeURIComponent(name) %>" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1rem;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                  <h4 style="margin: 0 0 0.5rem 0; color: white;"><%= set.name %> <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: normal;">(<%= set.profiles.length %> profiles)</span></h4>
+                  <ul style="margin: 0; padding-left: 1.5rem; color: var(--text-muted); font-size: 0.9rem;">
+                    <% set.profiles.forEach((p, idx) => { %>
+                      <li style="margin-bottom: 0.25rem;">
+                        <strong>Profile <%= String.fromCharCode(65 + idx) %>:</strong> 
+                        <span style="color: <%= p.claimed_by_user_id ? '#10b981' : '#ef4444' %>;"><%= p.claimed_by_user_id ? 'Claimed' : 'Unclaimed' %></span>,
+                        DOB: <%= p.birthday || 'N/A' %>,
+                        <%= p.total_awards %> Awards 
+                        <a href="/dancer/<%= p.unique_id %>" target="_blank" style="color: var(--primary); text-decoration: none; font-size: 0.85rem; margin-left: 0.5rem;">[View Profile]</a>
+                      </li>
+                    <% }) %>
+                  </ul>
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                  <button class="btn btn-blue" onclick="cleanDuplicateSet('<%= set.name %>')" style="background: #f59e0b; color: white;">1-Click Merge & Clean</button>
+                  <button class="btn" style="background: rgba(255,255,255,0.1); color: white;" onclick="ignoreDuplicateSet('<%= set.name %>')">Mark as Different People</button>
+                </div>
+              </div>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    <% } %>
+
+    <!-- Roster Management -->
+    <% 
+      const activeRoster = roster.filter(d => d.status !== 'alumni');
+      const inactiveRoster = roster.filter(d => d.status === 'alumni');
+    %>
+
+    <div style="display: flex; gap: 1rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+      <button class="tab-btn active" onclick="switchTab('active')" id="tab-active" style="background: none; border: none; padding: 0.75rem 1rem; color: white; border-bottom: 2px solid var(--primary); font-weight: bold; cursor: pointer; transition: all 0.2s;">Active Dancers (<%= activeRoster.length %>)</button>
+      <% if (inactiveRoster.length > 0) { %>
+        <button class="tab-btn" onclick="switchTab('inactive')" id="tab-inactive" style="background: none; border: none; padding: 0.75rem 1rem; color: var(--text-muted); border-bottom: 2px solid transparent; font-weight: bold; cursor: pointer; transition: all 0.2s;">Inactive / Alumni (<%= inactiveRoster.length %>)</button>
+      <% } %>
+    </div>
+
+    <!-- Active Roster Table -->
+    <div class="card glass-card" id="activeRosterTable">
       <table style="width: 100%; text-align: left; border-collapse: collapse;">
         <thead>
           <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-muted);">
@@ -78,14 +126,14 @@
           </tr>
         </thead>
         <tbody>
-          <% if (roster.length === 0) { %>
+          <% if (activeRoster.length === 0) { %>
             <tr>
-              <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">
-                Your roster is empty. Click "+ Add/Claim Dancer" to build your team.
+              <td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                Your active roster is empty. Click "+ Add/Claim Dancer" to build your team.
               </td>
             </tr>
           <% } else { %>
-            <% roster.forEach(dancer => { %>
+            <% activeRoster.forEach(dancer => { %>
               <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                 <td style="padding: 1rem 0;">
                   <input type="checkbox" class="merge-checkbox" value="<%= dancer.id %>" data-name="<%= dancer.name %>" data-dob="<%= dancer.birthday || '' %>" data-awards="<%= dancer.total_awards %>" style="transform: scale(1.2);">
@@ -101,10 +149,9 @@
                   <% } %>
                 </td>
                 <td style="padding: 1rem 0;">
-                  <% const statusClass = (dancer.status === 'active') ? 'roster-status-active' : 'roster-status-inactive'; %>
-                  <span class="roster-status-common <%= statusClass %>">
-                    <%= (dancer.status || 'active').toUpperCase() %>
-                  </span>
+                  <button onclick="toggleStatus(<%= dancer.id %>, 'alumni')" class="roster-status-common roster-status-active" style="border: none; cursor: pointer; transition: filter 0.2s;" title="Click to mark as Inactive" onmouseover="this.style.filter='brightness(1.2)'" onmouseout="this.style.filter='none'">
+                    ACTIVE
+                  </button>
                 </td>
                 <td style="padding: 1rem 0; color: var(--text-muted);">
                   <%= dancer.graduation_year || '-' %>
@@ -113,6 +160,13 @@
                   <%= dancer.total_awards %>
                 </td>
                 <td style="padding: 1rem 0; text-align: right;">
+                  <button class="btn" style="padding: 0.3rem 0.6rem; font-size: 0.85rem;" 
+                    data-unique-id="<%= dancer.unique_id %>"
+                    data-name="<%= dancer.name %>"
+                    data-headshot="<%= dancer.headshot_url || '' %>"
+                    data-recent-awards="<%= encodeURIComponent(JSON.stringify(dancer.recent_awards || [])) %>"
+                    data-birthday="<%= dancer.birthday || 'N/A' %>"
+                    onclick="openSummaryModal(this)">View</button>
                   <button class="btn" style="padding: 0.3rem 0.6rem; font-size: 0.85rem;" 
                     data-id="<%= dancer.id %>"
                     data-name="<%= dancer.name %>"
@@ -129,6 +183,72 @@
       </table>
     </div>
 
+    <!-- Inactive Roster Table -->
+    <% if (inactiveRoster.length > 0) { %>
+      <div class="card glass-card" id="inactiveRosterTable" style="display: none;">
+        <table style="width: 100%; text-align: left; border-collapse: collapse;">
+          <thead>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-muted);">
+              <th style="padding: 1rem 0; width: 40px;"></th>
+              <th style="padding: 1rem 0;">Dancer Name</th>
+              <th style="padding: 1rem 0;">Headshot</th>
+              <th style="padding: 1rem 0;">Status</th>
+              <th style="padding: 1rem 0;">Grad Year</th>
+              <th style="padding: 1rem 0;">Awards (Studio)</th>
+              <th style="padding: 1rem 0; text-align: right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% inactiveRoster.forEach(dancer => { %>
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); opacity: 0.8;">
+                <td style="padding: 1rem 0;">
+                  <input type="checkbox" class="merge-checkbox" value="<%= dancer.id %>" data-name="<%= dancer.name %>" data-dob="<%= dancer.birthday || '' %>" data-awards="<%= dancer.total_awards %>" style="transform: scale(1.2);">
+                </td>
+                <td style="padding: 1rem 0;">
+                  <a href="/dancer/<%= dancer.unique_id %>" style="color: white; text-decoration: none; font-weight: 600;"><%= dancer.name %></a>
+                </td>
+                <td style="padding: 1rem 0;">
+                  <% if (dancer.headshot_url) { %>
+                    <img src="<%= dancer.headshot_url %>" alt="Headshot" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; filter: grayscale(100%);">
+                  <% } else { %>
+                    <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: var(--text-muted);">No Pic</div>
+                  <% } %>
+                </td>
+                <td style="padding: 1rem 0;">
+                  <button onclick="toggleStatus(<%= dancer.id %>, 'active')" class="roster-status-common roster-status-inactive" style="border: none; cursor: pointer; transition: filter 0.2s;" title="Click to mark as Active" onmouseover="this.style.filter='brightness(1.2)'" onmouseout="this.style.filter='none'">
+                    ALUMNI
+                  </button>
+                </td>
+                <td style="padding: 1rem 0; color: var(--text-muted);">
+                  <%= dancer.graduation_year || '-' %>
+                </td>
+                <td style="padding: 1rem 0; color: var(--text-muted);">
+                  <%= dancer.total_awards %>
+                </td>
+                <td style="padding: 1rem 0; text-align: right;">
+                  <button class="btn" style="padding: 0.3rem 0.6rem; font-size: 0.85rem;" 
+                    data-unique-id="<%= dancer.unique_id %>"
+                    data-name="<%= dancer.name %>"
+                    data-headshot="<%= dancer.headshot_url || '' %>"
+                    data-recent-awards="<%= encodeURIComponent(JSON.stringify(dancer.recent_awards || [])) %>"
+                    data-birthday="<%= dancer.birthday || 'N/A' %>"
+                    onclick="openSummaryModal(this)">View</button>
+                  <button class="btn" style="padding: 0.3rem 0.6rem; font-size: 0.85rem;" 
+                    data-id="<%= dancer.id %>"
+                    data-name="<%= dancer.name %>"
+                    data-headshot="<%= dancer.headshot_url || '' %>"
+                    data-grad="<%= dancer.graduation_year || '' %>"
+                    data-status="<%= dancer.status || 'alumni' %>"
+                    data-birthday="<%= dancer.birthday || '' %>"
+                    onclick="openEditModal(this)">Edit</button>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+
   </div>
 </div>
 
@@ -137,23 +257,31 @@
   <div class="card glass-card" style="max-width: 600px; margin: 4rem auto; position: relative;">
     <button onclick="document.getElementById('claimDancerModal').style.display='none'" style="position: absolute; right: 1rem; top: 1rem; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.5rem;">&times;</button>
     <h2 style="margin-top: 0;">Add / Claim Dancer</h2>
-    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Search the global database to claim an existing dancer profile. This helps merge records automatically. If they don't exist, you can create a new profile.</p>
+    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">To protect dancer privacy, you must claim existing dancers using their exact <strong>Unique ID</strong>. Dancers can find this ID on their public profile or dashboard.</p>
     
-    <div style="margin-bottom: 1.5rem;">
-      <input type="text" id="dancerSearchInput" class="form-control" placeholder="Search by dancer name (e.g. Jane Doe)..." style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
-    </div>
-
-    <div id="searchResults" style="max-height: 300px; overflow-y: auto; margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem;">
-      <!-- Search results populate here -->
-      <div style="text-align: center; color: var(--text-muted); padding: 1rem;">Type to search...</div>
+    <div style="margin-bottom: 2rem;">
+      <h4 style="margin: 0 0 1rem 0;">Claim Existing Profile</h4>
+      <form action="/manage/studio/<%= studio.id %>/roster/claim" method="POST" style="display: flex; gap: 1rem; align-items: flex-end;">
+        <div style="flex-grow: 1;">
+          <label style="display: block; margin-bottom: 0.25rem; color: var(--text-muted); font-size: 0.8rem;">Dancer Unique ID</label>
+          <input type="text" name="claim_unique_id" placeholder="e.g. ashley-smith-1a2b" required style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+        </div>
+        <button type="submit" class="btn btn-primary-white" style="height: 42px;">Claim Profile</button>
+      </form>
     </div>
 
     <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1.5rem;">
-      <h4 style="margin: 0 0 1rem 0;">Can't find them? Create new profile</h4>
-      <form action="/manage/studio/<%= studio.id %>/roster/claim" method="POST" style="display: flex; gap: 1rem; flex-wrap: wrap;">
-        <input type="text" name="new_dancer_name" placeholder="New Dancer Name" required style="flex-grow: 1; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
-        <input type="date" name="birthday" placeholder="Birthday" style="padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
-        <button type="submit" class="btn btn-primary-white">Create & Add</button>
+      <h4 style="margin: 0 0 1rem 0;">Create New Profile</h4>
+      <form action="/manage/studio/<%= studio.id %>/roster/claim" method="POST" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
+        <div style="flex-grow: 1; min-width: 200px;">
+          <label style="display: block; margin-bottom: 0.25rem; color: var(--text-muted); font-size: 0.8rem;">Dancer Name <span style="color: #ef4444;">*</span></label>
+          <input type="text" name="new_dancer_name" placeholder="e.g. Jane Doe" required style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+        </div>
+        <div>
+          <label style="display: block; margin-bottom: 0.25rem; color: var(--text-muted); font-size: 0.8rem;">Birthday (Optional)</label>
+          <input type="date" name="birthday" style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+        </div>
+        <button type="submit" class="btn btn-primary-white" style="height: 42px;">Create & Add</button>
       </form>
     </div>
   </div>
@@ -251,23 +379,17 @@
         <thead>
           <tr style="border-bottom: 1px solid rgba(255,255,255,0.2); color: white;">
             <th style="padding: 0.5rem 0;">name <span style="color: #ef4444;">*</span></th>
-            <th style="padding: 0.5rem 0;">birthday</th>
-            <th style="padding: 0.5rem 0;">graduation_year</th>
-            <th style="padding: 0.5rem 0;">status</th>
+            <th style="padding: 0.5rem 0;">birthday (optional)</th>
           </tr>
         </thead>
         <tbody style="font-family: monospace; color: var(--text-muted);">
           <tr>
             <td style="padding: 0.5rem 0;">Ashley Smith</td>
             <td style="padding: 0.5rem 0;">2012-05-14</td>
-            <td style="padding: 0.5rem 0;">2030</td>
-            <td style="padding: 0.5rem 0;">active</td>
           </tr>
           <tr>
             <td style="padding: 0.5rem 0;">Jane Doe</td>
             <td style="padding: 0.5rem 0;"></td>
-            <td style="padding: 0.5rem 0;">2024</td>
-            <td style="padding: 0.5rem 0;">alumni</td>
           </tr>
         </tbody>
       </table>
@@ -280,120 +402,35 @@
   </div>
 </div>
 
+<!-- View Summary Modal -->
+<div id="summaryModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; overflow-y: auto;">
+  <div class="card glass-card" style="max-width: 400px; margin: 4rem auto; position: relative; text-align: center;">
+    <button onclick="document.getElementById('summaryModal').style.display='none'" style="position: absolute; right: 1rem; top: 1rem; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.5rem;">&times;</button>
+    
+    <div style="margin-bottom: 1.5rem; margin-top: 1rem;">
+      <img id="summaryHeadshot" src="" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); display: none; margin: 0 auto;">
+      <div id="summaryNoPic" style="width: 100px; height: 100px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 0.9rem; margin: 0 auto;">No Pic</div>
+    </div>
+    
+    <h2 id="summaryName" style="margin: 0 0 0.5rem 0; color: white;">Dancer Name</h2>
+    
+    <div style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 8px; text-align: left; margin-bottom: 1.5rem;">
+      <div style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1);"><strong style="color: var(--text-muted);">Birthday:</strong> <span id="summaryDob" style="float: right;"></span></div>
+      <div style="margin-bottom: 0.5rem;"><strong style="color: var(--text-muted);">Recent Awards:</strong></div>
+      <div id="summaryRecentAwards" style="margin-top: 0.5rem;">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+    
+    <a id="summaryProfileLink" href="#" target="_blank" class="btn btn-blue" style="width: 100%; display: inline-block; box-sizing: border-box; text-decoration: none;">View Full Public Profile ↗</a>
+  </div>
+</div>
+
 <script>
-  let searchTimeout = null;
-  const searchInput = document.getElementById('dancerSearchInput');
-  const resultsDiv = document.getElementById('searchResults');
   const mergeCheckboxes = document.querySelectorAll('.merge-checkbox');
   const mergeBtn = document.getElementById('mergeBtn');
 
   // Logic for Merge Checkboxes
-  mergeCheckboxes.forEach(cb => {
-    cb.addEventListener('change', () => {
-      const checked = document.querySelectorAll('.merge-checkbox:checked');
-      if (checked.length > 2) {
-        cb.checked = false; // Prevent selecting more than 2
-        alert('You can only select 2 dancers to merge at a time.');
-        return;
-      }
-      mergeBtn.style.display = checked.length === 2 ? 'block' : 'none';
-    });
-  });
-
-  function openMergeModal() {
-    const checked = document.querySelectorAll('.merge-checkbox:checked');
-    if (checked.length !== 2) return;
-
-    const dancerA = checked[0];
-    const dancerB = checked[1];
-
-    document.getElementById('mergeNameA').innerText = dancerA.dataset.name;
-    document.getElementById('mergeDobA').innerText = dancerA.dataset.dob || 'Unknown';
-    document.getElementById('mergeAwardsA').innerText = dancerA.dataset.awards;
-    document.getElementById('primaryA').value = dancerA.value;
-    
-    document.getElementById('mergeNameB').innerText = dancerB.dataset.name;
-    document.getElementById('mergeDobB').innerText = dancerB.dataset.dob || 'Unknown';
-    document.getElementById('mergeAwardsB').innerText = dancerB.dataset.awards;
-    document.getElementById('primaryB').value = dancerB.value;
-
-    // Reset radio selection
-    document.getElementById('primaryA').checked = false;
-    document.getElementById('primaryB').checked = false;
-    
-    // Setup hidden duplicate_id logic
-    document.getElementById('primaryA').addEventListener('change', () => {
-      document.getElementById('dupB').value = dancerB.value;
-      document.getElementById('dupB').disabled = false;
-      document.getElementById('dupA').disabled = true;
-    });
-    document.getElementById('primaryB').addEventListener('change', () => {
-      document.getElementById('dupA').value = dancerA.value;
-      document.getElementById('dupA').disabled = false;
-      document.getElementById('dupB').disabled = true;
-    });
-
-    document.getElementById('mergeModal').style.display = 'block';
-  }
-
-  // Search Logic
-  searchInput.addEventListener('input', (e) => {
-    clearTimeout(searchTimeout);
-    const q = e.target.value.trim();
-    
-    if (q.length < 2) {
-      resultsDiv.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 1rem;">Type at least 2 characters to search...</div>';
-      return;
-    }
-
-    resultsDiv.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 1rem;">Searching...</div>';
-
-    searchTimeout = setTimeout(async () => {
-      try {
-        const res = await fetch(`/api/dancers/search?q=${encodeURIComponent(q)}`);
-        const dancers = await res.json();
-        
-        if (dancers.length === 0) {
-          resultsDiv.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 1rem;">No dancers found. Create a new profile below!</div>';
-          return;
-        }
-
-        let html = '';
-        dancers.forEach(d => {
-          let routinesHtml = '';
-          if (d.recent_routines && d.recent_routines.length > 0) {
-            routinesHtml = `<div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.05);">
-              <strong>Recent Routines to verify:</strong><br/>
-              ${d.recent_routines.map(r => `• ${r.performance_name} (${r.comp_name} ${r.year})`).join('<br/>')}
-            </div>`;
-          }
-
-          let studiosHtml = '';
-          if (d.studio_names) {
-            studiosHtml = `<div style="font-size: 0.85rem; color: #fbbf24; margin-top: 0.25rem;">🏫 ${d.studio_names}</div>`;
-          }
-
-          html += `
-            <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 1rem; border-radius: 6px; display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;">
-              <div style="flex-grow: 1;">
-                <div style="font-weight: 600; color: white;">${d.name}</div>
-                ${studiosHtml}
-                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">${d.award_count} awards recorded globally</div>
-                ${routinesHtml}
-              </div>
-              <form action="/manage/studio/<%= studio.id %>/roster/claim" method="POST" style="margin-left: 1rem; flex-shrink: 0;">
-                <input type="hidden" name="dancer_id" value="${d.id}">
-                <button type="submit" class="btn btn-primary-white" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Claim to Roster</button>
-              </form>
-            </div>
-          `;
-        });
-        resultsDiv.innerHTML = html;
-      } catch (err) {
-        resultsDiv.innerHTML = '<div style="text-align: center; color: #ef4444; padding: 1rem;">Error searching database.</div>';
-      }
-    }, 300);
-  });
 
   function openEditModal(btn) {
     document.getElementById('editDancerName').innerText = btn.getAttribute('data-name');
@@ -403,6 +440,125 @@
     document.getElementById('editBirthday').value = btn.getAttribute('data-birthday');
     document.getElementById('editDancerForm').action = `/manage/studio/<%= studio.id %>/roster/${btn.getAttribute('data-id')}/update`;
     document.getElementById('editDancerModal').style.display = 'block';
+  }
+
+  function openSummaryModal(btn) {
+    document.getElementById('summaryName').innerText = btn.getAttribute('data-name');
+    document.getElementById('summaryDob').innerText = btn.getAttribute('data-birthday');
+    
+    const headshot = btn.getAttribute('data-headshot');
+    if (headshot) {
+      document.getElementById('summaryHeadshot').src = headshot;
+      document.getElementById('summaryHeadshot').style.display = 'block';
+      document.getElementById('summaryNoPic').style.display = 'none';
+    } else {
+      document.getElementById('summaryHeadshot').style.display = 'none';
+      document.getElementById('summaryNoPic').style.display = 'flex';
+    }
+
+    const recentAwardsStr = decodeURIComponent(btn.getAttribute('data-recent-awards'));
+    let recentAwards = [];
+    try { recentAwards = JSON.parse(recentAwardsStr); } catch(e){}
+    
+    const awardsContainer = document.getElementById('summaryRecentAwards');
+    if (recentAwards.length > 0) {
+      awardsContainer.innerHTML = recentAwards.map(a => `
+        <div style="font-size: 0.85rem; margin-bottom: 0.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.05);">
+          <strong style="color: var(--primary);">${a.place} ${a.category || ''}</strong> - ${a.performance_name}<br>
+          <span style="color: var(--text-muted); font-size: 0.75rem;">${a.event_name} (${a.year})</span>
+        </div>
+      `).join('');
+    } else {
+      awardsContainer.innerHTML = '<div style="color: var(--text-muted); font-style: italic; font-size: 0.85rem;">No recent awards.</div>';
+    }
+
+    document.getElementById('summaryProfileLink').href = `/dancer/${btn.getAttribute('data-unique-id')}`;
+    document.getElementById('summaryModal').style.display = 'block';
+  }
+
+  async function cleanDuplicateSet(name) {
+    if (!confirm(`Are you sure you want to merge all profiles for "${name}" into a single Primary profile?`)) return;
+    
+    try {
+      const res = await fetch(`/manage/studio/<%= studio.id %>/roster/clean-duplicate-set`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ duplicate_name: name })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(`Successfully merged ${data.merged} duplicate(s) into the Primary profile!`);
+        window.location.reload();
+      } else {
+        alert(data.error || 'Failed to merge duplicates.');
+      }
+    } catch (err) {
+      alert('Error connecting to server.');
+    }
+  }
+
+  async function ignoreDuplicateSet(name) {
+    if (!confirm(`Are you sure "${name}" represents two DIFFERENT people on your roster? This will permanently dismiss this warning.`)) return;
+    
+    try {
+      const res = await fetch(`/manage/studio/<%= studio.id %>/roster/ignore-duplicate-set`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ duplicate_name: name })
+      });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('dupSet-' + encodeURIComponent(name)).style.display = 'none';
+      } else {
+        alert(data.error || 'Failed to dismiss warning.');
+      }
+    } catch (err) {
+      alert('Error connecting to server.');
+    }
+  }
+
+  function switchTab(tab) {
+    if (tab === 'active') {
+      document.getElementById('activeRosterTable').style.display = 'block';
+      if (document.getElementById('inactiveRosterTable')) document.getElementById('inactiveRosterTable').style.display = 'none';
+      document.getElementById('tab-active').classList.add('active');
+      document.getElementById('tab-active').style.color = 'white';
+      document.getElementById('tab-active').style.borderBottomColor = 'var(--primary)';
+      if (document.getElementById('tab-inactive')) {
+        document.getElementById('tab-inactive').classList.remove('active');
+        document.getElementById('tab-inactive').style.color = 'var(--text-muted)';
+        document.getElementById('tab-inactive').style.borderBottomColor = 'transparent';
+      }
+    } else {
+      document.getElementById('activeRosterTable').style.display = 'none';
+      if (document.getElementById('inactiveRosterTable')) document.getElementById('inactiveRosterTable').style.display = 'block';
+      if (document.getElementById('tab-inactive')) {
+        document.getElementById('tab-inactive').classList.add('active');
+        document.getElementById('tab-inactive').style.color = 'white';
+        document.getElementById('tab-inactive').style.borderBottomColor = 'var(--primary)';
+      }
+      document.getElementById('tab-active').classList.remove('active');
+      document.getElementById('tab-active').style.color = 'var(--text-muted)';
+      document.getElementById('tab-active').style.borderBottomColor = 'transparent';
+    }
+  }
+
+  async function toggleStatus(dancerId, newStatus) {
+    try {
+      const res = await fetch(`/manage/studio/<%= studio.id %>/roster/${dancerId}/toggle-status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ new_status: newStatus })
+      });
+      const data = await res.json();
+      if (data.success) {
+        window.location.reload();
+      } else {
+        alert(data.error || 'Failed to toggle status.');
+      }
+    } catch (err) {
+      alert('Error connecting to server.');
+    }
   }
 </script>
 

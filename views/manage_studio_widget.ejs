@@ -47,13 +47,13 @@
       <p class="subtitle">Embed your studio's latest awards directly on your website.</p>
     </div>
 
-    <div style="display: flex; gap: 2rem;">
+    <!-- Global Settings -->
+    <div class="card glass-card" style="margin-bottom: 2rem;">
+      <h3 style="margin-top: 0; color: var(--primary);">Global Styling</h3>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">These colors apply to both the Stats Widget and the Awards List Widget.</p>
       
-      <!-- Controls -->
-      <div class="card glass-card" style="flex: 1; height: fit-content;">
-        <h3 style="margin-top: 0;">Customize Theme</h3>
-        
-        <div style="margin-bottom: 1.5rem;">
+      <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 200px;">
           <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Text Theme</label>
           <select id="themeSelect" style="width: 100%; padding: 0.5rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 4px;">
             <option value="dark">Dark Mode (Light Text)</option>
@@ -61,16 +61,7 @@
           </select>
         </div>
 
-        <div style="margin-bottom: 1.5rem;">
-          <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Layout Style</label>
-          <select id="layoutSelect" style="width: 100%; padding: 0.5rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 4px;">
-            <option value="list">List (Classic)</option>
-            <option value="carousel">Carousel (Horizontal Scroll)</option>
-            <option value="masonry">Masonry Grid</option>
-          </select>
-        </div>
-
-        <div style="margin-bottom: 1.5rem;">
+        <div style="flex: 1; min-width: 200px;">
           <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Background Color (Hex)</label>
           <div style="display: flex; align-items: center; gap: 0.5rem;">
             <span>#</span>
@@ -79,7 +70,7 @@
           </div>
         </div>
 
-        <div style="margin-bottom: 2rem;">
+        <div style="flex: 1; min-width: 200px;">
           <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Primary Brand Color (Hex)</label>
           <div style="display: flex; align-items: center; gap: 0.5rem;">
             <span>#</span>
@@ -87,79 +78,155 @@
             <input type="color" id="primaryPicker" value="#ec4899" style="background: none; border: none; width: 40px; height: 40px; cursor: pointer;">
           </div>
         </div>
-
-        <h3 style="margin-top: 0; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">Embed Code</h3>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Copy and paste this HTML snippet into your website builder (Wix, Squarespace, WordPress).</p>
-        
-        <div style="position: relative;">
-          <textarea id="embedCode" readonly style="width: 100%; height: 100px; padding: 1rem; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: #10b981; font-family: monospace; font-size: 0.8rem; border-radius: 6px; resize: none;"></textarea>
-          <button onclick="copyCode()" class="btn" style="position: absolute; top: 0.5rem; right: 0.5rem; padding: 0.2rem 0.5rem; font-size: 0.8rem;">Copy</button>
-        </div>
       </div>
-
-      <!-- Live Preview -->
-      <div style="flex: 1;">
-        <h3 style="margin-top: 0;">Live Preview</h3>
-        <div style="border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; overflow: hidden; background: #fff;">
-          <iframe id="widgetPreview" src="/widget/studio/<%= studio.id %>?theme=dark&bg=000000&primary=ec4899&layout=list" width="100%" height="600px" frameborder="0"></iframe>
-        </div>
-      </div>
-
     </div>
+
+    <!-- Stats Widget Section -->
+    <div style="display: flex; gap: 2rem; margin-bottom: 3rem;">
+      <!-- Stats Controls -->
+      <div class="card glass-card" style="flex: 1; height: fit-content;">
+        <h3 style="margin-top: 0; color: #a855f7;">1. Stats Widget</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">Display quick top-level metrics.</p>
+
+        <div style="margin-bottom: 0.5rem;">
+          <label style="display: flex; align-items: center; gap: 0.5rem; color: white; cursor: pointer;">
+            <input type="checkbox" id="showTotalAwardsCheck" onchange="updateWidgets()" checked>
+            Show Total Awards Count
+          </label>
+        </div>
+        <div style="margin-bottom: 0.5rem;">
+          <label style="display: flex; align-items: center; gap: 0.5rem; color: white; cursor: pointer;">
+            <input type="checkbox" id="showTopPlacementsCheck" onchange="updateWidgets()" checked>
+            Show Total Top Placements Count
+          </label>
+        </div>
+        <div style="margin-bottom: 2rem;">
+          <label style="display: flex; align-items: center; gap: 0.5rem; color: white; cursor: pointer;">
+            <input type="checkbox" id="showPastYearCheck" onchange="updateWidgets()" checked>
+            Show Awards Won This Year Count
+          </label>
+        </div>
+
+        <h4 style="margin-top: 0; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">Embed Code</h4>
+        <div style="position: relative;">
+          <textarea id="statsEmbedCode" readonly style="width: 100%; height: 80px; padding: 1rem; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: #10b981; font-family: monospace; font-size: 0.8rem; border-radius: 6px; resize: none;"></textarea>
+          <button onclick="copyCode('statsEmbedCode')" class="btn" style="position: absolute; top: 0.5rem; right: 0.5rem; padding: 0.2rem 0.5rem; font-size: 0.8rem;">Copy</button>
+        </div>
+      </div>
+
+      <!-- Stats Live Preview -->
+      <div style="flex: 1;">
+        <h4 style="margin-top: 0;">Live Preview</h4>
+        <div style="border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; overflow: hidden; background: #fff;">
+          <iframe id="statsPreview" src="" width="100%" height="250px" frameborder="0"></iframe>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Awards List Widget Section -->
+    <div style="display: flex; gap: 2rem; margin-bottom: 3rem;">
+      <!-- Awards Controls -->
+      <div class="card glass-card" style="flex: 1; height: fit-content;">
+        <h3 style="margin-top: 0; color: #3b82f6;">2. Awards List Widget</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">Display your detailed scrolling list of achievements.</p>
+
+        <div style="margin-bottom: 1.5rem;">
+          <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Layout Style</label>
+          <select id="layoutSelect" onchange="updateWidgets()" style="width: 100%; padding: 0.5rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 4px;">
+            <option value="list">List (Classic)</option>
+            <option value="carousel">Carousel (Horizontal Scroll)</option>
+            <option value="masonry">Masonry Grid</option>
+          </select>
+        </div>
+
+        <h4 style="margin-top: 0; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">Data Filters</h4>
+        
+        <div style="margin-bottom: 1rem;">
+          <label style="display: flex; align-items: center; gap: 0.5rem; color: white; cursor: pointer;">
+            <input type="checkbox" id="topPlacementsCheck" onchange="updateWidgets()">
+            Only show Top Placements (1st, 2nd, 3rd)
+          </label>
+        </div>
+        
+        <div style="margin-bottom: 2rem;">
+          <label style="display: flex; align-items: center; gap: 0.5rem; color: white; cursor: pointer;">
+            <input type="checkbox" id="premiumOnlyCheck" onchange="updateWidgets()">
+            Only show Premium Awards (Titles, Scholarships, Nationals)
+          </label>
+        </div>
+
+        <h4 style="margin-top: 0; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">Embed Code</h4>
+        <div style="position: relative;">
+          <textarea id="awardsEmbedCode" readonly style="width: 100%; height: 80px; padding: 1rem; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: #10b981; font-family: monospace; font-size: 0.8rem; border-radius: 6px; resize: none;"></textarea>
+          <button onclick="copyCode('awardsEmbedCode')" class="btn" style="position: absolute; top: 0.5rem; right: 0.5rem; padding: 0.2rem 0.5rem; font-size: 0.8rem;">Copy</button>
+        </div>
+      </div>
+
+      <!-- Awards Live Preview -->
+      <div style="flex: 1;">
+        <h4 style="margin-top: 0;">Live Preview</h4>
+        <div style="border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; overflow: hidden; background: #fff;">
+          <iframe id="awardsPreview" src="" width="100%" height="600px" frameborder="0"></iframe>
+        </div>
+      </div>
+    </div>
+
 
   </div>
 </div>
 
 <script>
   const themeSelect = document.getElementById('themeSelect');
-  const layoutSelect = document.getElementById('layoutSelect');
   const bgInput = document.getElementById('bgInput');
   const bgPicker = document.getElementById('bgPicker');
   const primaryInput = document.getElementById('primaryInput');
   const primaryPicker = document.getElementById('primaryPicker');
-  const widgetPreview = document.getElementById('widgetPreview');
-  const embedCode = document.getElementById('embedCode');
+
+  const showTotalAwardsCheck = document.getElementById('showTotalAwardsCheck');
+  const showTopPlacementsCheck = document.getElementById('showTopPlacementsCheck');
+  const showPastYearCheck = document.getElementById('showPastYearCheck');
+
+  const layoutSelect = document.getElementById('layoutSelect');
+  const topPlacementsCheck = document.getElementById('topPlacementsCheck');
+  const premiumOnlyCheck = document.getElementById('premiumOnlyCheck');
+
+  const statsPreview = document.getElementById('statsPreview');
+  const statsEmbedCode = document.getElementById('statsEmbedCode');
+  const awardsPreview = document.getElementById('awardsPreview');
+  const awardsEmbedCode = document.getElementById('awardsEmbedCode');
+
   const studioId = <%= studio.id %>;
   const baseUrl = window.location.origin;
 
-  function updateWidget() {
+  function updateWidgets() {
     const theme = themeSelect.value;
-    const layout = layoutSelect.value;
     const bg = bgInput.value.replace('#', '');
     const primary = primaryInput.value.replace('#', '');
     
-    const widgetUrl = `${baseUrl}/widget/studio/${studioId}?theme=${theme}&bg=${bg}&primary=${primary}&layout=${layout}`;
-    widgetPreview.src = widgetUrl;
+    // Stats URL
+    const showTotalAwards = showTotalAwardsCheck.checked;
+    const showTopPlacements = showTopPlacementsCheck.checked;
+    const showPastYear = showPastYearCheck.checked;
+    let statsUrl = `${baseUrl}/widget/studio/${studioId}?widgetType=stats&theme=${theme}&bg=${bg}&primary=${primary}`;
+    statsUrl += `&showTotalAwards=${showTotalAwards}&showTopPlacements=${showTopPlacements}&showPastYear=${showPastYear}`;
     
-    embedCode.value = `<iframe src="${widgetUrl}" width="100%" height="600px" frameborder="0" style="border: none; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></iframe>`;
+    statsPreview.src = statsUrl;
+    statsEmbedCode.value = `<iframe src="${statsUrl}" width="100%" height="250px" frameborder="0" style="border: none; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></iframe>`;
+
+    // Awards URL
+    const layout = layoutSelect.value;
+    const premiumOnly = premiumOnlyCheck.checked;
+    const topPlacementsOnly = topPlacementsCheck.checked;
+    let awardsUrl = `${baseUrl}/widget/studio/${studioId}?widgetType=awards&theme=${theme}&bg=${bg}&primary=${primary}&layout=${layout}`;
+    if (premiumOnly) awardsUrl += `&premiumOnly=true`;
+    if (topPlacementsOnly) awardsUrl += `&topPlacementsOnly=true`;
+
+    awardsPreview.src = awardsUrl;
+    awardsEmbedCode.value = `<iframe src="${awardsUrl}" width="100%" height="600px" frameborder="0" style="border: none; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></iframe>`;
   }
 
-  // Sync inputs
-  layoutSelect.addEventListener('change', updateWidget);
-
-  // Sync text inputs and color pickers
-  bgPicker.addEventListener('input', (e) => {
-    bgInput.value = e.target.value.substring(1);
-    updateWidget();
-  });
-  bgInput.addEventListener('input', (e) => {
-    if(e.target.value.length === 6) {
-      bgPicker.value = '#' + e.target.value;
-      updateWidget();
-    }
-  });
-
-  primaryPicker.addEventListener('input', (e) => {
-    primaryInput.value = e.target.value.substring(1);
-    updateWidget();
-  });
-  primaryInput.addEventListener('input', (e) => {
-    if(e.target.value.length === 6) {
-      primaryPicker.value = '#' + e.target.value;
-      updateWidget();
-    }
-  });
-
+  // Sync Global Settings
   themeSelect.addEventListener('change', () => {
     if (themeSelect.value === 'light' && bgInput.value === '000000') {
       bgInput.value = 'ffffff';
@@ -168,17 +235,40 @@
       bgInput.value = '000000';
       bgPicker.value = '#000000';
     }
-    updateWidget();
+    updateWidgets();
   });
 
-  function copyCode() {
-    embedCode.select();
+  bgPicker.addEventListener('input', (e) => {
+    bgInput.value = e.target.value.substring(1);
+    updateWidgets();
+  });
+  bgInput.addEventListener('input', (e) => {
+    if(e.target.value.length === 6) {
+      bgPicker.value = '#' + e.target.value;
+      updateWidgets();
+    }
+  });
+
+  primaryPicker.addEventListener('input', (e) => {
+    primaryInput.value = e.target.value.substring(1);
+    updateWidgets();
+  });
+  primaryInput.addEventListener('input', (e) => {
+    if(e.target.value.length === 6) {
+      primaryPicker.value = '#' + e.target.value;
+      updateWidgets();
+    }
+  });
+
+  function copyCode(elementId) {
+    const el = document.getElementById(elementId);
+    el.select();
     document.execCommand('copy');
     alert('Copied to clipboard!');
   }
 
   // Initial generation
-  updateWidget();
+  updateWidgets();
 </script>
 
 <%- include('partials/footer') %>

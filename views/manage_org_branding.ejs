@@ -439,6 +439,23 @@
                 <% if (customIcons && customIcons.special && customIcons.special['default']) { %><form action="/manage/org/<%= org.id %>/branding/icon/delete" method="POST" style="width: auto;"><input type="hidden" name="icon_class" value="special"><input type="hidden" name="icon_key" value="default"><button type="submit" style="background: transparent; color: #ef4444; border: none; font-size: 0.8rem; cursor: pointer; text-decoration: underline; padding: 0;">Remove</button></form><% } %>
               </div>
             </div>
+
+            <div class="icon-row">
+              <div class="icon-cell icon-label">Invitation (e.g. Golden Ticket)</div>
+              <div class="icon-cell icon-preview">
+                <% if (customIcons && customIcons.special && customIcons.special['invitation']) { %>
+                  <img src="<%= customIcons.special['invitation'] %>">
+                  <%- renderTooltip(customIcons.special['invitation'], '💌', 'Winner', 'Invitation') %>
+                <% } else { %>
+                  💌
+                  <%- renderTooltip(null, '💌', 'Winner', 'Invitation') %>
+                <% } %>
+              </div>
+              <div class="icon-cell icon-actions">
+                <form action="/manage/org/<%= org.id %>/branding/icon" method="POST" enctype="multipart/form-data"><input type="hidden" name="icon_class" value="special"><input type="hidden" name="icon_key" value="invitation"><input type="file" name="icon" accept="image/*" required><button type="submit" class="btn btn-outline btn-sm save-btn">Save</button></form>
+                <% if (customIcons && customIcons.special && customIcons.special['invitation']) { %><form action="/manage/org/<%= org.id %>/branding/icon/delete" method="POST" style="width: auto;"><input type="hidden" name="icon_class" value="special"><input type="hidden" name="icon_key" value="invitation"><button type="submit" style="background: transparent; color: #ef4444; border: none; font-size: 0.8rem; cursor: pointer; text-decoration: underline; padding: 0;">Remove</button></form><% } %>
+              </div>
+            </div>
             
             <% if (customIcons && customIcons.special && customIcons.special.custom) { %>
               <% Object.keys(customIcons.special.custom).forEach(key => { %>

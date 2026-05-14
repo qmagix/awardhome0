@@ -490,3 +490,12 @@ Advised the user to re-run the Revolution batch script to backfill the purged da
 ## Interaction - 2026-05-10 (Fix DanceBug Fetch Error)
 **User:** Reported that the mass import script was failing on all DanceBug Amazon S3 URLs with an Unknown status.
 **AI:** Discovered a ReferenceError where `year` was undefined during the `fetchWithCache` call. Fixed the script to properly resolve and define the year before fetching. Recommended the user to let the script finish and rerun it, or stop and restart, since the scripts are idempotent.
+
+## Interaction - 2026-05-13 (Roster UI Enhancements)
+**User:** Requested several UI enhancements on the Studio Roster page: showing the active dancer count, adding easy active/inactive status toggles, separating inactive students into their own tab, adding a "View Profile" button to each row, and displaying a summary popup showing recent awards instead of grad year and award count.
+**AI:** 
+1. Created an implementation plan and tracked tasks using `task.md`.
+2. Built a new `POST /manage/studio/:id/roster/:dancerId/toggle-status` API endpoint.
+3. Updated `manage_studio_roster.ejs` with a tabbed interface (Active vs. Inactive) and replaced the text status badge with a 1-click toggle button.
+4. Added the "View" button to the roster rows and built the `summaryModal` which dynamically renders the dancer's info and their 3 most recent awards (fetched efficiently using a unified `db.all` query in `server.js`).
+5. Removed "Grad Year" and "Total Awards" from the summary modal as requested.

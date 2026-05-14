@@ -114,6 +114,39 @@
       text-decoration: none;
     }
 
+    /* Stats Section */
+    .stats-container {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .stat-box {
+      flex: 1;
+      min-width: 100px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 0.25rem;
+      font-weight: 600;
+    }
+
+    .stat-value {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--primary);
+      margin: 0;
+    }
+
     /* Layout specific styles */
     .layout-carousel {
       display: flex;
@@ -157,13 +190,41 @@
 </head>
 <body>
 
+  <% if (widgetType === 'both' || widgetType === 'awards') { %>
   <div class="header">
     <% if (studio.logo_url) { %>
       <img src="<%= studio.logo_url %>" alt="Logo">
     <% } %>
     <h2><%= studio.name %> Awards</h2>
   </div>
+  <% } %>
 
+  <% if (widgetType === 'both' || widgetType === 'stats') { %>
+  <% if (showTotalAwards || showTopPlacements || showPastYear) { %>
+  <div class="stats-container">
+    <% if (showTotalAwards) { %>
+      <div class="stat-box">
+        <div class="stat-label">Total Awards</div>
+        <p class="stat-value"><%= widgetStats.totalAwards %></p>
+      </div>
+    <% } %>
+    <% if (showTopPlacements) { %>
+      <div class="stat-box">
+        <div class="stat-label">Top Placements</div>
+        <p class="stat-value"><%= widgetStats.topPlacements %></p>
+      </div>
+    <% } %>
+    <% if (showPastYear) { %>
+      <div class="stat-box">
+        <div class="stat-label">This Year</div>
+        <p class="stat-value"><%= widgetStats.pastYearAwards %></p>
+      </div>
+    <% } %>
+  </div>
+  <% } %>
+  <% } %>
+
+  <% if (widgetType === 'both' || widgetType === 'awards') { %>
   <% if (awards.length === 0) { %>
     <p style="text-align: center; color: var(--text-muted);">No recent awards.</p>
   <% } else { %>
@@ -183,6 +244,7 @@
         </div>
       <% }) %>
     </div>
+  <% } %>
   <% } %>
 
   <div class="footer">

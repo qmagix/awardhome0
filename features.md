@@ -18,8 +18,9 @@ This document outlines the core features of the Dance Awards Platform.
 
 ## 3. Dancer Experience
 - **Award Claiming:** Dancers can click "+ Add Me" on any award to link it to their profile.
+- **Find Missing Awards:** A dedicated search tool in the Dancer Dashboard allows students to scan the entire global database using their name and an optional studio prefix. This searches for scraped dummy profiles and lets dancers submit claims for unlinked awards.
 - **Unique IDs:** Dancers are issued a Unique ID to rapidly claim future awards without needing the Studio Code.
-- **Smart Auto-Backfill:** Claiming one award automatically queries and claims all other awards for the same routine at the same event.
+- **Smart Auto-Backfill:** Whether claiming via the public directory or the Missing Awards search tool, claiming one award automatically queries and claims all other awards for the exact same routine at the same event.
 - **Privacy:** Roster lists are hidden from the public; dancers only appear on the awards they claim.
 
 ## 4. Superadmin Controls

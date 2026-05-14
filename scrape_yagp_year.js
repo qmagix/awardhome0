@@ -318,7 +318,7 @@ async function scrapeYagp(url, dryRun = true) {
         ]);
         
         for (const d_id of dancer_ids) {
-           await db.run('INSERT OR IGNORE INTO award_dancers (award_id, dancer_id, status) VALUES (?, ?, ?)', [resAward.lastID, d_id, 'approved']);
+           await db.run('INSERT OR IGNORE INTO award_dancers (award_id, dancer_id, status) VALUES (?, ?, ?)', [resAward.lastID, d_id, 'imported']);
         }
         
         insertedCount++;

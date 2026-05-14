@@ -92,6 +92,16 @@
 
     <!-- Quick Stats -->
     <% const isOwnerOrAdmin = typeof user !== 'undefined' && user && (user.role === 'admin' || user.id === studio.owner_id); %>
+    
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; margin-top: 2rem;">
+      <h3 style="margin: 0; color: white; display: flex; align-items: center; gap: 0.5rem;"><span style="font-size: 1.2rem;">✨</span> Lifetime Achievements</h3>
+      <% if (isOwnerOrAdmin) { %>
+        <a href="/manage/studio/<%= studio.id %>" style="font-size: 0.8rem; color: var(--text-muted); text-decoration: none; display: flex; align-items: center; gap: 0.25rem;">
+          <svg width="12" height="12" fill="currentColor" viewBox="0 0 16 16"><path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/><path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/></svg>
+          Customize
+        </a>
+      <% } %>
+    </div>
     <div class="quick-stats grid"
       style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 3rem;">
       <% if (studio.prefs.show_total_awards || isOwnerOrAdmin) { %>
@@ -126,6 +136,15 @@
       </div>
       <% } %>
 
+      <% if (quickStats.scholarshipCount > 0 || isOwnerOrAdmin) { %>
+      <div class="card glass-card" style="text-align: center; min-height: auto; padding: 1.5rem; position: relative;">
+        <h4 style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase;">Scholarships & Invites</h4>
+        <p style="font-size: 2.5rem; font-weight: 800; color: #a855f7; margin: 0.5rem 0 0;">
+          <%= quickStats.scholarshipCount %>
+        </p>
+      </div>
+      <% } %>
+
       <% if (studio.prefs.show_1st_place_this_year || isOwnerOrAdmin) { %>
       <div class="card glass-card" style="text-align: center; min-height: auto; padding: 1.5rem; position: relative;">
         <% if (!studio.prefs.show_1st_place_this_year && isOwnerOrAdmin) { %><div style="position: absolute; top: 0.5rem; right: 0.5rem; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; background: rgba(239, 68, 68, 0.2); color: #f87171; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.3);" title="Hidden from Public">Hidden</div><% } %>
@@ -156,6 +175,27 @@
       </div>
       <% } %>
     </div>
+
+    <% if (hallOfFame && hallOfFame.length > 0) { %>
+      <div style="margin-bottom: 3rem;">
+        <h2 style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem;"><span style="font-size: 1.5rem;">👑</span> Hall of Fame</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;">
+          <% hallOfFame.forEach(award => { %>
+            <div class="card glass-card premium-award-border" style="padding: 1.5rem; text-align: center; position: relative; overflow: hidden; background: linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0.2) 100%);">
+              <div style="position: absolute; top: -15px; right: -15px; font-size: 5rem; opacity: 0.05; text-shadow: 0 0 20px var(--accent-gold);"><%= getPremiumDetails(award).icon %></div>
+              <div style="font-size: 0.75rem; color: var(--primary); font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 0.5rem;"><%= award.event_year %> <%= award.org_name %></div>
+              <h4 style="margin: 0 0 0.5rem 0; font-size: 1.1rem; color: white;"><%= award.performance_name %></h4>
+              <p style="margin: 0; color: #fbbf24; font-weight: 800; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                <%= formatPlacement(award) %> - <%= award.award_type || award.category %>
+              </p>
+              <% if (award.dancers && award.dancers.length > 0) { %>
+                <p style="margin: 0.75rem 0 0 0; font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;"><%= award.dancers.map(d => d.name).join(', ') %></p>
+              <% } %>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    <% } %>
 
     <div class="awards-list">
       <% if (groupedData.length===0) { %>
@@ -265,6 +305,32 @@
 
           <% } %>
     </div>
+
+    <% if (alumni && alumni.length >= 5) { %>
+      <div style="margin-top: 4rem; margin-bottom: 2rem;">
+        <h2 style="display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem;"><span style="font-size: 1.5rem;">🎓</span> Alumni Legacy</h2>
+        <p style="color: var(--text-muted); margin-bottom: 2rem;">Showcasing the incredible dancers who have trained and graduated from <%= studio.name %>.</p>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1.5rem;">
+          <% alumni.forEach(a => { %>
+            <div class="card glass-card" style="text-align: center; padding: 1.5rem; transition: transform 0.2s ease;">
+              <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(79, 70, 229, 0.2)); margin: 0 auto 1rem auto; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(255,255,255,0.1); overflow: hidden;">
+                <% if (a.headshot_url) { %>
+                  <img src="<%= a.headshot_url %>" style="width: 100%; height: 100%; object-fit: cover;">
+                <% } else { %>
+                  <span style="font-size: 2rem;">👤</span>
+                <% } %>
+              </div>
+              <h4 style="margin: 0 0 0.5rem 0; color: white;"><% if (a.unique_id) { %><a href="/dancer/<%= a.unique_id %>" style="color: inherit; text-decoration: none;"><%= a.name %></a><% } else { %><%= a.name %><% } %></h4>
+              <span class="badge" style="background: rgba(255,255,255,0.1); color: var(--text-muted);">Class of <%= a.graduation_year %></span>
+              <% if (a.notes) { %>
+                <p style="margin: 0.75rem 0 0 0; font-size: 0.8rem; color: var(--primary);"><%= a.notes %></p>
+              <% } %>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    <% } %>
+    
   </div>
 
   <!-- Benefits Modal -->

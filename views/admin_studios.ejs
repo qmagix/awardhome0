@@ -27,6 +27,7 @@
             <th>Total Awards</th>
             <th>Status</th>
             <th class="no-sort" style="width: 50px; text-align: center;">Featured</th>
+            <th class="no-sort" style="text-align: right;">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -52,6 +53,9 @@
               </td>
               <td style="text-align: center;">
                 <input type="checkbox" class="feature-checkbox" value="<%= studio.id %>" <%= studio.is_featured ? 'checked' : '' %> onchange="toggleFeature(<%= studio.id %>, this.checked)" style="transform: scale(1.2); accent-color: #10b981;">
+              </td>
+              <td style="text-align: right;">
+                <a href="/manage/studio/<%= studio.id %>" target="_blank" class="btn btn-outline" style="border-color: var(--accent-gold); color: var(--accent-gold); text-decoration: none; padding: 0.2rem 0.5rem; font-size: 0.8rem;">View Dashboard</a>
               </td>
             </tr>
           <% }); %>

@@ -50,6 +50,95 @@
     </div>
   </div>
 
+  <div style="margin-top: 3rem; margin-bottom: 1.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+    <h2 style="margin: 0; color: white;">Quick Directories</h2>
+  </div>
+  <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+    <!-- Compare Studios Tool -->
+    <div class="card glass-card">
+      <h3 style="color: var(--primary); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">🏢 Studio Directory</h3>
+      <p class="sub-text" style="margin-bottom: 1.5rem;">Launch the Selection Directory to view studios, compare histories, or inspect data.</p>
+      <a href="/admin/studios" class="btn btn-primary" style="display: block; text-align: center;">Open Studio Directory</a>
+    </div>
+
+    <!-- Manage Organizations -->
+    <div class="card glass-card">
+      <h3 style="color: var(--primary); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">🏆 Organization Directory</h3>
+      <p class="sub-text" style="margin-bottom: 1.5rem;">View, add, and edit the list of competition organizations (e.g. KAR, NYCDA).</p>
+      <a href="/admin/orgs" class="btn btn-primary" style="display: block; text-align: center;">Open Org Directory</a>
+    </div>
+
+    <!-- Accounts & Impersonation -->
+    <div class="card glass-card">
+      <h3 style="color: var(--accent-gold); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">🔑 Account Impersonation</h3>
+      <p class="sub-text" style="margin-bottom: 1.5rem;">Generate one-time links to login as specific Organizations or Studios to test dashboards.</p>
+      <a href="/admin/accounts" class="btn btn-outline" style="display: block; text-align: center; border-color: var(--accent-gold); color: var(--accent-gold);">Open Accounts Directory</a>
+    </div>
+
+    <!-- Dancer Search -->
+    <div class="card glass-card">
+      <h3 style="color: #a855f7; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">🩰 Global Dancer Search</h3>
+      <p class="sub-text" style="margin-bottom: 1.5rem;">Search the global database by dancer name and an optional studio name prefix to inspect their profile.</p>
+      <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+        <input type="text" id="adminDancerSearchName" class="premium-input" placeholder="Dancer Name (e.g. Jane Doe)...">
+        <input type="text" id="adminDancerSearchStudio" class="premium-input" placeholder="Studio Prefix (e.g. Elite)...">
+      </div>
+      <div id="adminDancerSearchResults" style="max-height: 250px; overflow-y: auto; margin-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem;">
+        <div style="text-align: center; color: var(--text-muted); font-size: 0.9rem;">Type to search...</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top: 3rem; margin-bottom: 1.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+    <h2 style="margin: 0; color: white;">Data Integrity Operations</h2>
+  </div>
+  <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));">
+    <!-- Merge Studios Tool -->
+    <div class="card glass-card">
+      <h3 style="color: #ef4444; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">⚠️ Merge Duplicate Studios</h3>
+      <p class="sub-text" style="margin-bottom: 1.5rem;">Merge a duplicate studio into a primary studio. The duplicate will be deleted and its history transferred.</p>
+      
+      <datalist id="studio-list">
+        <% allStudios.forEach(s => { %>
+          <option value="<%= s.id %>"><%= s.name %></option>
+        <% }); %>
+      </datalist>
+
+      <div style="display: flex; gap: 1rem; align-items: flex-end;">
+        <div style="flex: 1;">
+          <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.8rem;">Duplicate ID (to be deleted)</label>
+          <input type="text" id="merge-studio-source" list="studio-list" class="premium-input" placeholder="e.g. 124" style="width: 100%;">
+        </div>
+        <div style="flex: 1;">
+          <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.8rem;">Primary ID (to keep)</label>
+          <input type="text" id="merge-studio-target" list="studio-list" class="premium-input" placeholder="e.g. 15" style="width: 100%;">
+        </div>
+        <button class="btn btn-primary" onclick="mergeStudios()" style="background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444;">Merge</button>
+      </div>
+    </div>
+
+    <!-- Merge Dancers Tool -->
+    <div class="card glass-card">
+      <h3 style="color: #ef4444; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">⚠️ Merge Duplicate Dancers</h3>
+      <p class="sub-text" style="margin-bottom: 1.5rem;">Merge two dancers together by their Database IDs. The duplicate will be deleted.</p>
+      
+      <div style="display: flex; gap: 1rem; align-items: flex-end;">
+        <div style="flex: 1;">
+          <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.8rem;">Duplicate ID (to be deleted)</label>
+          <input type="text" id="merge-dancer-source" class="premium-input" placeholder="e.g. 5002" style="width: 100%;">
+        </div>
+        <div style="flex: 1;">
+          <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.8rem;">Primary ID (to keep)</label>
+          <input type="text" id="merge-dancer-target" class="premium-input" placeholder="e.g. 5001" style="width: 100%;">
+        </div>
+        <button class="btn btn-primary" onclick="mergeDancers()" style="background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444;">Merge</button>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top: 3rem; margin-bottom: 1.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+    <h2 style="margin: 0; color: white;">Alerts & Investigations</h2>
+  </div>
   <div class="grid">
     <!-- Flagged Studios -->
     <div class="card glass-card">
@@ -66,76 +155,66 @@
         </ul>
       <% } %>
     </div>
-
-    <!-- Merge Studios Tool -->
-    <div class="card glass-card">
-      <h3 style="color: var(--primary); margin-bottom: 1rem;">Merge Duplicate Studios</h3>
-      <p class="sub-text" style="margin-bottom: 1.5rem;">Merge a duplicate studio into a primary studio. The duplicate will be deleted and all its history transferred.</p>
-      
-      <datalist id="studio-list">
-        <% allStudios.forEach(s => { %>
-          <option value="<%= s.id %>"><%= s.name %></option>
-        <% }); %>
-      </datalist>
-
-      <div style="display: flex; flex-direction: column; gap: 1rem;">
-        <div>
-          <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Duplicate Studio ID (to be deleted)</label>
-          <input type="text" id="merge-studio-source" list="studio-list" class="premium-input" placeholder="e.g. 124" style="width: 100%;">
-        </div>
-        <div>
-          <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Primary Studio ID (to keep)</label>
-          <input type="text" id="merge-studio-target" list="studio-list" class="premium-input" placeholder="e.g. 15" style="width: 100%;">
-        </div>
-        <button class="btn btn-primary" onclick="mergeStudios()" style="margin-top: 1rem;">Merge Studios</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="grid" style="margin-top: 2rem;">
-    <!-- Compare Studios Tool -->
-    <div class="card glass-card">
-      <h3 style="color: var(--primary); margin-bottom: 1rem;">Compare Studios</h3>
-      <p class="sub-text" style="margin-bottom: 1.5rem;">Launch the Selection Directory to pick two studios and view their full event histories side-by-side.</p>
-      <a href="/admin/studios" class="btn btn-primary" style="display: block; text-align: center;">Launch Selection Directory</a>
-    </div>
-
-    <!-- Accounts & Impersonation -->
-    <div class="card glass-card">
-      <h3 style="color: var(--accent-gold); margin-bottom: 1rem;">Account Login & Impersonation</h3>
-      <p class="sub-text" style="margin-bottom: 1.5rem;">Generate one-time links to login as specific Organizations or Studios to test their dashboards.</p>
-      <a href="/admin/accounts" class="btn btn-outline" style="display: block; text-align: center; border-color: var(--accent-gold); color: var(--accent-gold);">Launch Accounts Directory</a>
-    </div>
-
-    <!-- Manage Organizations -->
-    <div class="card glass-card">
-      <h3 style="color: var(--primary); margin-bottom: 1rem;">Manage Organizations</h3>
-      <p class="sub-text" style="margin-bottom: 1.5rem;">View, add, and edit the list of competition organizations (e.g. KAR, Revolution Talent).</p>
-      <a href="/admin/orgs" class="btn btn-primary" style="display: block; text-align: center;">Launch Org Directory</a>
-    </div>
-
-    <!-- Merge Dancers Tool -->
-    <div class="card glass-card">
-      <h3 style="color: var(--primary); margin-bottom: 1rem;">Merge Duplicate Dancers</h3>
-      <p class="sub-text" style="margin-bottom: 1.5rem;">Merge two dancers together by their Database IDs. The duplicate will be deleted.</p>
-      
-      <div style="display: flex; flex-direction: column; gap: 1rem;">
-        <div>
-          <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Duplicate Dancer ID (to be deleted)</label>
-          <input type="text" id="merge-dancer-source" class="premium-input" placeholder="e.g. 5002" style="width: 100%;">
-        </div>
-        <div>
-          <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Primary Dancer ID (to keep)</label>
-          <input type="text" id="merge-dancer-target" class="premium-input" placeholder="e.g. 5001" style="width: 100%;">
-        </div>
-        <button class="btn btn-primary" onclick="mergeDancers()" style="margin-top: 1rem;">Merge Dancers</button>
-      </div>
-    </div>
   </div>
 
 </div>
 
 <script>
+  let adminSearchTimeout = null;
+  const adminSearchName = document.getElementById('adminDancerSearchName');
+  const adminSearchStudio = document.getElementById('adminDancerSearchStudio');
+  const adminSearchResults = document.getElementById('adminDancerSearchResults');
+
+  function triggerAdminDancerSearch() {
+    clearTimeout(adminSearchTimeout);
+    const q = adminSearchName.value.trim();
+    const studio = adminSearchStudio.value.trim();
+    
+    if (q.length < 2) {
+      adminSearchResults.innerHTML = '<div style="text-align: center; color: var(--text-muted); font-size: 0.9rem;">Type at least 2 characters in Name to search...</div>';
+      return;
+    }
+
+    adminSearchResults.innerHTML = '<div style="text-align: center; color: var(--text-muted); font-size: 0.9rem;">Searching...</div>';
+
+    adminSearchTimeout = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/dancers/search?q=${encodeURIComponent(q)}&studio=${encodeURIComponent(studio)}`);
+        const dancers = await res.json();
+        
+        if (dancers.length === 0) {
+          adminSearchResults.innerHTML = '<div style="text-align: center; color: var(--text-muted); font-size: 0.9rem;">No dancers found matching criteria.</div>';
+          return;
+        }
+
+        let html = '';
+        dancers.forEach(d => {
+          let studiosHtml = '';
+          if (d.studio_names) {
+            studiosHtml = `<div style="font-size: 0.8rem; color: #fbbf24; margin-top: 0.1rem;">🏫 ${d.studio_names}</div>`;
+          }
+
+          html += `
+            <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 0.75rem; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;">
+              <div style="flex-grow: 1; min-width: 0;">
+                <div style="font-weight: 600; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${d.name}</div>
+                ${studiosHtml}
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.1rem;">${d.award_count} awards recorded</div>
+              </div>
+              <a href="/manage/dancer/${d.id}" target="_blank" class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; flex-shrink: 0; border-color: #a855f7; color: #a855f7;">Dashboard</a>
+            </div>
+          `;
+        });
+        adminSearchResults.innerHTML = html;
+      } catch (err) {
+        adminSearchResults.innerHTML = '<div style="text-align: center; color: #ef4444; font-size: 0.9rem;">Error searching database.</div>';
+      }
+    }, 400);
+  }
+
+  adminSearchName.addEventListener('input', triggerAdminDancerSearch);
+  adminSearchStudio.addEventListener('input', triggerAdminDancerSearch);
+
 async function mergeStudios() {
   const sourceId = document.getElementById('merge-studio-source').value;
   const targetId = document.getElementById('merge-studio-target').value;

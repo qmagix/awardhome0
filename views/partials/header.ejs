@@ -25,6 +25,9 @@
           <% if (user.role === 'studio_owner') { %>
             <a href="/my-studio" style="color: white; text-decoration: none; font-weight: 600;">My Studio</a>
           <% } %>
+          <% if (user.role === 'dancer_owner') { %>
+            <a href="/my-dancer" style="color: white; text-decoration: none; font-weight: 600;">My Dancer Profile</a>
+          <% } %>
           <span style="color: var(--text-muted); font-size: 0.9rem;"><%= user.email %></span>
           <a href="/logout" style="color: var(--primary); text-decoration: none; font-weight: 600;">Logout</a>
         <% } else { %>

@@ -52,3 +52,9 @@
 - [x] Build Organizer Custom Branding Dashboard (Live Trophy Preview, Logo sliders, Taxonomy-Based Custom Icons, Legal Agreements).
 - [x] Implement Organizer Marketing Profile (Slogan and Description).
 - [x] Refactor Organizer Overview to Tabbed UI with Client-Side Search for past events.
+- [x] Phase 2: Bulk CSV Self-Reporting with Automatic Roster Linking for missing awards.
+- [x] Adjust Studio Dashboard Analytics to count total Scholarships & Invites.
+- [x] Add 'Invitation' default custom icon field for Organizer Custom Branding.
+- [x] Finalize Embeddable Studio Widgets (Cross-Origin Headers, Many-to-Many Group Dancers, Custom Data Filters).
+- [x] Build Dancer Dashboard: Find Missing Awards search tool and Smart Auto-Backfill claiming.
+- [x] Enhance Studio Roster UI: Active/Inactive tabs, status toggles, and recent awards summary popup.

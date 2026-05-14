@@ -28,8 +28,6 @@
                 <div style="font-weight: 600; color: white; font-size: 1.1rem;"><%= item.csv_row.name %></div>
                 <div style="font-size: 0.9rem; color: var(--text-muted); margin-top: 0.25rem;">
                   <% if (item.csv_row.birthday) { %> DOB: <%= item.csv_row.birthday %><br> <% } %>
-                  <% if (item.csv_row.graduation_year) { %> Grad: <%= item.csv_row.graduation_year %><br> <% } %>
-                  <% if (item.csv_row.status) { %> Status: <%= item.csv_row.status %><br> <% } %>
                 </div>
                 <!-- Store the row data -->
                 <textarea class="raw-data" style="display: none;"><%= JSON.stringify(item.csv_row) %></textarea>

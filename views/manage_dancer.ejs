@@ -1,0 +1,357 @@
+<%- include('partials/header') %>
+
+<div class="container" style="margin-top: 4rem; display: flex; gap: 2rem;">
+  
+  <!-- Sidebar Navigation -->
+  <div style="width: 250px; flex-shrink: 0;">
+    <div class="card glass-card" style="padding: 1.5rem; position: sticky; top: 2rem;">
+      <div style="text-align: center; margin-bottom: 1.5rem;">
+        <% if (dancer.headshot_url) { %>
+          <div style="width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 1rem auto; overflow: hidden; border: 2px solid rgba(255,255,255,0.2);">
+            <img src="<%= dancer.headshot_url %>" alt="Headshot" style="width: 100%; height: 100%; object-fit: cover;">
+          </div>
+        <% } else { %>
+          <div style="width: 80px; height: 80px; background: rgba(255,255,255,0.1); border-radius: 50%; margin: 0 auto 1rem auto; display: flex; align-items: center; justify-content: center; font-size: 2rem;">
+            👤
+          </div>
+        <% } %>
+        <h3 style="margin: 0; color: white;"><%= dancer.name %></h3>
+        <p style="margin: 0; color: var(--text-muted); font-size: 0.8rem;">ID: <%= dancer.unique_id %></p>
+      </div>
+
+      <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem;" id="dancerNav">
+        <li>
+          <a href="#profile" class="nav-link active" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: white; background: rgba(236, 72, 153, 0.1); border-left: 3px solid var(--primary); font-weight: 600;">
+            👤 Profile Details
+          </a>
+        </li>
+        <li>
+          <a href="#studios" class="nav-link" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: var(--text-muted); transition: background 0.2s;">
+            🏫 Studio Affiliations
+          </a>
+        </li>
+        <li>
+          <a href="#awards" class="nav-link" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: var(--text-muted); transition: background 0.2s;">
+            🏆 My Awards
+          </a>
+        </li>
+        <li>
+          <a href="#find-awards" class="nav-link" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: var(--text-muted); transition: background 0.2s;">
+            🔍 Find Missing Awards
+          </a>
+        </li>
+      </ul>
+      
+      <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
+        <a href="/dancer/<%= dancer.unique_id %>" style="color: var(--primary); text-decoration: none; font-size: 0.9rem;">&larr; View Public Profile</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Area -->
+  <div style="flex-grow: 1; padding-bottom: 4rem;">
+    
+    <!-- Profile Section -->
+    <section id="section-profile" class="dashboard-section">
+      <div class="header-section" style="margin-bottom: 2rem;">
+        <h1>Profile Details</h1>
+        <p class="subtitle">Manage your personal information and headshot.</p>
+      </div>
+
+      <div class="card glass-card">
+        <form action="/manage/dancer/<%= dancer.id %>/update" method="POST" style="display: flex; flex-direction: column; gap: 1.5rem;">
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Full Name</label>
+            <input type="text" name="name" value="<%= dancer.name %>" required style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Birthday</label>
+            <input type="date" name="birthday" value="<%= dancer.birthday || '' %>" style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Headshot URL</label>
+            <input type="url" name="headshot_url" value="<%= dancer.headshot_url || '' %>" placeholder="https://example.com/photo.jpg" style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Graduation Year</label>
+            <input type="number" name="graduation_year" value="<%= dancer.graduation_year || '' %>" placeholder="e.g. 2026" min="1950" max="2100" style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+          </div>
+          <button type="submit" class="btn btn-primary" style="align-self: flex-start;">Save Changes</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- Studios Section -->
+    <section id="section-studios" class="dashboard-section" style="display: none;">
+      <div class="header-section" style="margin-bottom: 2rem;">
+        <h1>Studio Affiliations</h1>
+        <p class="subtitle">Link your profile to your dance studios.</p>
+      </div>
+
+      <div class="card glass-card" style="margin-bottom: 2rem;">
+        <h3 style="margin-top: 0; color: #10b981;">My Studios</h3>
+        <% if (studios.length === 0) { %>
+          <p style="color: var(--text-muted);">You are not linked to any studios yet.</p>
+        <% } else { %>
+          <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 1rem;">
+            <% studios.forEach(studio => { %>
+              <li style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 1rem; border-radius: 6px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <strong style="color: white; font-size: 1.1rem;"><%= studio.name %></strong>
+                  <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">ID: <%= studio.unique_id %></div>
+                </div>
+                <div>
+                  <% if (studio.status === 'active') { %>
+                    <span style="background: rgba(16, 185, 129, 0.2); color: #10b981; padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.85rem; font-weight: 600;">Active</span>
+                  <% } else { %>
+                    <span style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.85rem; font-weight: 600;">Pending Approval</span>
+                  <% } %>
+                </div>
+              </li>
+            <% }) %>
+          </ul>
+        <% } %>
+      </div>
+
+      <div class="card glass-card">
+        <h3 style="margin-top: 0;">Link to a New Studio</h3>
+        <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.9rem;">Ask your Studio Director for their <strong>Studio Unique ID</strong>. Entering it here will send them a request to add you to their official roster.</p>
+        <form action="/manage/dancer/<%= dancer.id %>/join-studio" method="POST" style="display: flex; gap: 1rem;">
+          <input type="text" name="studio_unique_id" placeholder="e.g. elite-dance-studio-1a2b" required style="flex-grow: 1; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+          <button type="submit" class="btn btn-primary">Send Request</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- Awards Section -->
+    <section id="section-awards" class="dashboard-section" style="display: none;">
+      <div class="header-section" style="margin-bottom: 2rem;">
+        <h1>My Awards</h1>
+        <p class="subtitle">Review your verified awards and customize routines with photos.</p>
+      </div>
+
+      <div class="card glass-card">
+        <% if (awards.length === 0) { %>
+          <p style="color: var(--text-muted); text-align: center; padding: 2rem;">You haven't claimed any awards yet!</p>
+        <% } else { %>
+          <div style="overflow-x: auto;">
+            <table class="table" style="margin: 0; width: 100%;">
+              <thead>
+                <tr>
+                  <th>Event & Year</th>
+                  <th>Routine</th>
+                  <th>Award / Placement</th>
+                  <th>Studio</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% awards.forEach(award => { %>
+                  <tr>
+                    <td>
+                      <strong style="color: white;"><%= award.event_name %></strong>
+                      <div style="color: var(--text-muted); font-size: 0.85rem;"><%= award.year %> • <%= award.org_name || 'Event' %></div>
+                    </td>
+                    <td>
+                      <strong style="color: var(--primary);"><%= award.performance_name || 'N/A' %></strong>
+                      <div style="color: var(--text-muted); font-size: 0.85rem;"><%= award.category %></div>
+                    </td>
+                    <td>
+                      <span class="badge" style="background: rgba(255,255,255,0.1); color: white;"><%= formatPlacement(award) %></span>
+                      <% if(award.award_type) { %> <span class="badge" style="background: rgba(236,72,153,0.2); color: #fbcfe8;"><%= award.award_type %></span> <% } %>
+                    </td>
+                    <td style="color: var(--text-muted);">
+                      <%= award.studio_name || 'Independent' %>
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        <% } %>
+      </div>
+    </section>
+
+    <!-- Find Missing Awards Section -->
+    <section id="section-find-awards" class="dashboard-section" style="display: none;">
+      <div class="header-section" style="margin-bottom: 2rem;">
+        <h1>Find Missing Awards</h1>
+        <p class="subtitle">Search the database to automatically backfill your profile.</p>
+      </div>
+
+      <div class="card glass-card">
+        <h3 style="margin-top: 0; color: #a855f7;">Search Tools</h3>
+        <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.9rem;">
+          Enter your name and an optional studio name prefix (e.g., "Elite") to scan our entire global database for unclaimed awards that match your identity.
+        </p>
+
+        <form id="searchAwardsForm" style="display: flex; gap: 1rem; flex-wrap: wrap;">
+          <div style="flex-grow: 1; min-width: 200px;">
+            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Dancer Name</label>
+            <input type="text" id="search_name" name="search_name" value="<%= dancer.name %>" required style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+          </div>
+          <div style="flex-grow: 1; min-width: 200px;">
+            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Studio Name Prefix (Optional)</label>
+            <input type="text" id="search_studio" name="search_studio" placeholder="e.g. Elite" style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+          </div>
+          <div style="width: 100%; margin-top: 1rem;">
+            <button type="submit" id="searchBtn" class="btn" style="background: #a855f7; color: white; border: none; padding: 0.75rem 1.5rem;">Scan Database</button>
+          </div>
+        </form>
+
+        <!-- Search Results Container -->
+        <div id="searchResults" style="margin-top: 2rem; display: none;">
+          <h4 style="color: white; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem; margin-bottom: 1rem;">Search Results</h4>
+          <div style="overflow-x: auto;">
+            <table class="table" style="margin: 0; width: 100%;">
+              <thead>
+                <tr>
+                  <th>Event & Year</th>
+                  <th>Routine & Category</th>
+                  <th>Award / Placement</th>
+                  <th>Studio</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="searchResultsBody">
+                <!-- Populated via JS -->
+              </tbody>
+            </table>
+          </div>
+          <p id="noResultsMsg" style="display: none; color: var(--text-muted); text-align: center; padding: 1rem;">No missing awards found.</p>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<script>
+  // Search Form Submission
+  document.getElementById('searchAwardsForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('searchBtn');
+    btn.textContent = 'Scanning...';
+    btn.disabled = true;
+
+    const q = document.getElementById('search_name').value;
+    const studio = document.getElementById('search_studio').value;
+    
+    try {
+      const response = await fetch(`/api/dancer/<%= dancer.id %>/search-missing-awards?q=${encodeURIComponent(q)}&studio=${encodeURIComponent(studio)}`);
+      const results = await response.json();
+      
+      const tbody = document.getElementById('searchResultsBody');
+      const noResults = document.getElementById('noResultsMsg');
+      tbody.innerHTML = '';
+      
+      if (results.length === 0) {
+        noResults.style.display = 'block';
+      } else {
+        noResults.style.display = 'none';
+        results.forEach(award => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>
+              <strong style="color: white;">${award.event_name}</strong>
+              <div style="color: var(--text-muted); font-size: 0.85rem;">${award.year} • ${award.org_name || 'Event'}</div>
+            </td>
+            <td>
+              <strong style="color: var(--primary);">${award.performance_name || 'N/A'}</strong>
+              <div style="color: var(--text-muted); font-size: 0.85rem;">${award.category}</div>
+            </td>
+            <td>
+              <span class="badge" style="background: rgba(255,255,255,0.1); color: white;">${award.place || '-'}</span>
+              ${award.award_type ? `<span class="badge" style="background: rgba(236,72,153,0.2); color: #fbcfe8;">${award.award_type}</span>` : ''}
+            </td>
+            <td style="color: var(--text-muted);">
+              ${award.studio_name || 'Independent'}
+            </td>
+            <td>
+              <button class="btn claim-btn" data-id="${award.id}" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid #c084fc;">Claim Award</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        // Attach Claim listeners
+        document.querySelectorAll('.claim-btn').forEach(btn => {
+          btn.addEventListener('click', async (evt) => {
+            const awardId = evt.target.getAttribute('data-id');
+            evt.target.disabled = true;
+            evt.target.textContent = 'Claiming...';
+            
+            try {
+              const res = await fetch(`/manage/dancer/<%= dancer.id %>/claim-missing-award`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ award_id: awardId })
+              });
+              const data = await res.json();
+              if (data.success) {
+                evt.target.textContent = 'Pending Approval';
+                evt.target.style.background = 'rgba(245, 158, 11, 0.2)';
+                evt.target.style.color = '#f59e0b';
+                evt.target.style.border = '1px solid #f59e0b';
+                
+                if (data.backfilledCount > 0) {
+                  alert(`Success! We also found and claimed ${data.backfilledCount} other awards for this routine via Smart Auto-Backfill!`);
+                }
+              } else {
+                alert(data.error || 'Failed to claim award.');
+                evt.target.textContent = 'Claim Award';
+                evt.target.disabled = false;
+              }
+            } catch (err) {
+              alert('Error claiming award.');
+              evt.target.textContent = 'Claim Award';
+              evt.target.disabled = false;
+            }
+          });
+        });
+      }
+      
+      document.getElementById('searchResults').style.display = 'block';
+    } catch (err) {
+      alert('Error searching for awards.');
+    } finally {
+      btn.textContent = 'Scan Database';
+      btn.disabled = false;
+    }
+  });
+  // Simple Tab Navigation Logic
+  const links = document.querySelectorAll('#dancerNav .nav-link');
+  const sections = document.querySelectorAll('.dashboard-section');
+
+  links.forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      
+      // Update active nav styling
+      links.forEach(l => {
+        l.classList.remove('active');
+        l.style.color = 'var(--text-muted)';
+        l.style.background = 'transparent';
+        l.style.borderLeft = 'none';
+        l.style.fontWeight = 'normal';
+      });
+
+      e.target.classList.add('active');
+      e.target.style.color = 'white';
+      e.target.style.background = 'rgba(236, 72, 153, 0.1)';
+      e.target.style.borderLeft = '3px solid var(--primary)';
+      e.target.style.fontWeight = '600';
+
+      // Show targeted section
+      const targetId = e.target.getAttribute('href').substring(1);
+      sections.forEach(sec => {
+        if(sec.id === 'section-' + targetId) {
+          sec.style.display = 'block';
+        } else {
+          sec.style.display = 'none';
+        }
+      });
+    });
+  });
+</script>
+
+<%- include('partials/footer') %>

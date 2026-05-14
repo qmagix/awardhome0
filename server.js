@@ -85,6 +85,12 @@ app.locals.getCustomIcon = function(award, customIcons) {
     if (key && customIcons.special && customIcons.special.custom && customIcons.special.custom[key]) {
       return customIcons.special.custom[key];
     }
+    
+    const text = [award.category, award.award_type, award.performance_name].filter(Boolean).join(' ').toLowerCase();
+    if ((text.includes('invite') || text.includes('invitation')) && customIcons.special && customIcons.special.invitation) {
+      return customIcons.special.invitation;
+    }
+
     if (customIcons.special && customIcons.special.default) return customIcons.special.default;
   }
   
@@ -543,7 +549,7 @@ app.get('/manage/studio/:id', requireAuth, async (req, res) => {
   let studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
 
   if (!studio) return res.status(404).send('Studio not found');
-  if (studio.owner_id !== req.session.user.id) return res.status(403).send('Forbidden: Not the owner');
+  if (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin') return res.status(403).send('Forbidden: Not the owner');
 
   if (!studio.join_code) {
     const crypto = require('crypto');
@@ -600,7 +606,7 @@ app.post('/manage/studio/:id/profile', requireAuth, async (req, res) => {
 
   const studio = await db.get('SELECT owner_id FROM studios WHERE id = ?', [req.params.id]);
   if (!studio) return res.status(404).send('Studio not found');
-  if (studio.owner_id !== req.session.user.id) return res.status(403).send('Forbidden: Not the owner');
+  if (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin') return res.status(403).send('Forbidden: Not the owner');
 
   const prefs = {
     show_total_awards: req.body.show_total_awards === 'on',
@@ -625,7 +631,7 @@ app.get('/manage/studio/:id/roster', requireAuth, async (req, res) => {
   const db = await openDb();
   const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
   if (!studio) return res.status(404).send('Studio not found');
-  if (studio.owner_id !== req.session.user.id) return res.status(403).send('Forbidden: Not the owner');
+  if (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin') return res.status(403).send('Forbidden: Not the owner');
 
   const roster = await db.all(`
     SELECT d.id, d.unique_id, d.name, d.birthday, ds.status, ds.headshot_url, ds.graduation_year,
@@ -636,7 +642,55 @@ app.get('/manage/studio/:id/roster', requireAuth, async (req, res) => {
     ORDER BY d.name ASC
   `, [req.params.id]);
 
-  res.render('manage_studio_roster', { studio, roster });
+  const studioAwardsRaw = await db.all(`
+    SELECT ad.dancer_id, a.place, a.category, a.performance_name, e.year, e.name as event_name
+    FROM award_dancers ad
+    JOIN awards a ON ad.award_id = a.id
+    JOIN events e ON a.event_id = e.id
+    WHERE a.studio_id = ?
+    ORDER BY e.year DESC, a.id DESC
+  `, [req.params.id]);
+
+  const awardsByDancer = {};
+  for (const award of studioAwardsRaw) {
+    if (!awardsByDancer[award.dancer_id]) awardsByDancer[award.dancer_id] = [];
+    if (awardsByDancer[award.dancer_id].length < 3) {
+      awardsByDancer[award.dancer_id].push(award);
+    }
+  }
+
+  roster.forEach(d => {
+    d.recent_awards = awardsByDancer[d.id] || [];
+  });
+
+  const suspectedDuplicatesRaw = await db.all(`
+    SELECT d.name, d.id, d.unique_id, d.birthday, d.claimed_by_user_id,
+           (SELECT COUNT(*) FROM award_dancers ad JOIN awards a ON ad.award_id = a.id WHERE ad.dancer_id = d.id AND a.studio_id = ds.studio_id) as total_awards
+    FROM dancers d
+    JOIN dancer_studios ds ON d.id = ds.dancer_id
+    WHERE ds.studio_id = ?
+      AND LOWER(d.name) IN (
+        SELECT LOWER(d2.name)
+        FROM dancers d2
+        JOIN dancer_studios ds2 ON d2.id = ds2.dancer_id
+        WHERE ds2.studio_id = ?
+        GROUP BY LOWER(d2.name)
+        HAVING COUNT(*) > 1
+      )
+      AND LOWER(d.name) NOT IN (
+        SELECT LOWER(dancer_name) FROM studio_duplicate_exceptions WHERE studio_id = ?
+      )
+    ORDER BY d.name ASC, total_awards DESC
+  `, [req.params.id, req.params.id, req.params.id]);
+
+  const duplicateSets = {};
+  suspectedDuplicatesRaw.forEach(row => {
+    const key = row.name.toLowerCase();
+    if (!duplicateSets[key]) duplicateSets[key] = { name: row.name, profiles: [] };
+    duplicateSets[key].profiles.push(row);
+  });
+
+  res.render('manage_studio_roster', { studio, roster, duplicateSets });
 });
 
 app.post('/manage/studio/:id/roster/:dancerId/update', requireAuth, async (req, res) => {
@@ -644,7 +698,7 @@ app.post('/manage/studio/:id/roster/:dancerId/update', requireAuth, async (req, 
   const db = await openDb();
 
   const studio = await db.get('SELECT owner_id FROM studios WHERE id = ?', [req.params.id]);
-  if (!studio || studio.owner_id !== req.session.user.id) return res.status(403).send('Forbidden');
+  if (!studio || (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) return res.status(403).send('Forbidden');
 
   await db.run(`
     UPDATE dancer_studios 
@@ -659,12 +713,39 @@ app.post('/manage/studio/:id/roster/:dancerId/update', requireAuth, async (req, 
   res.redirect(`/manage/studio/${req.params.id}/roster`);
 });
 
+app.post('/manage/studio/:id/roster/:dancerId/toggle-status', requireAuth, async (req, res) => {
+  const { new_status } = req.body;
+  const db = await openDb();
+
+  const studio = await db.get('SELECT owner_id FROM studios WHERE id = ?', [req.params.id]);
+  if (!studio || (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+
+  if (new_status !== 'active' && new_status !== 'alumni') {
+    return res.status(400).json({ error: 'Invalid status' });
+  }
+
+  try {
+    await db.run(`
+      UPDATE dancer_studios 
+      SET status = ?
+      WHERE studio_id = ? AND dancer_id = ?
+    `, [new_status, req.params.id, req.params.dancerId]);
+    
+    res.json({ success: true, status: new_status });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 app.post('/manage/studio/:id/awards/self-report', requireAuth, async (req, res) => {
   const { event_name, year, category, performance_name, place, dancer_ids } = req.body;
   const db = await openDb();
 
   const studio = await db.get('SELECT owner_id FROM studios WHERE id = ?', [req.params.id]);
-  if (!studio || studio.owner_id !== req.session.user.id) return res.status(403).send('Forbidden');
+  if (!studio || (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) return res.status(403).send('Forbidden');
 
   // Create a dummy event for self-reported awards if we don't have a structured one
   await db.run('INSERT INTO events (name, year, org_id) VALUES (?, ?, NULL)', [event_name, year]);
@@ -687,13 +768,130 @@ app.post('/manage/studio/:id/awards/self-report', requireAuth, async (req, res) 
   res.redirect(`/manage/studio/${req.params.id}/awards?year=${year}`);
 });
 
+app.post('/manage/studio/:id/awards/csv-preview', requireAuth, upload.single('csvFile'), async (req, res) => {
+  if (!req.file) return res.status(400).send('No file uploaded');
+  const db = await openDb();
+  
+  const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
+  if (!studio || (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) return res.status(403).send('Forbidden');
+
+  try {
+    const fileContent = fs.readFileSync(req.file.path, 'utf-8');
+    const records = parse(fileContent, { columns: true, skip_empty_lines: true, trim: true });
+    
+    const previewData = [];
+    const roster = await db.all(`
+      SELECT d.id, d.name 
+      FROM dancer_studios ds
+      JOIN dancers d ON ds.dancer_id = d.id
+      WHERE ds.studio_id = ?
+    `, [req.params.id]);
+
+    for (const row of records) {
+      const findKey = (search) => Object.keys(row).find(k => k.toLowerCase().replace(/[^a-z0-9]/g, '').includes(search));
+      
+      const eventName = row[findKey('competition')] || row[findKey('event')] || '';
+      const year = row[findKey('year')] || '';
+      const performanceName = row[findKey('routine')] || row[findKey('performance')] || '';
+      const place = row[findKey('place')] || row[findKey('result')] || '';
+      const category = row[findKey('category')] || '';
+      const dancersStr = row[findKey('dancer')] || '';
+
+      const missing = [];
+      if (!eventName) missing.push('Competition Name');
+      if (!year) missing.push('Year');
+      if (!performanceName) missing.push('Routine Name');
+      if (!place) missing.push('Place');
+
+      const matchedDancers = [];
+      if (dancersStr) {
+        const names = dancersStr.split(',').map(n => n.trim()).filter(n => n);
+        for (const name of names) {
+          const match = roster.find(r => r.name.toLowerCase() === name.toLowerCase());
+          if (match) {
+            matchedDancers.push({ id: match.id, name: match.name, matched: true });
+          } else {
+            matchedDancers.push({ name: name, matched: false });
+          }
+        }
+      }
+
+      previewData.push({
+        event_name: eventName,
+        year: year,
+        performance_name: performanceName,
+        place: place,
+        category: category,
+        dancers: matchedDancers,
+        isValid: missing.length === 0,
+        missing: missing
+      });
+    }
+
+    fs.unlinkSync(req.file.path);
+    res.render('manage_studio_awards_csv', { studio, previewData });
+  } catch (err) {
+    if (req.file) fs.unlinkSync(req.file.path);
+    console.error(err);
+    res.status(500).send('Error parsing CSV. Please ensure you are using the correct template format.');
+  }
+});
+
+app.post('/manage/studio/:id/awards/csv-commit', requireAuth, async (req, res) => {
+  const { preview_data } = req.body;
+  const db = await openDb();
+
+  const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
+  if (!studio || (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) return res.status(403).send('Forbidden');
+
+  if (preview_data) {
+    let rows = [];
+    try {
+      rows = JSON.parse(preview_data);
+    } catch (e) {
+      return res.status(400).send('Invalid data format received.');
+    }
+
+    for (const row of rows) {
+      if (!row.isValid) continue;
+
+      let event = await db.get('SELECT id FROM events WHERE name = ? AND year = ? AND org_id IS NULL', [row.event_name, row.year]);
+      if (!event) {
+        await db.run('INSERT INTO events (name, year, org_id) VALUES (?, ?, NULL)', [row.event_name, row.year]);
+        event = await db.get('SELECT id FROM events ORDER BY id DESC LIMIT 1');
+      }
+
+      await db.run(`
+        INSERT INTO awards (event_id, place, performance_name, category, studio_id, is_self_added, verification_status)
+        VALUES (?, ?, ?, ?, ?, 1, 'unverified')
+      `, [event.id, row.place, row.performance_name, row.category, req.params.id]);
+
+      const award = await db.get('SELECT id FROM awards ORDER BY id DESC LIMIT 1');
+
+      for (const d of row.dancers) {
+        if (d.matched && d.id) {
+          await db.run('INSERT INTO award_dancers (award_id, dancer_id) VALUES (?, ?)', [award.id, d.id]);
+        } else if (!d.matched && d.name) {
+          await db.run('INSERT INTO dancers (name) VALUES (?)', [d.name]);
+          const newDancer = await db.get('SELECT id FROM dancers ORDER BY id DESC LIMIT 1');
+          await db.run('INSERT INTO dancer_studios (dancer_id, studio_id) VALUES (?, ?)', [newDancer.id, req.params.id]);
+          await db.run('INSERT INTO award_dancers (award_id, dancer_id) VALUES (?, ?)', [award.id, newDancer.id]);
+        }
+      }
+    }
+  }
+
+  res.redirect(`/manage/studio/${req.params.id}/awards`);
+});
+
 app.get('/api/dancers/search', requireAuth, async (req, res) => {
-  const { q } = req.query;
+  if (req.session.user.role !== 'superadmin') return res.status(403).json({ error: 'Forbidden' });
+  const { q, studio } = req.query;
   if (!q || q.length < 2) return res.json([]);
   const db = await openDb();
 
-  const dancers = await db.all(`
-    SELECT d.id, d.name, 
+  let query = `
+    SELECT d.id, d.name, d.unique_id,
            (SELECT COUNT(*) FROM award_dancers ad WHERE ad.dancer_id = d.id) as award_count,
            (SELECT GROUP_CONCAT(s.name, ', ') 
             FROM dancer_studios ds 
@@ -701,9 +899,20 @@ app.get('/api/dancers/search', requireAuth, async (req, res) => {
             WHERE ds.dancer_id = d.id) as studio_names
     FROM dancers d
     WHERE d.name LIKE ?
-    ORDER BY award_count DESC
-    LIMIT 10
-  `, [`%${q}%`]);
+  `;
+  const params = [`%${q}%`];
+
+  const dancersRaw = await db.all(query, params);
+  
+  // Filter by studio in JS since it's an alias from a subquery and SQLite is finicky
+  let dancers = dancersRaw;
+  if (studio && studio.length >= 2) {
+    const studioLower = studio.toLowerCase();
+    dancers = dancersRaw.filter(d => d.studio_names && d.studio_names.toLowerCase().includes(studioLower));
+  }
+
+  // Sort and limit
+  dancers = dancers.sort((a, b) => b.award_count - a.award_count).slice(0, 20);
 
   for (let dancer of dancers) {
     dancer.recent_routines = await db.all(`
@@ -726,7 +935,7 @@ app.post('/manage/studio/:id/roster/merge', requireAuth, async (req, res) => {
   const db = await openDb();
 
   const studio = await db.get('SELECT owner_id FROM studios WHERE id = ?', [req.params.id]);
-  if (!studio || studio.owner_id !== req.session.user.id) return res.status(403).send('Forbidden');
+  if (!studio || (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) return res.status(403).send('Forbidden');
 
   if (!primary_id || !duplicate_id || primary_id === duplicate_id) {
     return res.status(400).send('Invalid merge parameters');
@@ -763,10 +972,84 @@ app.post('/manage/studio/:id/roster/merge', requireAuth, async (req, res) => {
   }
 });
 
+// Clean Duplicate Set (1-Click Merge)
+app.post('/manage/studio/:id/roster/clean-duplicate-set', requireAuth, async (req, res) => {
+  const { duplicate_name } = req.body;
+  const db = await openDb();
+
+  const studio = await db.get('SELECT owner_id FROM studios WHERE id = ?', [req.params.id]);
+  if (!studio || (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) return res.status(403).json({ error: 'Forbidden' });
+
+  if (!duplicate_name) return res.status(400).json({ error: 'Missing name' });
+
+  try {
+    // Fetch all profiles for this exact name in this studio
+    const profiles = await db.all(`
+      SELECT d.id, d.claimed_by_user_id,
+             (SELECT COUNT(*) FROM award_dancers ad JOIN awards a ON ad.award_id = a.id WHERE ad.dancer_id = d.id AND a.studio_id = ds.studio_id) as total_awards
+      FROM dancers d
+      JOIN dancer_studios ds ON d.id = ds.dancer_id
+      WHERE ds.studio_id = ? AND LOWER(d.name) = ?
+    `, [req.params.id, duplicate_name.trim().toLowerCase()]);
+
+    if (profiles.length < 2) return res.status(400).json({ error: 'No duplicates found for this name.' });
+
+    // Determine Primary
+    // Priority 1: Claimed
+    // Priority 2: Most awards
+    profiles.sort((a, b) => {
+      if (a.claimed_by_user_id && !b.claimed_by_user_id) return -1;
+      if (!a.claimed_by_user_id && b.claimed_by_user_id) return 1;
+      return b.total_awards - a.total_awards;
+    });
+
+    const primaryId = profiles[0].id;
+    const duplicatesToMerge = profiles.slice(1).map(p => p.id);
+
+    await db.run('BEGIN TRANSACTION');
+
+    for (let dupId of duplicatesToMerge) {
+      await db.run('INSERT OR IGNORE INTO award_dancers (award_id, dancer_id) SELECT award_id, ? FROM award_dancers WHERE dancer_id = ?', [primaryId, dupId]);
+      await db.run('DELETE FROM award_dancers WHERE dancer_id = ?', [dupId]);
+
+      await db.run('INSERT OR IGNORE INTO dancer_studios (dancer_id, studio_id, status) SELECT ?, studio_id, status FROM dancer_studios WHERE dancer_id = ?', [primaryId, dupId]);
+      await db.run('DELETE FROM dancer_studios WHERE dancer_id = ?', [dupId]);
+
+      await db.run('DELETE FROM dancers WHERE id = ?', [dupId]);
+    }
+
+    await db.run('COMMIT');
+    res.json({ success: true, merged: duplicatesToMerge.length });
+  } catch (err) {
+    await db.run('ROLLBACK');
+    console.error(err);
+    res.status(500).json({ error: 'Server Error' });
+  }
+});
+
+// Ignore Duplicate Set
+app.post('/manage/studio/:id/roster/ignore-duplicate-set', requireAuth, async (req, res) => {
+  const { duplicate_name } = req.body;
+  const db = await openDb();
+
+  const studio = await db.get('SELECT owner_id FROM studios WHERE id = ?', [req.params.id]);
+  if (!studio || (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) return res.status(403).json({ error: 'Forbidden' });
+
+  if (!duplicate_name) return res.status(400).json({ error: 'Missing name' });
+
+  try {
+    await db.run('INSERT OR IGNORE INTO studio_duplicate_exceptions (studio_id, dancer_name) VALUES (?, ?)', [req.params.id, duplicate_name.trim().toLowerCase()]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server Error' });
+  }
+});
+
 app.post('/manage/studio/:id/roster/csv-preview', requireAuth, upload.single('roster_csv'), async (req, res) => {
   const db = await openDb();
   const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
-  if (!studio || studio.owner_id !== req.session.user.id) return res.status(403).send('Forbidden');
+  if (!studio || (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) return res.status(403).send('Forbidden');
 
   if (!req.file) return res.status(400).send('No file uploaded');
 
@@ -830,7 +1113,7 @@ app.post('/manage/studio/:id/roster/csv-commit', requireAuth, async (req, res) =
 
   const db = await openDb();
   const studio = await db.get('SELECT owner_id FROM studios WHERE id = ?', [req.params.id]);
-  if (!studio || studio.owner_id !== req.session.user.id) return res.status(403).send('Forbidden');
+  if (!studio || (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) return res.status(403).send('Forbidden');
 
   let parsedData;
   try {
@@ -858,8 +1141,8 @@ app.post('/manage/studio/:id/roster/csv-commit', requireAuth, async (req, res) =
 
       if (dancerId) {
         // Link to studio with pivot data
-        const status = item.csv_row.status ? item.csv_row.status.toLowerCase() : 'active';
-        const gradYear = item.csv_row.graduation_year ? parseInt(item.csv_row.graduation_year) : null;
+        const status = 'active';
+        const gradYear = null;
 
         await db.run(`
           INSERT INTO dancer_studios (dancer_id, studio_id, status, graduation_year) 
@@ -881,15 +1164,21 @@ app.post('/manage/studio/:id/roster/csv-commit', requireAuth, async (req, res) =
 });
 
 app.post('/manage/studio/:id/roster/claim', requireAuth, async (req, res) => {
-  const { dancer_id, new_dancer_name, birthday } = req.body;
+  const { claim_unique_id, new_dancer_name, birthday } = req.body;
   const db = await openDb();
 
   const studio = await db.get('SELECT owner_id FROM studios WHERE id = ?', [req.params.id]);
-  if (!studio || studio.owner_id !== req.session.user.id) return res.status(403).send('Forbidden');
+  if (!studio || (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) return res.status(403).send('Forbidden');
 
-  let finalDancerId = dancer_id;
+  let finalDancerId = null;
 
-  if (new_dancer_name) {
+  if (claim_unique_id) {
+    const existingDancer = await db.get('SELECT id FROM dancers WHERE unique_id = ?', [claim_unique_id.trim()]);
+    if (!existingDancer) {
+      return res.status(404).send('Dancer not found with that Unique ID.');
+    }
+    finalDancerId = existingDancer.id;
+  } else if (new_dancer_name) {
     // Create new dancer
     const uniqueId = generateDancerId(new_dancer_name);
     await db.run('INSERT INTO dancers (unique_id, name, birthday) VALUES (?, ?, ?)', [uniqueId, new_dancer_name, birthday || null]);
@@ -909,7 +1198,7 @@ app.get('/manage/studio/:id/verifications', requireAuth, async (req, res) => {
   const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
 
   if (!studio) return res.status(404).send('Studio not found');
-  if (studio.owner_id !== req.session.user.id) return res.status(403).send('Forbidden: Not the owner');
+  if (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin') return res.status(403).send('Forbidden: Not the owner');
 
   const pendingAwards = await db.all(`
     SELECT ad.id as link_id, ad.award_id, d.name as dancer_name, d.unique_id, a.performance_name, a.award_type, e.name as event_name, e.year
@@ -920,13 +1209,20 @@ app.get('/manage/studio/:id/verifications', requireAuth, async (req, res) => {
     WHERE ad.status = 'pending' AND a.studio_id = ?
   `, [studio.id]);
 
-  res.render('manage_studio_verifications', { studio, pendingAwards });
+  const pendingRoster = await db.all(`
+    SELECT ds.id as link_id, d.name as dancer_name, d.unique_id, ds.created_at
+    FROM dancer_studios ds
+    JOIN dancers d ON ds.dancer_id = d.id
+    WHERE ds.status = 'pending' AND ds.studio_id = ?
+  `, [studio.id]);
+
+  res.render('manage_studio_verifications', { studio, pendingAwards, pendingRoster });
 });
 
 app.post('/manage/studio/:id/verifications/award/:link_id/approve', requireAuth, async (req, res) => {
   const db = await openDb();
   const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
-  if (!studio || studio.owner_id !== req.session.user.id) return res.status(403).send('Forbidden');
+  if (!studio || (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) return res.status(403).send('Forbidden');
 
   const link = await db.get('SELECT dancer_id FROM award_dancers WHERE id = ?', [req.params.link_id]);
   if (link) {
@@ -940,22 +1236,37 @@ app.post('/manage/studio/:id/verifications/award/:link_id/approve', requireAuth,
 app.post('/manage/studio/:id/verifications/award/:link_id/deny', requireAuth, async (req, res) => {
   const db = await openDb();
   const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
-  if (!studio || studio.owner_id !== req.session.user.id) return res.status(403).send('Forbidden');
+  if (!studio || (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) return res.status(403).send('Forbidden');
 
-  const link = await db.get('SELECT dancer_id FROM award_dancers WHERE id = ?', [req.params.link_id]);
-  if (link) {
-    await db.run("DELETE FROM award_dancers WHERE id = ?", [req.params.link_id]);
-    // Optionally delete from dancer_studios if this was the only award and they were pending... 
-    // but for now, just deleting the award claim is enough.
-  }
+  await db.run("DELETE FROM award_dancers WHERE id = ?", [req.params.link_id]);
   res.redirect(`/manage/studio/${studio.id}/verifications`);
+});
+
+app.post('/manage/studio/:id/verifications/roster/:link_id/approve', requireAuth, async (req, res) => {
+  const db = await openDb();
+  const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
+  if (!studio || (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) return res.status(403).send('Forbidden');
+
+  await db.run('UPDATE dancer_studios SET status = "active" WHERE id = ?', [req.params.link_id]);
+
+  res.redirect(`/manage/studio/${req.params.id}/verifications`);
+});
+
+app.post('/manage/studio/:id/verifications/roster/:link_id/deny', requireAuth, async (req, res) => {
+  const db = await openDb();
+  const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
+  if (!studio || (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) return res.status(403).send('Forbidden');
+
+  await db.run('DELETE FROM dancer_studios WHERE id = ?', [req.params.link_id]);
+
+  res.redirect(`/manage/studio/${req.params.id}/verifications`);
 });
 
 app.get('/manage/studio/:id/awards', requireAuth, async (req, res) => {
   const db = await openDb();
   const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
   if (!studio) return res.status(404).send('Studio not found');
-  if (studio.owner_id !== req.session.user.id) return res.status(403).send('Forbidden: Not the owner');
+  if (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin') return res.status(403).send('Forbidden: Not the owner');
 
   const yearsResult = await db.all(`
     SELECT DISTINCT e.year
@@ -1015,7 +1326,7 @@ app.get('/manage/studio/:id/awards', requireAuth, async (req, res) => {
 app.post('/manage/studio/:id/awards/:awardId/update', requireAuth, async (req, res) => {
   const db = await openDb();
   const studio = await db.get('SELECT owner_id FROM studios WHERE id = ?', [req.params.id]);
-  if (!studio || studio.owner_id !== req.session.user.id) return res.status(403).send('Forbidden');
+  if (!studio || (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) return res.status(403).send('Forbidden');
 
   const award = await db.get('SELECT * FROM awards WHERE id = ? AND studio_id = ?', [req.params.awardId, req.params.id]);
   if (!award) return res.status(404).send('Award not found');
@@ -1039,7 +1350,7 @@ app.post('/manage/studio/:id/awards/:awardId/update', requireAuth, async (req, r
 app.post('/manage/studio/:id/awards/:awardId/dancers', requireAuth, async (req, res) => {
   const db = await openDb();
   const studio = await db.get('SELECT owner_id FROM studios WHERE id = ?', [req.params.id]);
-  if (!studio || studio.owner_id !== req.session.user.id) return res.status(403).send('Forbidden');
+  if (!studio || (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) return res.status(403).send('Forbidden');
 
   const yearQuery = req.query.year ? `?year=${req.query.year}` : '';
   let { dancer_name } = req.body;
@@ -1052,10 +1363,6 @@ app.post('/manage/studio/:id/awards/:awardId/dancers', requireAuth, async (req, 
       JOIN dancer_studios ds ON d.id = ds.dancer_id 
       WHERE d.name = ? COLLATE NOCASE AND ds.studio_id = ?
     `, [dancer_name, req.params.id]);
-
-    if (!dancer) {
-      dancer = await db.get('SELECT id FROM dancers WHERE name = ? COLLATE NOCASE LIMIT 1', [dancer_name]);
-    }
 
     if (!dancer) {
       const unique_id = generateDancerId(dancer_name);
@@ -1076,7 +1383,7 @@ app.post('/manage/studio/:id/awards/:awardId/dancers', requireAuth, async (req, 
 app.post('/manage/studio/:id/awards/:awardId/dancers/:dancerId/remove', requireAuth, async (req, res) => {
   const db = await openDb();
   const studio = await db.get('SELECT owner_id FROM studios WHERE id = ?', [req.params.id]);
-  if (!studio || studio.owner_id !== req.session.user.id) return res.status(403).send('Forbidden');
+  if (!studio || (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) return res.status(403).send('Forbidden');
 
   await db.run('DELETE FROM award_dancers WHERE award_id = ? AND dancer_id = ?', [req.params.awardId, req.params.dancerId]);
 
@@ -1089,33 +1396,97 @@ app.get('/manage/studio/:id/widget', requireAuth, async (req, res) => {
   const db = await openDb();
   const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
   if (!studio) return res.status(404).send('Studio not found');
-  if (studio.owner_id !== req.session.user.id) return res.status(403).send('Forbidden');
+  if (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin') return res.status(403).send('Forbidden');
 
   res.render('manage_studio_widget', { studio });
 });
 
 // Public Widget Iframe Route
 app.get('/widget/studio/:id', async (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.removeHeader('X-Frame-Options');
+
   const db = await openDb();
   const studio = await db.get('SELECT name, logo_url FROM studios WHERE id = ?', [req.params.id]);
   if (!studio) return res.status(404).send('Studio not found');
 
-  const awards = await db.all(`
-    SELECT a.place, a.performance_name, a.award_type, e.name as event_name, e.year, d.name as dancer_name
+  const baseQuery = `
+    SELECT a.id, a.place, a.performance_name, a.award_type, a.category, e.name as event_name, e.year, GROUP_CONCAT(d.name, ', ') as dancer_name
     FROM awards a
     LEFT JOIN events e ON a.event_id = e.id
-    LEFT JOIN dancers d ON a.dancer_id = d.id
+    LEFT JOIN award_dancers ad ON a.id = ad.award_id
+    LEFT JOIN dancers d ON ad.dancer_id = d.id
     WHERE a.studio_id = ?
+    GROUP BY a.id
     ORDER BY e.year DESC, e.date_string DESC
-    LIMIT 20
-  `, [req.params.id]);
+  `;
+  
+  const awardsRaw = await db.all(baseQuery, [req.params.id]);
 
   const theme = req.query.theme || 'dark';
   const primaryColor = req.query.primary || 'ec4899';
   const bg = req.query.bg || (theme === 'dark' ? '000000' : 'ffffff');
   const layout = req.query.layout || 'list';
+  const premiumOnly = req.query.premiumOnly === 'true';
+  const topPlacementsOnly = req.query.topPlacementsOnly === 'true';
+  
+  const showTotalAwards = req.query.showTotalAwards !== 'false'; // default true for stats
+  const showTopPlacements = req.query.showTopPlacements !== 'false';
+  const showPastYear = req.query.showPastYear !== 'false';
+  const widgetType = req.query.widgetType || 'both'; // 'stats', 'awards', or 'both'
 
-  res.render('widget', { studio, awards, theme, primaryColor, bg, layout });
+  const currentYear = new Date().getFullYear();
+  const widgetStats = {
+    totalAwards: awardsRaw.length,
+    pastYearAwards: awardsRaw.filter(a => parseInt(a.year, 10) === currentYear).length,
+    topPlacements: awardsRaw.filter(a => {
+      if (!a.place) return false;
+      const p = String(a.place).toLowerCase();
+      return p === '1' || p.includes('1st') || p === '2' || p.includes('2nd') || p === '3' || p.includes('3rd') || p === 'winner';
+    }).length
+  };
+
+  let awards = awardsRaw;
+
+  if (premiumOnly || topPlacementsOnly) {
+    awards = awards.filter(award => {
+      let isTopPlace = false;
+      if (award.place) {
+        const pLower = String(award.place).toLowerCase();
+        if (pLower === '1' || pLower.includes('1st') || pLower === '2' || pLower.includes('2nd') || pLower === '3' || pLower.includes('3rd') || pLower === 'winner') {
+          isTopPlace = true;
+        }
+      }
+      
+      const isPremium = app.locals.isPremiumAward(award);
+      
+      if (premiumOnly && topPlacementsOnly) {
+        return isPremium && isTopPlace;
+      } else if (premiumOnly) {
+        return isPremium;
+      } else if (topPlacementsOnly) {
+        return isTopPlace;
+      }
+      return true;
+    });
+  }
+
+  // Final limit after filtering
+  awards = awards.slice(0, 20);
+
+  res.render('widget', { 
+    studio, 
+    awards, 
+    theme, 
+    primaryColor, 
+    bg, 
+    layout,
+    widgetStats,
+    showTotalAwards,
+    showTopPlacements,
+    showPastYear,
+    widgetType
+  });
 });
 
 app.get('/my-studio', requireAuth, async (req, res) => {
@@ -1125,6 +1496,189 @@ app.get('/my-studio', requireAuth, async (req, res) => {
     res.redirect(`/manage/studio/${ownedStudio.id}`);
   } else {
     res.send(`<script>alert("You haven't claimed a studio yet! Please search for your studio in the directory and click 'Claim this Studio' to gain management access."); window.location.href="/studios";</script>`);
+  }
+});
+app.get('/my-dancer', requireAuth, async (req, res) => {
+  const db = await openDb();
+  const ownedDancer = await db.get('SELECT id FROM dancers WHERE claimed_by_user_id = ? LIMIT 1', [req.session.user.id]);
+  if (ownedDancer) {
+    res.redirect(`/manage/dancer/${ownedDancer.id}`);
+  } else {
+    res.send(`<script>alert("You haven't claimed a dancer profile yet!"); window.location.href="/";</script>`);
+  }
+});
+
+app.get('/manage/dancer/:id', requireAuth, async (req, res) => {
+  const db = await openDb();
+  const dancer = await db.get('SELECT * FROM dancers WHERE id = ?', [req.params.id]);
+  
+  if (!dancer) return res.status(404).send('Dancer not found');
+  if (dancer.claimed_by_user_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin') {
+    return res.status(403).send('Forbidden: Not the owner');
+  }
+
+  const studios = await db.all(`
+    SELECT s.name, s.unique_id, ds.status, ds.id as link_id
+    FROM dancer_studios ds
+    JOIN studios s ON ds.studio_id = s.id
+    WHERE ds.dancer_id = ?
+  `, [dancer.id]);
+
+  const awards = await db.all(`
+    SELECT a.*, e.name as event_name, e.year, s.name as studio_name, o.name as org_name
+    FROM awards a
+    JOIN award_dancers ad ON a.id = ad.award_id
+    JOIN events e ON a.event_id = e.id
+    LEFT JOIN studios s ON a.studio_id = s.id
+    LEFT JOIN organizations o ON e.org_id = o.id
+    WHERE ad.dancer_id = ?
+    ORDER BY e.year DESC
+  `, [dancer.id]);
+
+  res.render('manage_dancer', { dancer, studios, awards });
+});
+
+app.post('/manage/dancer/:id/update', requireAuth, async (req, res) => {
+  const db = await openDb();
+  const dancer = await db.get('SELECT claimed_by_user_id FROM dancers WHERE id = ?', [req.params.id]);
+  
+  if (!dancer || (dancer.claimed_by_user_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) {
+    return res.status(403).send('Forbidden');
+  }
+
+  const { name, birthday, headshot_url, graduation_year } = req.body;
+  await db.run(`
+    UPDATE dancers 
+    SET name = ?, birthday = ?, headshot_url = ?, graduation_year = ? 
+    WHERE id = ?
+  `, [name, birthday || null, headshot_url || null, graduation_year || null, req.params.id]);
+  
+  res.redirect(`/manage/dancer/${req.params.id}`);
+});
+
+app.post('/manage/dancer/:id/join-studio', requireAuth, async (req, res) => {
+  const db = await openDb();
+  const dancer = await db.get('SELECT claimed_by_user_id FROM dancers WHERE id = ?', [req.params.id]);
+  
+  if (!dancer || (dancer.claimed_by_user_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) {
+    return res.status(403).send('Forbidden');
+  }
+
+  const { studio_unique_id } = req.body;
+  const studio = await db.get('SELECT id FROM studios WHERE unique_id = ?', [studio_unique_id.trim()]);
+  
+  if (!studio) {
+    return res.send(`<script>alert("Studio not found with that Unique ID."); window.location.href="/manage/dancer/${req.params.id}";</script>`);
+  }
+
+  try {
+    await db.run('INSERT INTO dancer_studios (dancer_id, studio_id, status) VALUES (?, ?, ?)', [req.params.id, studio.id, 'pending']);
+    res.send(`<script>alert("Request sent successfully! The studio director must approve it."); window.location.href="/manage/dancer/${req.params.id}";</script>`);
+  } catch (err) {
+    // Unique constraint violation
+    res.send(`<script>alert("You are already linked or have a pending request for this studio."); window.location.href="/manage/dancer/${req.params.id}";</script>`);
+  }
+});
+
+// API: Search Missing Awards
+app.get('/api/dancer/:id/search-missing-awards', requireAuth, async (req, res) => {
+  const db = await openDb();
+  
+  // Verify ownership
+  const dancer = await db.get('SELECT claimed_by_user_id FROM dancers WHERE id = ?', [req.params.id]);
+  if (!dancer || (dancer.claimed_by_user_id !== req.session.user.id && req.session.user.role !== 'superadmin')) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+
+  let { q, studio } = req.query;
+  if (!q || q.trim().length < 2) {
+    return res.json([]);
+  }
+  
+  q = q.trim();
+  const nameQuery = `%${q}%`;
+  
+  try {
+    let sql = `
+      SELECT 
+        a.id, a.performance_name, a.category, a.place, a.award_type,
+        e.name as event_name, e.year, o.name as org_name,
+        s.name as studio_name, d.name as dancer_name_on_award
+      FROM awards a
+      JOIN events e ON a.event_id = e.id
+      LEFT JOIN organizations o ON e.org_id = o.id
+      LEFT JOIN studios s ON a.studio_id = s.id
+      JOIN award_dancers ad ON a.id = ad.award_id
+      JOIN dancers d ON ad.dancer_id = d.id
+      WHERE d.name LIKE ? COLLATE NOCASE
+      AND a.id NOT IN (
+        SELECT award_id FROM award_dancers WHERE dancer_id = ?
+      )
+    `;
+    const params = [nameQuery, req.params.id];
+
+    if (studio && studio.trim().length > 0) {
+      sql += ` AND s.name LIKE ? COLLATE NOCASE`;
+      params.push(`${studio.trim()}%`);
+    }
+
+    sql += ` ORDER BY e.year DESC, e.name ASC LIMIT 50`;
+
+    const results = await db.all(sql, params);
+    res.json(results);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server Error' });
+  }
+});
+
+// API: Claim Missing Award (Smart Auto-Backfill)
+app.post('/manage/dancer/:id/claim-missing-award', requireAuth, async (req, res) => {
+  const db = await openDb();
+  
+  // Verify ownership
+  const dancer = await db.get('SELECT claimed_by_user_id FROM dancers WHERE id = ?', [req.params.id]);
+  if (!dancer || (dancer.claimed_by_user_id !== req.session.user.id && req.session.user.role !== 'superadmin')) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+
+  const { award_id } = req.body;
+  if (!award_id) return res.status(400).json({ error: 'Missing award ID' });
+  
+  try {
+    // Check if already linked
+    const existing = await db.get('SELECT id FROM award_dancers WHERE dancer_id = ? AND award_id = ?', [req.params.id, award_id]);
+    if (existing) {
+      return res.status(400).json({ error: 'Already claimed this award.' });
+    }
+
+    // Insert pending claim for the main award
+    await db.run("INSERT INTO award_dancers (award_id, dancer_id, status) VALUES (?, ?, 'pending')", [award_id, req.params.id]);
+    
+    // Smart Auto-Backfill
+    const targetAward = await db.get('SELECT event_id, performance_name, studio_id FROM awards WHERE id = ?', [award_id]);
+    let backfilledCount = 0;
+    
+    if (targetAward && targetAward.performance_name && targetAward.event_id) {
+      // Find other awards for the same routine at the same event
+      const relatedAwards = await db.all(
+        'SELECT id FROM awards WHERE event_id = ? AND performance_name = ? AND id != ?',
+        [targetAward.event_id, targetAward.performance_name, award_id]
+      );
+      
+      for (let rel of relatedAwards) {
+        const exist = await db.get('SELECT id FROM award_dancers WHERE dancer_id = ? AND award_id = ?', [req.params.id, rel.id]);
+        if (!exist) {
+          await db.run("INSERT INTO award_dancers (award_id, dancer_id, status) VALUES (?, ?, 'pending')", [rel.id, req.params.id]);
+          backfilledCount++;
+        }
+      }
+    }
+    
+    res.json({ success: true, backfilledCount });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server Error' });
   }
 });
 
@@ -1840,7 +2394,9 @@ app.get('/studio/:id', async (req, res) => {
   const eventsPast5Years = new Set();
   let firstPlaceCount = 0;
   let firstPlaceCountThisYear = 0;
+  let scholarshipCount = 0;
   const uniqueDancers = new Set();
+  const hallOfFame = [];
 
   for (const award of awards) {
     if (awardDancersMap[award.id]) {
@@ -1878,6 +2434,20 @@ app.get('/studio/:id', async (req, res) => {
       firstPlaceCount++;
       if (yearNum === currentYear) {
         firstPlaceCountThisYear++;
+      }
+    }
+
+    const premiumDetails = app.locals.getPremiumDetails(award);
+    if (premiumDetails.icon === '🎓' || premiumDetails.icon === '💌') {
+      scholarshipCount++;
+    }
+
+    // Hall of Fame logic: Premium award + '1st' place + National/Finals indicator
+    if ((placeStr === '1' || placeStr === '1st') && premiumDetails.isPremium) {
+      const nameLower = (award.award_type || award.category || '').toLowerCase();
+      const eventNameLower = (award.event_name || '').toLowerCase();
+      if (nameLower.includes('national') || nameLower.includes('final') || nameLower.includes('grand') || nameLower.includes('title') || eventNameLower.includes('national') || eventNameLower.includes('final')) {
+        hallOfFame.push(award);
       }
     }
 
@@ -1921,6 +2491,7 @@ app.get('/studio/:id', async (req, res) => {
     eventsPast5Years: eventsPast5Years.size,
     firstPlaceCount,
     firstPlaceCountThisYear,
+    scholarshipCount,
     uniqueDancersCount: uniqueDancers.size
   };
 
@@ -1933,7 +2504,19 @@ app.get('/studio/:id', async (req, res) => {
   }
   studio.prefs = prefs;
 
-  res.render('studio', { studio, mergedIntoStudio, groupedData, quickStats, hasAwards: awards.length > 0 });
+  // Fetch Alumni (graduated this year or earlier)
+  const alumni = await db.all(`
+    SELECT d.id, d.name, d.unique_id, ds.graduation_year, ds.headshot_url, ds.notes
+    FROM dancer_studios ds
+    JOIN dancers d ON ds.dancer_id = d.id
+    WHERE ds.studio_id = ? AND ds.graduation_year <= ?
+    ORDER BY ds.graduation_year DESC, d.name ASC
+  `, [req.params.id, currentYear]);
+
+  // Keep max 12 items for Hall of Fame
+  const topHallOfFame = hallOfFame.slice(0, 12);
+
+  res.render('studio', { studio, mergedIntoStudio, groupedData, quickStats, hallOfFame: topHallOfFame, alumni, hasAwards: awards.length > 0 });
 });
 
 app.get('/dancer/:unique_id', async (req, res) => {

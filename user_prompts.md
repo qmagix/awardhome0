@@ -278,3 +278,15 @@ Wait just found seed_orgs missing believe imagine and dreammaker, will that be a
 
 ## User Request - 2026-05-10
 I ran import_all_years.sh, but all dancebug related file fetch all failed? ...
+
+## User Request - 2026-05-13
+On this page, http://localhost:3008/manage/studio/842/roster please note number of active dancers in the roster; further, make it easy to toggle a student status from active to inactive...
+
+## User Request - 2026-05-13
+please add "view profile" for each dancer on the roster row too, studio admin could find it useful...
+
+## User Request - 2026-05-13
+For the summary, do not show grad year, rarely someone cares, do not show award count, already on the table row, show a few recently awards instead?
+
+## User Request - 2026-05-13
+please summarize recent update and do a git commit

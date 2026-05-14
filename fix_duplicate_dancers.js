@@ -48,11 +48,11 @@ async function fixDuplicates() {
         WHERE id = ?
       `, [newDancerId, link.id]);
       
-      // Re-point the awards for this specific studio to the new dancer
+      // Re-point the awards for this specific studio to the new dancer using the junction table
       await db.run(`
-        UPDATE awards 
+        UPDATE award_dancers 
         SET dancer_id = ? 
-        WHERE dancer_id = ? AND studio_id = ?
+        WHERE dancer_id = ? AND award_id IN (SELECT id FROM awards WHERE studio_id = ?)
       `, [newDancerId, oldDancerId, link.studio_id]);
 
       splitCount++;
