@@ -2556,7 +2556,19 @@ app.get('/dancer/:unique_id', async (req, res) => {
   });
 
   const specialClassTypes = ['scholarship', 'special', 'studio', 'invitation'];
-  const conventionAwards = awards.filter(a => specialClassTypes.includes(a.award_class) || (!a.performance_name && a.dancer_count > 1));
+  const isSpecialKeyword = (str) => {
+    if (!str) return false;
+    const lower = str.toLowerCase();
+    return lower.includes('scholarship') || lower.includes('invite') || lower.includes('invitation');
+  };
+  
+  const conventionAwards = awards.filter(a => 
+    specialClassTypes.includes(a.award_class) || 
+    isSpecialKeyword(a.award_type) || 
+    isSpecialKeyword(a.category) || 
+    isSpecialKeyword(a.performance_name) ||
+    (!a.performance_name && a.dancer_count > 1)
+  );
   const performanceAwards = awards.filter(a => !conventionAwards.includes(a));
 
   const soloAwards = performanceAwards.filter(a => a.dancer_count <= 1 && (!a.category || !a.category.toLowerCase().includes('group')));
