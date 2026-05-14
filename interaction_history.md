@@ -507,3 +507,9 @@ Advised the user to re-run the Revolution batch script to backfill the purged da
 2. Rebuilt the Dancer Profile UI layout (`views/dancer.ejs`) to display in the user-requested order: Group Awards -> Solo Awards -> Special / Convention Awards.
 3. Updated the stats pills at the top of the profile to calculate and display the new Special / Convention awards count.
 4. Resolved an EJS rendering syntax error caused by string unescaping during script manipulation.
+
+## Interaction - 2026-05-13 (Dancer Profile - Milestone Banner)
+**User:** Requested to create a stats milestone section at the top of the Dancer Profile for dancers with more than 20 awards, showing total awards, total awards this year, and an encouraging message.
+**AI:**
+1. Added embedded JavaScript logic in `views/dancer.ejs` to dynamically calculate `totalAwardsCount`, find the most recent `maxYear`, and filter `awardsThisYear`.
+2. Created a premium gradient milestone banner that scales its celebratory message based on the total number of awards (>20, >50, >100).

@@ -58,3 +58,4 @@
 - [x] Finalize Embeddable Studio Widgets (Cross-Origin Headers, Many-to-Many Group Dancers, Custom Data Filters).
 - [x] Build Dancer Dashboard: Find Missing Awards search tool and Smart Auto-Backfill claiming.
 - [x] Enhance Studio Roster UI: Active/Inactive tabs, status toggles, and recent awards summary popup.
+- [x] Add dynamic milestone and celebratory banner for top-performing dancers on public profiles.

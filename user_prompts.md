@@ -302,3 +302,6 @@ Remember I want to emphasize team spirit and put group awards on top?
 
 ## User Request - 2026-05-13
 please summarize recent update and do a git commit
+
+## User Request - 2026-05-13
+Now for dancers have more than 20 awards, please create a stats section on top showing total number of awards, and total number of awards this year. And some milestone sentences such as wow! you got more than x awards, what an achievement! etc?
