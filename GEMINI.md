@@ -16,6 +16,7 @@ This file contains the core architecture, rules, and workflows for the **Dance A
 5. Always create/update documentation for app features in a `features.md` file.
 6. Always create/update a user manual file for the app, in a `user_manual.md` file.
 7. Always create and maintain a to-do list, use `TODOS_and_DONE.md` file at the root.
+8. Always document novel, patentable, or unique product ideas, features, and workflows in an `ideas.md` file as we brainstorm and implement them.
 
 ## Project-Specific Rules
 1. **Documentation Parity:** Any time a new user-facing workflow, UI tool, or architectural edge case is introduced, the AI MUST proactively update the `/faq/admin` or `/faq/dancer` EJS pages (located in `views/`) to explain how it works.

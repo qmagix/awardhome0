@@ -1,0 +1,56 @@
+<%- include('partials/header') %>
+
+<div class="container" style="max-width: 1000px; margin-top: 2rem;">
+  <div style="margin-bottom: 2rem;">
+    <a href="/studio/<%= studio.id %>" style="color: var(--primary); text-decoration: none; display: flex; align-items: center; gap: 0.5rem; font-weight: 600; margin-bottom: 1rem;">
+      &larr; Back to <%= studio.name %>
+    </a>
+    <h1 style="margin: 0; display: flex; align-items: center; gap: 0.75rem;">
+      <span style="font-size: 2rem;">🏆</span> 1st Place Finishes
+    </h1>
+    <p style="color: var(--text-muted); margin-top: 0.5rem;">
+      A comprehensive list of all first place awards, overall winners, and top titles won by <%= studio.name %>.
+    </p>
+  </div>
+
+  <div class="card glass-card" style="padding: 0; overflow: hidden; margin-bottom: 4rem;">
+    <% if (awards.length === 0) { %>
+      <div style="padding: 3rem; text-align: center; color: var(--text-muted);">
+        <p style="font-size: 1.2rem; margin: 0;">No 1st place finishes found yet.</p>
+      </div>
+    <% } else { %>
+      <div style="display: flex; padding: 1rem 1.5rem; background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: bold; color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase;">
+        <div style="width: 120px;">Year</div>
+        <div style="flex-grow: 1;">Event</div>
+        <div style="flex-grow: 1;">Routine</div>
+        <div style="width: 200px;">Category</div>
+        <div style="width: 100px; text-align: right;">Place</div>
+      </div>
+      
+      <% awards.forEach(function(award) { %>
+        <div style="display: flex; padding: 1rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); align-items: center;">
+          <div style="width: 120px; font-weight: 600; color: var(--primary);">
+            <%= award.event_year %>
+          </div>
+          <div style="flex-grow: 1; color: var(--text-muted); font-size: 0.95rem; padding-right: 1rem;">
+            <%= award.event_name %>
+            <div style="font-size: 0.8rem; opacity: 0.7;"><%= award.org_name %></div>
+          </div>
+          <div style="flex-grow: 1; font-weight: 600; color: white;">
+            <%= award.performance_name %>
+          </div>
+          <div style="width: 200px; font-size: 0.9rem; color: var(--text-muted);">
+            <%= award.category %>
+          </div>
+          <div style="width: 100px; text-align: right;">
+            <span class="badge" style="background: rgba(251, 191, 36, 0.2); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3);">
+              <%= award.place %>
+            </span>
+          </div>
+        </div>
+      <% }); %>
+    <% } %>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

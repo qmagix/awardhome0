@@ -9,3 +9,4 @@ yarn-error.log*
 database.sqlite*
 raw/
 tobeprocessed/
+backups/

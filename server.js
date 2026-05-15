@@ -1794,6 +1794,30 @@ app.get('/', async (req, res) => {
     LIMIT 100
   `);
 
+  const topStudiosThisYear = await db.all(`
+    SELECT s.id, s.name, COUNT(a.id) as total_awards
+    FROM studios s
+    LEFT JOIN awards a ON s.id = a.studio_id
+    LEFT JOIN events e ON a.event_id = e.id
+    WHERE e.year = (SELECT MAX(year) FROM events) AND s.id NOT IN (${excludeIds.join(',')})
+    GROUP BY s.id
+    ORDER BY total_awards DESC
+    LIMIT 100
+  `);
+
+  const topStudiosFirstPlaceThisYear = await db.all(`
+    SELECT s.id, s.name, COUNT(a.id) as total_awards
+    FROM studios s
+    LEFT JOIN awards a ON s.id = a.studio_id
+    LEFT JOIN events e ON a.event_id = e.id
+    WHERE a.is_first_place = 1 
+      AND e.year = (SELECT MAX(year) FROM events)
+      AND s.id NOT IN (${excludeIds.join(',')})
+    GROUP BY s.id
+    ORDER BY total_awards DESC
+    LIMIT 100
+  `);
+
   const orgs = await db.all(`
     SELECT o.id, o.name, o.slug, COUNT(e.id) as event_count
     FROM organizations o
@@ -1807,7 +1831,7 @@ app.get('/', async (req, res) => {
   if (isAdmin) {
     res.render('index_admin', { featuredStudios, topStudios: topStudios.slice(0, 12), orgs });
   } else {
-    res.render('index', { featuredStudios, topStudios, orgs });
+    res.render('index', { featuredStudios, topStudios, topStudiosThisYear, topStudiosFirstPlaceThisYear, orgs });
   }
 });
 
@@ -2426,6 +2450,29 @@ app.post('/api/merge/dancers', express.json(), async (req, res) => {
   }
 });
 
+// GET studio first places
+app.get('/studio/:id/first-places', async (req, res) => {
+  const db = await openDb();
+  
+  const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
+  if (!studio) return res.status(404).send('Studio not found');
+
+  const awards = await db.all(`
+    SELECT a.*, e.name as event_name, e.year as event_year, o.name as org_name
+    FROM awards a
+    JOIN events e ON a.event_id = e.id
+    JOIN organizations o ON e.org_id = o.id
+    WHERE a.studio_id = ? AND a.is_first_place = 1
+    ORDER BY e.year DESC, e.name ASC
+  `, [req.params.id]);
+
+  res.render('studio_first_places', {
+    studio,
+    awards,
+    user: req.session ? req.session.user : null
+  });
+});
+
 app.get('/studio/:id', async (req, res) => {
   const db = await openDb();
 
@@ -2515,8 +2562,7 @@ app.get('/studio/:id', async (req, res) => {
       }
     }
 
-    const placeStr = String(award.place || '').trim().toLowerCase();
-    if (placeStr === '1' || placeStr === '1st') {
+    if (award.is_first_place) {
       firstPlaceCount++;
       if (yearNum === currentYear) {
         firstPlaceCountThisYear++;
@@ -2529,7 +2575,7 @@ app.get('/studio/:id', async (req, res) => {
     }
 
     // Hall of Fame logic: Premium award + '1st' place + National/Finals indicator
-    if ((placeStr === '1' || placeStr === '1st') && premiumDetails.isPremium) {
+    if (award.is_first_place && premiumDetails.isPremium) {
       const nameLower = (award.award_type || award.category || '').toLowerCase();
       const eventNameLower = (award.event_name || '').toLowerCase();
       if (nameLower.includes('national') || nameLower.includes('final') || nameLower.includes('grand') || nameLower.includes('title') || eventNameLower.includes('national') || eventNameLower.includes('final')) {

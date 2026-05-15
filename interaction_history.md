@@ -528,3 +528,14 @@ Advised the user to re-run the Revolution batch script to backfill the purged da
 2. Added robust authorization checks (`403 Forbidden`) to `app.get('/org/:slug')` and `app.get('/event/:id')` to completely block unauthorized access to deep event data.
 3. Rebuilt the public `views/index.ejs` to display static organization cards (event counts only, no links) and transformed the top studios grid into a sleek, numbered Top 100 Leaderboard.
 4. Added an "Admin View" badge to `index_admin.ejs`.
+
+## Interaction - 2026-05-15 (Leaderboard Tabs & AI Normalization Layer)
+**User:** Requested to restrict studio statistics (Past 5 Years/Events Attended) on the public profiles, fix accordion lazy-loading issues, add tabs to the homepage leaderboard ("This Year", "1st Places"), and track patentable platform ideas.
+**AI:**
+1. Restricted sensitive statistic cards in `views/studio.ejs` to authenticated users and added a "Users Only" badge.
+2. Updated `ui.js` event delegation to fix lazy-loading interaction bugs for dynamically loaded accordion items.
+3. Created `mark_first_places.js` as an offline normalization script to accurately tag competitive "1st place" finishes, excluding over 92,000 false positives (scholarships, invites, etc.).
+4. Overhauled the `index.ejs` public Top 100 Leaderboard into a 3-tab system: All-Time, This Year, and 1st Places This Year.
+5. Built a dedicated drill-down page (`/studio/:id/first-places`) for studios to verify their specific 1st place wins, linked directly from their profile card.
+6. Established `ideas.md` to track unique platform concepts (Digital Trophy Case, B2B Analytics Teaser) and added Rule #8 to `GEMINI.md` to automate this tracking.
+7. Drafted `studio_invite_draft.md` to incentivize studio owners to claim their accounts by offering them the ability to merge AI-split duplicate profiles and boost their leaderboard rankings.

@@ -117,9 +117,9 @@
         <% } %>
       </div>
       <% } %>
-      <% if (studio.prefs.show_events_attended || isOwnerOrAdmin) { %>
+      <% if (typeof user !== 'undefined' && user) { %>
       <div class="card glass-card" style="text-align: center; min-height: auto; padding: 1.5rem; position: relative;">
-        <% if (!studio.prefs.show_events_attended && isOwnerOrAdmin) { %><div style="position: absolute; top: 0.5rem; right: 0.5rem; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; background: rgba(239, 68, 68, 0.2); color: #f87171; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.3);" title="Hidden from Public">Hidden</div><% } %>
+        <div style="position: absolute; top: 0.5rem; right: 0.5rem; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; background: rgba(59, 130, 246, 0.2); color: #60a5fa; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(59, 130, 246, 0.3);" title="Visible to Registered Users">Users Only</div>
         <h4 style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase;">Events Attended</h4>
         <p style="font-size: 2.5rem; font-weight: 800; color: white; margin: 0.5rem 0 0;">
           <%= quickStats.totalEvents %>
@@ -128,13 +128,13 @@
       <% } %>
 
       <% if (studio.prefs.show_1st_place_finishes || isOwnerOrAdmin) { %>
-      <div class="card glass-card" style="text-align: center; min-height: auto; padding: 1.5rem; position: relative;">
+      <a href="/studio/<%= studio.id %>/first-places" class="card glass-card" style="text-align: center; min-height: auto; padding: 1.5rem; position: relative; text-decoration: none; display: block; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(251, 191, 36, 0.15)';" onmouseout="this.style.transform='none'; this.style.boxShadow='var(--card-shadow)';">
         <% if (!studio.prefs.show_1st_place_finishes && isOwnerOrAdmin) { %><div style="position: absolute; top: 0.5rem; right: 0.5rem; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; background: rgba(239, 68, 68, 0.2); color: #f87171; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.3);" title="Hidden from Public">Hidden</div><% } %>
-        <h4 style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase;">1st Place Finishes</h4>
+        <h4 style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase;">1st Place Finishes <span style="font-size: 0.8rem; vertical-align: middle;">&rarr;</span></h4>
         <p style="font-size: 2.5rem; font-weight: 800; color: #fbbf24; margin: 0.5rem 0 0;">
           <%= quickStats.firstPlaceCount %>
         </p>
-      </div>
+      </a>
       <% } %>
 
       <% if (quickStats.scholarshipCount > 0 || isOwnerOrAdmin) { %>
@@ -155,9 +155,9 @@
         </p>
       </div>
       <% } %>
-      <% if (studio.prefs.show_past_5_years || isOwnerOrAdmin) { %>
+      <% if (typeof user !== 'undefined' && user) { %>
       <div class="card glass-card" style="text-align: center; min-height: auto; padding: 1.5rem; position: relative;">
-        <% if (!studio.prefs.show_past_5_years && isOwnerOrAdmin) { %><div style="position: absolute; top: 0.5rem; right: 0.5rem; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; background: rgba(239, 68, 68, 0.2); color: #f87171; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.3);" title="Hidden from Public">Hidden</div><% } %>
+        <div style="position: absolute; top: 0.5rem; right: 0.5rem; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; background: rgba(59, 130, 246, 0.2); color: #60a5fa; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(59, 130, 246, 0.3);" title="Visible to Registered Users">Users Only</div>
         <h4 style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase;">Past 5 Years</h4>
         <p style="font-size: 1.25rem; font-weight: 700; color: white; margin: 0.5rem 0 0.25rem 0;">
           <%= quickStats.awardsPast5Years %> Awards
@@ -393,6 +393,15 @@
         // Re-initialize sortable tables for the new HTML if necessary
         if (typeof initSortableTables === 'function') {
           setTimeout(initSortableTables, 100);
+        }
+        
+        // Auto-expand the first accordion ONLY if there is exactly 1 event
+        const accordions = pane.querySelectorAll('.accordion');
+        if (accordions.length === 1) {
+          const firstAccordionHeader = accordions[0].querySelector('.accordion-header');
+          if (firstAccordionHeader && !firstAccordionHeader.classList.contains('active')) {
+            firstAccordionHeader.click();
+          }
         }
       } catch (err) {
         console.error('Failed to load year:', err);

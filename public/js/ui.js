@@ -15,20 +15,23 @@ document.addEventListener('DOMContentLoaded', () => {
       if (targetPane) {
         targetPane.classList.add('active');
         
-        // Auto-expand the first accordion of this newly visible tab if not already expanded
-        const firstAccordionHeader = targetPane.querySelector('.accordion-header');
-        if (firstAccordionHeader && !firstAccordionHeader.classList.contains('active')) {
-          firstAccordionHeader.click();
+        // Auto-expand the first accordion ONLY if there is exactly 1 event
+        const accordions = targetPane.querySelectorAll('.accordion');
+        if (accordions.length === 1) {
+          const firstAccordionHeader = accordions[0].querySelector('.accordion-header');
+          if (firstAccordionHeader && !firstAccordionHeader.classList.contains('active')) {
+            firstAccordionHeader.click();
+          }
         }
       }
     });
   });
 
-  // --- Accordion Logic ---
-  const accordionHeaders = document.querySelectorAll('.accordion-header');
-  accordionHeaders.forEach(header => {
-    header.addEventListener('click', function() {
-      this.classList.toggle('active');
-    });
+  // --- Accordion Logic (Event Delegation for Dynamic Content) ---
+  document.addEventListener('click', function(e) {
+    const header = e.target.closest('.accordion-header');
+    if (header) {
+      header.classList.toggle('active');
+    }
   });
 });

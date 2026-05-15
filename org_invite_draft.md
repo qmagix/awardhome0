@@ -17,6 +17,7 @@ If you can provide us with your historical or current competition results in *an
 1. **Digital Merchandising:** Your attendees will receive premium, shareable "Digital Trophies" for the awards they won at your events, keeping your brand visible long after the competition ends.
 2. **Increased Exposure:** Dancers and Studio Owners constantly check AwardHome. Having your events listed alongside other national competitions increases your visibility in the competitive dance community.
 3. **Time Saved:** You don't have to build expensive digital infrastructure or field questions from parents looking for old results. We host the interactive data for you.
+4. **Data Insights (Registered Accounts Only):** By establishing an organizer account, you unlock deep analytics about the studios that attend your events—including how many *other* events they attend annually, allowing you to identify loyal studios and understand market trends.
 
 We are incredibly impressed by the talent at [Competition Name] and want to make sure your dancers get the digital recognition they deserve. 
 
