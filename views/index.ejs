@@ -32,7 +32,16 @@
     <% }); %>
   </div>
 
-  <h2>🏆 Top 100 Studios Leaderboard</h2>
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+    <h2 style="margin: 0;">🏆 Global Leaderboards</h2>
+    <div class="view-toggle" style="display: flex; gap: 0.5rem; background: rgba(0,0,0,0.3); padding: 0.3rem; border-radius: 8px;">
+      <button id="btn-studios" class="btn btn-primary btn-sm" onclick="setLeaderboardView('studios')" style="border-radius: 6px;">Top Studios</button>
+      <button id="btn-dancers" class="btn btn-outline btn-sm" onclick="setLeaderboardView('dancers')" style="border-radius: 6px; border: none;">Top Dancers</button>
+    </div>
+  </div>
+  
+  <!-- STUDIOS LEADERBOARD -->
+  <div id="leaderboard-studios-wrapper">
   
   <div class="tabs-container" style="margin-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); overflow-x: auto;">
     <ul class="year-tabs">
@@ -131,7 +140,174 @@
       <% }); %>
     </div>
   </div>
+  </div>
+
+  <!-- DANCERS LEADERBOARD -->
+  <div id="leaderboard-dancers-wrapper" style="display: none;">
+    <div class="tabs-container" style="margin-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); overflow-x: auto;">
+      <ul class="year-tabs">
+        <li class="tab-item active" data-target="leaderboard-dancer-alltime">All-Time</li>
+        <li class="tab-item" data-target="leaderboard-dancer-thisyear">This Year</li>
+        <li class="tab-item" data-target="leaderboard-dancer-firstplaces-thisyear">1st Places This Year</li>
+      </ul>
+    </div>
+
+    <!-- Dancer All Time -->
+    <div class="tab-pane active" id="leaderboard-dancer-alltime">
+      <div class="card glass-card" style="padding: 0; overflow: hidden; margin-bottom: 4rem;">
+        <div style="display: flex; padding: 1rem 1.5rem; background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: bold; color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase;">
+          <div style="width: 60px; text-align: center;">Rank</div>
+          <div style="width: 50px;"></div>
+          <div style="flex-grow: 1;">Dancer Name</div>
+          <div style="width: 100px; text-align: right;">Total Awards</div>
+        </div>
+        
+        <% topDancers.forEach(function(d, idx) { 
+          let rankClass = "badge-common";
+          let rankStyle = "background: rgba(255,255,255,0.1); color: white;";
+          if (idx === 0) rankStyle = "background: rgba(251, 191, 36, 0.2); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.4); font-size: 1rem; font-weight: bold;";
+          else if (idx === 1) rankStyle = "background: rgba(156, 163, 175, 0.2); color: #e5e7eb; border: 1px solid rgba(156, 163, 175, 0.4); font-size: 0.95rem; font-weight: bold;";
+          else if (idx === 2) rankStyle = "background: rgba(180, 83, 9, 0.2); color: #d97706; border: 1px solid rgba(180, 83, 9, 0.4); font-size: 0.9rem; font-weight: bold;";
+        %>
+          <a href="/dancer/<%= d.unique_id %>" style="display: flex; padding: 1rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); text-decoration: none; color: inherit; align-items: center; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+            <div style="width: 60px; text-align: center;">
+              <span class="badge <%= rankClass %>" style="<%= rankStyle %> padding: 0.3rem 0.6rem; border-radius: 8px;"><%= idx + 1 %></span>
+            </div>
+            <div style="width: 50px; text-align: center;">
+              <% if (d.headshot_url) { %>
+                <img src="<%= d.headshot_url %>" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover;">
+              <% } else { %>
+                <div style="width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">💃</div>
+              <% } %>
+            </div>
+            <div style="flex-grow: 1; font-weight: 600; font-size: 1.1rem; color: <%= idx < 3 ? 'white' : 'var(--text-color)' %>; display: flex; align-items: center; gap: 0.5rem;">
+              <%= d.name %>
+              <% if (d.is_claimed) { %>
+                <svg viewBox="0 0 24 24" fill="#3b82f6" width="16" height="16" title="Verified Dancer"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+              <% } %>
+            </div>
+            <div style="width: 100px; text-align: right;">
+              <span class="badge" style="background: rgba(139, 92, 246, 0.1); color: #c084fc;"><%= d.total_awards %></span>
+            </div>
+          </a>
+        <% }); %>
+      </div>
+    </div>
+
+    <!-- Dancer This Year -->
+    <div class="tab-pane" id="leaderboard-dancer-thisyear">
+      <div class="card glass-card" style="padding: 0; overflow: hidden; margin-bottom: 4rem;">
+        <div style="display: flex; padding: 1rem 1.5rem; background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: bold; color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase;">
+          <div style="width: 60px; text-align: center;">Rank</div>
+          <div style="width: 50px;"></div>
+          <div style="flex-grow: 1;">Dancer Name</div>
+          <div style="width: 100px; text-align: right;">Awards</div>
+        </div>
+        
+        <% topDancersThisYear.forEach(function(d, idx) { 
+          let rankClass = "badge-common";
+          let rankStyle = "background: rgba(255,255,255,0.1); color: white;";
+          if (idx === 0) rankStyle = "background: rgba(251, 191, 36, 0.2); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.4); font-size: 1rem; font-weight: bold;";
+          else if (idx === 1) rankStyle = "background: rgba(156, 163, 175, 0.2); color: #e5e7eb; border: 1px solid rgba(156, 163, 175, 0.4); font-size: 0.95rem; font-weight: bold;";
+          else if (idx === 2) rankStyle = "background: rgba(180, 83, 9, 0.2); color: #d97706; border: 1px solid rgba(180, 83, 9, 0.4); font-size: 0.9rem; font-weight: bold;";
+        %>
+          <a href="/dancer/<%= d.unique_id %>" style="display: flex; padding: 1rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); text-decoration: none; color: inherit; align-items: center; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+            <div style="width: 60px; text-align: center;">
+              <span class="badge <%= rankClass %>" style="<%= rankStyle %> padding: 0.3rem 0.6rem; border-radius: 8px;"><%= idx + 1 %></span>
+            </div>
+            <div style="width: 50px; text-align: center;">
+              <% if (d.headshot_url) { %>
+                <img src="<%= d.headshot_url %>" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover;">
+              <% } else { %>
+                <div style="width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">💃</div>
+              <% } %>
+            </div>
+            <div style="flex-grow: 1; font-weight: 600; font-size: 1.1rem; color: <%= idx < 3 ? 'white' : 'var(--text-color)' %>; display: flex; align-items: center; gap: 0.5rem;">
+              <%= d.name %>
+              <% if (d.is_claimed) { %>
+                <svg viewBox="0 0 24 24" fill="#3b82f6" width="16" height="16" title="Verified Dancer"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+              <% } %>
+            </div>
+            <div style="width: 100px; text-align: right;">
+              <span class="badge" style="background: rgba(139, 92, 246, 0.1); color: #c084fc;"><%= d.total_awards %></span>
+            </div>
+          </a>
+        <% }); %>
+      </div>
+    </div>
+
+    <!-- Dancer 1st Places -->
+    <div class="tab-pane" id="leaderboard-dancer-firstplaces-thisyear">
+      <div class="card glass-card" style="padding: 0; overflow: hidden; margin-bottom: 4rem;">
+        <div style="display: flex; padding: 1rem 1.5rem; background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: bold; color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase;">
+          <div style="width: 60px; text-align: center;">Rank</div>
+          <div style="width: 50px;"></div>
+          <div style="flex-grow: 1;">Dancer Name</div>
+          <div style="width: 100px; text-align: right;">1st Places</div>
+        </div>
+        
+        <% topDancersFirstPlaceThisYear.forEach(function(d, idx) { 
+          let rankClass = "badge-common";
+          let rankStyle = "background: rgba(255,255,255,0.1); color: white;";
+          if (idx === 0) rankStyle = "background: rgba(251, 191, 36, 0.2); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.4); font-size: 1rem; font-weight: bold;";
+          else if (idx === 1) rankStyle = "background: rgba(156, 163, 175, 0.2); color: #e5e7eb; border: 1px solid rgba(156, 163, 175, 0.4); font-size: 0.95rem; font-weight: bold;";
+          else if (idx === 2) rankStyle = "background: rgba(180, 83, 9, 0.2); color: #d97706; border: 1px solid rgba(180, 83, 9, 0.4); font-size: 0.9rem; font-weight: bold;";
+        %>
+          <a href="/dancer/<%= d.unique_id %>" style="display: flex; padding: 1rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); text-decoration: none; color: inherit; align-items: center; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+            <div style="width: 60px; text-align: center;">
+              <span class="badge <%= rankClass %>" style="<%= rankStyle %> padding: 0.3rem 0.6rem; border-radius: 8px;"><%= idx + 1 %></span>
+            </div>
+            <div style="width: 50px; text-align: center;">
+              <% if (d.headshot_url) { %>
+                <img src="<%= d.headshot_url %>" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover;">
+              <% } else { %>
+                <div style="width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">💃</div>
+              <% } %>
+            </div>
+            <div style="flex-grow: 1; font-weight: 600; font-size: 1.1rem; color: <%= idx < 3 ? 'white' : 'var(--text-color)' %>; display: flex; align-items: center; gap: 0.5rem;">
+              <%= d.name %>
+              <% if (d.is_claimed) { %>
+                <svg viewBox="0 0 24 24" fill="#3b82f6" width="16" height="16" title="Verified Dancer"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+              <% } %>
+            </div>
+            <div style="width: 100px; text-align: right;">
+              <span class="badge" style="background: rgba(16, 185, 129, 0.1); color: #10b981;"><%= d.total_awards %></span>
+            </div>
+          </a>
+        <% }); %>
+      </div>
+    </div>
+  </div>
 </div>
+
+<script>
+function setLeaderboardView(viewMode) {
+  const btnStudios = document.getElementById('btn-studios');
+  const btnDancers = document.getElementById('btn-dancers');
+  const wrapStudios = document.getElementById('leaderboard-studios-wrapper');
+  const wrapDancers = document.getElementById('leaderboard-dancers-wrapper');
+
+  if (viewMode === 'studios') {
+    wrapStudios.style.display = 'block';
+    wrapDancers.style.display = 'none';
+    btnStudios.classList.add('btn-primary');
+    btnStudios.classList.remove('btn-outline');
+    btnStudios.style.border = 'none';
+    btnDancers.classList.add('btn-outline');
+    btnDancers.classList.remove('btn-primary');
+    btnDancers.style.border = 'none';
+  } else {
+    wrapStudios.style.display = 'none';
+    wrapDancers.style.display = 'block';
+    btnDancers.classList.add('btn-primary');
+    btnDancers.classList.remove('btn-outline');
+    btnDancers.style.border = 'none';
+    btnStudios.classList.add('btn-outline');
+    btnStudios.classList.remove('btn-primary');
+    btnStudios.style.border = 'none';
+  }
+}
+</script>
 
 
 

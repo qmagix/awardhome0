@@ -5,9 +5,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   tabs.forEach(tab => {
     tab.addEventListener('click', () => {
-      // Deactivate all
-      tabs.forEach(t => t.classList.remove('active'));
-      panes.forEach(p => p.classList.remove('active'));
+      // Find closest container that wraps both tabs and panes, default to document if none found
+      const container = tab.closest('#leaderboard-studios-wrapper') || tab.closest('#leaderboard-dancers-wrapper') || document;
+      
+      // Deactivate all within container
+      container.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+      container.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
 
       // Activate clicked
       tab.classList.add('active');

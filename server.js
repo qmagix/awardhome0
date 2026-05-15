@@ -1621,12 +1621,12 @@ app.post('/manage/dancer/:id/update', requireAuth, async (req, res) => {
     return res.status(403).send('Forbidden');
   }
 
-  const { name, birthday, headshot_url, graduation_year } = req.body;
+  const { name, birthday, headshot_url, graduation_year, instagram_handle, tiktok_handle } = req.body;
   await db.run(`
     UPDATE dancers 
-    SET name = ?, birthday = ?, headshot_url = ?, graduation_year = ? 
+    SET name = ?, birthday = ?, headshot_url = ?, graduation_year = ?, instagram_handle = ?, tiktok_handle = ?
     WHERE id = ?
-  `, [name, birthday || null, headshot_url || null, graduation_year || null, req.params.id]);
+  `, [name, birthday || null, headshot_url || null, graduation_year || null, instagram_handle || null, tiktok_handle || null, req.params.id]);
   
   res.redirect(`/manage/dancer/${req.params.id}`);
 });
@@ -1818,6 +1818,39 @@ app.get('/', async (req, res) => {
     LIMIT 100
   `);
 
+  const topDancers = await db.all(`
+    SELECT d.id, d.unique_id, d.name, d.is_claimed, COUNT(ad.id) as total_awards
+    FROM dancers d
+    JOIN award_dancers ad ON d.id = ad.dancer_id
+    GROUP BY d.id
+    ORDER BY total_awards DESC
+    LIMIT 500
+  `);
+
+  const topDancersThisYear = await db.all(`
+    SELECT d.id, d.unique_id, d.name, d.is_claimed, COUNT(ad.id) as total_awards
+    FROM dancers d
+    JOIN award_dancers ad ON d.id = ad.dancer_id
+    JOIN awards a ON ad.award_id = a.id
+    JOIN events e ON a.event_id = e.id
+    WHERE e.year = (SELECT MAX(year) FROM events)
+    GROUP BY d.id
+    ORDER BY total_awards DESC
+    LIMIT 500
+  `);
+
+  const topDancersFirstPlaceThisYear = await db.all(`
+    SELECT d.id, d.unique_id, d.name, d.is_claimed, COUNT(ad.id) as total_awards
+    FROM dancers d
+    JOIN award_dancers ad ON d.id = ad.dancer_id
+    JOIN awards a ON ad.award_id = a.id
+    JOIN events e ON a.event_id = e.id
+    WHERE a.is_first_place = 1 AND e.year = (SELECT MAX(year) FROM events)
+    GROUP BY d.id
+    ORDER BY total_awards DESC
+    LIMIT 500
+  `);
+
   const orgs = await db.all(`
     SELECT o.id, o.name, o.slug, COUNT(e.id) as event_count
     FROM organizations o
@@ -1829,9 +1862,9 @@ app.get('/', async (req, res) => {
   const isAdmin = req.session && req.session.user && (req.session.user.role === 'admin' || req.session.user.role === 'superadmin');
   
   if (isAdmin) {
-    res.render('index_admin', { featuredStudios, topStudios: topStudios.slice(0, 12), orgs });
+    res.render('index_admin', { featuredStudios, topStudios, topStudiosThisYear, topStudiosFirstPlaceThisYear, topDancers, topDancersThisYear, topDancersFirstPlaceThisYear, orgs });
   } else {
-    res.render('index', { featuredStudios, topStudios, topStudiosThisYear, topStudiosFirstPlaceThisYear, orgs });
+    res.render('index', { featuredStudios, topStudios, topStudiosThisYear, topStudiosFirstPlaceThisYear, topDancers, topDancersThisYear, topDancersFirstPlaceThisYear, orgs });
   }
 });
 
@@ -1862,7 +1895,7 @@ app.get('/org/:slug', async (req, res) => {
     events
   }));
 
-  res.render('org', { org, groupedData, eventsCount: events.length });
+  res.render('org', { org, groupedData, eventsCount: events.length, user: req.session.user });
 });
 
 app.get('/studios', async (req, res) => {
@@ -2447,6 +2480,69 @@ app.post('/api/merge/dancers', express.json(), async (req, res) => {
     res.json({ success: true });
   } catch (e) {
     res.status(500).json({ error: e.message });
+  }
+});
+
+// GET organization categories dashboard (Superadmin only)
+app.get('/admin/org/:slug/categories', async (req, res) => {
+  if (!req.session || !req.session.user || req.session.user.role !== 'superadmin') {
+    return res.status(403).send('Forbidden');
+  }
+
+  const db = await openDb();
+  const org = await db.get('SELECT * FROM organizations WHERE slug = ?', [req.params.slug]);
+  if (!org) return res.status(404).send('Organization not found');
+
+  const sortBy = req.query.sort === 'award_type' ? 'a.award_type ASC, a.place ASC' : 'a.place ASC, a.category ASC';
+
+  const categories = await db.all(`
+    SELECT 
+      a.category, 
+      a.award_type, 
+      a.place, 
+      MAX(a.is_first_place) as is_first_place, 
+      COUNT(*) as award_count
+    FROM awards a
+    JOIN events e ON a.event_id = e.id
+    WHERE e.org_id = ?
+    GROUP BY a.category, a.award_type, a.place
+    ORDER BY ${sortBy}
+  `, [org.id]);
+
+  res.render('admin_org_categories', {
+    org,
+    categories,
+    user: req.session.user,
+    currentSort: req.query.sort || 'place'
+  });
+});
+
+// POST toggle first place status via AJAX
+app.post('/api/admin/org/:orgId/categories/toggle', express.json(), async (req, res) => {
+  if (!req.session || !req.session.user || req.session.user.role !== 'superadmin') {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+
+  const { orgId } = req.params;
+  const { category, award_type, place, is_first_place } = req.body;
+  const newStatus = is_first_place ? 1 : 0;
+
+  const db = await openDb();
+  
+  try {
+    const result = await db.run(`
+      UPDATE awards 
+      SET is_first_place = ? 
+      WHERE event_id IN (SELECT id FROM events WHERE org_id = ?) 
+        AND category IS ? 
+        AND award_type IS ? 
+        AND place IS ?
+    `, [newStatus, orgId, category || null, award_type || null, place || null]);
+
+    res.json({ success: true, changes: result.changes });
+  } catch (err) {
+    console.error('Error toggling is_first_place:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

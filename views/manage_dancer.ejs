@@ -76,6 +76,14 @@
             <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Graduation Year</label>
             <input type="number" name="graduation_year" value="<%= dancer.graduation_year || '' %>" placeholder="e.g. 2026" min="1950" max="2100" style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
           </div>
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Instagram Handle</label>
+            <input type="text" name="instagram_handle" value="<%= dancer.instagram_handle || '' %>" placeholder="e.g. @dancer.jane" style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">TikTok Handle</label>
+            <input type="text" name="tiktok_handle" value="<%= dancer.tiktok_handle || '' %>" placeholder="e.g. @jane.dances" style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+          </div>
           <button type="submit" class="btn btn-primary" style="align-self: flex-start;">Save Changes</button>
         </form>
       </div>

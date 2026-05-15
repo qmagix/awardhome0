@@ -90,7 +90,9 @@ async function initDb() {
       name TEXT NOT NULL,
       birthday TEXT,
       change_log TEXT,
-      needs_investigation BOOLEAN DEFAULT 0
+      needs_investigation BOOLEAN DEFAULT 0,
+      instagram_handle TEXT,
+      tiktok_handle TEXT
     );
     CREATE TABLE IF NOT EXISTS dancer_studios (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -183,6 +185,8 @@ async function initDb() {
   try { await db.exec("ALTER TABLE dancers ADD COLUMN claimed_by_user_id INTEGER REFERENCES users(id)"); } catch(e) {}
   try { await db.exec("ALTER TABLE dancers ADD COLUMN headshot_url TEXT"); } catch(e) {}
   try { await db.exec("ALTER TABLE dancers ADD COLUMN graduation_year INTEGER"); } catch(e) {}
+  try { await db.exec("ALTER TABLE dancers ADD COLUMN instagram_handle TEXT"); } catch(e) {}
+  try { await db.exec("ALTER TABLE dancers ADD COLUMN tiktok_handle TEXT"); } catch(e) {}
   
   try { await db.exec("ALTER TABLE organizations ADD COLUMN owner_id INTEGER REFERENCES users(id)"); } catch(e) {}
   try { await db.exec("ALTER TABLE organizations ADD COLUMN logo_url TEXT"); } catch(e) {}

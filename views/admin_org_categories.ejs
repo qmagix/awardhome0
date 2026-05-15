@@ -1,0 +1,143 @@
+<%- include('partials/header') %>
+
+<div class="container" style="max-width: 1200px; margin-top: 2rem;">
+  <div style="margin-bottom: 2rem;">
+    <a href="/admin/orgs" style="color: var(--primary); text-decoration: none; display: flex; align-items: center; gap: 0.5rem; font-weight: 600; margin-bottom: 1rem;">
+      &larr; Back to Organizations
+    </a>
+    <h1 style="margin: 0;">Category Normalization: <%= org.name %></h1>
+    <p style="color: var(--text-muted); margin-top: 0.5rem;">
+      Review all unique placement combinations awarded across all events for this organization. Toggle the checkbox to include or exclude a combination from the competitive "1st Place" count on the leaderboards. Changes are saved instantly.
+    </p>
+  </div>
+
+  <div class="card glass-card" style="padding: 0; overflow: hidden; margin-bottom: 4rem;">
+    <div style="display: flex; padding: 1rem 1.5rem; background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: bold; color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase;">
+      <div style="width: 80px; text-align: center;">True 1st?</div>
+      <div style="width: 150px;">
+        <a href="?sort=place" style="color: inherit; text-decoration: none; display: flex; align-items: center; gap: 0.2rem;">
+          Place <%= currentSort === 'place' ? '↓' : '' %>
+        </a>
+      </div>
+      <div style="width: 250px;">
+        <a href="?sort=award_type" style="color: inherit; text-decoration: none; display: flex; align-items: center; gap: 0.2rem;">
+          Award Type <%= currentSort === 'award_type' ? '↓' : '' %>
+        </a>
+      </div>
+      <div style="flex-grow: 1;">Category</div>
+      <div style="width: 100px; text-align: right;">Occurrences</div>
+    </div>
+    
+    <div style="max-height: 70vh; overflow-y: auto;" class="custom-scrollbar">
+      <% categories.forEach(function(c, idx) { %>
+        <div style="display: flex; padding: 1rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); align-items: center; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+          
+          <div style="width: 80px; text-align: center;">
+            <input type="checkbox" class="is-first-place-toggle" 
+                   data-category="<%= c.category || '' %>" 
+                   data-award-type="<%= c.award_type || '' %>" 
+                   data-place="<%= c.place || '' %>" 
+                   <%= c.is_first_place ? 'checked' : '' %>
+                   style="width: 20px; height: 20px; cursor: pointer;">
+          </div>
+          
+          <div style="width: 150px; font-weight: 600; color: <%= c.is_first_place ? '#fbbf24' : 'var(--text-color)' %>;">
+            <span class="badge" style="<%= c.is_first_place ? 'background: rgba(251, 191, 36, 0.2); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3);' : '' %>">
+              <%= c.place || '-' %>
+            </span>
+          </div>
+          
+          <div style="width: 250px; color: var(--text-muted); font-size: 0.95rem;">
+            <%= c.award_type || '-' %>
+          </div>
+          
+          <div style="flex-grow: 1; font-size: 0.9rem; color: var(--text-color);">
+            <%= c.category || '-' %>
+          </div>
+          
+          <div style="width: 100px; text-align: right; color: var(--text-muted);">
+            <%= c.award_count %>
+          </div>
+          
+        </div>
+      <% }); %>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const orgId = '<%= org.id %>';
+  const toggles = document.querySelectorAll('.is-first-place-toggle');
+
+  toggles.forEach(toggle => {
+    toggle.addEventListener('change', async (e) => {
+      const isChecked = e.target.checked;
+      const category = e.target.getAttribute('data-category');
+      const awardType = e.target.getAttribute('data-award-type');
+      const place = e.target.getAttribute('data-place');
+      
+      // Visual feedback row highlighting
+      const placeContainer = e.target.closest('div').nextElementSibling;
+      const badge = placeContainer.querySelector('.badge');
+      if (isChecked) {
+        placeContainer.style.color = '#fbbf24';
+        badge.style.background = 'rgba(251, 191, 36, 0.2)';
+        badge.style.color = '#fbbf24';
+        badge.style.border = '1px solid rgba(251, 191, 36, 0.3)';
+      } else {
+        placeContainer.style.color = 'var(--text-color)';
+        badge.style.background = 'rgba(255,255,255,0.1)';
+        badge.style.color = 'white';
+        badge.style.border = 'none';
+      }
+
+      try {
+        const response = await fetch(`/api/admin/org/${orgId}/categories/toggle`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            category: category === '' ? null : category,
+            award_type: awardType === '' ? null : awardType,
+            place: place === '' ? null : place,
+            is_first_place: isChecked
+          })
+        });
+
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.error || 'Failed to update');
+        }
+        
+        // Show brief success toast/log
+        console.log(`Updated ${result.changes} awards.`);
+      } catch (err) {
+        console.error('Error toggling status:', err);
+        alert('Failed to update first place status. See console for details.');
+        // Revert UI if failed
+        e.target.checked = !isChecked;
+      }
+    });
+  });
+});
+</script>
+
+<style>
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0,0,0,0.1); 
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.2); 
+  border-radius: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.3); 
+}
+</style>
+
+<%- include('partials/footer') %>

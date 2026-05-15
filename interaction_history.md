@@ -539,3 +539,12 @@ Advised the user to re-run the Revolution batch script to backfill the purged da
 5. Built a dedicated drill-down page (`/studio/:id/first-places`) for studios to verify their specific 1st place wins, linked directly from their profile card.
 6. Established `ideas.md` to track unique platform concepts (Digital Trophy Case, B2B Analytics Teaser) and added Rule #8 to `GEMINI.md` to automate this tracking.
 7. Drafted `studio_invite_draft.md` to incentivize studio owners to claim their accounts by offering them the ability to merge AI-split duplicate profiles and boost their leaderboard rankings.
+
+## Interaction - 2026-05-15 (Dancer Digital Trophy Case & Top 500 Leaderboard)
+**User:** Requested to focus on building the "Dancer Digital Trophy Case" first, specifically integrating social media handles, adding a Verified badge, and scaling the leaderboard to show the Top 500 dancers.
+**AI:**
+1. Completed Database Schema Updates: Added `instagram_handle` and `tiktok_handle` to the `dancers` table via `database.js` migrations.
+2. Updated the Manage Dancer Dashboard (`/manage/dancer/:id`) to allow dancers to safely input and save their social media links.
+3. Refined the Public Dancer Profile (`views/dancer.ejs`) to display a blue Verified Checkmark (if `is_claimed` is true), render dynamic Instagram and TikTok links, display a profile headshot (if available), and added a one-click "Share Profile" button leveraging the Web Share API.
+4. Scaled the Global Leaderboard on the Homepage (`/`): Built complex SQL queries to calculate the Top 500 Dancers (All-Time, This Year, and 1st Places This Year) and implemented a master toggle switch in `views/index.ejs` and `views/index_admin.ejs` to seamlessly switch between the Top 100 Studios and the new Top 500 Dancers Leaderboards.
+

@@ -17,6 +17,7 @@ This file contains the core architecture, rules, and workflows for the **Dance A
 6. Always create/update a user manual file for the app, in a `user_manual.md` file.
 7. Always create and maintain a to-do list, use `TODOS_and_DONE.md` file at the root.
 8. Always document novel, patentable, or unique product ideas, features, and workflows in an `ideas.md` file as we brainstorm and implement them.
+9. **Auto-Commit & Summary:** Automatically update `interaction_history.md` and perform a `git commit` after completing any logical feature or fixing a bug, but ONLY after ensuring the code is verified and has no runtime errors. You do not need to wait for the user to ask for a commit.
 
 ## Project-Specific Rules
 1. **Documentation Parity:** Any time a new user-facing workflow, UI tool, or architectural edge case is introduced, the AI MUST proactively update the `/faq/admin` or `/faq/dancer` EJS pages (located in `views/`) to explain how it works.
