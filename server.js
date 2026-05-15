@@ -1822,6 +1822,7 @@ app.get('/', async (req, res) => {
     SELECT d.id, d.unique_id, d.name, d.is_claimed, COUNT(ad.id) as total_awards
     FROM dancers d
     JOIN award_dancers ad ON d.id = ad.dancer_id
+    JOIN awards a ON ad.award_id = a.id
     GROUP BY d.id
     ORDER BY total_awards DESC
     LIMIT 500

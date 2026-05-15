@@ -548,3 +548,8 @@ Advised the user to re-run the Revolution batch script to backfill the purged da
 3. Refined the Public Dancer Profile (`views/dancer.ejs`) to display a blue Verified Checkmark (if `is_claimed` is true), render dynamic Instagram and TikTok links, display a profile headshot (if available), and added a one-click "Share Profile" button leveraging the Web Share API.
 4. Scaled the Global Leaderboard on the Homepage (`/`): Built complex SQL queries to calculate the Top 500 Dancers (All-Time, This Year, and 1st Places This Year) and implemented a master toggle switch in `views/index.ejs` and `views/index_admin.ejs` to seamlessly switch between the Top 100 Studios and the new Top 500 Dancers Leaderboards.
 
+
+## Interaction - 2026-05-15 (Fix Leaderboard Discrepancy)
+**User:** Reported a number discrepancy where the dancer profile showed 41 awards but the leaderboard showed 72 for Kasey Blackmon.
+**AI:** Investigated and discovered that a previous mass database deduplication of 53,000+ duplicate awards had left orphaned records in the `award_dancers` table. Because SQLite does not enforce foreign keys by default without `PRAGMA foreign_keys = ON` and lacked an `ON DELETE CASCADE` directive, deleting an award did not automatically delete its associated dancer mappings. I executed a SQLite deletion to cleanly purge all 35,226 orphaned `award_dancers` records database-wide. I also updated the All-Time Top Dancers SQL query in `server.js` to explicitly `JOIN awards a` to definitively protect the leaderboard from ever counting orphaned mappings again.
+
