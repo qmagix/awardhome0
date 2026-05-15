@@ -553,3 +553,8 @@ Advised the user to re-run the Revolution batch script to backfill the purged da
 **User:** Reported a number discrepancy where the dancer profile showed 41 awards but the leaderboard showed 72 for Kasey Blackmon.
 **AI:** Investigated and discovered that a previous mass database deduplication of 53,000+ duplicate awards had left orphaned records in the `award_dancers` table. Because SQLite does not enforce foreign keys by default without `PRAGMA foreign_keys = ON` and lacked an `ON DELETE CASCADE` directive, deleting an award did not automatically delete its associated dancer mappings. I executed a SQLite deletion to cleanly purge all 35,226 orphaned `award_dancers` records database-wide. I also updated the All-Time Top Dancers SQL query in `server.js` to explicitly `JOIN awards a` to definitively protect the leaderboard from ever counting orphaned mappings again.
 
+
+## Interaction - 2026-05-15 (YAGP Data Cleanup)
+**User:** Requested to remove the "Not Awarded" phantom dancer, which was a scraping artifact from YAGP events, and asked to ensure no other scraping errors existed.
+**AI:** Queried the database and confirmed the "Not Awarded" artifact was exclusively from YAGP events where top prizes (like Grand Prix) were withheld. I executed a SQLite transaction to securely delete the phantom dancer, purge its 162 `award_dancers` mappings, and remove the empty `awards` rows. I also searched the database for other common artifacts (TBD, None, N/A, Unknown) and confirmed the data is pristine. Finally, I patched `scrape_yagp_year.js` to explicitly ignore any rows where the dancer name is "NOT AWARDED" to permanently prevent this artifact on future scrapes.
+

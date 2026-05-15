@@ -171,8 +171,10 @@ async function scrapeYagp(url, dryRun = true) {
            dancerName = mainCol;
         }
 
-        // Only add if we actually extracted something meaningful
-        if (dancerName || perfName || finalStudio) {
+        // Only add if we actually extracted something meaningful and it's not a 'Not Awarded' placeholder
+        const isNotAwarded = typeof dancerName === 'string' && dancerName.toUpperCase() === 'NOT AWARDED';
+        
+        if (!isNotAwarded && (dancerName || perfName || finalStudio)) {
           const award = {
             place: place,
             age_division: currentAgeDivision,
