@@ -5,20 +5,19 @@
 </section>
 <div class="container">
   <h2>Competitions & Organizations</h2>
-  <div class="grid" style="margin-bottom: 3rem;">
+  <div class="grid" style="margin-bottom: 4rem;">
     <% orgs.forEach(function(org) { %>
-      <a href="/org/<%= org.slug %>" class="card glass-card hover-zoom" style="border-color: rgba(236, 72, 153, 0.3);">
+      <div class="card glass-card" style="border-color: rgba(236, 72, 153, 0.3);">
         <h3><%= org.name %></h3>
-        <div style="margin-bottom: 1.5rem; color: var(--text-muted); font-size: 0.9rem;">
+        <div style="margin-bottom: 0; color: var(--text-muted); font-size: 0.9rem;">
           <span class="badge" style="background: rgba(255, 255, 255, 0.1);"><%= org.event_count || 0 %> Events</span> <span style="font-size: 0.8rem;">(Since 2022)</span>
         </div>
-        <span class="btn btn-warning">View Events &rarr;</span>
-      </a>
+      </div>
     <% }); %>
   </div>
 
   <h2>Featured Studios</h2>
-  <div class="grid">
+  <div class="grid" style="margin-bottom: 4rem;">
     <% featuredStudios.forEach(function(s) { %>
       <a href="/studio/<%= s.id %>" class="card glass-card hover-zoom" style="border-color: rgba(16, 185, 129, 0.4); box-shadow: 0 0 15px rgba(16, 185, 129, 0.1);">
         <h3 style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">
@@ -31,14 +30,33 @@
         <span class="btn" style="width: 100%; text-align: center;">View Awards &rarr;</span>
       </a>
     <% }); %>
+  </div>
 
-    <% topStudios.forEach(function(s) { %>
-      <a href="/studio/<%= s.id %>" class="card glass-card hover-zoom">
-        <h3><%= s.name %></h3>
-        <div style="margin-bottom: 1.5rem;">
-          <span class="badge"><%= s.total_awards %> Awards</span>
+  <h2>🏆 Top 100 Studios Leaderboard</h2>
+  <div class="card glass-card" style="padding: 0; overflow: hidden; margin-bottom: 4rem;">
+    <div style="display: flex; padding: 1rem 1.5rem; background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: bold; color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase;">
+      <div style="width: 60px; text-align: center;">Rank</div>
+      <div style="flex-grow: 1;">Studio Name</div>
+      <div style="width: 100px; text-align: right;">Total Awards</div>
+    </div>
+    
+    <% topStudios.forEach(function(s, idx) { 
+      let rankClass = "badge-common";
+      let rankStyle = "background: rgba(255,255,255,0.1); color: white;";
+      if (idx === 0) rankStyle = "background: rgba(251, 191, 36, 0.2); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.4); font-size: 1rem; font-weight: bold;";
+      else if (idx === 1) rankStyle = "background: rgba(156, 163, 175, 0.2); color: #e5e7eb; border: 1px solid rgba(156, 163, 175, 0.4); font-size: 0.95rem; font-weight: bold;";
+      else if (idx === 2) rankStyle = "background: rgba(180, 83, 9, 0.2); color: #d97706; border: 1px solid rgba(180, 83, 9, 0.4); font-size: 0.9rem; font-weight: bold;";
+    %>
+      <a href="/studio/<%= s.id %>" style="display: flex; padding: 1rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); text-decoration: none; color: inherit; align-items: center; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+        <div style="width: 60px; text-align: center;">
+          <span class="badge <%= rankClass %>" style="<%= rankStyle %> padding: 0.3rem 0.6rem; border-radius: 8px;"><%= idx + 1 %></span>
         </div>
-        <span class="btn" style="width: 100%; text-align: center;">View Awards &rarr;</span>
+        <div style="flex-grow: 1; font-weight: 600; font-size: 1.1rem; color: <%= idx < 3 ? 'white' : 'var(--text-color)' %>;">
+          <%= s.name %>
+        </div>
+        <div style="width: 100px; text-align: right;">
+          <span class="badge" style="background: rgba(236, 72, 153, 0.1); color: #f472b6;"><%= s.total_awards %></span>
+        </div>
       </a>
     <% }); %>
   </div>

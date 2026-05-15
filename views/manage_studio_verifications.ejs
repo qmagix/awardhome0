@@ -55,13 +55,18 @@
       </div>
     <% } else { %>
       <div class="card glass-card" style="padding: 0; margin-bottom: 2rem;">
-        <div style="padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+        <div style="padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
           <h3 style="margin: 0;">Pending Award Claims</h3>
+          <div style="display: flex; gap: 0.5rem;">
+            <button onclick="submitBulkAction('award', 'approve')" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 0.4rem 0.75rem; border-radius: 4px; cursor: pointer; font-weight: 600;">Approve Selected</button>
+            <button onclick="submitBulkAction('award', 'deny')" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.4rem 0.75rem; border-radius: 4px; cursor: pointer; font-weight: 600;">Deny Selected</button>
+          </div>
         </div>
         <div style="overflow-x: auto;">
           <table class="table" style="margin: 0;">
             <thead>
               <tr>
+                <th style="width: 40px;"><input type="checkbox" onclick="toggleAll('award-checkbox', this)"></th>
                 <th>Dancer</th>
                 <th>Event</th>
                 <th>Performance</th>
@@ -71,6 +76,7 @@
             <tbody>
               <% pendingAwards.forEach(function(req) { %>
                 <tr>
+                  <td><input type="checkbox" class="award-checkbox" value="<%= req.link_id %>" style="transform: scale(1.2);"></td>
                   <td>
                     <strong><%= req.dancer_name %></strong>
                     <% if (req.unique_id) { %>
@@ -107,14 +113,21 @@
 
     <% if (pendingRoster && pendingRoster.length > 0) { %>
       <div class="card glass-card" style="padding: 0; margin-bottom: 2rem;">
-        <div style="padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
-          <h3 style="margin: 0;">Pending Roster Requests</h3>
-          <p style="margin: 0.2rem 0 0 0; font-size: 0.85rem; color: var(--text-muted);">These dancers requested to join your studio using your Studio Unique ID.</p>
+        <div style="padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <h3 style="margin: 0;">Pending Roster Requests</h3>
+            <p style="margin: 0.2rem 0 0 0; font-size: 0.85rem; color: var(--text-muted);">These dancers requested to join your studio using your Studio Unique ID.</p>
+          </div>
+          <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+            <button onclick="submitBulkAction('roster', 'approve')" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 0.4rem 0.75rem; border-radius: 4px; cursor: pointer; font-weight: 600;">Approve Selected</button>
+            <button onclick="submitBulkAction('roster', 'deny')" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.4rem 0.75rem; border-radius: 4px; cursor: pointer; font-weight: 600;">Deny Selected</button>
+          </div>
         </div>
         <div style="overflow-x: auto;">
           <table class="table" style="margin: 0;">
             <thead>
               <tr>
+                <th style="width: 40px;"><input type="checkbox" onclick="toggleAll('roster-checkbox', this)"></th>
                 <th>Dancer</th>
                 <th>Requested On</th>
                 <th>Action</th>
@@ -123,6 +136,7 @@
             <tbody>
               <% pendingRoster.forEach(function(req) { %>
                 <tr>
+                  <td><input type="checkbox" class="roster-checkbox" value="<%= req.link_id %>" style="transform: scale(1.2);"></td>
                   <td>
                     <strong><%= req.dancer_name %></strong>
                     <br><small style="color: var(--text-muted);">ID: <%= req.unique_id %></small>
@@ -149,5 +163,44 @@
     <% } %>
   </div>
 </div>
+
+<script>
+  function toggleAll(className, source) {
+    const isChecked = source.checked;
+    const checkboxes = document.querySelectorAll('.' + className);
+    checkboxes.forEach(cb => cb.checked = isChecked);
+  }
+
+  async function submitBulkAction(type, action) {
+    const checkboxes = document.querySelectorAll('.' + type + '-checkbox:checked');
+    const linkIds = Array.from(checkboxes).map(cb => cb.value);
+    
+    if (linkIds.length === 0) {
+      return alert('Please select at least one request.');
+    }
+    
+    if (!confirm(`Are you sure you want to ${action} ${linkIds.length} requests?`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/studios/<%= studio.id %>/verifications/bulk`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, action, linkIds })
+      });
+      
+      if (res.ok) {
+        window.location.reload();
+      } else {
+        const err = await res.json();
+        alert('Bulk action failed: ' + (err.error || 'Unknown error'));
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Network error during bulk action.');
+    }
+  }
+</script>
 
 <%- include('partials/footer') %>

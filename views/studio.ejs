@@ -5,6 +5,7 @@
 .badge-pending { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.2); }
 .badge-verified { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.2); }
 .badge-common { padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; display: inline-block; margin-right: 4px; margin-bottom: 4px; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 </style>
   <div class="container">
     <% if (mergedIntoStudio) { %>
@@ -208,7 +209,7 @@
           <div class="tabs-container">
             <ul class="year-tabs" id="yearTabs">
               <% groupedData.forEach(function(yearGroup, index) { %>
-                <li class="tab-item <%= index === 0 ? 'active' : '' %>" data-target="year-<%= yearGroup.year %>">
+                <li class="tab-item <%= index === 0 ? 'active' : '' %>" data-target="year-<%= yearGroup.year %>" data-loaded="<%= yearGroup.isLoaded %>" onclick="loadYear('<%= studio.id %>', '<%= yearGroup.year %>', this)">
                   <%= yearGroup.year %>
                 </li>
                 <% }); %>
@@ -220,84 +221,14 @@
             <% groupedData.forEach(function(yearGroup, index) { %>
               <div class="tab-pane <%= index === 0 ? 'active' : '' %>" id="year-<%= yearGroup.year %>">
 
-                <% yearGroup.events.forEach(function(event, eIndex) { %>
-                  <div class="accordion glass-card" style="margin-bottom: 1rem; padding: 0; overflow: hidden;">
-                    <div class="accordion-header"
-                      style="padding: 1.5rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02);">
-                      <h3 style="margin: 0; color: var(--text-color); font-size: 1.2rem;">🏆 <%= event.title %>
-                      </h3>
-                      <div style="display: flex; align-items: center; gap: 1rem;">
-                        <span class="badge" style="background: rgba(236, 72, 153, 0.2); color: #f472b6;">
-                          <%= event.awards.length %> Awards
-                        </span>
-                        <span class="accordion-icon">▼</span>
-                      </div>
-                    </div>
-
-                    <div class="accordion-body">
-                      <div style="overflow-x: auto; margin-top: 1rem;">
-                        <table class="premium-table sortable-table">
-                          <thead>
-                            <tr>
-                              <th>Routine</th>
-                              <th>Award Type</th>
-                              <th>Place</th>
-                              <th>Category</th>
-                              <th>Dancer(s)</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <% event.awards.forEach(function(award) { %>
-                              <tr class="<%= isPremiumAward(award) ? 'premium-award-border' : '' %>">
-                                <td><strong>
-                                    <%= award.performance_name %>
-                                  </strong> <span class="sub-text">
-                                    <%= award.performance_number ? '#' + award.performance_number : '' %>
-                                  </span></td>
-                                <td>
-                                  <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                    <% const customIconStudio = getCustomIcon(award, award.customIconsObj); %>
-                                    <% if (customIconStudio) { %>
-                                      <img src="<%= customIconStudio %>" alt="Icon" style="width: 20px; height: 20px; object-fit: contain;" title="<%= award.org_name %> Custom Icon">
-                                    <% } %>
-                                    <%= (award.award_type && award.award_type.trim() !== '') ? award.award_type : award.category %>
-                                  </div>
-                                </td>
-                                <td><span class="badge <%= isPremiumAward(award) ? 'badge-premium' : '' %>">
-                                    <%= isPremiumAward(award) ? getPremiumDetails(award).icon + ' ' : '' %><%= formatPlacement(award) %>
-                                  </span></td>
-                                <td>
-                                  <%= award.category || '-' %>
-                                </td>
-                                <td id="dancers-cell-<%= award.id %>">
-                                  <% if (award.dancers && award.dancers.length > 0) { %>
-                                    <% award.dancers.forEach(function(d, index) { %>
-                                      <% 
-                                        let badgeClass = 'badge-imported';
-                                        if (d.status === 'pending') badgeClass = 'badge-pending';
-                                        if (d.status === 'verified') badgeClass = 'badge-verified';
-                                      %>
-                                      <span class="badge-common <%= badgeClass %>">
-                                        <% if (d.unique_id) { %>
-                                          <a href="/dancer/<%= d.unique_id %>" style="color: inherit; text-decoration: none;"><%= d.name %></a>
-                                        <% } else { %>
-                                          <%= d.name %>
-                                        <% } %>
-                                      </span>
-                                    <% }); %>
-                                  <% } else { %>
-                                    <em style="color: var(--text-muted); margin-right: 8px;">Company / Group</em>
-                                  <% } %>
-                                  <button onclick="openClaimModal('<%= award.id %>')" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; color: var(--text-muted); font-size: 0.75rem; padding: 2px 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(236,72,153,0.2)'; this.style.color='white'" onmouseout="this.style.background='rgba(255,255,255,0.1)'; this.style.color='var(--text-muted)'">+ Add Me</button>
-                                </td>
-                              </tr>
-                              <% }); %>
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
+                <% if (yearGroup.isLoaded) { %>
+                  <%- include('partials/studio_year_events', { events: yearGroup.events }) %>
+                <% } else { %>
+                  <div class="loading-spinner" style="text-align: center; padding: 4rem 2rem;">
+                    <div style="display: inline-block; width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-radius: 50%; border-top-color: var(--primary); animation: spin 1s ease-in-out infinite;"></div>
+                    <p style="color: var(--text-muted); margin-top: 1rem;">Loading awards for <%= yearGroup.year %>...</p>
                   </div>
-                  <% }); %>
+                <% } %>
 
               </div>
               <% }); %>
@@ -448,6 +379,27 @@
   </div>
 
   <script>
+    async function loadYear(studioId, year, tabElement) {
+      const isLoaded = tabElement.getAttribute('data-loaded') === 'true';
+      if (isLoaded) return;
+      
+      const pane = document.getElementById('year-' + year);
+      try {
+        const response = await fetch(`/api/studio/${studioId}/year/${year}`);
+        const html = await response.text();
+        pane.innerHTML = html;
+        tabElement.setAttribute('data-loaded', 'true');
+        
+        // Re-initialize sortable tables for the new HTML if necessary
+        if (typeof initSortableTables === 'function') {
+          setTimeout(initSortableTables, 100);
+        }
+      } catch (err) {
+        console.error('Failed to load year:', err);
+        pane.innerHTML = '<p style="text-align:center; color: #f87171;">Failed to load awards for this year. Please try again.</p>';
+      }
+    }
+
     function openBenefitsModal(e) {
       if(e) e.preventDefault();
       const modal = document.getElementById('benefits-modal');

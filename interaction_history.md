@@ -513,3 +513,18 @@ Advised the user to re-run the Revolution batch script to backfill the purged da
 **AI:**
 1. Added embedded JavaScript logic in `views/dancer.ejs` to dynamically calculate `totalAwardsCount`, find the most recent `maxYear`, and filter `awardsThisYear`.
 2. Created a premium gradient milestone banner that scales its celebratory message based on the total number of awards (>20, >50, >100).
+
+## Interaction - 2026-05-14 (Studio Phase 2 - Bulk Actions & CSV Export)
+**User:** Requested to start Phase 2 of the scaling roadmap (excluding emails), specifically asking for roster export (active dancers only) and bulk actions for the verifications dashboard.
+**AI:**
+1. Implemented `GET /manage/studio/:id/roster/export` to generate and download a CSV of the active dancer roster.
+2. Upgraded `views/manage_studio_verifications.ejs` with "Select All" checkboxes and "Bulk Approve" / "Bulk Deny" buttons.
+3. Built `POST /api/studios/:id/verifications/bulk` to handle iterative database updates for both Award Claims and Roster Requests.
+
+## Interaction - 2026-05-14 (Public Homepage Redesign & Data Protection)
+**User:** Pointed out that deep event data should not be public to respect organizer privacy. Requested to restrict the current homepage to admins, and build a new public homepage showing static organization cards and a Top 100 Studio Leaderboard.
+**AI:**
+1. Split the homepage logic in `server.js` (`app.get('/')`) to serve `index_admin.ejs` for admins and `index.ejs` for the public.
+2. Added robust authorization checks (`403 Forbidden`) to `app.get('/org/:slug')` and `app.get('/event/:id')` to completely block unauthorized access to deep event data.
+3. Rebuilt the public `views/index.ejs` to display static organization cards (event counts only, no links) and transformed the top studios grid into a sleek, numbered Top 100 Leaderboard.
+4. Added an "Admin View" badge to `index_admin.ejs`.

@@ -305,3 +305,36 @@ please summarize recent update and do a git commit
 
 ## User Request - 2026-05-13
 Now for dancers have more than 20 awards, please create a stats section on top showing total number of awards, and total number of awards this year. And some milestone sentences such as wow! you got more than x awards, what an achievement! etc?
+
+## User Request - 2026-05-14
+just found we got that margin issue again, the Special / Convention Awards section left and right margin seems to be zero, unlike the group and solo sections
+
+## User Request - 2026-05-14
+Please take a look at this page: are you sure you used the right icon for KAR 2nd place, the default 2nd place icon you show in the kar account was a medal instead of a cup, can you double check?
+
+## User Request - 2026-05-14
+Look at this page again, there are scholarships and invites still in solo awards, not in specials
+
+## User Request - 2026-05-14
+Please review the current design and status of our project and recommend best next steps
+
+## User Request - 2026-05-14
+Ok tackle phase 1
+
+## User Request - 2026-05-14
+now Phase 2 except the email part
+
+## User Request - 2026-05-14
+only export active dancer for the roster download
+
+## User Request - 2026-05-14
+both
+
+## User Request - 2026-05-14
+I feel this current page http://localhost:3008, should be accessiable for super admin and site admins, not for the public, because the event organizers may not like to have their events data so openly available on websites other than theirs. For the public page, we could have each organization card showing how many events are there in our ststem, no links to details, and for the top studios, we could list top 100, that is an order for them, and could link to their public studio page on our awardhome site, what do you think?
+
+## User Request - 2026-05-14
+yes featured studio on top still.
+
+## User Request - 2026-05-14
+please summarize recent update and git commit

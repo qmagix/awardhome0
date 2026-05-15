@@ -1,6 +1,8 @@
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
+const rateLimit = require('express-rate-limit');
+const cron = require('node-cron');
 const bcrypt = require('bcrypt');
 const { openDb } = require('./database');
 const path = require('path');
@@ -625,6 +627,35 @@ app.post('/manage/studio/:id/profile', requireAuth, async (req, res) => {
 
   const updatedStudio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
   res.render('manage_studio', { studio: updatedStudio, success: 'Profile updated successfully!' });
+});
+
+app.get('/manage/studio/:id/roster/export', requireAuth, async (req, res) => {
+  const db = await openDb();
+  const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
+  if (!studio) return res.status(404).send('Studio not found');
+  if (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin') return res.status(403).send('Forbidden');
+
+  const roster = await db.all(`
+    SELECT d.name, d.unique_id, d.birthday, ds.status, ds.graduation_year,
+           (SELECT COUNT(*) FROM award_dancers ad JOIN awards a ON ad.award_id = a.id WHERE ad.dancer_id = d.id AND a.studio_id = ds.studio_id) as total_awards
+    FROM dancers d
+    JOIN dancer_studios ds ON d.id = ds.dancer_id
+    WHERE ds.studio_id = ? AND ds.status != 'alumni'
+    ORDER BY d.name ASC
+  `, [req.params.id]);
+
+  let csvContent = "Name,Unique ID,Birthday,Status,Graduation Year,Total Awards\n";
+  for (const row of roster) {
+    const name = `"${row.name.replace(/"/g, '""')}"`;
+    const dob = row.birthday || "";
+    const status = row.status || "active";
+    const grad = row.graduation_year || "";
+    csvContent += `${name},${row.unique_id},${dob},${status},${grad},${row.total_awards}\n`;
+  }
+
+  res.setHeader('Content-Type', 'text/csv');
+  res.setHeader('Content-Disposition', `attachment; filename="studio_${studio.id}_active_roster.csv"`);
+  res.send(csvContent);
 });
 
 app.get('/manage/studio/:id/roster', requireAuth, async (req, res) => {
@@ -1262,6 +1293,50 @@ app.post('/manage/studio/:id/verifications/roster/:link_id/deny', requireAuth, a
   res.redirect(`/manage/studio/${req.params.id}/verifications`);
 });
 
+app.post('/api/studios/:id/verifications/bulk', requireAuth, async (req, res) => {
+  const db = await openDb();
+  const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
+  if (!studio || (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) return res.status(403).send('Forbidden');
+
+  const { type, action, linkIds } = req.body;
+  if (!Array.isArray(linkIds) || linkIds.length === 0) return res.status(400).json({ error: 'Invalid linkIds' });
+
+  try {
+    if (type === 'award') {
+      if (action === 'approve') {
+        for (const link_id of linkIds) {
+          const link = await db.get('SELECT dancer_id FROM award_dancers WHERE id = ?', [link_id]);
+          if (link) {
+            await db.run("UPDATE award_dancers SET status = 'verified' WHERE id = ?", [link_id]);
+            await db.run("UPDATE dancer_studios SET status = 'active' WHERE dancer_id = ? AND studio_id = ?", [link.dancer_id, studio.id]);
+          }
+        }
+      } else if (action === 'deny') {
+        for (const link_id of linkIds) {
+          await db.run("DELETE FROM award_dancers WHERE id = ?", [link_id]);
+        }
+      }
+    } else if (type === 'roster') {
+      if (action === 'approve') {
+        for (const link_id of linkIds) {
+          await db.run("UPDATE dancer_studios SET status = 'active' WHERE id = ?", [link_id]);
+        }
+      } else if (action === 'deny') {
+        for (const link_id of linkIds) {
+          await db.run("DELETE FROM dancer_studios WHERE id = ?", [link_id]);
+        }
+      }
+    } else {
+      return res.status(400).json({ error: 'Invalid type' });
+    }
+    
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 app.get('/manage/studio/:id/awards', requireAuth, async (req, res) => {
   const db = await openDb();
   const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
@@ -1716,7 +1791,7 @@ app.get('/', async (req, res) => {
     WHERE s.id NOT IN (${excludeIds.join(',')})
     GROUP BY s.id
     ORDER BY total_awards DESC
-    LIMIT 12
+    LIMIT 100
   `);
 
   const orgs = await db.all(`
@@ -1726,10 +1801,21 @@ app.get('/', async (req, res) => {
     GROUP BY o.id
     ORDER BY o.name
   `);
-  res.render('index', { featuredStudios, topStudios, orgs });
+  
+  const isAdmin = req.session && req.session.user && (req.session.user.role === 'admin' || req.session.user.role === 'superadmin');
+  
+  if (isAdmin) {
+    res.render('index_admin', { featuredStudios, topStudios: topStudios.slice(0, 12), orgs });
+  } else {
+    res.render('index', { featuredStudios, topStudios, orgs });
+  }
 });
 
 app.get('/org/:slug', async (req, res) => {
+  if (!req.session || !req.session.user || (req.session.user.role !== 'admin' && req.session.user.role !== 'superadmin')) {
+    return res.status(403).send('Detailed event data is only available to platform administrators.');
+  }
+  
   const db = await openDb();
   const org = await db.get(`SELECT * FROM organizations WHERE slug = ?`, [req.params.slug]);
   if (!org) return res.status(404).send('Organization not found');
@@ -2468,10 +2554,11 @@ app.get('/studio/:id', async (req, res) => {
   }
 
   // Format into arrays for EJS
-  const groupedData = Array.from(yearsMap, ([year, eventsMap]) => {
+  const groupedData = Array.from(yearsMap, ([year, eventsMap], idx) => {
     return {
       year,
-      events: Array.from(eventsMap.values())
+      events: idx === 0 ? Array.from(eventsMap.values()) : [],
+      isLoaded: idx === 0
     };
   });
 
@@ -2517,6 +2604,63 @@ app.get('/studio/:id', async (req, res) => {
   const topHallOfFame = hallOfFame.slice(0, 12);
 
   res.render('studio', { studio, mergedIntoStudio, groupedData, quickStats, hallOfFame: topHallOfFame, alumni, hasAwards: awards.length > 0 });
+});
+
+app.get('/api/studio/:id/year/:year', async (req, res) => {
+  const db = await openDb();
+  
+  const awards = await db.all(`
+    SELECT a.*, d.name as dancer_name, d.unique_id, e.name as event_name, e.year as event_year, e.date_string, o.name as org_name, o.logo_url, o.custom_icons
+    FROM awards a
+    LEFT JOIN dancers d ON a.dancer_id = d.id
+    LEFT JOIN events e ON a.event_id = e.id
+    LEFT JOIN organizations o ON e.org_id = o.id
+    WHERE a.studio_id = ? AND e.year = ?
+    ORDER BY e.date_string DESC, a.award_type, a.place
+  `, [req.params.id, req.params.year]);
+
+  awards.forEach(a => {
+    if (a.custom_icons) {
+      try { a.customIconsObj = JSON.parse(a.custom_icons); } catch(e) {}
+    }
+  });
+
+  const awardDancers = await db.all(`
+    SELECT ad.award_id, d.name, d.unique_id, ad.status
+    FROM award_dancers ad
+    JOIN dancers d ON ad.dancer_id = d.id
+    WHERE ad.award_id IN (SELECT id FROM awards WHERE studio_id = ? AND event_id IN (SELECT id FROM events WHERE year = ?))
+  `, [req.params.id, req.params.year]);
+
+  const awardDancersMap = {};
+  for (const ad of awardDancers) {
+    if (!awardDancersMap[ad.award_id]) awardDancersMap[ad.award_id] = [];
+    awardDancersMap[ad.award_id].push({ name: ad.name, unique_id: ad.unique_id, status: ad.status });
+  }
+
+  const eventsMap = new Map();
+  for (const award of awards) {
+    if (awardDancersMap[award.id]) {
+      award.dancers = awardDancersMap[award.id];
+    } else if (award.dancer_name) {
+      award.dancers = [{ name: award.dancer_name, unique_id: award.unique_id }];
+    } else {
+      award.dancers = [];
+    }
+
+    const eventKey = `${award.org_name} - ${award.event_name} (${award.date_string})`;
+    if (!eventsMap.has(eventKey)) {
+      eventsMap.set(eventKey, {
+        title: eventKey,
+        eventId: award.event_id,
+        awards: []
+      });
+    }
+    eventsMap.get(eventKey).awards.push(award);
+  }
+
+  const events = Array.from(eventsMap.values());
+  res.render('partials/studio_year_events', { events });
 });
 
 app.get('/dancer/:unique_id', async (req, res) => {
@@ -2578,6 +2722,10 @@ app.get('/dancer/:unique_id', async (req, res) => {
 });
 
 app.get('/event/:id', async (req, res) => {
+  if (!req.session || !req.session.user || (req.session.user.role !== 'admin' && req.session.user.role !== 'superadmin')) {
+    return res.status(403).send('Detailed event data is only available to platform administrators.');
+  }
+
   const db = await openDb();
   const event = await db.get(`
     SELECT e.*, o.name as org_name 
@@ -2665,7 +2813,13 @@ app.get('/api/check-dancer-studio', async (req, res) => {
   return res.json({ linked: !!link });
 });
 
-app.post('/api/claim-award', async (req, res) => {
+const claimAwardLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20,
+  message: { error: 'Too many claims submitted from this IP, please try again after 15 minutes' }
+});
+
+app.post('/api/claim-award', claimAwardLimiter, async (req, res) => {
   const { award_id, studio_id, join_code, unique_id, name, birthday } = req.body;
   const db = await openDb();
 
@@ -2765,5 +2919,35 @@ app.listen(PORT, async () => {
       // Ensure role is superadmin if it exists but was downgraded or something
       await db.run('UPDATE users SET role = "superadmin" WHERE email = ?', [process.env.SUPERADMIN_EMAIL]);
     }
+  }
+});
+
+// Setup automated nightly backups at 3:00 AM
+cron.schedule('0 3 * * *', () => {
+  console.log('Running automated nightly backup of database.sqlite...');
+  try {
+    if (!fs.existsSync(path.join(__dirname, 'backups'))) {
+      fs.mkdirSync(path.join(__dirname, 'backups'));
+    }
+    const dateStr = new Date().toISOString().split('T')[0];
+    const backupPath = path.join(__dirname, 'backups', `database_${dateStr}.sqlite`);
+    fs.copyFileSync(path.join(__dirname, 'database.sqlite'), backupPath);
+    console.log(`Backup successfully created at ${backupPath}`);
+    
+    // Cleanup old backups (keep last 7)
+    const files = fs.readdirSync(path.join(__dirname, 'backups'))
+      .filter(f => f.startsWith('database_') && f.endsWith('.sqlite'))
+      .sort()
+      .reverse();
+    
+    if (files.length > 7) {
+      const toDelete = files.slice(7);
+      toDelete.forEach(file => {
+        fs.unlinkSync(path.join(__dirname, 'backups', file));
+        console.log(`Deleted old backup: ${file}`);
+      });
+    }
+  } catch (err) {
+    console.error('Failed to run nightly backup:', err);
   }
 });

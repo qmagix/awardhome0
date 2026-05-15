@@ -58,6 +58,7 @@
       </div>
       <div style="display: flex; gap: 1rem;">
         <button id="mergeBtn" class="btn" style="display: none; background: var(--primary); color: white;" onclick="openMergeModal()">Compare & Merge (2)</button>
+        <button class="btn btn-blue" onclick="window.location.href='/manage/studio/<%= studio.id %>/roster/export'">Export Roster CSV</button>
         <button class="btn btn-blue" onclick="document.getElementById('csvUploadModal').style.display='block'">Upload CSV</button>
         <button class="btn btn-blue" onclick="document.getElementById('claimDancerModal').style.display='block'">+ Add/Claim Dancer</button>
       </div>
