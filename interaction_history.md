@@ -563,3 +563,8 @@ Advised the user to re-run the Revolution batch script to backfill the purged da
 **User:** Requested to download Showstopper dance competition PDF results for the years 2022-2026 into the `tobeprocessed/pdf/showstopper` folder.
 **AI:** Wrote a robust Node.js scraping script (`download_showstopper_pdfs.js`) that automatically fetched the Showstopper results page, extracted all PDF links using regex and cheerio, parsed the year and location metadata from the URLs, and cleanly downloaded them to the target directory. Sidecar `.json` metadata files were also generated for each PDF to prepare for the future data extraction pipeline.
 
+
+## Interaction - 2026-05-17 (Extracting Showstopper PDFs)
+**User:** Requested to extract award data from the downloaded 2023-2025 Showstopper PDF files into text files, ignoring the score column.
+**AI:** Wrote `extract_showstopper_pdfs.js` utilizing the `pdf2json` library. Built a custom state machine to parse the tabular format, including grouping rows by coordinates and handling multi-line dancer strings. Ignored the numerical scores as requested. The script successfully processed all 160 PDFs, outputting thousands of structured awards into `.txt` files ready for database import.
+
