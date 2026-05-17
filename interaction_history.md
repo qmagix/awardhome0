@@ -568,3 +568,8 @@ Advised the user to re-run the Revolution batch script to backfill the purged da
 **User:** Requested to extract award data from the downloaded 2023-2025 Showstopper PDF files into text files, ignoring the score column.
 **AI:** Wrote `extract_showstopper_pdfs.js` utilizing the `pdf2json` library. Built a custom state machine to parse the tabular format, including grouping rows by coordinates and handling multi-line dancer strings. Ignored the numerical scores as requested. The script successfully processed all 160 PDFs, outputting thousands of structured awards into `.txt` files ready for database import.
 
+
+## Interaction - 2026-05-17 (Import Showstopper Data)
+**User:** Requested to create the Showstopper organization account and import the parsed `.txt` award files into the database.
+**AI:** Wrote `import_showstopper_txt.js` to batch import all the parsed txt files. The script automatically creates the Showstopper organization if it doesn't exist, establishes the localized Event rows, and parses the extracted data directly into the relational `awards`, `dancers`, and `studios` tables while properly resolving the `award_dancers` and `dancer_studios` many-to-many junction tables.
+
