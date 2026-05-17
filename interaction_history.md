@@ -558,3 +558,8 @@ Advised the user to re-run the Revolution batch script to backfill the purged da
 **User:** Requested to remove the "Not Awarded" phantom dancer, which was a scraping artifact from YAGP events, and asked to ensure no other scraping errors existed.
 **AI:** Queried the database and confirmed the "Not Awarded" artifact was exclusively from YAGP events where top prizes (like Grand Prix) were withheld. I executed a SQLite transaction to securely delete the phantom dancer, purge its 162 `award_dancers` mappings, and remove the empty `awards` rows. I also searched the database for other common artifacts (TBD, None, N/A, Unknown) and confirmed the data is pristine. Finally, I patched `scrape_yagp_year.js` to explicitly ignore any rows where the dancer name is "NOT AWARDED" to permanently prevent this artifact on future scrapes.
 
+
+## Interaction - 2026-05-17 (Showstopper PDF Download)
+**User:** Requested to download Showstopper dance competition PDF results for the years 2022-2026 into the `tobeprocessed/pdf/showstopper` folder.
+**AI:** Wrote a robust Node.js scraping script (`download_showstopper_pdfs.js`) that automatically fetched the Showstopper results page, extracted all PDF links using regex and cheerio, parsed the year and location metadata from the URLs, and cleanly downloaded them to the target directory. Sidecar `.json` metadata files were also generated for each PDF to prepare for the future data extraction pipeline.
+
