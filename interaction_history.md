@@ -581,3 +581,10 @@ Advised the user to re-run the Revolution batch script to backfill the purged da
 2. Discovered that the Showstopper PDF contains individual "Star Adjudication" lists (e.g. "Rising Star Solo Program") after the "Overall Score Reports", which caused the parser to incorrectly interpret entry numbers (like 480) as Top Overall places.
 3. Patched `extract_showstopper_pdfs.js` to correctly detect the end of the "Overall Score Reports" by flagging any header rows containing the word "Program" or "Star", successfully ignoring the individual adjudication lists and isolating the clean Top Overall awards.
 4. Reran the extraction pipeline to refresh all 160 processed `txt` files.
+
+## Interaction - 2026-05-17 (Purge & Re-import Showstopper Data)
+**User:** Requested to purge the corrupted Showstopper awards from the database and re-run the import script to populate the clean data.
+**AI:** 
+1. Authored and executed `purge_showstopper.js` to securely delete all `awards`, `award_dancers`, and `events` tied to the Showstopper organization, cleanly removing orphaned records without affecting other organizations.
+2. Optimized the database by adding SQLite indices on `LOWER(name)` for both the `dancers` and `studios` tables to dramatically accelerate the import script's deduplication logic.
+3. Successfully ran `import_showstopper_txt.js` to populate the database with the newly cleansed Showstopper data across all 160 processed events.
