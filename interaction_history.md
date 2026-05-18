@@ -573,3 +573,11 @@ Advised the user to re-run the Revolution batch script to backfill the purged da
 **User:** Requested to create the Showstopper organization account and import the parsed `.txt` award files into the database.
 **AI:** Wrote `import_showstopper_txt.js` to batch import all the parsed txt files. The script automatically creates the Showstopper organization if it doesn't exist, establishes the localized Event rows, and parses the extracted data directly into the relational `awards`, `dancers`, and `studios` tables while properly resolving the `award_dancers` and `dancer_studios` many-to-many junction tables.
 
+
+## Interaction - 2026-05-17 (Fixing Showstopper Extraction)
+**User:** Reported an issue where Showstopper extracted data included invalid places and routine names that looked like dancer names (e.g. Place: 480).
+**AI:**
+1. Investigated the original `biloxi.txt` extraction file and the raw `biloxi.pdf` data.
+2. Discovered that the Showstopper PDF contains individual "Star Adjudication" lists (e.g. "Rising Star Solo Program") after the "Overall Score Reports", which caused the parser to incorrectly interpret entry numbers (like 480) as Top Overall places.
+3. Patched `extract_showstopper_pdfs.js` to correctly detect the end of the "Overall Score Reports" by flagging any header rows containing the word "Program" or "Star", successfully ignoring the individual adjudication lists and isolating the clean Top Overall awards.
+4. Reran the extraction pipeline to refresh all 160 processed `txt` files.

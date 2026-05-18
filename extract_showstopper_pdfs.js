@@ -14,6 +14,7 @@ function extractAwards(pdfData) {
   let currentAgeDivCat = 'Unknown Category';
   let currentLevel = 'Unknown Level';
   let lastAward = null;
+  let inOveralls = true;
 
   pdfData.Pages.forEach(page => {
     let rows = [];
@@ -46,8 +47,20 @@ function extractAwards(pdfData) {
       if (row.cols.length > 0) {
         const firstText = row.cols[0].text;
         
-        // Ignore "Overall Score Reports" headers or page numbers
-        if (firstText.includes('Overall Score Reports') || firstText.includes('Rising Star')) return;
+        // Handle section headers
+        if (row.cols.length === 1) {
+          if (firstText.includes('Overall Score Reports')) {
+            inOveralls = true;
+            return;
+          }
+          if (firstText.toLowerCase().includes('program') || firstText.includes('Rising Star') || firstText.includes('Shining Star') || firstText.includes('Crystal Award')) {
+            inOveralls = false;
+            return;
+          }
+        }
+
+        if (!inOveralls) return;
+
         if (row.cols.length === 1 && !isNaN(parseInt(firstText)) && firstText.length < 3) return; // likely a page number
 
         const upperFirst = firstText.toUpperCase();
