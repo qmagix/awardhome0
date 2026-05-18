@@ -177,6 +177,43 @@
       <% } %>
     </div>
 
+    <% if (typeof orgsHistory !== 'undefined' && orgsHistory && orgsHistory.length > 0 && ((studio.prefs && studio.prefs.show_org_history) || isOwnerOrAdmin)) { %>
+      <div style="margin-bottom: 3rem; position: relative;">
+        <% if (!studio.prefs.show_org_history && isOwnerOrAdmin) { %><div style="position: absolute; top: 0; right: 0; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; background: rgba(239, 68, 68, 0.2); color: #f87171; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.3);" title="Hidden from Public">Hidden</div><% } %>
+        <h2 style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem;"><span style="font-size: 1.5rem;">📊</span> Organization History</h2>
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+          <% orgsHistory.forEach(org => { %>
+            <div class="card glass-card" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                  <% if (org.logo_url) { %>
+                    <img src="<%= org.logo_url %>" alt="<%= org.name %>" style="height: 30px; border-radius: 4px;">
+                  <% } else { %>
+                    <div style="width: 30px; height: 30px; border-radius: 4px; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-weight: bold; color: var(--text-muted); font-size: 0.8rem;"><%= org.name.substring(0, 2).toUpperCase() %></div>
+                  <% } %>
+                  <h3 style="margin: 0; color: white; font-size: 1.2rem;"><%= org.name %></h3>
+                </div>
+                <div style="display: flex; gap: 1.5rem; text-align: right; font-size: 0.9rem;">
+                  <div><span style="color: var(--text-muted);">Awards:</span> <strong style="color: white;"><%= org.total_awards_all_time %></strong></div>
+                  <div><span style="color: var(--text-muted);">1st Places:</span> <strong style="color: var(--primary);"><%= org.first_places_all_time %></strong></div>
+                  <div title="Premium/National/Grand Titles"><span style="color: var(--text-muted);">Major:</span> <strong style="color: #f59e0b;"><%= org.major_awards_all_time %></strong></div>
+                </div>
+              </div>
+              <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                <% Object.keys(org.years).sort((a,b) => b-a).forEach(year => { const yrData = org.years[year]; %>
+                  <div style="background: rgba(0,0,0,0.3); padding: 0.5rem 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); font-size: 0.85rem; display: flex; gap: 0.75rem; align-items: center;">
+                    <strong style="color: white;"><%= year %></strong>
+                    <span style="color: var(--text-muted);">|</span>
+                    <span style="color: var(--text-muted);"><%= yrData.total_awards %> Awds</span>
+                  </div>
+                <% }) %>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    <% } %>
+
     <% if (hallOfFame && hallOfFame.length > 0) { %>
       <div style="margin-bottom: 3rem;">
         <h2 style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem;"><span style="font-size: 1.5rem;">👑</span> Hall of Fame</h2>

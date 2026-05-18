@@ -616,7 +616,8 @@ app.post('/manage/studio/:id/profile', requireAuth, async (req, res) => {
     show_1st_place_finishes: req.body.show_1st_place_finishes === 'on',
     show_1st_place_this_year: req.body.show_1st_place_this_year === 'on',
     show_past_5_years: req.body.show_past_5_years === 'on',
-    show_this_year: req.body.show_this_year === 'on'
+    show_this_year: req.body.show_this_year === 'on',
+    show_org_history: req.body.show_org_history === 'on'
   };
 
   await db.run(`
@@ -1336,6 +1337,100 @@ app.post('/api/studios/:id/verifications/bulk', requireAuth, async (req, res) =>
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+app.get('/manage/studio/:id/history', requireAuth, async (req, res) => {
+  const db = await openDb();
+  
+  // Verify permissions
+  const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
+  if (!studio) return res.status(404).send('Studio not found');
+  if (req.session.user.role !== 'admin' && req.session.user.role !== 'superadmin' && studio.owner_id !== req.session.user.id) {
+    return res.status(403).send('Forbidden');
+  }
+
+  const awards = await db.all(`
+    SELECT a.*, e.name as event_name, e.year as event_year, o.id as org_id, o.name as org_name, o.logo_url as org_logo_url, o.custom_icons
+    FROM awards a
+    JOIN events e ON a.event_id = e.id
+    JOIN organizations o ON e.org_id = o.id
+    WHERE a.studio_id = ?
+  `, [req.params.id]);
+
+  awards.forEach(a => {
+    if (a.custom_icons) {
+      try { a.customIconsObj = JSON.parse(a.custom_icons); } catch(e) {}
+    }
+  });
+
+  const orgsMap = {};
+
+  for (const award of awards) {
+    if (!orgsMap[award.org_id]) {
+      orgsMap[award.org_id] = {
+        id: award.org_id,
+        name: award.org_name,
+        logo_url: award.org_logo_url,
+        years: {},
+        total_awards_all_time: 0,
+        first_places_all_time: 0,
+        major_awards_all_time: 0
+      };
+    }
+    const org = orgsMap[award.org_id];
+    org.total_awards_all_time++;
+    if (award.is_first_place) org.first_places_all_time++;
+
+    const premiumDetails = app.locals.getPremiumDetails(award);
+    let isMajor = false;
+    if (award.is_first_place && premiumDetails.isPremium) {
+      const nameLower = (award.award_type || award.category || '').toLowerCase();
+      const eventNameLower = (award.event_name || '').toLowerCase();
+      if (nameLower.includes('national') || nameLower.includes('final') || nameLower.includes('grand') || nameLower.includes('title') || eventNameLower.includes('national') || eventNameLower.includes('final')) {
+        isMajor = true;
+        org.major_awards_all_time++;
+      }
+    }
+
+    if (!org.years[award.event_year]) {
+      org.years[award.event_year] = {
+        total_awards: 0,
+        first_places: 0,
+        major_awards: 0,
+        eventsMap: {}
+      };
+    }
+    const yr = org.years[award.event_year];
+    yr.total_awards++;
+    if (award.is_first_place) yr.first_places++;
+    if (isMajor) yr.major_awards++;
+
+    if (!yr.eventsMap[award.event_id]) {
+      yr.eventsMap[award.event_id] = {
+        name: award.event_name,
+        total_awards: 0,
+        first_places: 0,
+        major_awards: 0
+      };
+    }
+    const evt = yr.eventsMap[award.event_id];
+    evt.total_awards++;
+    if (award.is_first_place) evt.first_places++;
+    if (isMajor) evt.major_awards++;
+  }
+
+  // Format map into array
+  const orgs = Object.values(orgsMap).map(org => {
+    Object.keys(org.years).forEach(year => {
+      org.years[year].events = Object.values(org.years[year].eventsMap).sort((a,b) => a.name.localeCompare(b.name));
+      delete org.years[year].eventsMap;
+    });
+    return org;
+  });
+
+  orgs.sort((a, b) => a.name.localeCompare(b.name));
+
+  res.render('manage_studio_history', { studio, orgs });
+});
+
 
 app.get('/manage/studio/:id/awards', requireAuth, async (req, res) => {
   const db = await openDb();
@@ -2584,7 +2679,7 @@ app.get('/studio/:id', async (req, res) => {
   }
 
   const awards = await db.all(`
-    SELECT a.*, d.name as dancer_name, d.unique_id, e.name as event_name, e.year as event_year, e.date_string, o.name as org_name, o.logo_url, o.custom_icons
+    SELECT a.*, d.name as dancer_name, d.unique_id, e.name as event_name, e.year as event_year, e.date_string, o.id as org_id, o.name as org_name, o.logo_url, o.custom_icons
     FROM awards a
     LEFT JOIN dancers d ON a.dancer_id = d.id
     LEFT JOIN events e ON a.event_id = e.id
@@ -2614,6 +2709,7 @@ app.get('/studio/:id', async (req, res) => {
 
   // Group by Year -> Event
   const yearsMap = new Map();
+  const orgsMap = {};
   let totalAwards = 0;
   const eventsAttended = new Set();
 
@@ -2672,12 +2768,36 @@ app.get('/studio/:id', async (req, res) => {
     }
 
     // Hall of Fame logic: Premium award + '1st' place + National/Finals indicator
+    let isMajor = false;
     if (award.is_first_place && premiumDetails.isPremium) {
       const nameLower = (award.award_type || award.category || '').toLowerCase();
       const eventNameLower = (award.event_name || '').toLowerCase();
       if (nameLower.includes('national') || nameLower.includes('final') || nameLower.includes('grand') || nameLower.includes('title') || eventNameLower.includes('national') || eventNameLower.includes('final')) {
         hallOfFame.push(award);
+        isMajor = true;
       }
+    }
+
+    if (award.org_id) {
+      if (!orgsMap[award.org_id]) {
+        orgsMap[award.org_id] = { id: award.org_id, name: award.org_name, logo_url: award.logo_url, years: {}, total_awards_all_time: 0, first_places_all_time: 0, major_awards_all_time: 0 };
+      }
+      const org = orgsMap[award.org_id];
+      org.total_awards_all_time++;
+      if (award.is_first_place) org.first_places_all_time++;
+      if (isMajor) org.major_awards_all_time++;
+
+      if (!org.years[year]) org.years[year] = { total_awards: 0, first_places: 0, major_awards: 0, eventsMap: {} };
+      const yr = org.years[year];
+      yr.total_awards++;
+      if (award.is_first_place) yr.first_places++;
+      if (isMajor) yr.major_awards++;
+
+      if (!yr.eventsMap[award.event_id]) yr.eventsMap[award.event_id] = { name: award.event_name, total_awards: 0, first_places: 0, major_awards: 0 };
+      const evt = yr.eventsMap[award.event_id];
+      evt.total_awards++;
+      if (award.is_first_place) evt.first_places++;
+      if (isMajor) evt.major_awards++;
     }
 
     if (!yearsMap.has(year)) {
@@ -2746,7 +2866,17 @@ app.get('/studio/:id', async (req, res) => {
   // Keep max 12 items for Hall of Fame
   const topHallOfFame = hallOfFame.slice(0, 12);
 
-  res.render('studio', { studio, mergedIntoStudio, groupedData, quickStats, hallOfFame: topHallOfFame, alumni, hasAwards: awards.length > 0 });
+  // Format orgsMap into array
+  const orgsHistory = Object.values(orgsMap).map(org => {
+    Object.keys(org.years).forEach(year => {
+      org.years[year].events = Object.values(org.years[year].eventsMap).sort((a,b) => a.name.localeCompare(b.name));
+      delete org.years[year].eventsMap;
+    });
+    return org;
+  });
+  orgsHistory.sort((a, b) => a.name.localeCompare(b.name));
+
+  res.render('studio', { studio, mergedIntoStudio, groupedData, quickStats, hallOfFame: topHallOfFame, alumni, hasAwards: awards.length > 0, orgsHistory });
 });
 
 app.get('/api/studio/:id/year/:year', async (req, res) => {

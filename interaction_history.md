@@ -588,3 +588,13 @@ Advised the user to re-run the Revolution batch script to backfill the purged da
 1. Authored and executed `purge_showstopper.js` to securely delete all `awards`, `award_dancers`, and `events` tied to the Showstopper organization, cleanly removing orphaned records without affecting other organizations.
 2. Optimized the database by adding SQLite indices on `LOWER(name)` for both the `dancers` and `studios` tables to dramatically accelerate the import script's deduplication logic.
 3. Successfully ran `import_showstopper_txt.js` to populate the database with the newly cleansed Showstopper data across all 160 processed events.
+
+
+### Organization History Analytics (2026-05-17)
+**User Request:** Create a page listing the events attended at the org level, summarizing achievements year by year, and make the 'Major Awards' metric customizable/visible.
+**Implementation:**
+- Built the private dashboard view (`views/manage_studio_history.ejs`) to group lifetime and yearly metrics by competition organization.
+- Implemented efficient SQL aggregation and Javascript mapping in `server.js` to tally Total Awards, 1st Places, and Major Awards.
+- Linked 'Major Awards' logic into the existing Hall of Fame algorithm (First Place + Premium/Title keywords).
+- Added a new checkbox to the studio customization dashboard to allow studio owners to toggle public visibility of this analytics block.
+- Integrated the conditionally-rendered Organization History summary into the public `views/studio.ejs` profile.
