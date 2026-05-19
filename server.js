@@ -68,7 +68,7 @@ app.locals.isPremiumAward = function (award) {
   return app.locals.getPremiumDetails(award).isPremium;
 };
 
-app.locals.getCustomIcon = function(award, customIcons) {
+app.locals.getCustomIcon = function (award, customIcons) {
   if (!customIcons || typeof customIcons !== 'object') return null;
   const pLower = String(award.place || '').toLowerCase();
   const aClass = award.award_class || '';
@@ -77,17 +77,17 @@ app.locals.getCustomIcon = function(award, customIcons) {
     if (pLower.includes('runner') && customIcons.title && customIcons.title.runnerup) return customIcons.title.runnerup;
     if (customIcons.title && customIcons.title.winner) return customIcons.title.winner;
   }
-  
+
   if (aClass === 'scholarship') {
     if (customIcons.scholarship && customIcons.scholarship.default) return customIcons.scholarship.default;
   }
-  
+
   if (aClass === 'special' || aClass === 'studio') {
     const key = (award.award_type && award.award_type.trim() !== '') ? award.award_type : award.category;
     if (key && customIcons.special && customIcons.special.custom && customIcons.special.custom[key]) {
       return customIcons.special.custom[key];
     }
-    
+
     const text = [award.category, award.award_type, award.performance_name].filter(Boolean).join(' ').toLowerCase();
     if ((text.includes('invite') || text.includes('invitation')) && customIcons.special && customIcons.special.invitation) {
       return customIcons.special.invitation;
@@ -95,7 +95,7 @@ app.locals.getCustomIcon = function(award, customIcons) {
 
     if (customIcons.special && customIcons.special.default) return customIcons.special.default;
   }
-  
+
   if (aClass === 'adjudication') {
     // Adjudications usually store the score string in the place field
     const adjKey = String(award.place || '').trim();
@@ -108,7 +108,7 @@ app.locals.getCustomIcon = function(award, customIcons) {
       return customIcons.adjudication[typeKey];
     }
   }
-  
+
   if (aClass === 'overall') {
     if (pLower === '1' || pLower.includes('1st') || pLower === 'winner') {
       if (customIcons.overall && customIcons.overall['1']) return customIcons.overall['1'];
@@ -119,7 +119,7 @@ app.locals.getCustomIcon = function(award, customIcons) {
     }
     if (customIcons.overall && customIcons.overall['other']) return customIcons.overall['other'];
   }
-  
+
   return null;
 };
 
@@ -413,7 +413,7 @@ app.get('/manage/org/:id/branding', requireAuth, async (req, res) => {
   const db = await openDb();
   const org = await db.get('SELECT * FROM organizations WHERE id = ?', [req.params.id]);
   if (!org) return res.status(404).send('Org not found');
-  
+
   if (req.session.user.role !== 'superadmin' && org.owner_id !== req.session.user.id) {
     return res.status(403).send('Unauthorized');
   }
@@ -431,7 +431,7 @@ app.get('/manage/org/:id/branding', requireAuth, async (req, res) => {
   let customIcons = {};
   try {
     if (org.custom_icons) customIcons = JSON.parse(org.custom_icons);
-  } catch(e) {}
+  } catch (e) { }
 
   res.render('manage_org_branding', { org, awardTypes, customIcons, user: req.session.user });
 });
@@ -443,9 +443,9 @@ app.post('/manage/org/:id/marketing', requireAuth, async (req, res) => {
   if (req.session.user.role !== 'superadmin' && org.owner_id !== req.session.user.id) return res.status(403).send('Unauthorized');
 
   const { description, slogan } = req.body;
-  
+
   await db.run('UPDATE organizations SET description = ?, slogan = ? WHERE id = ?', [description, slogan, org.id]);
-  
+
   res.redirect('/manage/org/' + org.id);
 });
 
@@ -459,7 +459,7 @@ app.post('/manage/org/:id/branding/logo', requireAuth, brandingUpload.single('lo
 
   const logoUrl = '/uploads/org_branding/' + req.file.filename;
   await db.run('UPDATE organizations SET logo_url = ? WHERE id = ?', [logoUrl, org.id]);
-  
+
   res.redirect('/manage/org/' + org.id + '/branding');
 });
 
@@ -471,9 +471,9 @@ app.post('/manage/org/:id/branding/logo-settings', requireAuth, async (req, res)
 
   let customIcons = {};
   if (org.custom_icons) {
-    try { customIcons = JSON.parse(org.custom_icons); } catch (e) {}
+    try { customIcons = JSON.parse(org.custom_icons); } catch (e) { }
   }
-  
+
   customIcons.hide_logo = req.body.show_logo !== 'on'; // Checkbox is 'on' when checked
   customIcons.logo_size = parseInt(req.body.logo_size) || 24;
   customIcons.logo_opacity = parseFloat(req.body.logo_opacity);
@@ -496,7 +496,7 @@ app.post('/manage/org/:id/branding/icon', requireAuth, brandingUpload.single('ic
   let customIcons = {};
   try {
     if (org.custom_icons) customIcons = JSON.parse(org.custom_icons);
-  } catch(e) {}
+  } catch (e) { }
 
   if (!customIcons[icon_class]) customIcons[icon_class] = {};
 
@@ -514,7 +514,7 @@ app.post('/manage/org/:id/branding/icon', requireAuth, brandingUpload.single('ic
     }
     await db.run('UPDATE organizations SET custom_icons = ? WHERE id = ?', [JSON.stringify(customIcons), org.id]);
   }
-  
+
   res.redirect('/manage/org/' + org.id + '/branding');
 });
 
@@ -528,7 +528,7 @@ app.post('/manage/org/:id/branding/icon/delete', requireAuth, async (req, res) =
   let customIcons = {};
   try {
     if (org.custom_icons) customIcons = JSON.parse(org.custom_icons);
-  } catch(e) {}
+  } catch (e) { }
 
   if (customIcons[icon_class]) {
     if (icon_class === 'scholarship') {
@@ -542,7 +542,7 @@ app.post('/manage/org/:id/branding/icon/delete', requireAuth, async (req, res) =
     }
     await db.run('UPDATE organizations SET custom_icons = ? WHERE id = ?', [JSON.stringify(customIcons), org.id]);
   }
-  
+
   res.redirect('/manage/org/' + org.id + '/branding');
 });
 
@@ -764,7 +764,7 @@ app.post('/manage/studio/:id/roster/:dancerId/toggle-status', requireAuth, async
       SET status = ?
       WHERE studio_id = ? AND dancer_id = ?
     `, [new_status, req.params.id, req.params.dancerId]);
-    
+
     res.json({ success: true, status: new_status });
   } catch (err) {
     console.error(err);
@@ -803,14 +803,14 @@ app.post('/manage/studio/:id/awards/self-report', requireAuth, async (req, res) 
 app.post('/manage/studio/:id/awards/csv-preview', requireAuth, upload.single('csvFile'), async (req, res) => {
   if (!req.file) return res.status(400).send('No file uploaded');
   const db = await openDb();
-  
+
   const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
   if (!studio || (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) return res.status(403).send('Forbidden');
 
   try {
     const fileContent = fs.readFileSync(req.file.path, 'utf-8');
     const records = parse(fileContent, { columns: true, skip_empty_lines: true, trim: true });
-    
+
     const previewData = [];
     const roster = await db.all(`
       SELECT d.id, d.name 
@@ -821,7 +821,7 @@ app.post('/manage/studio/:id/awards/csv-preview', requireAuth, upload.single('cs
 
     for (const row of records) {
       const findKey = (search) => Object.keys(row).find(k => k.toLowerCase().replace(/[^a-z0-9]/g, '').includes(search));
-      
+
       const eventName = row[findKey('competition')] || row[findKey('event')] || '';
       const year = row[findKey('year')] || '';
       const performanceName = row[findKey('routine')] || row[findKey('performance')] || '';
@@ -937,7 +937,7 @@ app.get('/api/dancers/search', requireAuth, async (req, res) => {
   const params = [`%${q}%`];
 
   const dancersRaw = await db.all(query, params);
-  
+
   // Filter by studio in JS since it's an alias from a subquery and SQLite is finicky
   let dancers = dancersRaw;
   if (studio && studio.length >= 2) {
@@ -1332,7 +1332,7 @@ app.post('/api/studios/:id/verifications/bulk', requireAuth, async (req, res) =>
     } else {
       return res.status(400).json({ error: 'Invalid type' });
     }
-    
+
     res.json({ success: true });
   } catch (err) {
     console.error(err);
@@ -1341,7 +1341,7 @@ app.post('/api/studios/:id/verifications/bulk', requireAuth, async (req, res) =>
 });
 app.get('/manage/studio/:id/history', requireAuth, async (req, res) => {
   const db = await openDb();
-  
+
   // Verify permissions
   const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
   if (!studio) return res.status(404).send('Studio not found');
@@ -1359,7 +1359,7 @@ app.get('/manage/studio/:id/history', requireAuth, async (req, res) => {
 
   awards.forEach(a => {
     if (a.custom_icons) {
-      try { a.customIconsObj = JSON.parse(a.custom_icons); } catch(e) {}
+      try { a.customIconsObj = JSON.parse(a.custom_icons); } catch (e) { }
     }
   });
 
@@ -1410,19 +1410,21 @@ app.get('/manage/studio/:id/history', requireAuth, async (req, res) => {
         name: award.event_name,
         total_awards: 0,
         first_places: 0,
-        major_awards: 0
+        major_awards: 0,
+        awards: []
       };
     }
     const evt = yr.eventsMap[award.event_id];
     evt.total_awards++;
     if (award.is_first_place) evt.first_places++;
     if (isMajor) evt.major_awards++;
+    evt.awards.push(award);
   }
 
   // Format map into array
   const orgs = Object.values(orgsMap).map(org => {
     Object.keys(org.years).forEach(year => {
-      org.years[year].events = Object.values(org.years[year].eventsMap).sort((a,b) => a.name.localeCompare(b.name));
+      org.years[year].events = Object.values(org.years[year].eventsMap).sort((a, b) => a.name.localeCompare(b.name));
       delete org.years[year].eventsMap;
     });
     return org;
@@ -1598,7 +1600,7 @@ app.get('/widget/studio/:id', async (req, res) => {
     GROUP BY a.id
     ORDER BY e.year DESC, e.date_string DESC
   `;
-  
+
   const awardsRaw = await db.all(baseQuery, [req.params.id]);
 
   const theme = req.query.theme || 'dark';
@@ -1607,7 +1609,7 @@ app.get('/widget/studio/:id', async (req, res) => {
   const layout = req.query.layout || 'list';
   const premiumOnly = req.query.premiumOnly === 'true';
   const topPlacementsOnly = req.query.topPlacementsOnly === 'true';
-  
+
   const showTotalAwards = req.query.showTotalAwards !== 'false'; // default true for stats
   const showTopPlacements = req.query.showTopPlacements !== 'false';
   const showPastYear = req.query.showPastYear !== 'false';
@@ -1635,9 +1637,9 @@ app.get('/widget/studio/:id', async (req, res) => {
           isTopPlace = true;
         }
       }
-      
+
       const isPremium = app.locals.isPremiumAward(award);
-      
+
       if (premiumOnly && topPlacementsOnly) {
         return isPremium && isTopPlace;
       } else if (premiumOnly) {
@@ -1652,12 +1654,12 @@ app.get('/widget/studio/:id', async (req, res) => {
   // Final limit after filtering
   awards = awards.slice(0, 20);
 
-  res.render('widget', { 
-    studio, 
-    awards, 
-    theme, 
-    primaryColor, 
-    bg, 
+  res.render('widget', {
+    studio,
+    awards,
+    theme,
+    primaryColor,
+    bg,
     layout,
     widgetStats,
     showTotalAwards,
@@ -1689,7 +1691,7 @@ app.get('/my-dancer', requireAuth, async (req, res) => {
 app.get('/manage/dancer/:id', requireAuth, async (req, res) => {
   const db = await openDb();
   const dancer = await db.get('SELECT * FROM dancers WHERE id = ?', [req.params.id]);
-  
+
   if (!dancer) return res.status(404).send('Dancer not found');
   if (dancer.claimed_by_user_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin') {
     return res.status(403).send('Forbidden: Not the owner');
@@ -1719,7 +1721,7 @@ app.get('/manage/dancer/:id', requireAuth, async (req, res) => {
 app.post('/manage/dancer/:id/update', requireAuth, async (req, res) => {
   const db = await openDb();
   const dancer = await db.get('SELECT claimed_by_user_id FROM dancers WHERE id = ?', [req.params.id]);
-  
+
   if (!dancer || (dancer.claimed_by_user_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) {
     return res.status(403).send('Forbidden');
   }
@@ -1730,21 +1732,21 @@ app.post('/manage/dancer/:id/update', requireAuth, async (req, res) => {
     SET name = ?, birthday = ?, headshot_url = ?, graduation_year = ?, instagram_handle = ?, tiktok_handle = ?
     WHERE id = ?
   `, [name, birthday || null, headshot_url || null, graduation_year || null, instagram_handle || null, tiktok_handle || null, req.params.id]);
-  
+
   res.redirect(`/manage/dancer/${req.params.id}`);
 });
 
 app.post('/manage/dancer/:id/join-studio', requireAuth, async (req, res) => {
   const db = await openDb();
   const dancer = await db.get('SELECT claimed_by_user_id FROM dancers WHERE id = ?', [req.params.id]);
-  
+
   if (!dancer || (dancer.claimed_by_user_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) {
     return res.status(403).send('Forbidden');
   }
 
   const { studio_unique_id } = req.body;
   const studio = await db.get('SELECT id FROM studios WHERE unique_id = ?', [studio_unique_id.trim()]);
-  
+
   if (!studio) {
     return res.send(`<script>alert("Studio not found with that Unique ID."); window.location.href="/manage/dancer/${req.params.id}";</script>`);
   }
@@ -1761,7 +1763,7 @@ app.post('/manage/dancer/:id/join-studio', requireAuth, async (req, res) => {
 // API: Search Missing Awards
 app.get('/api/dancer/:id/search-missing-awards', requireAuth, async (req, res) => {
   const db = await openDb();
-  
+
   // Verify ownership
   const dancer = await db.get('SELECT claimed_by_user_id FROM dancers WHERE id = ?', [req.params.id]);
   if (!dancer || (dancer.claimed_by_user_id !== req.session.user.id && req.session.user.role !== 'superadmin')) {
@@ -1772,10 +1774,10 @@ app.get('/api/dancer/:id/search-missing-awards', requireAuth, async (req, res) =
   if (!q || q.trim().length < 2) {
     return res.json([]);
   }
-  
+
   q = q.trim();
   const nameQuery = `%${q}%`;
-  
+
   try {
     let sql = `
       SELECT 
@@ -1813,7 +1815,7 @@ app.get('/api/dancer/:id/search-missing-awards', requireAuth, async (req, res) =
 // API: Claim Missing Award (Smart Auto-Backfill)
 app.post('/manage/dancer/:id/claim-missing-award', requireAuth, async (req, res) => {
   const db = await openDb();
-  
+
   // Verify ownership
   const dancer = await db.get('SELECT claimed_by_user_id FROM dancers WHERE id = ?', [req.params.id]);
   if (!dancer || (dancer.claimed_by_user_id !== req.session.user.id && req.session.user.role !== 'superadmin')) {
@@ -1822,7 +1824,7 @@ app.post('/manage/dancer/:id/claim-missing-award', requireAuth, async (req, res)
 
   const { award_id } = req.body;
   if (!award_id) return res.status(400).json({ error: 'Missing award ID' });
-  
+
   try {
     // Check if already linked
     const existing = await db.get('SELECT id FROM award_dancers WHERE dancer_id = ? AND award_id = ?', [req.params.id, award_id]);
@@ -1832,18 +1834,18 @@ app.post('/manage/dancer/:id/claim-missing-award', requireAuth, async (req, res)
 
     // Insert pending claim for the main award
     await db.run("INSERT INTO award_dancers (award_id, dancer_id, status) VALUES (?, ?, 'pending')", [award_id, req.params.id]);
-    
+
     // Smart Auto-Backfill
     const targetAward = await db.get('SELECT event_id, performance_name, studio_id FROM awards WHERE id = ?', [award_id]);
     let backfilledCount = 0;
-    
+
     if (targetAward && targetAward.performance_name && targetAward.event_id) {
       // Find other awards for the same routine at the same event
       const relatedAwards = await db.all(
         'SELECT id FROM awards WHERE event_id = ? AND performance_name = ? AND id != ?',
         [targetAward.event_id, targetAward.performance_name, award_id]
       );
-      
+
       for (let rel of relatedAwards) {
         const exist = await db.get('SELECT id FROM award_dancers WHERE dancer_id = ? AND award_id = ?', [req.params.id, rel.id]);
         if (!exist) {
@@ -1852,7 +1854,7 @@ app.post('/manage/dancer/:id/claim-missing-award', requireAuth, async (req, res)
         }
       }
     }
-    
+
     res.json({ success: true, backfilledCount });
   } catch (err) {
     console.error(err);
@@ -1962,9 +1964,9 @@ app.get('/', async (req, res) => {
     GROUP BY o.id
     ORDER BY o.name
   `);
-  
+
   const isAdmin = req.session && req.session.user && (req.session.user.role === 'admin' || req.session.user.role === 'superadmin');
-  
+
   if (isAdmin) {
     res.render('index_admin', { featuredStudios, topStudios, topStudiosThisYear, topStudiosFirstPlaceThisYear, topDancers, topDancersThisYear, topDancersFirstPlaceThisYear, orgs });
   } else {
@@ -1976,7 +1978,7 @@ app.get('/org/:slug', async (req, res) => {
   if (!req.session || !req.session.user || (req.session.user.role !== 'admin' && req.session.user.role !== 'superadmin')) {
     return res.status(403).send('Detailed event data is only available to platform administrators.');
   }
-  
+
   const db = await openDb();
   const org = await db.get(`SELECT * FROM organizations WHERE slug = ?`, [req.params.slug]);
   if (!org) return res.status(404).send('Organization not found');
@@ -2632,7 +2634,7 @@ app.post('/api/admin/org/:orgId/categories/toggle', express.json(), async (req, 
   const newStatus = is_first_place ? 1 : 0;
 
   const db = await openDb();
-  
+
   try {
     const result = await db.run(`
       UPDATE awards 
@@ -2653,7 +2655,7 @@ app.post('/api/admin/org/:orgId/categories/toggle', express.json(), async (req, 
 // GET studio first places
 app.get('/studio/:id/first-places', async (req, res) => {
   const db = await openDb();
-  
+
   const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
   if (!studio) return res.status(404).send('Studio not found');
 
@@ -2698,7 +2700,7 @@ app.get('/studio/:id', async (req, res) => {
 
   awards.forEach(a => {
     if (a.custom_icons) {
-      try { a.customIconsObj = JSON.parse(a.custom_icons); } catch(e) {}
+      try { a.customIconsObj = JSON.parse(a.custom_icons); } catch (e) { }
     }
   });
 
@@ -2877,7 +2879,7 @@ app.get('/studio/:id', async (req, res) => {
   // Format orgsMap into array
   const orgsHistory = Object.values(orgsMap).map(org => {
     Object.keys(org.years).forEach(year => {
-      org.years[year].events = Object.values(org.years[year].eventsMap).sort((a,b) => a.name.localeCompare(b.name));
+      org.years[year].events = Object.values(org.years[year].eventsMap).sort((a, b) => a.name.localeCompare(b.name));
       delete org.years[year].eventsMap;
     });
     return org;
@@ -2889,7 +2891,7 @@ app.get('/studio/:id', async (req, res) => {
 
 app.get('/api/studio/:id/year/:year', async (req, res) => {
   const db = await openDb();
-  
+
   const awards = await db.all(`
     SELECT a.*, d.name as dancer_name, d.unique_id, e.name as event_name, e.year as event_year, e.date_string, o.name as org_name, o.logo_url, o.custom_icons
     FROM awards a
@@ -2902,7 +2904,7 @@ app.get('/api/studio/:id/year/:year', async (req, res) => {
 
   awards.forEach(a => {
     if (a.custom_icons) {
-      try { a.customIconsObj = JSON.parse(a.custom_icons); } catch(e) {}
+      try { a.customIconsObj = JSON.parse(a.custom_icons); } catch (e) { }
     }
   });
 
@@ -2976,7 +2978,7 @@ app.get('/dancer/:unique_id', async (req, res) => {
 
   awards.forEach(a => {
     if (a.custom_icons) {
-      try { a.customIconsObj = JSON.parse(a.custom_icons); } catch(e) {}
+      try { a.customIconsObj = JSON.parse(a.custom_icons); } catch (e) { }
     }
   });
 
@@ -2986,11 +2988,11 @@ app.get('/dancer/:unique_id', async (req, res) => {
     const lower = str.toLowerCase();
     return lower.includes('scholarship') || lower.includes('invite') || lower.includes('invitation');
   };
-  
-  const conventionAwards = awards.filter(a => 
-    specialClassTypes.includes(a.award_class) || 
-    isSpecialKeyword(a.award_type) || 
-    isSpecialKeyword(a.category) || 
+
+  const conventionAwards = awards.filter(a =>
+    specialClassTypes.includes(a.award_class) ||
+    isSpecialKeyword(a.award_type) ||
+    isSpecialKeyword(a.category) ||
     isSpecialKeyword(a.performance_name) ||
     (!a.performance_name && a.dancer_count > 1)
   );
@@ -3182,7 +3184,12 @@ app.post('/api/claim-award', claimAwardLimiter, async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3008;
-app.listen(PORT, async () => {
+app.listen(PORT, async (err) => {
+  if (err) {
+    console.error("Failed to start server:", err);
+    process.exit(1);
+  }
+
   console.log(`Server running on http://localhost:${PORT}`);
 
   // Bootstrap Superadmin
@@ -3214,13 +3221,13 @@ cron.schedule('0 3 * * *', () => {
     const backupPath = path.join(__dirname, 'backups', `database_${dateStr}.sqlite`);
     fs.copyFileSync(path.join(__dirname, 'database.sqlite'), backupPath);
     console.log(`Backup successfully created at ${backupPath}`);
-    
+
     // Cleanup old backups (keep last 7)
     const files = fs.readdirSync(path.join(__dirname, 'backups'))
       .filter(f => f.startsWith('database_') && f.endsWith('.sqlite'))
       .sort()
       .reverse();
-    
+
     if (files.length > 7) {
       const toDelete = files.slice(7);
       toDelete.forEach(file => {

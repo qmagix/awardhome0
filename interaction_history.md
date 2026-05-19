@@ -607,3 +607,16 @@ Advised the user to re-run the Revolution batch script to backfill the purged da
 - Added visual badges for the `age_division` across all public views (`views/partials/studio_year_events.ejs`, `views/studio.ejs`, and `views/dancer.ejs`).
 - Updated the Awards Editor (`views/manage_studio_awards.ejs`) to allow editing of the Age Division via the Single Edit Modal and Self-Report Modal.
 - Extended the Bulk CSV Upload feature to include an Age Division column, updating the template, the preview UI (`views/manage_studio_awards_csv.ejs`), and the parsing logic in `server.js`.
+
+## 2026-05-19: Bug Fix - "Cannot GET /manage/studio/842/history"
+- **Request:** The user reported a `404 Not Found (Cannot GET)` error when attempting to access the studio history route.
+- **Investigation:** Analyzed `server.js` and confirmed that the route `app.get('/manage/studio/:id/history')` was properly defined and placed at the top level of the AST. Tested routing behavior via `curl` and found that the active server process was returning a 404 despite the file being valid. Discovered that an old, stale `node server.js` background process (PID 6788) from May 15th was binding to port 3008. Because it was running older code from before the history route was added (May 17th), the route did not exist in its memory.
+- **Action:** Executed `pkill -f "node server.js"` to terminate the orphaned daemon. The user can now restart the server cleanly, which will load the current file with the correct route. No code changes were necessary.
+
+## 2026-05-19: UI Enhancement - Studio History Drill Down
+- **Request:** The user requested the ability to drill down further into the Studio History page to see specific award details for each event attended.
+- **Implementation:** 
+  - Modified the `server.js` route `/manage/studio/:id/history` to inject an array of specific award objects (`evt.awards`) into the nested `eventsMap` hierarchy during aggregation.
+  - Updated `views/manage_studio_history.ejs` to use `<details>` elements for each event item instead of a static `<li>`.
+  - Added a clean, responsive HTML table inside the event `<details>` panel that loops through the `evt.awards` array, sorting them by place (e.g. 1st, 2nd) and displaying the Place, Routine, Category, Age Division (with premium badges), and Level.
+- **Result:** The Studio History dashboard now allows users to click on any event to expand a clean data table displaying the exact routines and placements they earned at that event.

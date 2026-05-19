@@ -108,14 +108,53 @@
                     </div>
                   </summary>
                   <div style="padding: 0 1rem 1rem 1rem; border-top: 1px solid rgba(255,255,255,0.05); margin-top: 0.5rem; padding-top: 1rem;">
-                    <ul style="margin: 0; padding-left: 1.5rem; color: var(--text-muted); font-size: 0.9rem;">
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
                       <% yrData.events.forEach(evt => { %>
-                        <li style="margin-bottom: 0.5rem;">
-                          <strong style="color: white;"><%= evt.name %></strong> 
-                          <span style="margin-left: 0.5rem; font-size: 0.85rem;">(<%= evt.total_awards %> Awards, <%= evt.first_places %> 1st Places)</span>
-                        </li>
+                        <details style="background: rgba(0,0,0,0.2); border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                          <summary style="padding: 0.75rem 1rem; cursor: pointer; display: flex; align-items: center; justify-content: space-between; font-size: 0.9rem;">
+                            <div>
+                              <strong style="color: white;"><%= evt.name %></strong> 
+                              <span style="margin-left: 0.5rem; font-size: 0.85rem; color: var(--text-muted);">(<%= evt.total_awards %> Awards, <%= evt.first_places %> 1st Places)</span>
+                            </div>
+                          </summary>
+                          <div style="padding: 0 1rem 1rem 1rem; overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                              <thead>
+                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-muted); text-align: left;">
+                                  <th style="padding: 0.5rem;">Award</th>
+                                  <th style="padding: 0.5rem;">Routine</th>
+                                  <th style="padding: 0.5rem;">Category / Age</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <% evt.awards.sort((a,b) => {
+                                  const pA = parseInt(a.place) || 999;
+                                  const pB = parseInt(b.place) || 999;
+                                  return pA - pB;
+                                }).forEach(award => { %>
+                                  <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                    <td style="padding: 0.5rem;">
+                                      <% if (award.is_first_place) { %>🥇 <% } %>
+                                      <strong style="color: white;"><%= award.place %></strong>
+                                      <% if (award.award_class) { %>
+                                        <span style="color: var(--text-muted); font-size: 0.75rem; display: block; text-transform: capitalize;"><%= award.award_class %></span>
+                                      <% } %>
+                                    </td>
+                                    <td style="padding: 0.5rem; color: white;"><%= award.performance_name || 'N/A' %></td>
+                                    <td style="padding: 0.5rem; color: var(--text-muted);">
+                                      <%= award.category || award.award_type || 'N/A' %>
+                                      <% if (award.age_division) { %>
+                                        <span class="badge" style="background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); font-size: 0.7rem; padding: 0.1rem 0.3rem; margin-left: 0.3rem;"><%= award.age_division %></span>
+                                      <% } %>
+                                    </td>
+                                  </tr>
+                                <% }) %>
+                              </tbody>
+                            </table>
+                          </div>
+                        </details>
                       <% }) %>
-                    </ul>
+                    </div>
                   </div>
                 </details>
               <% }) %>
