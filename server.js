@@ -773,7 +773,7 @@ app.post('/manage/studio/:id/roster/:dancerId/toggle-status', requireAuth, async
 });
 
 app.post('/manage/studio/:id/awards/self-report', requireAuth, async (req, res) => {
-  const { event_name, year, category, performance_name, place, dancer_ids } = req.body;
+  const { event_name, year, category, age_division, performance_name, place, dancer_ids } = req.body;
   const db = await openDb();
 
   const studio = await db.get('SELECT owner_id FROM studios WHERE id = ?', [req.params.id]);
@@ -784,9 +784,9 @@ app.post('/manage/studio/:id/awards/self-report', requireAuth, async (req, res) 
   const event = await db.get('SELECT id FROM events ORDER BY id DESC LIMIT 1');
 
   await db.run(`
-    INSERT INTO awards (event_id, place, performance_name, category, studio_id, is_self_added, verification_status) 
-    VALUES (?, ?, ?, ?, ?, 1, 'unverified')
-  `, [event.id, place, performance_name, category, req.params.id]);
+    INSERT INTO awards (event_id, place, performance_name, category, age_division, studio_id, is_self_added, verification_status) 
+    VALUES (?, ?, ?, ?, ?, ?, 1, 'unverified')
+  `, [event.id, place, performance_name, category, age_division, req.params.id]);
 
   const award = await db.get('SELECT id FROM awards ORDER BY id DESC LIMIT 1');
 
@@ -827,6 +827,7 @@ app.post('/manage/studio/:id/awards/csv-preview', requireAuth, upload.single('cs
       const performanceName = row[findKey('routine')] || row[findKey('performance')] || '';
       const place = row[findKey('place')] || row[findKey('result')] || '';
       const category = row[findKey('category')] || '';
+      const ageDivision = row[findKey('agedivision')] || row[findKey('division')] || row[findKey('age')] || '';
       const dancersStr = row[findKey('dancer')] || '';
 
       const missing = [];
@@ -854,6 +855,7 @@ app.post('/manage/studio/:id/awards/csv-preview', requireAuth, upload.single('cs
         performance_name: performanceName,
         place: place,
         category: category,
+        age_division: ageDivision,
         dancers: matchedDancers,
         isValid: missing.length === 0,
         missing: missing
@@ -894,9 +896,9 @@ app.post('/manage/studio/:id/awards/csv-commit', requireAuth, async (req, res) =
       }
 
       await db.run(`
-        INSERT INTO awards (event_id, place, performance_name, category, studio_id, is_self_added, verification_status)
-        VALUES (?, ?, ?, ?, ?, 1, 'unverified')
-      `, [event.id, row.place, row.performance_name, row.category, req.params.id]);
+        INSERT INTO awards (event_id, place, performance_name, category, age_division, studio_id, is_self_added, verification_status)
+        VALUES (?, ?, ?, ?, ?, ?, 1, 'unverified')
+      `, [event.id, row.place, row.performance_name, row.category, row.age_division, req.params.id]);
 
       const award = await db.get('SELECT id FROM awards ORDER BY id DESC LIMIT 1');
 
@@ -1501,7 +1503,7 @@ app.post('/manage/studio/:id/awards/:awardId/update', requireAuth, async (req, r
   const award = await db.get('SELECT * FROM awards WHERE id = ? AND studio_id = ?', [req.params.awardId, req.params.id]);
   if (!award) return res.status(404).send('Award not found');
 
-  const { performance_name, place, award_type } = req.body;
+  const { performance_name, place, award_type, category, age_division } = req.body;
 
   if (performance_name && !award.performance_name) {
     await db.run('UPDATE awards SET performance_name = ? WHERE id = ?', [performance_name, award.id]);
@@ -1511,6 +1513,12 @@ app.post('/manage/studio/:id/awards/:awardId/update', requireAuth, async (req, r
   }
   if (award_type && !award.award_type) {
     await db.run('UPDATE awards SET award_type = ? WHERE id = ?', [award_type, award.id]);
+  }
+  if (category !== undefined) {
+    await db.run('UPDATE awards SET category = ? WHERE id = ?', [category, award.id]);
+  }
+  if (age_division !== undefined) {
+    await db.run('UPDATE awards SET age_division = ? WHERE id = ?', [age_division, award.id]);
   }
 
   const yearQuery = req.query.year ? `?year=${req.query.year}` : '';

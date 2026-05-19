@@ -86,7 +86,7 @@
             <th>Event</th>
             <th>Performance Name</th>
             <th>Place</th>
-            <th>Award Type</th>
+            <th>Type & Category</th>
             <th>Primary Dancer</th>
             <th>Group Dancers</th>
             <th>Actions</th>
@@ -125,8 +125,15 @@
                 
                 <td>
                   <% if (award.award_type) { %>
-                    <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981;"><%= award.award_type %></span>
-                  <% } else { %>
+                    <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981; margin-bottom: 0.25rem; display: inline-block;"><%= award.award_type %></span>
+                  <% } %>
+                  <% if (award.age_division) { %>
+                    <span class="badge" style="background: rgba(168, 85, 247, 0.2); color: #c084fc; font-size: 0.65rem; border: 1px solid rgba(168, 85, 247, 0.3); margin-bottom: 0.25rem; display: inline-block;"><%= award.age_division %></span>
+                  <% } %>
+                  <% if (award.category) { %>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);"><%= award.category %></div>
+                  <% } %>
+                  <% if (!award.award_type && !award.category && !award.age_division) { %>
                     <span style="color: var(--text-muted); font-style: italic;">Missing</span>
                   <% } %>
                 </td>
@@ -163,6 +170,8 @@
                     data-perf="<%= award.performance_name || '' %>"
                     data-place="<%= award.place || '' %>"
                     data-type="<%= award.award_type || '' %>"
+                    data-cat="<%= award.category || '' %>"
+                    data-agediv="<%= award.age_division || '' %>"
                     style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">
                     Edit
                   </button>
@@ -197,6 +206,16 @@
         <div>
           <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Award Type</label>
           <input type="text" id="typeInput" name="award_type" style="width: 100%; padding: 0.5rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 4px;">
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+        <div>
+          <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Category</label>
+          <input type="text" id="catInput" name="category" style="width: 100%; padding: 0.5rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 4px;">
+        </div>
+        <div>
+          <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Age Division</label>
+          <input type="text" id="ageDivInput" name="age_division" placeholder="e.g. Junior" style="width: 100%; padding: 0.5rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 4px;">
         </div>
       </div>
       <button type="submit" class="btn" style="width: 100%; background: var(--primary); color: white; border: none; padding: 0.75rem; border-radius: 4px; cursor: pointer;">Save Changes</button>
@@ -247,9 +266,15 @@
         </div>
       </div>
 
-      <div>
-        <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Category</label>
-        <input type="text" name="category" placeholder="e.g. Junior Solo Lyrical" style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div>
+          <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Category</label>
+          <input type="text" name="category" placeholder="e.g. Solo Lyrical" style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+        </div>
+        <div>
+          <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Age Division</label>
+          <input type="text" name="age_division" placeholder="e.g. Junior" style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+        </div>
       </div>
 
       <div>
@@ -276,9 +301,9 @@
     
     <div style="background: rgba(234, 179, 8, 0.1); border: 1px solid rgba(234, 179, 8, 0.3); padding: 1rem; border-radius: 8px; margin-bottom: 2rem;">
       <h4 style="margin: 0 0 0.5rem 0; color: #eab308;">1. Download Template</h4>
-      <p style="margin: 0 0 1rem 0; font-size: 0.9rem; color: var(--text-muted);">Ensure your CSV columns match exactly: <strong>Competition Name, Year, Routine Name, Place, Category, Dancers</strong></p>
+      <p style="margin: 0 0 1rem 0; font-size: 0.9rem; color: var(--text-muted);">Ensure your CSV columns match exactly: <strong>Competition Name, Year, Routine Name, Place, Category, Age Division, Dancers</strong></p>
       <!-- Create a blob for download so we don't need a static file -->
-      <a href="data:text/csv;charset=utf-8,Competition Name,Year,Routine Name,Place,Category,Dancers%0ADanceKar,2023,Jazz Hands,1st Place Overall,Junior Solo Lyrical,%22John Doe, Jane Smith%22" download="template_awards.csv" class="btn" style="background: transparent; border: 1px solid #eab308; color: #eab308; padding: 0.5rem 1rem; text-decoration: none; font-size: 0.9rem;">Download Template</a>
+      <a href="data:text/csv;charset=utf-8,Competition Name,Year,Routine Name,Place,Category,Age Division,Dancers%0ADanceKar,2023,Jazz Hands,1st Place Overall,Solo Lyrical,Junior,%22John Doe, Jane Smith%22" download="template_awards.csv" class="btn" style="background: transparent; border: 1px solid #eab308; color: #eab308; padding: 0.5rem 1rem; text-decoration: none; font-size: 0.9rem;">Download Template</a>
     </div>
 
     <form action="/manage/studio/<%= studio.id %>/awards/csv-preview" method="POST" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 1rem;">
@@ -308,6 +333,8 @@
       const perf = btn.getAttribute('data-perf');
       const place = btn.getAttribute('data-place');
       const type = btn.getAttribute('data-type');
+      const cat = btn.getAttribute('data-cat');
+      const ageDiv = btn.getAttribute('data-agediv');
 
       // Set action URLs
       const yearQuery = selectedYear ? `?year=${selectedYear}` : '';
@@ -329,6 +356,12 @@
       typeInput.value = type;
       typeInput.readOnly = !!type;
       typeInput.style.opacity = !!type ? '0.5' : '1';
+
+      const catInput = document.getElementById('catInput');
+      catInput.value = cat;
+
+      const ageDivInput = document.getElementById('ageDivInput');
+      ageDivInput.value = ageDiv;
 
       modal.style.display = 'flex';
     });

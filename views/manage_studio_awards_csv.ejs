@@ -24,6 +24,7 @@
           <th>Routine Name</th>
           <th>Place</th>
           <th>Category</th>
+          <th>Age Division</th>
           <th>Dancers</th>
         </tr>
       </thead>
@@ -44,6 +45,7 @@
             <td><%= row.performance_name || '-' %></td>
             <td><%= row.place || '-' %></td>
             <td><%= row.category || '-' %></td>
+            <td><%= row.age_division || '-' %></td>
             <td>
               <% if (row.dancers && row.dancers.length > 0) { %>
                 <div style="display: flex; flex-wrap: wrap; gap: 0.25rem;">

@@ -223,8 +223,11 @@
               <div style="position: absolute; top: -15px; right: -15px; font-size: 5rem; opacity: 0.05; text-shadow: 0 0 20px var(--accent-gold);"><%= getPremiumDetails(award).icon %></div>
               <div style="font-size: 0.75rem; color: var(--primary); font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 0.5rem;"><%= award.event_year %> <%= award.org_name %></div>
               <h4 style="margin: 0 0 0.5rem 0; font-size: 1.1rem; color: white;"><%= award.performance_name %></h4>
-              <p style="margin: 0; color: #fbbf24; font-weight: 800; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
-                <%= formatPlacement(award) %> - <%= award.award_type || award.category %>
+              <p style="margin: 0; color: #fbbf24; font-weight: 800; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; flex-wrap: wrap;">
+                <% if (award.age_division) { %>
+                  <span class="badge" style="background: rgba(168, 85, 247, 0.2); color: #c084fc; font-size: 0.7rem; border: 1px solid rgba(168, 85, 247, 0.3); padding: 2px 6px;"><%= award.age_division %></span>
+                <% } %>
+                <span><%= formatPlacement(award) %> - <%= award.award_type || award.category %></span>
               </p>
               <% if (award.dancers && award.dancers.length > 0) { %>
                 <p style="margin: 0.75rem 0 0 0; font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;"><%= award.dancers.map(d => d.name).join(', ') %></p>

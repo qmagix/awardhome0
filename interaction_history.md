@@ -598,3 +598,12 @@ Advised the user to re-run the Revolution batch script to backfill the purged da
 - Linked 'Major Awards' logic into the existing Hall of Fame algorithm (First Place + Premium/Title keywords).
 - Added a new checkbox to the studio customization dashboard to allow studio owners to toggle public visibility of this analytics block.
 - Integrated the conditionally-rendered Organization History summary into the public `views/studio.ejs` profile.
+
+
+### Expose Age Division in UI (2026-05-19)
+**User Request:** Extend the award model and UI to display level/age division information (e.g. Senior, Junior, Pre-Competitive) that was seemingly missing from the YAGP results.
+**Implementation:**
+- Verified that the backend schema (`age_division`) and scraper scripts were already functioning correctly.
+- Added visual badges for the `age_division` across all public views (`views/partials/studio_year_events.ejs`, `views/studio.ejs`, and `views/dancer.ejs`).
+- Updated the Awards Editor (`views/manage_studio_awards.ejs`) to allow editing of the Age Division via the Single Edit Modal and Self-Report Modal.
+- Extended the Bulk CSV Upload feature to include an Age Division column, updating the template, the preview UI (`views/manage_studio_awards_csv.ejs`), and the parsing logic in `server.js`.
