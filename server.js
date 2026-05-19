@@ -1357,7 +1357,25 @@ app.get('/manage/studio/:id/history', requireAuth, async (req, res) => {
     WHERE a.studio_id = ?
   `, [req.params.id]);
 
+  const awardIds = awards.map(a => a.id);
+  let awardDancersMap = {};
+  if (awardIds.length > 0) {
+    const placeholders = awardIds.map(() => '?').join(',');
+    const dancersData = await db.all(`
+      SELECT ad.award_id, d.name
+      FROM award_dancers ad
+      JOIN dancers d ON ad.dancer_id = d.id
+      WHERE ad.award_id IN (${placeholders})
+    `, awardIds);
+    
+    dancersData.forEach(row => {
+      if (!awardDancersMap[row.award_id]) awardDancersMap[row.award_id] = [];
+      awardDancersMap[row.award_id].push(row.name);
+    });
+  }
+
   awards.forEach(a => {
+    a.dancers = awardDancersMap[a.id] || [];
     if (a.custom_icons) {
       try { a.customIconsObj = JSON.parse(a.custom_icons); } catch (e) { }
     }

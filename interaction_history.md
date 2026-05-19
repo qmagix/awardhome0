@@ -627,3 +627,11 @@ Advised the user to re-run the Revolution batch script to backfill the purged da
   - Identified the process as the automated nightly `database.sqlite` backup job (`cron.schedule('0 3 * * *')`).
   - Added an environment variable check in `server.js` around the cron job: `if (process.env.ENABLE_NIGHTLY_BACKUPS === 'true') { ... }`.
 - **Result:** The cron job will now only run if `ENABLE_NIGHTLY_BACKUPS=true` is explicitly set in `.env`. Since it defaults to off, this will allow the Node process to exit cleanly if it fails to bind the port in the future.
+
+## 2026-05-19: Bug Fix - YAGP Awards & Dancer History Details
+- **Request:** The user pointed out that YAGP "Top 12" and "1st Place" awards were incorrectly displaying as "Adjudication" awards instead of "Overall" ranking awards, and requested dancer names to be added to the history table.
+- **Implementation:** 
+  - Ran a global SQLite migration query to permanently fix thousands of incorrectly tagged awards in the database (updating `award_class = 'adjudication'` to `'overall'` for all awards with placements like "Top 12", "1st Place", "2nd Place", etc.).
+  - Updated the `/manage/studio/:id/history` route in `server.js` to perform a secondary bulk query joining the `award_dancers` and `dancers` tables to pull all dancer names associated with the events on the page.
+  - Modified `views/manage_studio_history.ejs` to beautifully render the dancer names directly underneath the routine name in the history table.
+- **Result:** The UI now correctly labels top placements as "Overall" awards, and studio owners can easily identify exactly which dancers performed in every routine listed in their historical timeline.

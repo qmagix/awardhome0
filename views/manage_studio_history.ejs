@@ -140,7 +140,14 @@
                                         <span style="color: var(--text-muted); font-size: 0.75rem; display: block; text-transform: capitalize;"><%= award.award_class %></span>
                                       <% } %>
                                     </td>
-                                    <td style="padding: 0.5rem; color: white;"><%= award.performance_name || 'N/A' %></td>
+                                    <td style="padding: 0.5rem; color: white;">
+                                      <%= award.performance_name || 'N/A' %>
+                                      <% if (award.dancers && award.dancers.length > 0) { %>
+                                        <div style="margin-top: 0.3rem; font-size: 0.75rem; color: var(--text-muted);">
+                                          <%= award.dancers.join(', ') %>
+                                        </div>
+                                      <% } %>
+                                    </td>
                                     <td style="padding: 0.5rem; color: var(--text-muted);">
                                       <%= award.category || award.award_type || 'N/A' %>
                                       <% if (award.age_division) { %>
