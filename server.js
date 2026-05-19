@@ -3211,7 +3211,8 @@ app.listen(PORT, async (err) => {
 });
 
 // Setup automated nightly backups at 3:00 AM
-cron.schedule('0 3 * * *', () => {
+if (process.env.ENABLE_NIGHTLY_BACKUPS === 'true') {
+  cron.schedule('0 3 * * *', () => {
   console.log('Running automated nightly backup of database.sqlite...');
   try {
     if (!fs.existsSync(path.join(__dirname, 'backups'))) {
@@ -3239,3 +3240,4 @@ cron.schedule('0 3 * * *', () => {
     console.error('Failed to run nightly backup:', err);
   }
 });
+}

@@ -620,3 +620,10 @@ Advised the user to re-run the Revolution batch script to backfill the purged da
   - Updated `views/manage_studio_history.ejs` to use `<details>` elements for each event item instead of a static `<li>`.
   - Added a clean, responsive HTML table inside the event `<details>` panel that loops through the `evt.awards` array, sorting them by place (e.g. 1st, 2nd) and displaying the Place, Routine, Category, Age Division (with premium badges), and Level.
 - **Result:** The Studio History dashboard now allows users to click on any event to expand a clean data table displaying the exact routines and placements they earned at that event.
+
+## 2026-05-19: Feature - Toggle for Automated Nightly Backups
+- **Request:** The user noticed a hidden background process keeping the Node event loop alive (preventing it from crashing on `EADDRINUSE`) and asked what it was and if it could be disabled via `.env`.
+- **Implementation:** 
+  - Identified the process as the automated nightly `database.sqlite` backup job (`cron.schedule('0 3 * * *')`).
+  - Added an environment variable check in `server.js` around the cron job: `if (process.env.ENABLE_NIGHTLY_BACKUPS === 'true') { ... }`.
+- **Result:** The cron job will now only run if `ENABLE_NIGHTLY_BACKUPS=true` is explicitly set in `.env`. Since it defaults to off, this will allow the Node process to exit cleanly if it fails to bind the port in the future.
