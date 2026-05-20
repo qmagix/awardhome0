@@ -635,3 +635,12 @@ Advised the user to re-run the Revolution batch script to backfill the purged da
   - Updated the `/manage/studio/:id/history` route in `server.js` to perform a secondary bulk query joining the `award_dancers` and `dancers` tables to pull all dancer names associated with the events on the page.
   - Modified `views/manage_studio_history.ejs` to beautifully render the dancer names directly underneath the routine name in the history table.
 - **Result:** The UI now correctly labels top placements as "Overall" awards, and studio owners can easily identify exactly which dancers performed in every routine listed in their historical timeline.
+
+## 2026-05-19: Feature - Automated Organization History Text Summary
+- **Request:** The user requested an automated way to generate a formatted text summary of a studio's performance history at a specific organization (like YAGP), matching a manual format they provided.
+- **Implementation:** 
+  - Added a new API endpoint `GET /api/studio/:id/history/org/:org_id/summary` in `server.js` that pulls the relevant awards and dancer data.
+  - Implemented complex string formatting logic directly in the endpoint: grouping by year and age division, cleaning up category names, appending `Regional` or elevating `Finals` events to their own top-level groups, and mapping standard placements to emojis.
+  - Added a "Generate Text Summary" button next to each organization on the Studio History dashboard.
+  - Implemented a hidden UI modal containing a readonly `textarea` and a "Copy to Clipboard" button that triggers an AJAX fetch to populate the text dynamically.
+- **Result:** Studio owners can now instantly generate, copy, and share perfectly formatted textual timelines of their studio's awards at any given competition.

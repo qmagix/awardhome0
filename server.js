@@ -1453,6 +1453,112 @@ app.get('/manage/studio/:id/history', requireAuth, async (req, res) => {
   res.render('manage_studio_history', { studio, orgs });
 });
 
+app.get('/api/studio/:id/history/org/:org_id/summary', requireAuth, async (req, res) => {
+  const db = await openDb();
+  const studioId = req.params.id;
+  const orgId = req.params.org_id;
+
+  // Verify permissions
+  const studio = await db.get('SELECT * FROM studios WHERE id = ?', [studioId]);
+  if (!studio) return res.status(404).send('Studio not found');
+  if (req.session.user.role !== 'admin' && req.session.user.role !== 'superadmin' && studio.owner_id !== req.session.user.id) {
+    return res.status(403).send('Forbidden');
+  }
+
+  const org = await db.get('SELECT name FROM organizations WHERE id = ?', [orgId]);
+  if (!org) return res.status(404).send('Org not found');
+  const isYagp = org.name.toLowerCase().includes('yagp');
+
+  const awards = await db.all(`
+    SELECT a.*, e.name as event_name, e.year as event_year
+    FROM awards a
+    JOIN events e ON a.event_id = e.id
+    WHERE a.studio_id = ? AND e.org_id = ?
+    ORDER BY e.year ASC, a.age_division ASC, a.place ASC
+  `, [studioId, orgId]);
+
+  if (awards.length === 0) return res.json({ summary: "No awards found for this organization." });
+
+  const awardIds = awards.map(a => a.id);
+  const awardDancersMap = {};
+  if (awardIds.length > 0) {
+    const placeholders = awardIds.map(() => '?').join(',');
+    const dancersData = await db.all(`
+      SELECT ad.award_id, d.name
+      FROM award_dancers ad
+      JOIN dancers d ON ad.dancer_id = d.id
+      WHERE ad.award_id IN (${placeholders})
+    `, awardIds);
+    dancersData.forEach(row => {
+      if (!awardDancersMap[row.award_id]) awardDancersMap[row.award_id] = [];
+      awardDancersMap[row.award_id].push(row.name);
+    });
+  }
+
+  const groups = {};
+
+  for (const award of awards) {
+    let groupKey = String(award.event_year);
+    if (award.event_name.toLowerCase().includes('final')) {
+      groupKey = `${award.event_year} Final`;
+    }
+    
+    if (!groups[groupKey]) groups[groupKey] = {};
+
+    let ageDiv = award.age_division || 'Others';
+    ageDiv = ageDiv.replace(/ AGE DIVISION/i, '').trim();
+    ageDiv = ageDiv.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+
+    if (ageDiv === 'Others' && isYagp && (award.category || '').toLowerCase().includes('ensemble')) {
+       ageDiv = 'Ensembles';
+    }
+
+    if (!groups[groupKey][ageDiv]) groups[groupKey][ageDiv] = [];
+
+    const placeLower = String(award.place || '').toLowerCase();
+    let emoji = '';
+    if (placeLower.includes('hope') || placeLower.includes('youth grand prix') || placeLower.includes('grand prix')) emoji = '👑 ';
+    else if (placeLower.includes('1st')) emoji = '🥇';
+    else if (placeLower.includes('2nd')) emoji = '🥈';
+    else if (placeLower.includes('3rd')) emoji = '🥉';
+    else if (placeLower.includes('top')) emoji = '🎖';
+
+    let cleanedCategory = award.category || award.award_type || '';
+    cleanedCategory = cleanedCategory.replace(/-?\s*DANCE CATEGORY\s*-?/i, ' ').trim();
+    cleanedCategory = cleanedCategory.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+
+    const dancers = awardDancersMap[award.id] ? awardDancersMap[award.id].join(', ') : '';
+    let suffix = award.event_name.toLowerCase().includes('final') ? '' : ', Regional';
+
+    let formattedPlace = award.place ? award.place : 'Award';
+    let agePrefix = (ageDiv !== 'Others' && ageDiv !== 'Ensembles') ? `${ageDiv} ` : '';
+    
+    let lineStr = `${emoji}${formattedPlace}, ${agePrefix}${cleanedCategory}`;
+    if (dancers) lineStr += ` (${dancers})`;
+    else if (award.performance_name) lineStr += ` [${award.performance_name}]`;
+    if (suffix) lineStr += suffix;
+
+    groups[groupKey][ageDiv].push(lineStr);
+  }
+
+  let summaryText = org.name + " awards history\n\n";
+  const sortedYears = Object.keys(groups).sort();
+  
+  for (const year of sortedYears) {
+    summaryText += `${year}\n\n`;
+    
+    const divKeys = Object.keys(groups[year]).sort();
+    for (const div of divKeys) {
+      if (div !== 'Others') summaryText += `${div}\n`;
+      groups[year][div].forEach(line => {
+        summaryText += `${line}\n`;
+      });
+      summaryText += `\n`;
+    }
+  }
+
+  res.json({ summary: summaryText.trim() });
+});
 
 app.get('/manage/studio/:id/awards', requireAuth, async (req, res) => {
   const db = await openDb();
