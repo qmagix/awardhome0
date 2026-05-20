@@ -652,3 +652,14 @@ Advised the user to re-run the Revolution batch script to backfill the purged da
   - Replaced the simple UI modal in `manage_studio_history.ejs` with a dynamic, two-step checklist interface.
   - Implemented client-side JavaScript to iterate through the DOM's checked inputs, concatenate the selected labels, filter out empty headers, and assemble the final copy-pasteable text block on the fly.
 - **Result:** Studio owners now have fine-grained control over exactly which awards are included in their textual summaries without having to manually delete lines from a static text block.
+
+## 2026-05-20: Feature - AI Marketing Summary Generator & Data Flywheel
+- **Request:** The user requested an AI-powered summary generator that takes the historical awards data and writes compelling, concise marketing copy (for social media or press releases) to offer as a premium feature or a reward for claiming a studio. They also specifically requested database tracking of all prompts, AI outputs, and user edits to build a data flywheel for future model fine-tuning.
+- **Implementation:** 
+  - Installed the `openai` SDK and instantiated the client in `server.js` using the existing `.env` key.
+  - Created the `ai_summaries` SQLite table to track the data pipeline (`prompt`, `original_ai_response`, `user_edited_response`, etc).
+  - Built the `POST /api/studio/:id/history/org/:org_id/ai-summary` endpoint that accepts the user's checklist selection and tone choice to generate the OpenAI response and log the initial DB record.
+  - Built the `PUT /api/studio/ai-summary/:id` endpoint for background autosaving.
+  - Upgraded the Step 1 checklist UI to include a Tone selection dropdown (Enthusiastic vs Professional) and the "✨ Generate AI Summary" button.
+  - Attached a debounced `oninput` handler to the Step 2 textarea to automatically save user edits back to the database in real-time.
+- **Result:** Studio owners can now instantly generate highly customized, inspiring marketing copy based purely on their selected data, and the platform seamlessly logs all human-in-the-loop edits to continuously improve the system.

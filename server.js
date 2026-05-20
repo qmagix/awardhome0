@@ -11,6 +11,9 @@ const multer = require('multer');
 const { parse } = require('csv-parse/sync');
 const { generateDancerId, generateStudioId } = require('./utils');
 const { runBackfillForEvent } = require('./backfill_utils');
+const { OpenAI } = require('openai');
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const upload = multer({ dest: 'uploads/' });
 
@@ -1548,6 +1551,72 @@ app.get('/api/studio/:id/history/org/:org_id/summary', requireAuth, async (req, 
   }
 
   res.json({ orgName: org.name, groups });
+});
+
+app.post('/api/studio/:id/history/org/:org_id/ai-summary', requireAuth, async (req, res) => {
+  try {
+    const db = await openDb();
+    const studioId = req.params.id;
+    const orgId = req.params.org_id;
+    const { tone, awardsList, orgName } = req.body;
+
+    const studio = await db.get('SELECT * FROM studios WHERE id = ?', [studioId]);
+    if (!studio) return res.status(404).send('Studio not found');
+    if (req.session.user.role !== 'admin' && req.session.user.role !== 'superadmin' && studio.owner_id !== req.session.user.id) {
+      return res.status(403).send('Forbidden');
+    }
+
+    const awardsText = awardsList.join('\n');
+    let systemPrompt = `You are an expert marketing copywriter for a competitive dance studio. Write a concise, inspiring social media caption celebrating the studio's achievements at ${orgName} based on the provided list of awards.`;
+    
+    if (tone === 'Professional') {
+      systemPrompt = `You are a professional PR specialist for a competitive dance studio. Write a formal, concise press release blurb celebrating the studio's achievements at ${orgName} based on the provided list of awards. Avoid overly casual language or excessive emojis.`;
+    } else if (tone === 'Enthusiastic') {
+      systemPrompt = `You are an extremely enthusiastic marketing copywriter for a competitive dance studio. Write a highly energetic, inspiring social media caption celebrating the studio's achievements at ${orgName} based on the provided list of awards. Use emojis generously and make it sound exciting!`;
+    }
+
+    const prompt = `Awards List:\n${awardsText}\n\nWrite the marketing summary. Keep it under 150 words. Do not hallucinate any awards. Focus on podium placements (1st, 2nd, 3rd) and major awards.`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: prompt }
+      ]
+    });
+
+    const aiResponseText = response.choices[0].message.content.trim();
+
+    const result = await db.run(`
+      INSERT INTO ai_summaries (studio_id, org_id, tone, prompt, raw_awards_json, original_ai_response, user_edited_response)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `, [studioId, orgId, tone, prompt, JSON.stringify(awardsList), aiResponseText, aiResponseText]);
+
+    res.json({ id: result.lastID, text: aiResponseText });
+  } catch (error) {
+    console.error('OpenAI Error:', error);
+    res.status(500).json({ error: 'Failed to generate summary' });
+  }
+});
+
+app.put('/api/studio/ai-summary/:id', requireAuth, async (req, res) => {
+  try {
+    const db = await openDb();
+    const { text } = req.body;
+    
+    if (!req.session.user) return res.status(403).send('Forbidden');
+    
+    await db.run(`
+      UPDATE ai_summaries 
+      SET user_edited_response = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `, [text, req.params.id]);
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('DB Update Error:', error);
+    res.status(500).json({ error: 'Failed to save edits' });
+  }
 });
 
 app.get('/manage/studio/:id/awards', requireAuth, async (req, res) => {
