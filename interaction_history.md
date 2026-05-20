@@ -670,3 +670,8 @@ Advised the user to re-run the Revolution batch script to backfill the purged da
   - Updated `user_manual.md` with a new "9. AI Marketing Summary Generator" section detailing the two-step workflow, auto-check logic, and auto-saving features.
   - Updated `views/faq_admin.ejs` with a new "7. Generating AI Marketing Summaries" section providing a quick start guide for studio directors navigating the UI.
 - **Result:** Both the internal documentation and public-facing Admin FAQ are now fully up to date with the latest AI platform capabilities.
+
+## 2026-05-20: Bug Fix - EJS Syntax Error
+- **Request:** The user's IDE reported a syntax error (`Expression expected`) on line 80 of `manage_studio_history.ejs`.
+- **Implementation:** Refactored the `onclick` handler on the "Generate Text Summary" button. Replaced the messy inline JavaScript regex escaping (`'<%= org.name.replace(/'/g, "\\'") %>'`) with clean HTML5 `data-*` attributes (`data-org-name="<%= org.name %>"`) and passed the dataset properties into the click handler (`onclick="generateSummary(this.dataset.studioId, this.dataset.orgId, this.dataset.orgName)"`).
+- **Result:** Resolved the IDE syntax errors and made the HTML structure more robust against organizations with quotes in their names.
