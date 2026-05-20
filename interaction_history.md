@@ -675,3 +675,8 @@ Advised the user to re-run the Revolution batch script to backfill the purged da
 - **Request:** The user's IDE reported a syntax error (`Expression expected`) on line 80 of `manage_studio_history.ejs`.
 - **Implementation:** Refactored the `onclick` handler on the "Generate Text Summary" button. Replaced the messy inline JavaScript regex escaping (`'<%= org.name.replace(/'/g, "\\'") %>'`) with clean HTML5 `data-*` attributes (`data-org-name="<%= org.name %>"`) and passed the dataset properties into the click handler (`onclick="generateSummary(this.dataset.studioId, this.dataset.orgId, this.dataset.orgName)"`).
 - **Result:** Resolved the IDE syntax errors and made the HTML structure more robust against organizations with quotes in their names.
+
+## 2026-05-20: Enhancement - AI Summary Quick Selection
+- **Request:** The user requested an easier way to select only the most recent year's awards for the AI summary, or all years, without having to manually check/uncheck dozens of boxes.
+- **Implementation:** Added three quick-select helper buttons ("Select All", "Most Recent Year Only", "Clear All") directly above the checklist modal in `manage_studio_history.ejs`. Implemented client-side logic to dynamically find the highest year group and check all its boxes while clearing the others.
+- **Result:** Studio owners can now instantly toggle their selection scope before generating their AI summaries, vastly improving the UX for studios with massive historical archives.
