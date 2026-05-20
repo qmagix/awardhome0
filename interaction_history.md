@@ -688,3 +688,13 @@ Advised the user to re-run the Revolution batch script to backfill the purged da
   - Built a new EJS view `manage_studio_ai_summaries.ejs` that renders the summaries grouped by organization in a beautiful card layout. Only the final `user_edited_response` is shown for simplicity.
   - Added a "✨ AI Summaries" link to the global sidebar navigation across all 6 management views (`manage_studio.ejs`, `manage_studio_roster.ejs`, etc).
 - **Result:** Studio owners now have a centralized, persistent library of all their AI-generated marketing assets, properly categorized and easy to copy-paste for future use.
+
+## 2026-05-20: Feature - Dynamic Superadmin AI Model Switcher
+- **Request:** The user requested an admin interface to dynamically switch the LLM model used for the AI Marketing Summaries, avoiding the need for a `.env` restart and allowing them to optimize for cost or quality (`gpt-4o-mini`, `o3-mini`, etc).
+- **Implementation:** 
+  - Added a `system_settings` key-value table to the SQLite database via `database.js`.
+  - Built `GET /admin/settings` and `POST /api/admin/settings` endpoints to view and securely save global settings.
+  - Created a new `views/admin_settings.ejs` dashboard with an informative radio-button selector for `gpt-4o-mini`, `gpt-4o`, `o1-mini`, `o3-mini`, and `gpt-3.5-turbo`.
+  - Added a "⚙️ Settings" link to the Superadmin global navigation.
+  - Rewired the AI Summary endpoint to query the database for the `openai_model` setting immediately before calling the OpenAI API.
+- **Result:** Superadmins can now instantaneously switch out the underlying AI engine without any server downtime.

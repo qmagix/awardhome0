@@ -166,6 +166,13 @@ async function initDb() {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
+    CREATE TABLE IF NOT EXISTS system_settings (
+      key TEXT PRIMARY KEY,
+      value TEXT
+    );
+
+    INSERT OR IGNORE INTO system_settings (key, value) VALUES ('openai_model', 'gpt-4o-mini');
+
     -- Performance Indexes
     CREATE INDEX IF NOT EXISTS idx_awards_event ON awards(event_id);
     CREATE INDEX IF NOT EXISTS idx_awards_studio ON awards(studio_id);

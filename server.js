@@ -1610,8 +1610,11 @@ app.post('/api/studio/:id/history/org/:org_id/ai-summary', requireAuth, async (r
 
     const prompt = `Awards List:\n${awardsText}\n\nWrite the marketing summary. Keep it under 150 words. Do not hallucinate any awards. Focus on podium placements (1st, 2nd, 3rd) and major awards.`;
 
+    const modelSetting = await db.get(`SELECT value FROM system_settings WHERE key = 'openai_model'`);
+    const aiModel = modelSetting ? modelSetting.value : 'gpt-4o-mini';
+
     const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: aiModel,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: prompt }
@@ -2328,6 +2331,40 @@ app.get('/admin/accounts', requireSuperadmin, async (req, res) => {
   `);
 
   res.render('admin_accounts', { orgs, studios, user: req.session.user });
+});
+
+app.get('/admin/settings', requireSuperadmin, async (req, res) => {
+  const db = await openDb();
+  
+  // Create table if it didn't exist (in case initDb wasn't run)
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS system_settings (
+      key TEXT PRIMARY KEY,
+      value TEXT
+    )
+  `);
+  // Ensure default model is there
+  await db.run(`INSERT OR IGNORE INTO system_settings (key, value) VALUES ('openai_model', 'gpt-4o-mini')`);
+
+  const settings = await db.all('SELECT * FROM system_settings');
+  const settingsMap = {};
+  settings.forEach(s => settingsMap[s.key] = s.value);
+
+  res.render('admin_settings', { user: req.session.user, settings: settingsMap });
+});
+
+app.post('/api/admin/settings', requireSuperadmin, async (req, res) => {
+  try {
+    const db = await openDb();
+    const { key, value } = req.body;
+    if (!key || !value) return res.status(400).json({ error: 'Missing key or value' });
+    
+    await db.run('INSERT INTO system_settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value', [key, value]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.get('/admin', requireAdmin, async (req, res) => {

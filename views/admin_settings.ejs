@@ -1,0 +1,113 @@
+<%- include('partials/header') %>
+<div class="container" style="max-width: 1000px; margin-top: 2rem; margin-bottom: 4rem;">
+  <div class="header-section">
+    <h1>System Settings</h1>
+    <p class="subtitle">Superadmin control panel for global platform configurations.</p>
+    <a href="/admin" class="btn btn-outline" style="margin-top: 1rem;">&larr; Back to Admin</a>
+  </div>
+
+  <div class="card glass-card" style="margin-bottom: 2rem;">
+    <h2 style="color: var(--primary); margin-bottom: 1rem;">AI Model Configuration</h2>
+    <p style="color: var(--text-muted); margin-bottom: 1.5rem; line-height: 1.6;">
+      Select the underlying OpenAI model used to generate marketing summaries across the platform. This change takes effect instantly without requiring a server reboot.
+    </p>
+
+    <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem;">
+      <!-- GPT-4o Mini -->
+      <label style="display: flex; align-items: flex-start; gap: 1rem; padding: 1rem; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; cursor: pointer;">
+        <input type="radio" name="openai_model" value="gpt-4o-mini" <%= settings['openai_model'] === 'gpt-4o-mini' ? 'checked' : '' %> style="margin-top: 0.3rem;">
+        <div>
+          <div style="font-weight: bold; color: white; margin-bottom: 0.25rem;">gpt-4o-mini <span style="background: rgba(16, 185, 129, 0.2); color: #10b981; font-size: 0.7rem; padding: 0.1rem 0.4rem; border-radius: 4px; margin-left: 0.5rem;">Recommended</span></div>
+          <div style="font-size: 0.85rem; color: var(--text-muted);">
+            Cost: 🟢 Very Low | Speed: ⚡️ Very Fast | Quality: Good<br>
+            Perfect for generating standard marketing summaries at high volume and low cost.
+          </div>
+        </div>
+      </label>
+
+      <!-- GPT-4o -->
+      <label style="display: flex; align-items: flex-start; gap: 1rem; padding: 1rem; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; cursor: pointer;">
+        <input type="radio" name="openai_model" value="gpt-4o" <%= settings['openai_model'] === 'gpt-4o' ? 'checked' : '' %> style="margin-top: 0.3rem;">
+        <div>
+          <div style="font-weight: bold; color: white; margin-bottom: 0.25rem;">gpt-4o</div>
+          <div style="font-size: 0.85rem; color: var(--text-muted);">
+            Cost: 🔴 High | Speed: ⏱️ Moderate | Quality: 🌟 Excellent<br>
+            High-intelligence flagship model. Use sparingly for premium users or complex reasoning tasks.
+          </div>
+        </div>
+      </label>
+      
+      <!-- o1-mini -->
+      <label style="display: flex; align-items: flex-start; gap: 1rem; padding: 1rem; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; cursor: pointer;">
+        <input type="radio" name="openai_model" value="o1-mini" <%= settings['openai_model'] === 'o1-mini' ? 'checked' : '' %> style="margin-top: 0.3rem;">
+        <div>
+          <div style="font-weight: bold; color: white; margin-bottom: 0.25rem;">o1-mini <span style="background: rgba(59, 130, 246, 0.2); color: #60a5fa; font-size: 0.7rem; padding: 0.1rem 0.4rem; border-radius: 4px; margin-left: 0.5rem;">New</span></div>
+          <div style="font-size: 0.85rem; color: var(--text-muted);">
+            Cost: 🟡 Medium | Speed: ⏱️ Moderate | Quality: 🌟 Advanced<br>
+            Fast, cost-effective reasoning model. Excellent for complex multi-step instructions.
+          </div>
+        </div>
+      </label>
+
+      <!-- o3-mini -->
+      <label style="display: flex; align-items: flex-start; gap: 1rem; padding: 1rem; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; cursor: pointer;">
+        <input type="radio" name="openai_model" value="o3-mini" <%= settings['openai_model'] === 'o3-mini' ? 'checked' : '' %> style="margin-top: 0.3rem;">
+        <div>
+          <div style="font-weight: bold; color: white; margin-bottom: 0.25rem;">o3-mini <span style="background: rgba(168, 85, 247, 0.2); color: #c084fc; font-size: 0.7rem; padding: 0.1rem 0.4rem; border-radius: 4px; margin-left: 0.5rem;">Latest</span></div>
+          <div style="font-size: 0.85rem; color: var(--text-muted);">
+            Cost: 🟡 Medium | Speed: ⚡️ Fast | Quality: 🌟 State-of-the-Art<br>
+            The newest cost-effective reasoning model. Best balance of speed, cost, and high intelligence.
+          </div>
+        </div>
+      </label>
+
+      <!-- GPT-3.5 Turbo -->
+      <label style="display: flex; align-items: flex-start; gap: 1rem; padding: 1rem; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; cursor: pointer;">
+        <input type="radio" name="openai_model" value="gpt-3.5-turbo" <%= settings['openai_model'] === 'gpt-3.5-turbo' ? 'checked' : '' %> style="margin-top: 0.3rem;">
+        <div>
+          <div style="font-weight: bold; color: white; margin-bottom: 0.25rem;">gpt-3.5-turbo</div>
+          <div style="font-size: 0.85rem; color: var(--text-muted);">
+            Cost: 🟢 Very Low | Speed: ⚡️ Fast | Quality: Fair<br>
+            Legacy fallback model. Not recommended unless other models are experiencing outages.
+          </div>
+        </div>
+      </label>
+    </div>
+
+    <button id="btnSaveAi" class="btn btn-primary" onclick="saveAiModel()">💾 Save Configuration</button>
+    <span id="saveAiStatus" style="margin-left: 1rem; color: #10b981; display: none;">✅ Saved successfully!</span>
+  </div>
+</div>
+
+<script>
+async function saveAiModel() {
+  const selectedModel = document.querySelector('input[name="openai_model"]:checked').value;
+  const btn = document.getElementById('btnSaveAi');
+  const status = document.getElementById('saveAiStatus');
+  
+  btn.disabled = true;
+  btn.innerText = 'Saving...';
+  
+  try {
+    const res = await fetch('/api/admin/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: 'openai_model', value: selectedModel })
+    });
+    
+    if (res.ok) {
+      status.style.display = 'inline';
+      setTimeout(() => status.style.display = 'none', 3000);
+    } else {
+      alert('Failed to save settings');
+    }
+  } catch (err) {
+    alert('Network error while saving settings');
+  } finally {
+    btn.disabled = false;
+    btn.innerText = '💾 Save Configuration';
+  }
+}
+</script>
+
+<%- include('partials/footer') %>
