@@ -644,3 +644,11 @@ Advised the user to re-run the Revolution batch script to backfill the purged da
   - Added a "Generate Text Summary" button next to each organization on the Studio History dashboard.
   - Implemented a hidden UI modal containing a readonly `textarea` and a "Copy to Clipboard" button that triggers an AJAX fetch to populate the text dynamically.
 - **Result:** Studio owners can now instantly generate, copy, and share perfectly formatted textual timelines of their studio's awards at any given competition.
+
+## 2026-05-19: Refactor - Interactive Two-Step Summary Generator
+- **Request:** The user requested an improvement to the text summary generator to make it a two-step interactive process. Instead of spitting out all text blindly, the user wanted a checklist UI where major awards (1st, 2nd, 3rd) are auto-checked, and minor awards (Top 12) are unchecked, allowing the user to select exactly what is included in the final text.
+- **Implementation:** 
+  - Refactored the `/api/studio/:id/history/org/:org_id/summary` endpoint to return a structured JSON hierarchy containing `autoCheck` booleans based on string matching (e.g., Hope Award and 1st Place = true).
+  - Replaced the simple UI modal in `manage_studio_history.ejs` with a dynamic, two-step checklist interface.
+  - Implemented client-side JavaScript to iterate through the DOM's checked inputs, concatenate the selected labels, filter out empty headers, and assemble the final copy-pasteable text block on the fly.
+- **Result:** Studio owners now have fine-grained control over exactly which awards are included in their textual summaries without having to manually delete lines from a static text block.

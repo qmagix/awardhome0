@@ -184,31 +184,123 @@
 
 <!-- Summary Modal -->
 <div id="summaryModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center;">
-  <div class="card glass-card" style="width: 100%; max-width: 600px; padding: 2rem; position: relative;">
+  <div class="card glass-card" style="width: 100%; max-width: 700px; max-height: 90vh; display: flex; flex-direction: column; padding: 2rem; position: relative;">
     <button type="button" onclick="document.getElementById('summaryModal').style.display='none'" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer;">&times;</button>
     <h2 style="margin-top: 0; margin-bottom: 1rem;" id="summaryModalTitle">Awards Summary</h2>
-    <textarea id="summaryTextarea" style="width: 100%; height: 300px; padding: 1rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 4px; font-family: monospace; resize: vertical;" readonly></textarea>
-    <button type="button" class="btn btn-primary" style="margin-top: 1rem; width: 100%;" onclick="copySummary()">📋 Copy to Clipboard</button>
+    
+    <!-- Step 1: Selection -->
+    <div id="summaryStep1" style="display: flex; flex-direction: column; overflow-y: auto; flex: 1;">
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0; margin-bottom: 1rem;">Select the awards you want to include in the text summary.</p>
+      <div id="summaryChecklist" style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05); color: white;">
+        Loading...
+      </div>
+      <button type="button" class="btn btn-primary" style="margin-top: 1rem; width: 100%; flex-shrink: 0;" onclick="buildFinalText()">➡️ Generate Final Text</button>
+    </div>
+
+    <!-- Step 2: Output -->
+    <div id="summaryStep2" style="display: none; flex-direction: column; flex: 1;">
+      <button type="button" class="btn" style="background: rgba(255,255,255,0.1); border: none; color: white; margin-bottom: 1rem; width: fit-content;" onclick="document.getElementById('summaryStep2').style.display='none'; document.getElementById('summaryStep1').style.display='flex';">⬅️ Back to Selection</button>
+      <textarea id="summaryTextarea" style="width: 100%; height: 400px; padding: 1rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 4px; font-family: monospace; resize: vertical;" readonly></textarea>
+      <button type="button" class="btn btn-primary" style="margin-top: 1rem; width: 100%; flex-shrink: 0;" onclick="copySummary(event)">📋 Copy to Clipboard</button>
+    </div>
   </div>
 </div>
 
 <script>
+let currentOrgName = '';
+
 async function generateSummary(studioId, orgId, orgName) {
+  currentOrgName = orgName;
   document.getElementById('summaryModalTitle').innerText = orgName + ' Summary';
-  document.getElementById('summaryTextarea').value = 'Generating...';
+  document.getElementById('summaryChecklist').innerHTML = 'Loading...';
+  
+  document.getElementById('summaryStep1').style.display = 'flex';
+  document.getElementById('summaryStep2').style.display = 'none';
   document.getElementById('summaryModal').style.display = 'flex';
   
   try {
     const res = await fetch(`/api/studio/${studioId}/history/org/${orgId}/summary`);
     const data = await res.json();
-    document.getElementById('summaryTextarea').value = data.summary || 'No awards found.';
+    
+    if (!data.groups || Object.keys(data.groups).length === 0) {
+      document.getElementById('summaryChecklist').innerHTML = '<div style="color: var(--text-muted);">No awards found.</div>';
+      return;
+    }
+
+    let html = '';
+    const sortedYears = Object.keys(data.groups).sort();
+    
+    for (const year of sortedYears) {
+      html += `<div class="summary-year-group" data-year="${year}" style="margin-bottom: 1.5rem;">`;
+      html += `<h3 style="margin-top: 0; margin-bottom: 0.5rem; color: #c084fc;">${year}</h3>`;
+      
+      const divKeys = Object.keys(data.groups[year]).sort();
+      for (const div of divKeys) {
+        html += `<div class="summary-div-group" data-div="${div}" style="margin-left: 1rem; margin-bottom: 1rem;">`;
+        if (div !== 'Others') {
+          html += `<div style="font-weight: bold; margin-bottom: 0.5rem; color: var(--text-muted);">${div}</div>`;
+        }
+        
+        data.groups[year][div].forEach(award => {
+          const checked = award.autoCheck ? 'checked' : '';
+          html += `
+            <label style="display: flex; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.5rem; cursor: pointer; font-size: 0.9rem;">
+              <input type="checkbox" class="award-checkbox" data-text="${award.text.replace(/"/g, '&quot;')}" ${checked} style="margin-top: 0.2rem;">
+              <span>${award.text}</span>
+            </label>
+          `;
+        });
+        html += `</div>`;
+      }
+      html += `</div>`;
+    }
+    
+    document.getElementById('summaryChecklist').innerHTML = html;
+
   } catch (err) {
-    document.getElementById('summaryTextarea').value = 'Error generating summary.';
+    document.getElementById('summaryChecklist').innerHTML = '<div style="color: red;">Error loading summary.</div>';
     console.error(err);
   }
 }
 
-function copySummary() {
+function buildFinalText() {
+  let summaryText = currentOrgName + " awards history\n\n";
+  
+  const yearGroups = document.querySelectorAll('.summary-year-group');
+  
+  yearGroups.forEach(yg => {
+    const yearStr = yg.getAttribute('data-year');
+    let yearHasItems = false;
+    let yearTextBlock = `${yearStr}\n\n`;
+    
+    const divGroups = yg.querySelectorAll('.summary-div-group');
+    divGroups.forEach(dg => {
+      const divStr = dg.getAttribute('data-div');
+      const checkboxes = dg.querySelectorAll('.award-checkbox:checked');
+      
+      if (checkboxes.length > 0) {
+        yearHasItems = true;
+        if (divStr !== 'Others') {
+          yearTextBlock += `${divStr}\n`;
+        }
+        checkboxes.forEach(cb => {
+          yearTextBlock += `${cb.getAttribute('data-text')}\n`;
+        });
+        yearTextBlock += `\n`;
+      }
+    });
+    
+    if (yearHasItems) {
+      summaryText += yearTextBlock;
+    }
+  });
+
+  document.getElementById('summaryTextarea').value = summaryText.trim();
+  document.getElementById('summaryStep1').style.display = 'none';
+  document.getElementById('summaryStep2').style.display = 'flex';
+}
+
+function copySummary(event) {
   const textarea = document.getElementById('summaryTextarea');
   textarea.select();
   document.execCommand('copy');

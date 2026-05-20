@@ -1538,26 +1538,16 @@ app.get('/api/studio/:id/history/org/:org_id/summary', requireAuth, async (req, 
     else if (award.performance_name) lineStr += ` [${award.performance_name}]`;
     if (suffix) lineStr += suffix;
 
-    groups[groupKey][ageDiv].push(lineStr);
+    const autoCheck = placeLower.includes('1st') || placeLower.includes('2nd') || placeLower.includes('3rd') || placeLower.includes('hope') || placeLower.includes('grand prix');
+
+    groups[groupKey][ageDiv].push({
+      id: award.id,
+      text: lineStr,
+      autoCheck: autoCheck
+    });
   }
 
-  let summaryText = org.name + " awards history\n\n";
-  const sortedYears = Object.keys(groups).sort();
-  
-  for (const year of sortedYears) {
-    summaryText += `${year}\n\n`;
-    
-    const divKeys = Object.keys(groups[year]).sort();
-    for (const div of divKeys) {
-      if (div !== 'Others') summaryText += `${div}\n`;
-      groups[year][div].forEach(line => {
-        summaryText += `${line}\n`;
-      });
-      summaryText += `\n`;
-    }
-  }
-
-  res.json({ summary: summaryText.trim() });
+  res.json({ orgName: org.name, groups });
 });
 
 app.get('/manage/studio/:id/awards', requireAuth, async (req, res) => {
