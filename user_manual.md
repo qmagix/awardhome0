@@ -140,3 +140,16 @@ If you need to completely wipe the database and perform a clean multi-year inges
 To assist users in navigating the platform, two standalone FAQ pages are hosted on the application itself:
 - **Studio Admin FAQ (`/faq/admin`)**: A comprehensive guide for Studio Directors on how to claim their studio, customize their public profile, embed the iframe widget, and manage their dancer roster securely using the Secret Join Code. It also details the "Pseudo-Studio" architecture for handling multi-studio collaborations (e.g. YAGP Pas De Deux).
 - **Dancer FAQ (`/faq/dancer`)**: A guide for students/parents explaining how to navigate their Dancer Dashboard, use the Find Missing Awards search tool to backfill their history, claim awards via the public directory using their Studio Secret Code, reuse their Unique ID for faster claiming, and understand the platform's privacy protections.
+
+## 9. AI Marketing Summary Generator (Studio History)
+The Studio Admin dashboard features a powerful, two-step AI Marketing Summary Generator designed to automatically convert a studio's raw historical awards data into inspiring, copy-pasteable marketing copy for social media and press releases.
+
+### How to Use:
+1. Navigate to the **Studio History** page (`/manage/studio/:id/history`).
+2. Next to any organization (e.g., YAGP), click the **📄 Generate Text Summary** button.
+3. **Step 1 (Curate):** A modal will appear with a checklist of all awards won by the studio at that organization. 
+   - *Auto-Check Logic:* The system automatically checks the boxes for major podium placements (1st, 2nd, 3rd, Hope Award, Grand Prix). "Top X" placements (e.g., Top 12) are left unchecked by default to keep the summary concise, but you can manually toggle any award.
+4. **Step 2 (Generate):** 
+   - **Raw Text:** Click "Generate Raw Text Summary" to produce a standard, grouped text list of the selected awards.
+   - **AI Marketing Copy:** Select a tone from the dropdown ("Enthusiastic" for social media, or "Professional" for press releases) and click **✨ Generate AI Summary**.
+5. **Auto-Save:** Once the text is generated, you can edit it directly in the text box. The system will silently autosave your edits to the database to help improve future AI models!

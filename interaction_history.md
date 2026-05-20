@@ -663,3 +663,10 @@ Advised the user to re-run the Revolution batch script to backfill the purged da
   - Upgraded the Step 1 checklist UI to include a Tone selection dropdown (Enthusiastic vs Professional) and the "✨ Generate AI Summary" button.
   - Attached a debounced `oninput` handler to the Step 2 textarea to automatically save user edits back to the database in real-time.
 - **Result:** Studio owners can now instantly generate highly customized, inspiring marketing copy based purely on their selected data, and the platform seamlessly logs all human-in-the-loop edits to continuously improve the system.
+
+## 2026-05-20: Documentation - AI Marketing Summary
+- **Request:** The user requested to update the Studio admin user manual and FAQ pages to document the new AI Marketing Summary generator features.
+- **Implementation:** 
+  - Updated `user_manual.md` with a new "9. AI Marketing Summary Generator" section detailing the two-step workflow, auto-check logic, and auto-saving features.
+  - Updated `views/faq_admin.ejs` with a new "7. Generating AI Marketing Summaries" section providing a quick start guide for studio directors navigating the UI.
+- **Result:** Both the internal documentation and public-facing Admin FAQ are now fully up to date with the latest AI platform capabilities.
