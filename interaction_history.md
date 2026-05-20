@@ -680,3 +680,11 @@ Advised the user to re-run the Revolution batch script to backfill the purged da
 - **Request:** The user requested an easier way to select only the most recent year's awards for the AI summary, or all years, without having to manually check/uncheck dozens of boxes.
 - **Implementation:** Added three quick-select helper buttons ("Select All", "Most Recent Year Only", "Clear All") directly above the checklist modal in `manage_studio_history.ejs`. Implemented client-side logic to dynamically find the highest year group and check all its boxes while clearing the others.
 - **Result:** Studio owners can now instantly toggle their selection scope before generating their AI summaries, vastly improving the UX for studios with massive historical archives.
+
+## 2026-05-20: Feature - AI Summaries Dashboard Library
+- **Request:** The user requested a dedicated dashboard section where studio admins can navigate to view their previously generated AI summaries, rather than having them only exist silently in the database.
+- **Implementation:** 
+  - Added a new backend route `GET /manage/studio/:id/ai-summaries` in `server.js` to query the `ai_summaries` table and join it with the `organizations` table.
+  - Built a new EJS view `manage_studio_ai_summaries.ejs` that renders the summaries grouped by organization in a beautiful card layout. Only the final `user_edited_response` is shown for simplicity.
+  - Added a "✨ AI Summaries" link to the global sidebar navigation across all 6 management views (`manage_studio.ejs`, `manage_studio_roster.ejs`, etc).
+- **Result:** Studio owners now have a centralized, persistent library of all their AI-generated marketing assets, properly categorized and easy to copy-paste for future use.

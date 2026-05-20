@@ -1456,6 +1456,39 @@ app.get('/manage/studio/:id/history', requireAuth, async (req, res) => {
   res.render('manage_studio_history', { studio, orgs });
 });
 
+app.get('/manage/studio/:id/ai-summaries', requireAuth, async (req, res) => {
+  const db = await openDb();
+  const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
+  if (!studio) return res.status(404).send('Studio not found');
+  if (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin') return res.status(403).send('Forbidden: Not the owner');
+
+  const summaries = await db.all(`
+    SELECT a.*, o.name as org_name, o.logo_url as org_logo
+    FROM ai_summaries a
+    JOIN organizations o ON a.org_id = o.id
+    WHERE a.studio_id = ?
+    ORDER BY a.created_at DESC
+  `, [studio.id]);
+
+  // Group by organization
+  const groupedSummaries = {};
+  for (const s of summaries) {
+    if (!groupedSummaries[s.org_name]) {
+      groupedSummaries[s.org_name] = {
+        org_name: s.org_name,
+        org_logo: s.org_logo,
+        items: []
+      };
+    }
+    groupedSummaries[s.org_name].items.push(s);
+  }
+
+  res.render('manage_studio_ai_summaries', { 
+    studio, 
+    groupedSummaries: Object.values(groupedSummaries).sort((a,b) => a.org_name.localeCompare(b.org_name))
+  });
+});
+
 app.get('/api/studio/:id/history/org/:org_id/summary', requireAuth, async (req, res) => {
   const db = await openDb();
   const studioId = req.params.id;
