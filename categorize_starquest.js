@@ -72,18 +72,17 @@ function extractAwards(pdfData) {
         let isRunnerUp = false;
 
         let aClass = 'overall';
-        if (currentCategory.toLowerCase().includes('solo') || currentCategory.toLowerCase().includes('dancer') || currentCategory.toLowerCase().includes('artist') || currentCategory.toLowerCase().includes('photogenic') || currentCategory.toLowerCase().includes('costume')) {
-          if (currentCategory.toLowerCase().includes('solo') || currentCategory.toLowerCase().includes('photogenic') || currentCategory.toLowerCase().includes('costume')) {
-             aClass = 'overall';
-          } else {
-             aClass = 'scholarship';
-          }
-        }
+        let aType = 'Overall';
         
+        if (currentCategory.toLowerCase().includes('dancer') || currentCategory.toLowerCase().includes('artist')) {
+           aType = 'Title';
+        }
+
         const isSpecial = currentCategory.toLowerCase().includes('award');
 
         if (isSpecial) {
            aClass = 'special';
+           aType = currentCategory;
         }
 
         // Format 1: Dancer Placement (e.g., Gabi Lynn - Beautiful Swan - Blake Stanley Techniques)
@@ -143,7 +142,7 @@ function extractAwards(pdfData) {
           awards.push({
             category: currentCategory,
             award_class: aClass,
-            award_type: isSpecial ? currentCategory : (aClass === 'scholarship' ? 'Title' : 'Overall'),
+            award_type: aType,
             place: place || '1',
             performance_name: routine || null,
             dancer_name: dancer || null,
@@ -231,8 +230,8 @@ async function processPdf(file) {
       fs.writeFileSync(path.join(txtDir, `${file}.txt`), output);
       
       // Rename to GOOD-
-      const newName = `GOOD-${file}`;
-      fs.renameSync(path.join(dir, file), path.join(dir, newName));
+      const newName = file.startsWith('GOOD-') ? file : `GOOD-${file}`;
+      if (file !== newName) fs.renameSync(path.join(dir, file), path.join(dir, newName));
       console.log(`  -> SUCCESS (${awards.length} awards) -> ${newName}`);
     } else {
       const newName = `TBD-${file}`;

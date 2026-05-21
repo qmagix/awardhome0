@@ -98,7 +98,7 @@ async function runImport() {
       const studioId = await getOrCreateStudio(studioName);
 
       // Check if award already exists (idempotency)
-      let query = `SELECT id FROM awards WHERE event_id = ? AND studio_id = ? AND category = ? AND award_type = ? AND place = ?`;
+      let query = `SELECT id, award_class FROM awards WHERE event_id = ? AND studio_id = ? AND category = ? AND award_type = ? AND place = ?`;
       const params = [eventId, studioId, category, awardType, place];
 
       if (routine) { query += ` AND performance_name = ?`; params.push(routine); } else { query += ` AND performance_name IS NULL`; }
@@ -113,12 +113,17 @@ async function runImport() {
         }
 
         await db.run(`
-          INSERT INTO awards (event_id, studio_id, place, performance_name, award_type, category, notes, verification_status)
-          VALUES (?, ?, ?, ?, ?, ?, ?, 'imported')
-        `, [eventId, studioId, place, routine, awardType, category, finalNotes.trim()]);
+          INSERT INTO awards (event_id, studio_id, place, performance_name, award_type, category, notes, verification_status, award_class)
+          VALUES (?, ?, ?, ?, ?, ?, ?, 'imported', ?)
+        `, [eventId, studioId, place, routine, awardType, category, finalNotes.trim(), aClass]);
         
         fileImportCount++;
         totalImported++;
+      } else {
+        // Update award_class if it's null or has changed
+        if (existing.award_class !== aClass) {
+          await db.run('UPDATE awards SET award_class = ? WHERE id = ?', [aClass, existing.id]);
+        }
       }
     }
     

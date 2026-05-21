@@ -707,3 +707,10 @@ Advised the user to re-run the Revolution batch script to backfill the purged da
   - Created an idempotent database ingestion script (`import_starquest_txt.js`).
   - Appended Choreographer names to the `notes` column in the format `[Choreographer: Name]` for future data portability.
 - **Result:** Successfully scraped, parsed, and ingested 37,201 new awards from the 2025 and 2026 Starquest PDFs into the platform.
+
+## 2026-05-20: Fix Starquest Title Award Classification
+- **Request:** The user reported that "Title Awards" (like `Classic Emerging Artist Petite Dancer`) were being misclassified as `scholarship` instead of `overall` in the `award_class` mapping.
+- **Implementation:** 
+  - Updated `categorize_starquest.js` to correctly assign `award_class = 'overall'` and `award_type = 'Title'` for all dancer/artist placements.
+  - Updated `import_starquest_txt.js` to run an `UPDATE` statement to backfill and update the `award_class` on existing rows in the database (as the previous iteration actually missed inserting `award_class` entirely).
+- **Result:** Successfully re-parsed the PDFs and ran the database update, converting 2,909 Title awards to the correct `overall` class.
