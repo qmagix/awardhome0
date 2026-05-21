@@ -698,3 +698,12 @@ Advised the user to re-run the Revolution batch script to backfill the purged da
   - Added a "⚙️ Settings" link to the Superadmin global navigation.
   - Rewired the AI Summary endpoint to query the database for the `openai_model` setting immediately before calling the OpenAI API.
 - **Result:** Superadmins can now instantaneously switch out the underlying AI engine without any server downtime.
+
+## 2026-05-20: Data Ingestion - Starquest PDF Pipeline
+- **Request:** The user requested an offline processing script to extract competition results from the downloaded Starquest PDFs and a second script to ingest that structured data into the SQLite database.
+- **Implementation:** 
+  - Created a custom `pdf2json` coordinate-based parser (`categorize_starquest.js`) tuned to Starquest's 5 distinct document layouts.
+  - Successfully parsed 130 PDFs into structured `.txt` files.
+  - Created an idempotent database ingestion script (`import_starquest_txt.js`).
+  - Appended Choreographer names to the `notes` column in the format `[Choreographer: Name]` for future data portability.
+- **Result:** Successfully scraped, parsed, and ingested 37,201 new awards from the 2025 and 2026 Starquest PDFs into the platform.
