@@ -78,7 +78,7 @@ function extractAwards(pdfData) {
            aType = 'Title';
         }
 
-        const isSpecial = currentCategory.toLowerCase().includes('award');
+        const isSpecial = currentCategory.toLowerCase().includes('award') || currentCategory.toLowerCase().includes('costume') || currentCategory.toLowerCase().includes('photogenic');
 
         if (isSpecial) {
            aClass = 'special';

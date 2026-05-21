@@ -714,3 +714,11 @@ Advised the user to re-run the Revolution batch script to backfill the purged da
   - Updated `categorize_starquest.js` to correctly assign `award_class = 'overall'` and `award_type = 'Title'` for all dancer/artist placements.
   - Updated `import_starquest_txt.js` to run an `UPDATE` statement to backfill and update the `award_class` on existing rows in the database (as the previous iteration actually missed inserting `award_class` entirely).
 - **Result:** Successfully re-parsed the PDFs and ran the database update, converting 2,909 Title awards to the correct `overall` class.
+
+## 2026-05-20: Fix Starquest Costume Award Classification
+- **Request:** The user reported that "Costume" awards were being misclassified as `overall` instead of `special`.
+- **Implementation:** 
+  - Updated `categorize_starquest.js` to correctly assign `award_class = 'special'` and `award_type` equal to the specific category name (e.g., `Mini/Petite Solo Costume`) for all Costume and Photogenic awards.
+  - Flushed the existing misclassified Costume and Photogenic awards from the database.
+  - Re-ran the database ingestion script.
+- **Result:** Successfully re-parsed the PDFs and re-imported 2,895 Costume and Photogenic awards with the correct `special` class.
