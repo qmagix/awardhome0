@@ -221,13 +221,14 @@ async function processPdf(file) {
 
     const awards = extractAwards(parsedData);
     if (awards.length > 0) {
-      // Save text file
+      // Save text file (strip GOOD- from the output filename so they remain consistent)
       let output = `=== ${file} ===\n\n`;
       awards.forEach(a => {
         let noteStr = a.choreographer ? ` | Notes: [Choreographer: ${a.choreographer}]` : '';
         output += `Cat: ${a.category} | Class: ${a.award_class} | Award: ${a.award_type} | Place: ${a.place || 'N/A'} | Routine: ${a.performance_name || 'N/A'} | Dancer: ${a.dancer_name || 'N/A'} | Studio: ${a.studio}${noteStr}\n`;
       });
-      fs.writeFileSync(path.join(txtDir, `${file}.txt`), output);
+      const cleanFileName = file.replace(/^GOOD-/, '');
+      fs.writeFileSync(path.join(txtDir, `${cleanFileName}.txt`), output);
       
       // Rename to GOOD-
       const newName = file.startsWith('GOOD-') ? file : `GOOD-${file}`;
