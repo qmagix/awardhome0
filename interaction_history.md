@@ -722,3 +722,8 @@ Advised the user to re-run the Revolution batch script to backfill the purged da
   - Flushed the existing misclassified Costume and Photogenic awards from the database.
   - Re-ran the database ingestion script.
 - **Result:** Successfully re-parsed the PDFs and re-imported 2,895 Costume and Photogenic awards with the correct `special` class.
+## Task: Server-Side Pagination & Premium Styling Polish
+- **Request:** Optimize loading of studio awards for mega-studios and apply premium aesthetics.
+- **Action:** Refactored `/studio/:id` to use SQLite aggregations instead of loading full award arrays. Implemented lazy loading for year tabs. Updated `styles.css` and `header.ejs` with deeper dark modes, enhanced glassmorphism, and the Outfit font.
+- **Result:** Server no longer crashes on massive studios. UI feels significantly more modern and responsive.
+

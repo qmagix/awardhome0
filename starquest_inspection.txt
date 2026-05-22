@@ -1,0 +1,324 @@
+
+--- PAGE 1 ---
+[Y: 16.44] [X:14.6] Orlando,	FL
+[Y: 18.34] [X:11.3] January | [X:17.6] 17 | [X:19.5] - | [X:20.0] 1 | [X:21.0] 8 | [X:21.9] ,	202 | [X:25.6] 6
+[Y: 20.29] [X:1.6] Elite	Dancer	Petite	Dancer
+[Y: 21.18] [X:3.9] Gabi	Lynn | [X:7.5] - | [X:7.9] Beautiful	Swan | [X:13.2] - | [X:13.6] Blake	Stanley	Techniques
+[Y: 22.93] [X:1.6] Elite	Dancer	Junior	Dancer
+[Y: 23.82] [X:3.9] Harper	Stein | [X:8.4] - | [X:8.8] Voice	Of	God | [X:13.3] - | [X:13.8] New	Level	Dance	Company
+[Y: 24.69] [X:3.9] 1st	Runner | [X:7.7] - | [X:7.9] Up | [X:9.1] - | [X:9.5] Skylar	Hetsler | [X:14.5] - | [X:15.0] Fight	For	Me | [X:19.4] - | [X:19.9] Studio	G	Performing	Arts	Academy
+[Y: 25.57] [X:3.9] 2nd	Runner | [X:8.0] - | [X:8.2] Up | [X:9.3] - | [X:9.8] Austin	Barkley | [X:15.0] - | [X:15.5] Truth | [X:17.6] - | [X:18.0] Studio	G	Performing	Arts	Academy
+[Y: 27.33] [X:1.6] Elite	Dancer	Teen	Dancer
+[Y: 28.21] [X:3.9] Ava	Andre | [X:7.6] - | [X:8.0] Hyperballad | [X:12.5] - | [X:12.9] Central	Florida	Dance	Center
+[Y: 29.08] [X:3.9] 1st	Runner | [X:7.7] - | [X:7.9] Up | [X:9.1] - | [X:9.5] Kirsten	Bulfango | [X:15.4] - | [X:15.9] El	Galatzo | [X:19.4] - | [X:19.9] Performer's	Edge	Dance	Center
+[Y: 29.97] [X:3.9] 2nd	Runner | [X:8.0] - | [X:8.2] Up | [X:9.3] - | [X:9.8] Laila	Hampton | [X:15.0] - | [X:15.4] Till	The	End | [X:19.7] - | [X:20.1] Haus	Of	Storm	Dance	Collective
+[Y: 31.72] [X:1.6] Elite	Dancer	Senior	Dancer
+[Y: 32.61] [X:3.9] Marlie	Mommaerts | [X:10.6] - | [X:11.0] The	Voice	Within | [X:17.1] - | [X:17.5] Central	Florida	Dance	Center
+[Y: 33.49] [X:3.9] 1st	Runner | [X:7.7] - | [X:7.9] Up | [X:9.1] - | [X:9.5] Corynn	Lott | [X:13.7] - | [X:14.1] Ode	To	Lost	Love | [X:20.1] - | [X:20.6] Ace	Dance	Project
+[Y: 34.36] [X:3.9] 2nd	Runner | [X:8.0] - | [X:8.2] Up | [X:9.3] - | [X:9.8] Audrey	Isong | [X:14.5] - | [X:14.9] The	Blue	Hour | [X:20.1] - | [X:20.5] Tutterow	Dance	Academy
+[Y: 36.12] [X:1.6] Top	Select	Petite	Solo
+[Y: 37.00] [X:3.9] 1 | [X:4.5] - | [X:4.9] Gabi	Lynn | [X:8.5] - | [X:8.9] Beautiful	Swan | [X:14.3] - | [X:14.7] Blake	Stanley	Techniques
+[Y: 38.76] [X:1.6] Top	Select	Junior	Solo
+[Y: 39.64] [X:3.9] 1 | [X:4.5] - | [X:4.9] Skylar	Hetsler | [X:10.0] - | [X:10.4] We	Came	To	Work | [X:16.9] - | [X:17.3] Studio	G	Performing	Arts	Academy
+[Y: 40.53] [X:3.9] 2 | [X:4.5] - | [X:4.9] Harper	Stein | [X:9.4] - | [X:9.9] Voila | [X:11.8] - | [X:12.2] New	Level	Dance	Company
+[Y: 41.40] [X:3.9] 3 | [X:4.5] - | [X:4.9] Mia	Concepcion | [X:10.5] - | [X:10.9] Live	Til	I	Die | [X:15.4] - | [X:15.8] Duvall	Dance	Academy
+[Y: 42.28] [X:3.9] 4 | [X:4.5] - | [X:4.9] Austin	Barkley | [X:10.2] - | [X:10.6] Truth | [X:12.7] - | [X:13.2] Studio	G	Performing	Arts	Academy
+[Y: 43.15] [X:3.9] 5 | [X:4.5] - | [X:4.9] Mila	Rodolfich | [X:10.0] - | [X:10.4] Mj | [X:11.5] - | [X:11.9] Esprit	Performing	Arts
+
+--- PAGE 2 ---
+[Y: 3.15] [X:1.6] Top	Select	Teen	Solo
+[Y: 4.03] [X:3.9] 1 | [X:4.5] - | [X:4.9] Kirsten	Bulfango | [X:10.9] - | [X:11.3] El	Galatzo | [X:14.9] - | [X:15.3] Performer's	Edge	Dance	Center
+[Y: 4.90] [X:3.9] 2 | [X:4.5] - | [X:4.9] Ava	Andre | [X:8.6] - | [X:9.1] Hyperballad | [X:13.5] - | [X:13.9] Central	Florida	Dance	Center
+[Y: 5.79] [X:3.9] 3 | [X:4.5] - | [X:4.9] Laila	Hampton | [X:10.1] - | [X:10.5] Till	The	End | [X:14.9] - | [X:15.3] Haus	Of	Storm	Dance	Collective
+[Y: 6.67] [X:3.9] 4 | [X:4.5] - | [X:4.9] Riley	Lott | [X:8.4] - | [X:8.8] Let	It	All	Go | [X:12.9] - | [X:13.3] Ace	Dance	Project
+[Y: 7.54] [X:3.9] 5 | [X:4.5] - | [X:4.9] Sabryn	Stein | [X:9.4] - | [X:9.8] I	Didn't	Know	My	Own	Strength | [X:20.7] - | [X:21.2] New	Level	Dance	Company
+[Y: 8.43] [X:3.9] 6 | [X:4.5] - | [X:4.9] Jema	Giannetto | [X:10.3] - | [X:10.8] Hurt | [X:12.5] - | [X:12.9] Studio	G	Performing	Arts	Academy
+[Y: 9.31] [X:3.9] 7 | [X:4.5] - | [X:4.9] Adaline	Bevill | [X:9.9] - | [X:10.3] Before	My	Time | [X:15.9] - | [X:16.3] Duvall	Dance	Academy
+[Y: 10.18] [X:3.9] 8 | [X:4.5] - | [X:4.9] Harlow	Payor | [X:9.8] - | [X:10.2] Unforgettable | [X:15.2] - | [X:15.6] New	Level	Dance	Company
+[Y: 11.07] [X:3.9] 9 | [X:4.5] - | [X:4.9] Brielle	Roberts | [X:10.3] - | [X:10.7] Total	Eclipse | [X:15.3] - | [X:15.7] Ace	Dance	Project
+[Y: 11.94] [X:3.9] 10 | [X:4.9] - | [X:5.3] Savannah	Ruley | [X:11.0] - | [X:11.4] Hard	Fought	Hallelujah | [X:19.6] - | [X:20.0] The	Dance	Collective
+[Y: 13.71] [X:1.6] Top	Select	Senior	Solo
+[Y: 14.58] [X:3.9] 1 | [X:4.5] - | [X:4.9] Gabriella	Shaw | [X:10.2] - | [X:10.6] El	Tango	De	Roxanne | [X:18.1] - | [X:18.5] Duvall	Dance	Academy
+[Y: 15.46] [X:3.9] 2 | [X:4.5] - | [X:4.9] Marlie	Mommaerts | [X:11.6] - | [X:12.0] The	Voice	Within | [X:18.1] - | [X:18.5] Central	Florida	Dance	Center
+[Y: 16.35] [X:3.9] 3 | [X:4.5] - | [X:4.9] Emma	Feske | [X:9.4] - | [X:9.8] Circles | [X:12.3] - | [X:12.7] Performer's	Edge	Dance	Center
+[Y: 17.22] [X:3.9] 4 | [X:4.5] - | [X:4.9] Piper	Hill | [X:8.3] - | [X:8.8] Strong | [X:11.2] - | [X:11.6] Performer's	Edge	Dance	Center
+[Y: 18.10] [X:3.9] 5 | [X:4.5] - | [X:4.9] Corynn	Lott | [X:9.1] - | [X:9.5] Ode	To	Lost	Love | [X:15.6] - | [X:16.0] Ace	Dance	Project
+[Y: 18.97] [X:3.9] 6 | [X:4.5] - | [X:4.9] Audrey	Isong | [X:9.6] - | [X:10.0] The	Blue	Hour | [X:15.2] - | [X:15.6] Tutterow	Dance	Academy
+[Y: 19.86] [X:3.9] 7 | [X:4.5] - | [X:4.9] Anaya	Mendez | [X:10.1] - | [X:10.5] Hanuman | [X:14.0] - | [X:14.4] Performer's	Edge	Dance	Center
+[Y: 20.74] [X:3.9] 8 | [X:4.5] - | [X:4.9] McKenna	Ruley | [X:10.4] - | [X:10.8] Little	Miss	Sunshine | [X:17.9] - | [X:18.3] The	Dance	Collective
+[Y: 21.61] [X:3.9] 9 | [X:4.5] - | [X:4.9] Madelyn	Bedell | [X:10.4] - | [X:10.8] Kiss	Of	The	Spider	Woman | [X:20.1] - | [X:20.5] Duvall	Dance	Academy
+[Y: 22.50] [X:3.9] 10 | [X:4.9] - | [X:5.3] Hailey	Paltjon | [X:10.3] - | [X:10.8] El	Tango	De	Roxanne | [X:18.2] - | [X:18.6] The	Dance	Collective
+[Y: 24.25] [X:1.6] Top	Select	Progressive	Solo
+[Y: 25.14] [X:3.9] 1 | [X:4.5] - | [X:4.9] Maddie	McRitchie | [X:11.2] - | [X:11.6] I	Want	You	To	Love	Me | [X:19.6] - | [X:20.0] Tutterow	Dance	Academy
+[Y: 26.89] [X:1.6] Top	Select	Junior	Duet/Trio
+[Y: 27.78] [X:3.9] 1 | [X:4.5] - | [X:4.9] Stand	By	Me | [X:9.3] - | [X:9.7] Studio	G	Performing	Arts	Academy | [X:21.8] - | [X:22.2] Jennifer	Houghton
+[Y: 29.53] [X:1.6] Top	Select	Teen	Duet/Trio
+[Y: 30.40] [X:3.9] 1 | [X:4.5] - | [X:4.9] Amazing	Grace | [X:10.2] - | [X:10.6] The	Dance	Collective | [X:17.9] - | [X:18.4] Hannah	Tiemeyer
+[Y: 31.29] [X:3.9] 2 | [X:4.5] - | [X:4.9] Walking	On	Air | [X:10.3] - | [X:10.7] Performer's	Edge	Dance	Center | [X:21.6] - | [X:22.1] Amie	Hollborn
+[Y: 33.04] [X:1.6] Top	Select	Senior	Duet/Trio
+[Y: 33.93] [X:3.9] 1 | [X:4.5] - | [X:4.9] Only	Ever	Loved	Your	Ghost | [X:14.6] - | [X:15.0] Tutterow	Dance	Academy | [X:24.1] - | [X:24.5] Debbie	Kennedy
+[Y: 34.80] [X:3.9] 2 | [X:4.5] - | [X:4.9] One	Short	Day | [X:10.0] - | [X:10.4] The	Dance	Collective | [X:17.7] - | [X:18.1] Hannah	Tiemeyer
+[Y: 35.68] [X:3.9] 3 | [X:4.5] - | [X:4.9] Nights	In	White	Satin | [X:12.3] - | [X:12.7] Tutterow	Dance	Academy | [X:21.7] - | [X:22.1] Debbie	Kennedy
+[Y: 37.44] [X:1.6] Top	Select	Junior	Small	Group
+[Y: 38.32] [X:3.9] 1 | [X:4.5] - | [X:4.9] Like	That | [X:8.3] - | [X:8.7] Studio	G	Performing	Arts	Academy | [X:20.8] - | [X:21.2] Jennifer	Houghton
+[Y: 40.08] [X:1.6] Top	Select	Senior	Small	Group
+[Y: 40.96] [X:3.9] 1 | [X:4.5] - | [X:4.9] Landslide | [X:8.4] - | [X:8.8] Tutterow	Dance	Academy | [X:17.9] - | [X:18.3] Debbie	Kennedy
+[Y: 41.83] [X:3.9] 2 | [X:4.5] - | [X:4.9] Never	Love	Again | [X:11.0] - | [X:11.5] Tutterow	Dance	Academy | [X:20.5] - | [X:20.9] Debbie	Kennedy
+[Y: 42.72] [X:3.9] 3 | [X:4.5] - | [X:4.9] Dancing	In	The	Moonlight | [X:13.9] - | [X:14.3] Tutterow	Dance	Academy | [X:23.4] - | [X:23.8] Debbie	Kennedy
+
+--- PAGE 3 ---
+[Y: 3.15] [X:1.6] Top	Select	Senior	Large	Group
+[Y: 4.03] [X:3.9] 1 | [X:4.5] - | [X:4.9] Natural	Woman | [X:10.5] - | [X:10.9] Tutterow	Dance	Academy | [X:19.9] - | [X:20.4] Debbie	Kennedy
+[Y: 4.90] [X:3.9] 2 | [X:4.5] - | [X:4.9] Viva	La	Vida | [X:9.3] - | [X:9.7] Tutterow	Dance	Academy | [X:18.7] - | [X:19.1] Debbie	Kennedy
+[Y: 5.79] [X:3.9] 3 | [X:4.5] - | [X:4.9] Rihanna | [X:7.9] - | [X:8.4] Tutterow	Dance	Academy | [X:17.4] - | [X:17.8] Debbie	Kennedy
+[Y: 7.54] [X:1.6] Junior	Select	Apogee	Award
+[Y: 8.43] [X:3.9] Like	That | [X:7.3] - | [X:7.7] Studio	G	Performing	Arts	Academy | [X:19.8] - | [X:20.2] Jennifer	Houghton
+[Y: 10.18] [X:1.6] Senior	Select	Apogee	Award
+[Y: 11.07] [X:3.9] Landslide | [X:7.4] - | [X:7.8] Tutterow	Dance	Academy | [X:16.8] - | [X:17.3] Debbie	Kennedy
+[Y: 12.82] [X:1.6] Classic	Emerging	Artist	Petite	Dancer
+[Y: 13.71] [X:3.9] Kenzie	Walsh | [X:8.7] - | [X:9.1] My	New	Philosophy | [X:16.0] - | [X:16.4] Performer's	Edge	Dance	Center
+[Y: 14.58] [X:3.9] 1st	Runner | [X:7.7] - | [X:7.9] Up | [X:9.1] - | [X:9.5] Kylie	Bulfango | [X:14.7] - | [X:15.1] Hound	Dog | [X:19.1] - | [X:19.5] Performer's	Edge	Dance	Center
+[Y: 15.46] [X:3.9] 2nd	Runner | [X:8.0] - | [X:8.2] Up | [X:9.3] - | [X:9.8] McKenna	Loftis | [X:15.2] - | [X:15.6] Little	Bitty	Pretty	One | [X:23.3] - | [X:23.7] JMB	Dance	Academy
+[Y: 17.22] [X:1.6] Classic	Emerging	Artist	Junior	Dancer
+[Y: 18.10] [X:3.9] Sadie	Spain | [X:8.0] - | [X:8.4] Survival | [X:11.4] - | [X:11.8] JMB	Dance	Academy
+[Y: 18.97] [X:3.9] 1st	Runner | [X:7.7] - | [X:7.9] Up | [X:9.1] - | [X:9.5] Brynn	Schiffbauer | [X:15.9] - | [X:16.3] Life	Of	The	Party | [X:22.2] - | [X:22.6] Performer's	Edge	Dance	Center
+[Y: 19.86] [X:3.9] 2nd	Runner | [X:8.0] - | [X:8.2] Up | [X:9.3] - | [X:9.8] Zoe	Alba | [X:12.9] - | [X:13.3] Control | [X:16.1] - | [X:16.5] Performer's	Edge	Dance	Center
+[Y: 21.61] [X:1.6] Classic	Emerging	Artist	Teen	Dancer
+[Y: 22.50] [X:3.9] Ava	Sardinas | [X:8.5] - | [X:8.9] Bohemian	Rhapsody | [X:16.2] - | [X:16.6] Studio	G	Performing	Arts	Academy
+[Y: 23.37] [X:3.9] 1st	Runner | [X:7.7] - | [X:7.9] Up | [X:9.1] - | [X:9.5] Aaliyah	King | [X:14.0] - | [X:14.4] Sitting	Up	In	My	Room | [X:22.2] - | [X:22.6] Performer's	Edge	Dance	Center
+[Y: 24.25] [X:3.9] 2nd	Runner | [X:8.0] - | [X:8.2] Up | [X:9.3] - | [X:9.8] Alanah	Flounary | [X:15.6] - | [X:16.0] There's	No	Place	Like	Home | [X:25.8] - | [X:26.2] Tutterow	Dance	Academy
+[Y: 26.01] [X:1.6] Classic	Emerging	Artist	Senior	Dancer
+[Y: 26.89] [X:3.9] Lily	Audibert | [X:8.6] - | [X:9.0] Stand	Still | [X:12.6] - | [X:13.0] Tutterow	Dance	Academy
+[Y: 27.78] [X:3.9] 1st	Runner | [X:7.7] - | [X:7.9] Up | [X:9.1] - | [X:9.5] Elena	Szewczykowski | [X:17.1] - | [X:17.5] Too	Much | [X:21.0] - | [X:21.4] The	Dance	Collective
+[Y: 28.65] [X:3.9] 2nd	Runner | [X:8.0] - | [X:8.2] Up | [X:9.3] - | [X:9.8] Jessica	Ridenhour | [X:16.1] - | [X:16.5] Ashes | [X:18.7] - | [X:19.1] JMB	Dance	Academy
+[Y: 30.40] [X:1.6] Top	Classic	Petite	Solo
+[Y: 31.29] [X:3.9] 1 | [X:4.5] - | [X:4.9] Kenzie	Walsh | [X:9.7] - | [X:10.1] My	New	Philosophy | [X:17.0] - | [X:17.5] Performer's	Edge	Dance	Center
+[Y: 32.17] [X:3.9] 2 | [X:4.5] - | [X:4.9] McKenna	Loftis | [X:10.4] - | [X:10.8] Little	Bitty	Pretty	One | [X:18.5] - | [X:18.9] JMB	Dance	Academy
+[Y: 33.04] [X:3.9] 3 | [X:4.5] - | [X:4.9] Hadley	Loftis | [X:9.6] - | [X:10.0] These	Boots | [X:14.3] - | [X:14.8] JMB	Dance	Academy
+[Y: 33.93] [X:3.9] 4 | [X:4.5] - | [X:4.9] Kylie	Bulfango | [X:10.1] - | [X:10.5] Hound	Dog | [X:14.5] - | [X:14.9] Performer's	Edge	Dance	Center
+[Y: 34.80] [X:3.9] 5 | [X:4.5] - | [X:4.9] Ariyah	Hernandez | [X:11.3] - | [X:11.8] Fly | [X:13.0] - | [X:13.4] JMB	Dance	Academy
+
+--- PAGE 4 ---
+[Y: 3.15] [X:1.6] Top	Classic	Junior	Solo
+[Y: 4.03] [X:3.9] 1 | [X:4.5] - | [X:4.9] Brynn	Schiffbauer | [X:11.3] - | [X:11.7] Life	Of	The	Party | [X:17.6] - | [X:18.1] Performer's	Edge	Dance	Center
+[Y: 4.90] [X:3.9] 2 | [X:4.5] - | [X:4.9] Zoe	Alba | [X:8.0] - | [X:8.4] Control | [X:11.2] - | [X:11.6] Performer's	Edge	Dance	Center
+[Y: 5.79] [X:3.9] 3 | [X:4.5] - | [X:4.9] Sadie	Spain | [X:9.0] - | [X:9.4] Gratitude | [X:12.9] - | [X:13.3] JMB	Dance	Academy
+[Y: 6.67] [X:3.9] 4 | [X:4.5] - | [X:4.9] Harper	Namey | [X:10.1] - | [X:10.5] Bloom | [X:12.9] - | [X:13.3] Tutterow	Dance	Academy
+[Y: 7.54] [X:3.9] 5 | [X:4.5] - | [X:4.9] Noelia	Lizardi | [X:9.9] - | [X:10.3] See	The	Light | [X:15.0] - | [X:15.5] Performer's	Edge	Dance	Center
+[Y: 8.43] [X:3.9] 6 | [X:4.5] - | [X:4.9] Mia	Funes | [X:8.5] - | [X:9.0] Fix	You | [X:11.7] - | [X:12.1] JMB	Dance	Academy
+[Y: 9.31] [X:3.9] 7 | [X:4.5] - | [X:4.9] Rachel	Jacobs | [X:9.8] - | [X:10.2] Proud | [X:12.5] - | [X:12.9] Tutterow	Dance	Academy
+[Y: 10.18] [X:3.9] 8 | [X:4.5] - | [X:4.9] Cameron	Belvedere | [X:11.8] - | [X:12.3] So	Much	Better | [X:17.6] - | [X:18.0] The	Dance	Collective
+[Y: 11.07] [X:3.9] 9 | [X:4.5] - | [X:4.9] Elizabeth	Wolf | [X:10.1] - | [X:10.5] One	Beautiful	Evening | [X:18.3] - | [X:18.7] Tutterow	Dance	Academy
+[Y: 11.94] [X:3.9] 10 | [X:4.9] - | [X:5.3] Ayla	Metz | [X:8.8] - | [X:9.3] I	Enjoy	Being	A	Girl | [X:16.0] - | [X:16.5] Tutterow	Dance	Academy
+[Y: 13.71] [X:1.6] Top	Classic	Teen	Solo
+[Y: 14.58] [X:3.9] 1 | [X:4.5] - | [X:4.9] Aaliyah	King | [X:9.4] - | [X:9.8] Sitting	Up	In	My	Room | [X:17.6] - | [X:18.0] Performer's	Edge	Dance	Center
+[Y: 15.46] [X:3.9] 2 | [X:4.5] - | [X:4.9] Eva	Mendez | [X:9.1] - | [X:9.6] You	Stole	The	Show | [X:16.4] - | [X:16.9] Performer's	Edge	Dance	Center
+[Y: 16.35] [X:3.9] 3 | [X:4.5] - | [X:4.9] Ava	Sardinas | [X:9.5] - | [X:9.9] Bohemian	Rhapsody | [X:17.2] - | [X:17.6] Studio	G	Performing	Arts	Academy
+[Y: 17.22] [X:3.9] 4 | [X:4.5] - | [X:4.9] Mercedes	Emerson | [X:11.6] - | [X:12.0] Someone	To	You | [X:17.9] - | [X:18.3] Performer's	Edge	Dance	Center
+[Y: 18.10] [X:3.9] 5 | [X:4.5] - | [X:4.9] Mia	Hernandez | [X:10.3] - | [X:10.7] Enough | [X:13.5] - | [X:13.9] JMB	Dance	Academy
+[Y: 18.97] [X:3.9] 6 | [X:4.5] - | [X:4.9] Alegria	Ortega | [X:10.0] - | [X:10.5] Snowing | [X:13.6] - | [X:14.0] Performer's	Edge	Dance	Center
+[Y: 19.86] [X:3.9] 7 | [X:4.5] - | [X:4.9] Alanah	Flounary | [X:10.8] - | [X:11.2] There's	No	Place	Like	Home | [X:20.9] - | [X:21.3] Tutterow	Dance	Academy
+[Y: 20.74] [X:3.9] 8 | [X:4.5] - | [X:4.9] Claire	Hyc | [X:8.6] - | [X:9.0] Spanish	Rose | [X:13.7] - | [X:14.1] Tutterow	Dance	Academy
+[Y: 21.61] [X:3.9] 9 | [X:4.5] - | [X:4.9] Ella	Wolfson | [X:9.4] - | [X:9.8] Can't	Take	My	Eyes	Off	Of	You | [X:20.1] - | [X:20.5] Tutterow	Dance	Academy
+[Y: 22.50] [X:3.9] 10 | [X:4.9] - | [X:5.3] Aubrey	Quever | [X:10.7] - | [X:11.1] She	Use	To	Be	Mine | [X:17.9] - | [X:18.3] Tutterow	Dance	Academy
+[Y: 23.37] [X:3.9] 11 | [X:4.9] - | [X:5.3] Paola	Ochoa | [X:9.7] - | [X:10.1] Come	Out	And	Play | [X:16.9] - | [X:17.3] Performer's	Edge	Dance	Center
+[Y: 24.25] [X:3.9] 12 | [X:4.9] - | [X:5.3] Victoria	Kadatskiy | [X:11.9] - | [X:12.3] When	I	Fall | [X:16.3] - | [X:16.8] The	Dance	Collective
+[Y: 25.14] [X:3.9] 13 | [X:4.9] - | [X:5.3] Angela	Silva | [X:9.7] - | [X:10.1] My	Time | [X:13.2] - | [X:13.7] Performer's	Edge	Dance	Center
+[Y: 26.01] [X:3.9] 14 | [X:4.9] - | [X:5.3] Alicia	Rees | [X:9.2] - | [X:9.7] Lovely	Day | [X:13.6] - | [X:14.0] Tutterow	Dance	Academy
+[Y: 26.89] [X:3.9] 15 | [X:4.9] - | [X:5.3] Nina	Trisiripisal | [X:11.1] - | [X:11.6] Villain | [X:14.0] - | [X:14.4] The	Dance	Collective
+[Y: 27.78] [X:3.9] 16 | [X:4.9] - | [X:5.3] Crosby	Garrison | [X:11.1] - | [X:11.5] I	Love	Your	Smile | [X:17.7] - | [X:18.1] Performer's	Edge	Dance	Center
+[Y: 28.65] [X:3.9] 17 | [X:4.9] - | [X:5.3] Kaia	Rambo | [X:9.6] - | [X:10.1] A	Perfect	Lady | [X:15.2] - | [X:15.6] Tutterow	Dance	Academy
+[Y: 29.53] [X:3.9] 18 | [X:4.9] - | [X:5.3] Raelynn	Kyle | [X:10.0] - | [X:10.4] Honest | [X:13.1] - | [X:13.5] Tutterow	Dance	Academy
+[Y: 30.40] [X:3.9] 19 | [X:4.9] - | [X:5.3] Annabelle	Munevar | [X:12.2] - | [X:12.7] All	Of	Me | [X:15.9] - | [X:16.3] JMB	Dance	Academy
+[Y: 31.29] [X:3.9] 20 | [X:4.9] - | [X:5.3] Gianna	Graham | [X:10.8] - | [X:11.3] Unchained	Melody | [X:17.8] - | [X:18.2] Tutterow	Dance	Academy
+[Y: 33.04] [X:1.6] Top	Classic	Senior	Solo
+[Y: 33.93] [X:3.9] 1 | [X:4.5] - | [X:4.9] Jillian	Chase | [X:9.3] - | [X:9.7] Snowing | [X:12.8] - | [X:13.2] The	Dance	Collective
+[Y: 34.80] [X:3.9] 2 | [X:4.5] - | [X:4.9] Addison	McEntegart | [X:12.0] - | [X:12.4] Look	At	Me | [X:16.4] - | [X:16.9] Tutterow	Dance	Academy
+[Y: 35.68] [X:3.9] 3 | [X:4.5] - | [X:4.9] Dalia	Causby | [X:9.5] - | [X:9.9] Georgia	On	My	Mind | [X:17.0] - | [X:17.4] Tutterow	Dance	Academy
+[Y: 36.57] [X:3.9] 4 | [X:4.5] - | [X:4.9] Adisyn	Stuck | [X:9.5] - | [X:9.9] Vienna | [X:12.5] - | [X:12.9] The	Dance	Collective
+[Y: 37.44] [X:3.9] 5 | [X:4.5] - | [X:4.9] Lily	Audibert | [X:9.6] - | [X:10.0] Stand	Still | [X:13.6] - | [X:14.1] Tutterow	Dance	Academy
+[Y: 39.21] [X:1.6] Top	Classic	Petite	Duet/Trio
+[Y: 40.08] [X:3.9] 1 | [X:4.5] - | [X:4.9] The	Sanderson	Sisters | [X:12.7] - | [X:13.1] JMB	Dance	Academy | [X:20.3] - | [X:20.7] Jordan	Britt
+[Y: 40.96] [X:3.9] 2 | [X:4.5] - | [X:4.9] As	If | [X:6.6] - | [X:7.0] JMB	Dance	Academy | [X:14.1] - | [X:14.6] Jordan	Britt
+
+--- PAGE 5 ---
+[Y: 3.15] [X:1.6] Top	Classic	Junior	Duet/Trio
+[Y: 4.03] [X:3.9] 1 | [X:4.5] - | [X:4.9] Bad	Dreams | [X:9.2] - | [X:9.7] JMB	Dance	Academy | [X:16.8] - | [X:17.2] Jordan	Britt
+[Y: 4.90] [X:3.9] 2 | [X:4.5] - | [X:4.9] Werk	It | [X:7.7] - | [X:8.1] JMB	Dance	Academy | [X:15.2] - | [X:15.7] Jordan	Britt
+[Y: 5.79] [X:3.9] 3 | [X:4.5] - | [X:4.9] Powerpuff	Girls | [X:10.5] - | [X:10.9] Performer's	Edge	Dance	Center | [X:21.8] - | [X:22.2] Amie	Hollborn
+[Y: 7.54] [X:1.6] Top	Classic	Teen	Duet/Trio
+[Y: 8.43] [X:3.9] 1 | [X:4.5] - | [X:4.9] I've	Got	Your	Number | [X:12.5] - | [X:12.9] Performer's	Edge	Dance	Center | [X:23.8] - | [X:24.2] Amie	Hollborn
+[Y: 9.31] [X:3.9] 2 | [X:4.5] - | [X:4.9] The	Good	Life | [X:9.8] - | [X:10.2] Tutterow	Dance	Academy | [X:19.2] - | [X:19.6] Debbie	Kennedy
+[Y: 10.18] [X:3.9] 3 | [X:4.5] - | [X:4.9] Simply	The	Best | [X:10.6] - | [X:11.0] Tutterow	Dance	Academy | [X:20.0] - | [X:20.4] Debbie	Kennedy
+[Y: 11.07] [X:3.9] 4 | [X:4.5] - | [X:4.9] I	Look	To	You | [X:9.8] - | [X:10.2] Tutterow	Dance	Academy | [X:19.2] - | [X:19.6] Debbie	Kennedy
+[Y: 11.94] [X:3.9] 5 | [X:4.5] - | [X:4.9] Tightrope | [X:8.5] - | [X:8.9] Tutterow	Dance	Academy | [X:17.9] - | [X:18.4] Debbie	Kennedy
+[Y: 13.71] [X:1.6] Top	Classic	Junior	Small	Group
+[Y: 14.58] [X:3.9] 1 | [X:4.5] - | [X:4.9] It's	Snowing | [X:9.2] - | [X:9.6] Tutterow	Dance	Academy | [X:18.7] - | [X:19.1] Debbie	Kennedy
+[Y: 15.46] [X:3.9] 2 | [X:4.5] - | [X:4.9] Never	Enough | [X:9.9] - | [X:10.3] JMB	Dance	Academy | [X:17.4] - | [X:17.9] Jordan	Britt
+[Y: 16.35] [X:3.9] 3 | [X:4.5] - | [X:4.9] Technologic | [X:9.2] - | [X:9.7] JMB	Dance	Academy | [X:16.8] - | [X:17.2] Jordan	Britt
+[Y: 18.10] [X:1.6] Top	Classic	Teen	Small	Group
+[Y: 18.97] [X:3.9] 1 | [X:4.5] - | [X:4.9] Here	In	The	Hole | [X:10.9] - | [X:11.3] Tutterow	Dance	Academy | [X:20.3] - | [X:20.7] Debbie	Kennedy
+[Y: 19.86] [X:3.9] 2 | [X:4.5] - | [X:4.9] Willkommen | [X:9.5] - | [X:9.9] Tutterow	Dance	Academy | [X:19.0] - | [X:19.4] Debbie	Kennedy
+[Y: 20.74] [X:3.9] 3 | [X:4.5] - | [X:4.9] Maneater | [X:8.4] - | [X:8.8] JMB	Dance	Academy | [X:15.9] - | [X:16.4] Jordan	Britt
+[Y: 21.61] [X:3.9] 4 | [X:4.5] - | [X:4.9] I'll	Be | [X:7.0] - | [X:7.4] Tutterow	Dance	Academy | [X:16.5] - | [X:16.9] Debbie	Kennedy
+[Y: 23.37] [X:1.6] Top	Classic	Senior	Small	Group
+[Y: 24.25] [X:3.9] 1 | [X:4.5] - | [X:4.9] The	Chain | [X:8.5] - | [X:8.9] Tutterow	Dance	Academy | [X:18.0] - | [X:18.4] Debbie	Kennedy
+[Y: 26.01] [X:1.6] Top	Classic	Junior	Large	Group
+[Y: 26.89] [X:3.9] 1 | [X:4.5] - | [X:4.9] Lets	Get	Into	It | [X:10.1] - | [X:10.5] Tutterow	Dance	Academy | [X:19.5] - | [X:19.9] Debbie	Kennedy
+[Y: 27.78] [X:3.9] 2 | [X:4.5] - | [X:4.9] Millennium | [X:9.0] - | [X:9.5] JMB	Dance	Academy | [X:16.6] - | [X:17.0] Jordan	Britt
+[Y: 28.65] [X:3.9] 3 | [X:4.5] - | [X:4.9] The	Vault | [X:8.4] - | [X:8.8] JMB	Dance	Academy | [X:15.9] - | [X:16.4] Jordan	Britt
+[Y: 30.40] [X:1.6] Top	Classic	Teen	Large	Group
+[Y: 31.29] [X:3.9] 1 | [X:4.5] - | [X:4.9] Bigger	Than | [X:9.2] - | [X:9.7] Tutterow	Dance	Academy | [X:18.7] - | [X:19.1] Debbie	Kennedy
+[Y: 32.17] [X:3.9] 2 | [X:4.5] - | [X:4.9] Amen | [X:7.1] - | [X:7.5] JMB	Dance	Academy | [X:14.6] - | [X:15.1] Jordan	Britt
+[Y: 33.04] [X:3.9] 3 | [X:4.5] - | [X:4.9] The	Goodness	Of	God | [X:12.3] - | [X:12.7] Tutterow	Dance	Academy | [X:21.8] - | [X:22.2] Debbie	Kennedy
+[Y: 33.93] [X:3.9] 4 | [X:4.5] - | [X:4.9] Flightless	Bird | [X:10.0] - | [X:10.5] Tutterow	Dance	Academy | [X:19.5] - | [X:19.9] Debbie	Kennedy
+[Y: 35.68] [X:1.6] Top	Classic	Junior	Line
+[Y: 36.57] [X:3.9] 1 | [X:4.5] - | [X:4.9] Don't	Stop	The	Party | [X:12.2] - | [X:12.6] Tutterow	Dance	Academy | [X:21.6] - | [X:22.0] Debbie	Kennedy
+[Y: 38.32] [X:1.6] Top	Classic	Teen	Line
+[Y: 39.21] [X:3.9] 1 | [X:4.5] - | [X:4.9] Dreams | [X:7.7] - | [X:8.2] Tutterow	Dance	Academy | [X:17.2] - | [X:17.6] Debbie	Kennedy
+[Y: 40.96] [X:1.6] Junior	Classic	Apogee	Award
+[Y: 41.83] [X:3.9] Lets	Get	Into	It | [X:9.1] - | [X:9.5] Tutterow	Dance	Academy | [X:18.5] - | [X:18.9] Debbie	Kennedy
+[Y: 43.60] [X:1.6] Teen | [X:3.5] Classic	Apogee	Award
+[Y: 44.47] [X:3.9] Here	In	The	Hole | [X:9.8] - | [X:10.3] Tutterow	Dance	Academy | [X:19.3] - | [X:19.7] Debbie	Kennedy
+
+--- PAGE 6 ---
+[Y: 3.15] [X:1.6] Senior	Classic | [X:6.5] Apogee	Award
+[Y: 4.03] [X:3.9] The	Chain | [X:7.5] - | [X:7.9] Tutterow	Da | [X:12.2] nce	Academy | [X:16.9] - | [X:17.3] Debbie	Kennedy
+[Y: 5.79] [X:1.6] Nova	Emerging	Artist	Mini	Dancer
+[Y: 6.67] [X:3.9] Lennox	Botkin | [X:9.0] - | [X:9.5] Hot	Hot	Hot | [X:13.7] - | [X:14.1] JMB	Dance	Academy
+[Y: 8.43] [X:1.6] Nova	Emerging	Artist	Petite	Dancer
+[Y: 9.31] [X:3.9] Autumn	Barkley | [X:9.7] - | [X:10.1] Werk	It | [X:12.9] - | [X:13.3] Studio	G	Performing	Arts	Academy
+[Y: 10.18] [X:3.9] 1st	Runner | [X:7.7] - | [X:7.9] Up | [X:9.1] - | [X:9.5] Whitlee	Davis | [X:14.4] - | [X:14.8] Elastic	Heart | [X:19.4] - | [X:19.8] Central	Florida	Dance	Center
+[Y: 11.07] [X:3.9] 2nd	Runner | [X:8.0] - | [X:8.2] Up | [X:9.3] - | [X:9.8] Kennedy	Perry | [X:15.1] - | [X:15.5] Tiana's	Place | [X:20.2] - | [X:20.6] The	Dance	Collective
+[Y: 12.82] [X:1.6] Nova	Emerging	Artist	Junior	Dancer
+[Y: 13.71] [X:3.9] Quinn	Loftis | [X:8.2] - | [X:8.7] What	A	Wonderful	World | [X:17.5] - | [X:18.0] JMB	Dance	Academy
+[Y: 14.58] [X:3.9] 1st	Runner | [X:7.7] - | [X:7.9] Up | [X:9.1] - | [X:9.5] Mia	Reyes | [X:13.1] - | [X:13.5] Brave | [X:15.7] - | [X:16.1] JMB	Dance	Academy
+[Y: 15.46] [X:3.9] 2nd	Runner | [X:8.0] - | [X:8.2] Up | [X:9.3] - | [X:9.8] Danieliz	Valentin | [X:15.8] - | [X:16.3] That's	Not	My	Name | [X:23.3] - | [X:23.7] JMB	Dance	Academy
+[Y: 17.22] [X:1.6] Nova	Emerging	Artist	Teen	Dancer
+[Y: 18.10] [X:3.9] Azara	Lucker | [X:8.6] - | [X:9.0] Daylight | [X:12.1] - | [X:12.5] Silhouette	Dance
+[Y: 18.97] [X:3.9] 1st	Runner | [X:7.7] - | [X:7.9] Up | [X:9.1] - | [X:9.5] Gianna	Gibbons | [X:15.1] - | [X:15.5] Young	&	Beautiful | [X:21.9] - | [X:22.3] Silhouette	Dance
+[Y: 20.74] [X:1.6] Top	Nova	Mini	Solo
+[Y: 21.61] [X:3.9] 1 | [X:4.5] - | [X:4.9] Lennox	Botkin | [X:10.1] - | [X:10.5] Hot	Hot	Hot | [X:14.7] - | [X:15.1] JMB	Dance	Academy
+[Y: 23.37] [X:1.6] Top	Nova	Petite	Solo
+[Y: 24.25] [X:3.9] 1 | [X:4.5] - | [X:4.9] Whitlee	Davis | [X:9.8] - | [X:10.2] Elastic	Heart | [X:14.8] - | [X:15.2] Central	Florida	Dance	Center
+[Y: 25.14] [X:3.9] 2 | [X:4.5] - | [X:4.9] Kinsley	Peacoe | [X:10.2] - | [X:10.6] Gratitude | [X:14.1] - | [X:14.5] Tutterow	Dance	Academy
+[Y: 26.01] [X:3.9] 3 | [X:4.5] - | [X:4.9] Autumn	Barkley | [X:10.7] - | [X:11.1] Werk	It | [X:13.9] - | [X:14.3] Studio	G	Performing	Arts	Academy
+[Y: 26.89] [X:3.9] 4 | [X:4.5] - | [X:4.9] Delaney	Sfura | [X:9.8] - | [X:10.3] Stupid	Cupid | [X:14.8] - | [X:15.3] Tutterow	Dance	Academy
+[Y: 27.78] [X:3.9] 5 | [X:4.5] - | [X:4.9] Kennedy	Perry | [X:10.2] - | [X:10.6] Tiana's	Place | [X:15.3] - | [X:15.7] The	Dance	Collective
+[Y: 29.53] [X:1.6] Top	Nova	Junior	Solo
+[Y: 30.40] [X:3.9] 1 | [X:4.5] - | [X:4.9] Addison	Delgado | [X:10.9] - | [X:11.3] Fabulous | [X:14.6] - | [X:15.0] Studio	G	Performing	Arts	Academy
+[Y: 31.29] [X:3.9] 2 | [X:4.5] - | [X:4.9] Quinn	Loftis | [X:9.3] - | [X:9.7] What	A	Wonderful	World | [X:18.6] - | [X:19.0] JMB	Dance	Academy
+[Y: 32.17] [X:3.9] 3 | [X:4.5] - | [X:4.9] Amayra	D'Souza | [X:10.7] - | [X:11.1] True	Colors | [X:15.3] - | [X:15.7] Duvall	Dance	Academy
+[Y: 33.04] [X:3.9] 4 | [X:4.5] - | [X:4.9] Aubrianne	Johnston | [X:12.0] - | [X:12.4] Breathe | [X:15.3] - | [X:15.7] Silhouette	Dance
+[Y: 33.93] [X:3.9] 5 | [X:4.5] - | [X:4.9] Natalie	Maldonado | [X:11.5] - | [X:12.0] Over	The	Rainbow | [X:18.5] - | [X:18.9] JMB	Dance	Academy
+[Y: 34.80] [X:3.9] 6 | [X:4.5] - | [X:4.9] Tatum	Robbins | [X:10.3] - | [X:10.7] I	Feel	Pretty | [X:15.1] - | [X:15.5] Tutterow	Dance	Academy
+[Y: 35.68] [X:3.9] 7 | [X:4.5] - | [X:4.9] Hayden	Wilson | [X:10.3] - | [X:10.7] Homecoming | [X:15.4] - | [X:15.8] Fierce	Orlando
+[Y: 36.57] [X:3.9] 8 | [X:4.5] - | [X:4.9] Alaina	Cole | [X:8.9] - | [X:9.3] Cant	Help	Falling	In	Love | [X:18.0] - | [X:18.5] Tutterow	Dance	Academy
+[Y: 37.44] [X:3.9] 9 | [X:4.5] - | [X:4.9] Mia	Reyes | [X:8.5] - | [X:8.9] Brave | [X:11.1] - | [X:11.6] JMB	Dance	Academy
+[Y: 38.32] [X:3.9] 10 | [X:4.9] - | [X:5.3] Gwen	Hyc | [X:8.9] - | [X:9.3] When	You	Wish	Upon	A	Star | [X:19.1] - | [X:19.5] Tutterow	Dance	Academy
+[Y: 40.08] [X:1.6] Top	Nova	Teen	Solo
+[Y: 40.96] [X:3.9] 1 | [X:4.5] - | [X:4.9] Aiyana	Reyes | [X:9.6] - | [X:10.0] Evergreen | [X:13.8] - | [X:14.2] Tutterow	Dance	Academy
+[Y: 41.83] [X:3.9] 2 | [X:4.5] - | [X:4.9] Azara	Lucker | [X:9.6] - | [X:10.0] Daylight | [X:13.1] - | [X:13.5] Silhouette	Dance
+[Y: 42.72] [X:3.9] 3 | [X:4.5] - | [X:4.9] Kayla	Hampton | [X:10.4] - | [X:10.8] Surprise	Yourself | [X:17.0] - | [X:17.4] Vault	Dance	Company
+[Y: 43.60] [X:3.9] 4 | [X:4.5] - | [X:4.9] Tinsley	Robbins | [X:10.6] - | [X:11.0] Who	Else	Is	Worthy | [X:17.9] - | [X:18.3] Tutterow	Dance	Academy
+[Y: 44.47] [X:3.9] 5 | [X:4.5] - | [X:4.9] Madison	Wyatt | [X:10.2] - | [X:10.6] You	Say | [X:13.5] - | [X:13.9] Silhouette	Dance
+
+--- PAGE 7 ---
+[Y: 4.03] [X:1.6] Top	Nova	Mini	Duet/Trio
+[Y: 4.90] [X:3.9] 1 | [X:4.5] - | [X:4.9] Happy	Meals | [X:9.5] - | [X:9.9] JMB	Dance	Academy | [X:17.0] - | [X:17.5] Jordan	Britt
+[Y: 6.67] [X:1.6] Top	Nova	Petite	Duet/Trio
+[Y: 7.54] [X:3.9] 1 | [X:4.5] - | [X:4.9] Fire	&	Ice | [X:8.3] - | [X:8.8] JMB	Dance	Academy | [X:15.9] - | [X:16.3] Jordan	Britt
+[Y: 8.43] [X:3.9] 2 | [X:4.5] - | [X:4.9] We	Are	Siamese | [X:10.6] - | [X:11.0] Tutterow	Dance	Academy | [X:20.0] - | [X:20.4] Debbie	Kennedy
+[Y: 9.31] [X:3.9] 3 | [X:4.5] - | [X:4.9] Fabulous | [X:8.2] - | [X:8.6] Silhouette	Dance | [X:14.6] - | [X:15.0] Laura	Schmidt
+[Y: 11.07] [X:1.6] Top	Nova	Junior	Duet/Trio
+[Y: 11.94] [X:3.9] 1 | [X:4.5] - | [X:4.9] Beautiful	Friends | [X:11.0] - | [X:11.4] JMB	Dance	Academy | [X:18.6] - | [X:19.0] Jordan	Britt
+[Y: 12.82] [X:3.9] 2 | [X:4.5] - | [X:4.9] Praise | [X:7.2] - | [X:7.7] JMB	Dance	Academy | [X:14.8] - | [X:15.2] Jordan	Britt
+[Y: 13.71] [X:3.9] 3 | [X:4.5] - | [X:4.9] Little	Bird | [X:8.6] - | [X:9.0] Studio	G	Performing	Arts	Academy | [X:21.1] - | [X:21.5] Jennifer	Houghton
+[Y: 15.46] [X:1.6] Top	Nova	Teen	Duet/Trio
+[Y: 16.35] [X:3.9] 1 | [X:4.5] - | [X:4.9] Ain't	Nothing	Wrong | [X:12.1] - | [X:12.5] Silhouette	Dance | [X:18.5] - | [X:18.9] Laura	Schmidt
+[Y: 17.22] [X:3.9] 2 | [X:4.5] - | [X:4.9] The	Raven | [X:8.7] - | [X:9.1] Silhouette	Dance | [X:15.1] - | [X:15.5] Laura	Schmidt
+[Y: 18.97] [X:1.6] Top	Nova	Mini	Small	Group
+[Y: 19.86] [X:3.9] 1 | [X:4.5] - | [X:4.9] This	Little	Piggy | [X:10.6] - | [X:11.0] JMB	Dance	Academy | [X:18.2] - | [X:18.6] Jordan	Britt
+[Y: 21.61] [X:1.6] Top	Nova	Petite	Small	Group
+[Y: 22.50] [X:3.9] 1 | [X:4.5] - | [X:4.9] Ill	Be	Seeing	You | [X:10.7] - | [X:11.2] Tutterow	Dance	Academy | [X:20.2] - | [X:20.6] Debbie	Kennedy
+[Y: 23.37] [X:3.9] 2 | [X:4.5] - | [X:4.9] Ready,	Set,	Hike | [X:10.5] - | [X:11.0] JMB	Dance	Academy | [X:18.1] - | [X:18.5] Jordan	Britt
+[Y: 24.25] [X:3.9] 3 | [X:4.5] - | [X:4.9] Work | [X:7.0] - | [X:7.4] Fierce	Orlando | [X:12.7] - | [X:13.1] Rachel	Rivera
+[Y: 25.14] [X:3.9] 4 | [X:4.5] - | [X:4.9] Carnival | [X:7.9] - | [X:8.4] Fierce	Orlando | [X:13.7] - | [X:14.1] Rachel	Rivera
+[Y: 26.89] [X:1.6] Top	Nova	Junior	Small	Group
+[Y: 27.78] [X:3.9] 1 | [X:4.5] - | [X:4.9] One	Fine	Day | [X:9.6] - | [X:10.0] Tutterow	Dance	Academy | [X:19.0] - | [X:19.4] Debbie	Kennedy
+[Y: 28.65] [X:3.9] 2 | [X:4.5] - | [X:4.9] Powerful	Woman | [X:11.0] - | [X:11.5] Tutterow	Dance	Academy | [X:20.5] - | [X:20.9] Debbie	Kennedy
+[Y: 29.53] [X:3.9] 3 | [X:4.5] - | [X:4.9] Jumpin' | [X:7.7] - | [X:8.2] JMB	Dance	Academy | [X:15.3] - | [X:15.7] Jordan	Britt
+[Y: 30.40] [X:3.9] 4 | [X:4.5] - | [X:4.9] Jumanji | [X:7.7] - | [X:8.2] Fierce	Orlando | [X:13.5] - | [X:13.9] Rachel	Rivera
+[Y: 31.29] [X:3.9] 5 | [X:4.5] - | [X:4.9] Whistle	While	You	Work	It | [X:14.2] - | [X:14.6] Silhouette	Dance | [X:20.6] - | [X:21.0] Laura	Schmidt
+[Y: 33.04] [X:1.6] Top	Nova	Teen	Small	Group
+[Y: 33.93] [X:3.9] 1 | [X:4.5] - | [X:4.9] Jazzercise | [X:8.5] - | [X:8.9] Vault	Dance	Company | [X:16.6] - | [X:17.0] Eryn	Huff
+[Y: 34.80] [X:3.9] 2 | [X:4.5] - | [X:4.9] Got	It | [X:6.9] - | [X:7.4] Silhouette	Dance | [X:13.3] - | [X:13.8] Laura	Schmidt
+[Y: 36.57] [X:1.6] Top	Nova	Mini	Large	Group
+[Y: 37.44] [X:3.9] 1 | [X:4.5] - | [X:4.9] Bigger	Is	Better | [X:10.4] - | [X:10.8] Performer's	Edge	Dance	Center | [X:21.8] - | [X:22.2] Amie	Hollborn
+[Y: 39.21] [X:1.6] Top	Nova	Petite	Large	Group
+[Y: 40.08] [X:3.9] 1 | [X:4.5] - | [X:4.9] The	Greatest	Love | [X:11.3] - | [X:11.7] Tutterow	Dance	Academy | [X:20.7] - | [X:21.1] Debbie	Kennedy
+[Y: 40.96] [X:3.9] 2 | [X:4.5] - | [X:4.9] The	Rose | [X:8.2] - | [X:8.6] JMB	Dance	Academy | [X:15.8] - | [X:16.2] Jordan	Britt
+
+--- PAGE 8 ---
+[Y: 3.15] [X:1.6] Top	Nova	Junior	Large	Group
+[Y: 4.03] [X:3.9] 1 | [X:4.5] - | [X:4.9] Feels	Good | [X:8.8] - | [X:9.2] JMB	Dance	Academy | [X:16.4] - | [X:16.8] Jordan	Britt
+[Y: 4.90] [X:3.9] 2 | [X:4.5] - | [X:4.9] Hannah	Montana	Live | [X:12.6] - | [X:13.0] Performer's	Edge	Dance	Center | [X:23.9] - | [X:24.3] Amie	Hollborn
+[Y: 5.79] [X:3.9] 3 | [X:4.5] - | [X:4.9] You	Can't	Stop	The	Beat | [X:13.2] - | [X:13.6] Performer's	Edge	Dance	Center | [X:24.6] - | [X:25.0] Amie	Hollborn
+[Y: 6.67] [X:3.9] 4 | [X:4.5] - | [X:4.9] Wild	Wild	West | [X:10.4] - | [X:10.8] JMB	Dance	Academy | [X:18.0] - | [X:18.4] Jordan	Britt
+[Y: 7.54] [X:3.9] 5 | [X:4.5] - | [X:4.9] Knockout | [X:8.4] - | [X:8.8] Fierce	Orlando | [X:14.1] - | [X:14.5] Rachel	Rivera
+[Y: 9.31] [X:1.6] Top	Nova	Junior	Line
+[Y: 10.18] [X:3.9] 1 | [X:4.5] - | [X:4.9] Ready	To	Rock | [X:10.1] - | [X:10.6] JMB	Dance	Academy | [X:17.7] - | [X:18.1] Jordan	Britt
+[Y: 11.94] [X:1.6] Mini/Petite/Junior	Solo	Photogenic
+[Y: 12.82] [X:3.9] Cameron	Belvedere	The	Dance	Collective
+[Y: 14.58] [X:1.6] Teen/Senior	Solo	Photogenic
+[Y: 15.46] [X:3.9] Kirsten	Bulfango	Performer's	Edge	Dance	Center
+[Y: 17.22] [X:1.6] Mini/Petite	Solo	Cost | [X:8.9] ume
+[Y: 18.10] [X:3.9] 1 | [X:4.5] - | [X:4.9] The	Swa | [X:7.8] n | [X:8.4] - | [X:8.8] JM | [X:9.7] B | [X:10.3] Dance	Academy | [X:16.0] - | [X:16.4] Jordan	Britt
+[Y: 19.86] [X:1.6] Junior	Solo	Costu | [X:7.5] me
+[Y: 20.74] [X:3.9] 1 | [X:4.5] - | [X:4.9] I	Feel	Pretty | [X:9.2] - | [X:9.7] Tutterow	Dance	Academy | [X:18.7] - | [X:19.1] Debbie	Kennedy
+[Y: 22.50] [X:1.6] Teen	Solo	Costume
+[Y: 23.37] [X:3.9] 1 | [X:4.5] - | [X:4.9] There | [X:7.0] ’ | [X:7.1] s	No	Place	Like	Home | [X:14.6] - | [X:15.0] Tutterow	Dance	Academy | [X:24.0] - | [X:24.5] Debbie	Kennedy
+[Y: 25.14] [X:1.6] Seni | [X:3.1] or	Solo	Costume
+[Y: 26.01] [X:3.9] 1 | [X:4.5] - | [X:4.9] Georgia	On	My	Mind | [X:12.0] - | [X:12.4] Tutterow	Dance	Academy | [X:21.5] - | [X:21.9] Debbie	Kennedy
+[Y: 27.78] [X:1.6] Mini/Pet | [X:4.7] ite/Junior	Duet/Trio	Costume
+[Y: 28.65] [X:3.9] 1 | [X:4.5] - | [X:4.9] Happy	Means | [X:9.7] - | [X:10.1] JM | [X:11.0] B | [X:11.6] Dance	Academy | [X:17.3] - | [X:17.7] Jordan	Britt
+[Y: 30.40] [X:1.6] Teen/Senior	Duet/Trio	Costume
+[Y: 31.29] [X:3.9] 1 | [X:4.5] - | [X:4.9] Tightrope | [X:8.5] - | [X:8.9] Tutterow	Dance	Academy | [X:17.9] - | [X:18.4] Debbie	Kennedy
+[Y: 33.04] [X:1.6] Min | [X:2.9] i/Petite/Junior	Group	Costume
+[Y: 33.93] [X:3.9] 1 | [X:4.5] - | [X:4.9] Ready,	Set | [X:8.4] ,	Hike | [X:10.5] - | [X:11.0] JMB	Dance	Academy | [X:18.1] - | [X:18.5] Jordan	Britt
+[Y: 35.68] [X:1.6] Teen | [X:3.3] /Senior	Group | [X:8.4] Costume
+[Y: 36.57] [X:3.9] 1 | [X:4.5] - | [X:4.9] Wil | [X:6.1] lkommen | [X:9.5] - | [X:9.9] Tutterow	Dance	Ac | [X:16.5] ademy | [X:19.0] - | [X:19.4] Jordan	Britt
+[Y: 38.32] [X:1.6] Mini | [X:3.2] /Petite | [X:5.8] Odyssey	Award
+[Y: 39.21] [X:3.9] Bigger	Is	Better | [X:9.4] - | [X:9.8] Performer's	Edge	Dance	Center | [X:20.7] - | [X:21.2] Amie	Hollborn
+[Y: 40.08] [X:3.9] Ready,	Set,	Hike | [X:9.5] - | [X:9.9] JMB	Dance	Academy | [X:17.1] - | [X:17.5] Jordan	Britt
+[Y: 40.96] [X:3.9] Ill	Be	Seeing	You | [X:9.7] - | [X:10.1] Tutterow	Dance	Academy | [X:19.2] - | [X:19.6] Debbie	Kennedy
+
+--- PAGE 9 ---
+[Y: 3.15] [X:1.6] Junior	Odyssey	Award
+[Y: 4.03] [X:3.9] Ready	To	Rock | [X:9.1] - | [X:9.5] JMB	Dance	Academy | [X:16.7] - | [X:17.1] Jordan	Britt
+[Y: 4.90] [X:3.9] It's	Snowing | [X:8.2] - | [X:8.6] Tutterow	Dance	Academy | [X:17.6] - | [X:18.1] Debbie	Kennedy
+[Y: 5.79] [X:3.9] Hannah	Montana	Live | [X:11.5] - | [X:12.0] Performer's	Edge	Dance	Center | [X:22.9] - | [X:23.3] Amie	Hollborn
+[Y: 7.54] [X:1.6] Teen	Odyssey	Award
+[Y: 8.43] [X:3.9] Got	It | [X:5.9] - | [X:6.3] Silhouette	Dance | [X:12.3] - | [X:12.7] Laura	Schmidt
+[Y: 9.31] [X:3.9] Willkommen | [X:8.5] - | [X:8.9] Tutterow	Dance	Academy | [X:17.9] - | [X:18.4] Debbie	Kennedy
+[Y: 11.07] [X:1.6] Senior	Odyssey	Award
+[Y: 11.94] [X:3.9] Natural	Woman | [X:9.5] - | [X:9.9] Tutterow	Dance	Academy | [X:18.9] - | [X:19.3] Debbie	Kennedy
+[Y: 13.71] [X:1.6] Viral	Video	of	the	Event
+[Y: 14.58] [X:3.9] Viva	La	Vida | [X:8.4] Tutterow	Dance	Academy | [X:17.4] Debbie	Kennedy
+[Y: 16.35] [X:1.6] Acrobatic	Arts	Awards
+[Y: 17.22] [X:3.9] Fierce	Orlando | [X:10.6] Rachel	R | [X:13.6] ivera
+[Y: 18.97] [X:1.6] Studio	Superlative	Awards
+[Y: 19.86] [X:3.9] Committed	Characterization
+[Y: 20.74] [X:6.1] Studio	G	Performing	Arts	Academy | [X:18.2] - | [X:18.6] Jennifer	Houghton
+[Y: 21.61] [X:3.9] Innovative	Concepts
+[Y: 22.50] [X:6.1] JMB	Dance	Academy | [X:13.3] - | [X:13.7] Jordan	Britt
+[Y: 23.37] [X:3.9] Well	Rounded	in	Multiple	Genres
+[Y: 24.25] [X:6.1] The	Dance	Collective | [X:13.4] - | [X:13.9] Hannah	Tiemeyer
+[Y: 26.89] [X:1.6] Choreography	Awards
+[Y: 27.78] [X:3.9] Duvall	Dance	Academy | [X:17.4] Tamara	Duvall,	Samantha	Macklin
+[Y: 28.65] [X:3.9] Performer's	Edge	Dance	Center | [X:17.4] Amie	Hollborn,	Amie	Hollborn
+[Y: 29.53] [X:3.9] Tutterow	Dance	Academy | [X:17.4] Debbie	Kennedy
+[Y: 31.29] [X:1.6] StarQuest	Classic	Studio	of	Excellence
+[Y: 32.17] [X:3.9] Tutterow	Dance	Academy
+[Y: 33.93] [X:1.6] StarQuest	Select	Studio	of	Excellence
+[Y: 34.80] [X:3.9] Tutterow	Dance	Academy

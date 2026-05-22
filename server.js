@@ -2941,172 +2941,202 @@ app.get('/studio/:id', async (req, res) => {
     mergedIntoStudio = await db.get('SELECT id, name FROM studios WHERE id = ?', [studio.merged_into_id]);
   }
 
-  const awards = await db.all(`
-    SELECT a.*, d.name as dancer_name, d.unique_id, e.name as event_name, e.year as event_year, e.date_string, o.id as org_id, o.name as org_name, o.logo_url, o.custom_icons
+  const currentYear = new Date().getFullYear();
+  
+  // 1. Fetch Quick Stats via SQL aggregation
+  const statsQuery = `
+    SELECT 
+      COUNT(*) as totalAwards,
+      COUNT(DISTINCT a.event_id) as totalEvents,
+      COUNT(CASE WHEN CAST(e.year AS INTEGER) = ? THEN 1 END) as awardsThisYear,
+      COUNT(DISTINCT CASE WHEN CAST(e.year AS INTEGER) = ? THEN a.event_id END) as eventsThisYear,
+      COUNT(CASE WHEN CAST(e.year AS INTEGER) >= ? THEN 1 END) as awardsPast5Years,
+      COUNT(DISTINCT CASE WHEN CAST(e.year AS INTEGER) >= ? THEN a.event_id END) as eventsPast5Years,
+      SUM(CASE WHEN a.is_first_place = 1 THEN 1 ELSE 0 END) as firstPlaceCount,
+      SUM(CASE WHEN a.is_first_place = 1 AND CAST(e.year AS INTEGER) = ? THEN 1 ELSE 0 END) as firstPlaceCountThisYear,
+      SUM(CASE WHEN LOWER(a.category || ' ' || COALESCE(a.award_type, '') || ' ' || COALESCE(a.performance_name, '')) LIKE '%scholarship%' OR LOWER(a.category || ' ' || COALESCE(a.award_type, '') || ' ' || COALESCE(a.performance_name, '')) LIKE '%invite%' OR LOWER(a.category || ' ' || COALESCE(a.award_type, '') || ' ' || COALESCE(a.performance_name, '')) LIKE '%invitation%' THEN 1 ELSE 0 END) as scholarshipCount
+    FROM awards a
+    LEFT JOIN events e ON a.event_id = e.id
+    WHERE a.studio_id = ?
+  `;
+  const quickStatsRow = await db.get(statsQuery, [currentYear, currentYear, currentYear - 4, currentYear - 4, currentYear, req.params.id]);
+  
+  const uniqueDancersRow = await db.get(`
+    SELECT COUNT(DISTINCT final_dancer) as count FROM (
+      SELECT COALESCE(d.unique_id, LOWER(TRIM(d.name))) as final_dancer
+      FROM award_dancers ad
+      JOIN awards a ON ad.award_id = a.id
+      JOIN dancers d ON ad.dancer_id = d.id
+      WHERE a.studio_id = ?
+      UNION
+      SELECT COALESCE(d.unique_id, LOWER(TRIM(d.name))) as final_dancer
+      FROM awards a
+      JOIN dancers d ON a.dancer_id = d.id
+      WHERE a.studio_id = ? AND a.dancer_id IS NOT NULL
+    )
+  `, [req.params.id, req.params.id]);
+
+  // 2. Fetch Active Years
+  const yearsResult = await db.all(`
+    SELECT DISTINCT e.year 
+    FROM awards a JOIN events e ON a.event_id = e.id 
+    WHERE a.studio_id = ? 
+    ORDER BY e.year DESC
+  `, [req.params.id]);
+  
+  const yearsActive = yearsResult.map(r => String(r.year));
+  const activeYearsStr = yearsActive.length > 0 ?
+    (yearsActive.length === 1 ? `${yearsActive[0]}` : `${yearsActive[0]} - ${yearsActive[yearsActive.length - 1]}`)
+    : 'None';
+
+  const quickStats = {
+    totalAwards: quickStatsRow.totalAwards || 0,
+    totalEvents: quickStatsRow.totalEvents || 0,
+    activeYearsStr,
+    sinceYear: yearsActive.length > 0 ? yearsActive[yearsActive.length - 1] : null,
+    awardsThisYear: quickStatsRow.awardsThisYear || 0,
+    eventsThisYear: quickStatsRow.eventsThisYear || 0,
+    awardsPast5Years: quickStatsRow.awardsPast5Years || 0,
+    eventsPast5Years: quickStatsRow.eventsPast5Years || 0,
+    firstPlaceCount: quickStatsRow.firstPlaceCount || 0,
+    firstPlaceCountThisYear: quickStatsRow.firstPlaceCountThisYear || 0,
+    scholarshipCount: quickStatsRow.scholarshipCount || 0,
+    uniqueDancersCount: uniqueDancersRow.count || 0
+  };
+
+  // 3. Hall Of Fame
+  const topHallOfFame = await db.all(`
+    SELECT a.*, d.name as dancer_name, d.unique_id, e.name as event_name, e.year as event_year, e.date_string, o.name as org_name, o.logo_url, o.custom_icons
     FROM awards a
     LEFT JOIN dancers d ON a.dancer_id = d.id
     LEFT JOIN events e ON a.event_id = e.id
     LEFT JOIN organizations o ON e.org_id = o.id
-    WHERE a.studio_id = ?
-    ORDER BY e.year DESC, e.date_string DESC, a.award_type, a.place
+    WHERE a.studio_id = ? AND a.is_first_place = 1
+    AND (
+      LOWER(a.category || ' ' || COALESCE(a.award_type, '') || ' ' || COALESCE(a.performance_name, '')) LIKE '%scholarship%' OR
+      LOWER(a.category || ' ' || COALESCE(a.award_type, '') || ' ' || COALESCE(a.performance_name, '')) LIKE '%invite%' OR
+      LOWER(a.category || ' ' || COALESCE(a.award_type, '') || ' ' || COALESCE(a.performance_name, '')) LIKE '%title%' OR
+      LOWER(a.category || ' ' || COALESCE(a.award_type, '') || ' ' || COALESCE(a.performance_name, '')) LIKE '%photogenic%' OR
+      LOWER(a.category || ' ' || COALESCE(a.award_type, '') || ' ' || COALESCE(a.performance_name, '')) LIKE '%doy%' OR
+      LOWER(a.category || ' ' || COALESCE(a.award_type, '') || ' ' || COALESCE(a.performance_name, '')) LIKE '%dancer of the year%'
+    )
+    AND (
+      LOWER(a.category || ' ' || COALESCE(a.award_type, '')) LIKE '%national%' OR
+      LOWER(a.category || ' ' || COALESCE(a.award_type, '')) LIKE '%final%' OR
+      LOWER(a.category || ' ' || COALESCE(a.award_type, '')) LIKE '%grand%' OR
+      LOWER(a.category || ' ' || COALESCE(a.award_type, '')) LIKE '%title%' OR
+      LOWER(e.name) LIKE '%national%' OR
+      LOWER(e.name) LIKE '%final%'
+    )
+    ORDER BY e.year DESC, e.date_string DESC
+    LIMIT 12
   `, [req.params.id]);
-
-  awards.forEach(a => {
-    if (a.custom_icons) {
-      try { a.customIconsObj = JSON.parse(a.custom_icons); } catch (e) { }
-    }
-  });
-
-  const awardDancers = await db.all(`
-    SELECT ad.award_id, d.name, d.unique_id, ad.status
-    FROM award_dancers ad
-    JOIN dancers d ON ad.dancer_id = d.id
-    WHERE ad.award_id IN (SELECT id FROM awards WHERE studio_id = ?)
-  `, [req.params.id]);
-
-  const awardDancersMap = {};
-  for (const ad of awardDancers) {
-    if (!awardDancersMap[ad.award_id]) awardDancersMap[ad.award_id] = [];
-    awardDancersMap[ad.award_id].push({ name: ad.name, unique_id: ad.unique_id, status: ad.status });
+  
+  if (topHallOfFame.length > 0) {
+    const hofIds = topHallOfFame.map(a => a.id);
+    const hofDancers = await db.all(`SELECT ad.award_id, d.name, d.unique_id FROM award_dancers ad JOIN dancers d ON ad.dancer_id = d.id WHERE ad.award_id IN (${hofIds.map(()=>'?').join(',')})`, hofIds);
+    const hofMap = {};
+    hofDancers.forEach(ad => {
+      if(!hofMap[ad.award_id]) hofMap[ad.award_id] = [];
+      hofMap[ad.award_id].push({ name: ad.name, unique_id: ad.unique_id });
+    });
+    topHallOfFame.forEach(a => {
+      a.dancers = hofMap[a.id] || (a.dancer_name ? [{ name: a.dancer_name, unique_id: a.unique_id }] : []);
+      if (a.custom_icons) { try { a.customIconsObj = JSON.parse(a.custom_icons); } catch(e){} }
+    });
   }
 
-  // Group by Year -> Event
-  const yearsMap = new Map();
+  // 4. Orgs History Aggregation
+  const orgsRaw = await db.all(`
+    SELECT o.id as org_id, o.name as org_name, o.logo_url, e.year, e.id as event_id, e.name as event_name, 
+           COUNT(*) as total_awards, 
+           SUM(CASE WHEN a.is_first_place = 1 THEN 1 ELSE 0 END) as first_places,
+           SUM(CASE WHEN a.is_first_place = 1 AND 
+             (
+              LOWER(a.category || ' ' || COALESCE(a.award_type, '') || ' ' || COALESCE(a.performance_name, '')) LIKE '%scholarship%' OR
+              LOWER(a.category || ' ' || COALESCE(a.award_type, '') || ' ' || COALESCE(a.performance_name, '')) LIKE '%invite%' OR
+              LOWER(a.category || ' ' || COALESCE(a.award_type, '') || ' ' || COALESCE(a.performance_name, '')) LIKE '%title%' OR
+              LOWER(a.category || ' ' || COALESCE(a.award_type, '') || ' ' || COALESCE(a.performance_name, '')) LIKE '%photogenic%' OR
+              LOWER(a.category || ' ' || COALESCE(a.award_type, '') || ' ' || COALESCE(a.performance_name, '')) LIKE '%doy%' OR
+              LOWER(a.category || ' ' || COALESCE(a.award_type, '') || ' ' || COALESCE(a.performance_name, '')) LIKE '%dancer of the year%'
+             ) AND 
+             (
+              LOWER(a.category || ' ' || COALESCE(a.award_type, '')) LIKE '%national%' OR
+              LOWER(a.category || ' ' || COALESCE(a.award_type, '')) LIKE '%final%' OR
+              LOWER(a.category || ' ' || COALESCE(a.award_type, '')) LIKE '%grand%' OR
+              LOWER(a.category || ' ' || COALESCE(a.award_type, '')) LIKE '%title%' OR
+              LOWER(e.name) LIKE '%national%' OR
+              LOWER(e.name) LIKE '%final%'
+             )
+           THEN 1 ELSE 0 END) as major_awards
+    FROM awards a
+    JOIN events e ON a.event_id = e.id
+    JOIN organizations o ON e.org_id = o.id
+    WHERE a.studio_id = ?
+    GROUP BY o.id, o.name, o.logo_url, e.year, e.id, e.name
+  `, [req.params.id]);
+
   const orgsMap = {};
-  let totalAwards = 0;
-  const eventsAttended = new Set();
-
-  const currentYear = new Date().getFullYear();
-  let awardsThisYear = 0;
-  let awardsPast5Years = 0;
-  const eventsThisYear = new Set();
-  const eventsPast5Years = new Set();
-  let firstPlaceCount = 0;
-  let firstPlaceCountThisYear = 0;
-  let scholarshipCount = 0;
-  const uniqueDancers = new Set();
-  const hallOfFame = [];
-
-  for (const award of awards) {
-    if (awardDancersMap[award.id]) {
-      award.dancers = awardDancersMap[award.id];
-    } else if (award.dancer_name) {
-      award.dancers = [{ name: award.dancer_name, unique_id: award.unique_id }];
-    } else {
-      award.dancers = [];
+  for (const row of orgsRaw) {
+    if (!orgsMap[row.org_id]) {
+      orgsMap[row.org_id] = { id: row.org_id, name: row.org_name, logo_url: row.logo_url, years: {}, total_awards_all_time: 0, first_places_all_time: 0, major_awards_all_time: 0 };
     }
+    const org = orgsMap[row.org_id];
+    org.total_awards_all_time += row.total_awards;
+    org.first_places_all_time += row.first_places;
+    org.major_awards_all_time += row.major_awards;
 
-    award.dancers.forEach(d => {
-      if (d.unique_id) uniqueDancers.add(d.unique_id);
-      else if (d.name) uniqueDancers.add(d.name.toLowerCase().trim());
+    if (!org.years[row.year]) org.years[row.year] = { total_awards: 0, first_places: 0, major_awards: 0, eventsMap: {} };
+    const yr = org.years[row.year];
+    yr.total_awards += row.total_awards;
+    yr.first_places += row.first_places;
+    yr.major_awards += row.major_awards;
+
+    yr.eventsMap[row.event_id] = { name: row.event_name, total_awards: row.total_awards, first_places: row.first_places, major_awards: row.major_awards };
+  }
+
+  // 5. Load ONLY the first year's awards for GroupedData initial render
+  let groupedData = yearsActive.map((year, idx) => ({
+    year,
+    events: [],
+    isLoaded: idx === 0
+  }));
+
+  if (yearsActive.length > 0) {
+    const firstYear = yearsActive[0];
+    const firstYearAwards = await db.all(`
+      SELECT a.*, d.name as dancer_name, d.unique_id, e.name as event_name, e.year as event_year, e.date_string, o.id as org_id, o.name as org_name, o.logo_url, o.custom_icons
+      FROM awards a
+      LEFT JOIN dancers d ON a.dancer_id = d.id
+      LEFT JOIN events e ON a.event_id = e.id
+      LEFT JOIN organizations o ON e.org_id = o.id
+      WHERE a.studio_id = ? AND e.year = ?
+      ORDER BY e.date_string DESC, a.award_type, a.place
+    `, [req.params.id, firstYear]);
+    
+    firstYearAwards.forEach(a => {
+      if (a.custom_icons) { try { a.customIconsObj = JSON.parse(a.custom_icons); } catch(e){} }
     });
 
-    totalAwards++;
-    const year = award.event_year;
-    const eventKey = `${award.org_name} - ${award.event_name} (${award.date_string})`;
-    eventsAttended.add(eventKey);
-
-    const yearNum = parseInt(year, 10);
-    if (!isNaN(yearNum)) {
-      if (yearNum === currentYear) {
-        awardsThisYear++;
-        eventsThisYear.add(eventKey);
-      }
-      if (yearNum >= currentYear - 4) {
-        awardsPast5Years++;
-        eventsPast5Years.add(eventKey);
-      }
-    }
-
-    if (award.is_first_place) {
-      firstPlaceCount++;
-      if (yearNum === currentYear) {
-        firstPlaceCountThisYear++;
-      }
-    }
-
-    const premiumDetails = app.locals.getPremiumDetails(award);
-    if (premiumDetails.icon === '🎓' || premiumDetails.icon === '💌') {
-      scholarshipCount++;
-    }
-
-    // Hall of Fame logic: Premium award + '1st' place + National/Finals indicator
-    let isMajor = false;
-    if (award.is_first_place && premiumDetails.isPremium) {
-      const nameLower = (award.award_type || award.category || '').toLowerCase();
-      const eventNameLower = (award.event_name || '').toLowerCase();
-      if (nameLower.includes('national') || nameLower.includes('final') || nameLower.includes('grand') || nameLower.includes('title') || eventNameLower.includes('national') || eventNameLower.includes('final')) {
-        hallOfFame.push(award);
-        isMajor = true;
-      }
-    }
-
-    if (award.org_id) {
-      if (!orgsMap[award.org_id]) {
-        orgsMap[award.org_id] = { id: award.org_id, name: award.org_name, logo_url: award.logo_url, years: {}, total_awards_all_time: 0, first_places_all_time: 0, major_awards_all_time: 0 };
-      }
-      const org = orgsMap[award.org_id];
-      org.total_awards_all_time++;
-      if (award.is_first_place) org.first_places_all_time++;
-      if (isMajor) org.major_awards_all_time++;
-
-      if (!org.years[year]) org.years[year] = { total_awards: 0, first_places: 0, major_awards: 0, eventsMap: {} };
-      const yr = org.years[year];
-      yr.total_awards++;
-      if (award.is_first_place) yr.first_places++;
-      if (isMajor) yr.major_awards++;
-
-      if (!yr.eventsMap[award.event_id]) yr.eventsMap[award.event_id] = { name: award.event_name, total_awards: 0, first_places: 0, major_awards: 0 };
-      const evt = yr.eventsMap[award.event_id];
-      evt.total_awards++;
-      if (award.is_first_place) evt.first_places++;
-      if (isMajor) evt.major_awards++;
-    }
-
-    if (!yearsMap.has(year)) {
-      yearsMap.set(year, new Map());
-    }
-
-    const eventsMap = yearsMap.get(year);
-    if (!eventsMap.has(eventKey)) {
-      eventsMap.set(eventKey, {
-        title: eventKey,
-        eventId: award.event_id,
-        awards: []
+    const fyIds = firstYearAwards.map(a => a.id);
+    if (fyIds.length > 0) {
+      const fyDancers = await db.all(`SELECT ad.award_id, d.name, d.unique_id, ad.status FROM award_dancers ad JOIN dancers d ON ad.dancer_id = d.id WHERE ad.award_id IN (${fyIds.map(()=>'?').join(',')})`, fyIds);
+      const fyDancerMap = {};
+      fyDancers.forEach(ad => {
+        if(!fyDancerMap[ad.award_id]) fyDancerMap[ad.award_id] = [];
+        fyDancerMap[ad.award_id].push({ name: ad.name, unique_id: ad.unique_id, status: ad.status });
       });
+      
+      const eventsMap = new Map();
+      firstYearAwards.forEach(award => {
+        award.dancers = fyDancerMap[award.id] || (award.dancer_name ? [{ name: award.dancer_name, unique_id: award.unique_id }] : []);
+        const eventKey = `${award.org_name} - ${award.event_name} (${award.date_string})`;
+        if (!eventsMap.has(eventKey)) eventsMap.set(eventKey, { title: eventKey, eventId: award.event_id, awards: [] });
+        eventsMap.get(eventKey).awards.push(award);
+      });
+      groupedData[0].events = Array.from(eventsMap.values());
     }
-
-    eventsMap.get(eventKey).awards.push(award);
   }
-
-  // Format into arrays for EJS
-  const groupedData = Array.from(yearsMap, ([year, eventsMap], idx) => {
-    return {
-      year,
-      events: idx === 0 ? Array.from(eventsMap.values()) : [],
-      isLoaded: idx === 0
-    };
-  });
-
-  const yearsActive = Array.from(yearsMap.keys()).sort().reverse();
-  const activeYearsStr = yearsActive.length > 0 ?
-    (yearsActive.length === 1 ? `${yearsActive[0]}` : `${yearsActive[yearsActive.length - 1]} - ${yearsActive[0]}`)
-    : 'None';
-
-  const quickStats = {
-    totalAwards,
-    totalEvents: eventsAttended.size,
-    activeYearsStr,
-    sinceYear: yearsActive.length > 0 ? yearsActive[yearsActive.length - 1] : null,
-    awardsThisYear,
-    eventsThisYear: eventsThisYear.size,
-    awardsPast5Years,
-    eventsPast5Years: eventsPast5Years.size,
-    firstPlaceCount,
-    firstPlaceCountThisYear,
-    scholarshipCount,
-    uniqueDancersCount: uniqueDancers.size
-  };
 
   let prefs = {};
   if (studio.public_preferences) {
@@ -3126,8 +3156,7 @@ app.get('/studio/:id', async (req, res) => {
     ORDER BY ds.graduation_year DESC, d.name ASC
   `, [req.params.id, currentYear]);
 
-  // Keep max 12 items for Hall of Fame
-  const topHallOfFame = hallOfFame.slice(0, 12);
+
 
   // Format orgsMap into array
   const orgsHistory = Object.values(orgsMap).map(org => {
@@ -3139,7 +3168,7 @@ app.get('/studio/:id', async (req, res) => {
   });
   orgsHistory.sort((a, b) => a.name.localeCompare(b.name));
 
-  res.render('studio', { studio, mergedIntoStudio, groupedData, quickStats, hallOfFame: topHallOfFame, alumni, hasAwards: awards.length > 0, orgsHistory });
+  res.render('studio', { studio, mergedIntoStudio, groupedData, quickStats, hallOfFame: topHallOfFame, alumni, hasAwards: quickStats.totalAwards > 0, orgsHistory });
 });
 
 app.get('/api/studio/:id/year/:year', async (req, res) => {
