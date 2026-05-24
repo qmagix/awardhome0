@@ -2,6 +2,9 @@
 
 
 ## 2026-05-24
+Good, now for the edge of those org cards, can you make the right and bottom side thicker so mimic a 3-D effects for those card? will that make them look even better?
+
+## 2026-05-24
 I saw it is significantly improved, with a sweeping reflective sheen, somehow I do not see any box shadow effect on the cards. can you double check?
 
 ## 2026-05-24

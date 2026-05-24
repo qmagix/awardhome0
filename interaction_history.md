@@ -2,6 +2,10 @@
 
 
 ## Interaction - 2026-05-24
+**User:** Good, now for the edge of those org cards, can you make the right and bottom side thicker so mimic a 3-D effects for those card? will that make them look even better?
+**AI:** Yes, applying asymmetric borders is a fantastic way to mimic physical depth! I updated the CSS to add a thick 4px border specifically to the right and bottom sides of the premium organization and studio cards, while keeping the top and left at 1px. Combined with the colored ambient drop shadows, this creates a convincing extruded 3D pop effect. Committed the changes cleanly.
+
+## Interaction - 2026-05-24
 **User:** I saw it is significantly improved, with a sweeping reflective sheen, somehow I do not see any box shadow effect on the cards. can you double check?
 **AI:** You were completely right. Because the page background is a very dark slate, the dark grey drop shadows were blending in and becoming invisible. I updated the CSS to inject a vivid, colorful glowing ambient shadow (amber for organizations, emerald for studios) into the resting state, and significantly intensified the glow opacity during the hover animation to ensure it pops beautifully against the dark theme.
 

@@ -670,6 +670,8 @@ footer {
   border: 1px solid rgba(251, 191, 36, 0.3);
   border-top: 1px solid rgba(251, 191, 36, 0.5);
   border-left: 1px solid rgba(251, 191, 36, 0.4);
+  border-right: 4px solid rgba(251, 191, 36, 0.6);
+  border-bottom: 4px solid rgba(251, 191, 36, 0.6);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   box-shadow: 
@@ -746,6 +748,8 @@ footer {
   border: 1px solid rgba(16, 185, 129, 0.3);
   border-top: 1px solid rgba(16, 185, 129, 0.5);
   border-left: 1px solid rgba(16, 185, 129, 0.4);
+  border-right: 4px solid rgba(16, 185, 129, 0.6);
+  border-bottom: 4px solid rgba(16, 185, 129, 0.6);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   box-shadow: 
