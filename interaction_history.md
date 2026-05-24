@@ -1,5 +1,9 @@
 # Interaction History
 
+
+## Interaction - 2026-05-24
+**User:** The front page org card have the hover-zoom effects now. Can you make the look of those card look more premium and higher-end?
+**AI:** Added new CSS classes `.premium-org-card` and `.premium-studio-card` with glassmorphism gradients, stronger borders, and improved shadow transitions. Applied these classes to the Organizations and Featured Studios lists on the homepage (`views/index.ejs`) to deliver a high-end, premium aesthetic.
 ## 2026-05-05
 
 **User Request:**

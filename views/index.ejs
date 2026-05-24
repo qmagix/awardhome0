@@ -7,10 +7,13 @@
   <h2>Competitions & Organizations</h2>
   <div class="grid" style="margin-bottom: 4rem;">
     <% orgs.forEach(function(org) { %>
-      <div class="card glass-card" style="border-color: rgba(236, 72, 153, 0.3);">
-        <h3><%= org.name %></h3>
-        <div style="margin-bottom: 0; color: var(--text-muted); font-size: 0.9rem;">
-          <span class="badge" style="background: rgba(255, 255, 255, 0.1);"><%= org.event_count || 0 %> Events</span> <span style="font-size: 0.8rem;">(Since 2022)</span>
+      <div class="premium-org-card">
+        <div class="content-wrapper">
+          <h3><%= org.name %></h3>
+          <div class="org-meta">
+            <span class="badge-org"><%= org.event_count || 0 %> Events</span>
+            <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: 500;">(Since 2022)</span>
+          </div>
         </div>
       </div>
     <% }); %>
@@ -19,15 +22,17 @@
   <h2>Featured Studios</h2>
   <div class="grid" style="margin-bottom: 4rem;">
     <% featuredStudios.forEach(function(s) { %>
-      <a href="/studio/<%= s.id %>" class="card glass-card hover-zoom" style="border-color: rgba(16, 185, 129, 0.4); box-shadow: 0 0 15px rgba(16, 185, 129, 0.1);">
-        <h3 style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">
-          <%= s.name %> 
-          <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981; font-size: 0.7rem;">★ Featured</span>
-        </h3>
-        <div style="margin-bottom: 1.5rem;">
-          <span class="badge"><%= s.total_awards %> Awards</span>
+      <a href="/studio/<%= s.id %>" class="premium-studio-card">
+        <div class="content-wrapper">
+          <h3>
+            <%= s.name %> 
+            <span class="badge-studio" style="font-size: 0.7rem; padding: 0.2rem 0.5rem;">★ Featured</span>
+          </h3>
+          <div style="margin-bottom: 1.5rem; margin-top: auto;">
+            <span class="badge-studio" style="background: rgba(16, 185, 129, 0.2);"><%= s.total_awards %> Awards</span>
+          </div>
+          <span class="btn btn-outline" style="width: 100%; text-align: center; border-color: rgba(16, 185, 129, 0.3); color: #10b981;">View Awards &rarr;</span>
         </div>
-        <span class="btn" style="width: 100%; text-align: center;">View Awards &rarr;</span>
       </a>
     <% }); %>
   </div>
@@ -60,7 +65,7 @@
       </div>
       
       <% topStudios.forEach(function(s, idx) { 
-        let rankClass = "badge-common";
+        let rankClass = "badge-common rank-" + (idx + 1);
         let rankStyle = "background: rgba(255,255,255,0.1); color: white;";
         if (idx === 0) rankStyle = "background: rgba(251, 191, 36, 0.2); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.4); font-size: 1rem; font-weight: bold;";
         else if (idx === 1) rankStyle = "background: rgba(156, 163, 175, 0.2); color: #e5e7eb; border: 1px solid rgba(156, 163, 175, 0.4); font-size: 0.95rem; font-weight: bold;";
@@ -68,9 +73,9 @@
       %>
         <a href="/studio/<%= s.id %>" style="display: flex; padding: 1rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); text-decoration: none; color: inherit; align-items: center; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
           <div style="width: 60px; text-align: center;">
-            <span class="badge <%= rankClass %>" style="<%= rankStyle %> padding: 0.3rem 0.6rem; border-radius: 8px;"><%= idx + 1 %></span>
+            <span class="badge <%= rankClass %> leaderboard-rank-badge"><%= idx + 1 %></span>
           </div>
-          <div style="flex-grow: 1; font-weight: 600; font-size: 1.1rem; color: <%= idx < 3 ? 'white' : 'var(--text-color)' %>;">
+          <div class="leaderboard-name <%= idx < 3 ? 'top-3' : '' %>">
             <%= s.name %>
           </div>
           <div style="width: 100px; text-align: right;">
@@ -90,7 +95,7 @@
       </div>
       
       <% topStudiosThisYear.forEach(function(s, idx) { 
-        let rankClass = "badge-common";
+        let rankClass = "badge-common rank-" + (idx + 1);
         let rankStyle = "background: rgba(255,255,255,0.1); color: white;";
         if (idx === 0) rankStyle = "background: rgba(251, 191, 36, 0.2); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.4); font-size: 1rem; font-weight: bold;";
         else if (idx === 1) rankStyle = "background: rgba(156, 163, 175, 0.2); color: #e5e7eb; border: 1px solid rgba(156, 163, 175, 0.4); font-size: 0.95rem; font-weight: bold;";
@@ -98,9 +103,9 @@
       %>
         <a href="/studio/<%= s.id %>" style="display: flex; padding: 1rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); text-decoration: none; color: inherit; align-items: center; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
           <div style="width: 60px; text-align: center;">
-            <span class="badge <%= rankClass %>" style="<%= rankStyle %> padding: 0.3rem 0.6rem; border-radius: 8px;"><%= idx + 1 %></span>
+            <span class="badge <%= rankClass %> leaderboard-rank-badge"><%= idx + 1 %></span>
           </div>
-          <div style="flex-grow: 1; font-weight: 600; font-size: 1.1rem; color: <%= idx < 3 ? 'white' : 'var(--text-color)' %>;">
+          <div class="leaderboard-name <%= idx < 3 ? 'top-3' : '' %>">
             <%= s.name %>
           </div>
           <div style="width: 100px; text-align: right;">
@@ -120,7 +125,7 @@
       </div>
       
       <% topStudiosFirstPlaceThisYear.forEach(function(s, idx) { 
-        let rankClass = "badge-common";
+        let rankClass = "badge-common rank-" + (idx + 1);
         let rankStyle = "background: rgba(255,255,255,0.1); color: white;";
         if (idx === 0) rankStyle = "background: rgba(251, 191, 36, 0.2); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.4); font-size: 1rem; font-weight: bold;";
         else if (idx === 1) rankStyle = "background: rgba(156, 163, 175, 0.2); color: #e5e7eb; border: 1px solid rgba(156, 163, 175, 0.4); font-size: 0.95rem; font-weight: bold;";
@@ -128,9 +133,9 @@
       %>
         <a href="/studio/<%= s.id %>" style="display: flex; padding: 1rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); text-decoration: none; color: inherit; align-items: center; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
           <div style="width: 60px; text-align: center;">
-            <span class="badge <%= rankClass %>" style="<%= rankStyle %> padding: 0.3rem 0.6rem; border-radius: 8px;"><%= idx + 1 %></span>
+            <span class="badge <%= rankClass %> leaderboard-rank-badge"><%= idx + 1 %></span>
           </div>
-          <div style="flex-grow: 1; font-weight: 600; font-size: 1.1rem; color: <%= idx < 3 ? 'white' : 'var(--text-color)' %>;">
+          <div class="leaderboard-name <%= idx < 3 ? 'top-3' : '' %>">
             <%= s.name %>
           </div>
           <div style="width: 100px; text-align: right;">
@@ -163,7 +168,7 @@
         </div>
         
         <% topDancers.forEach(function(d, idx) { 
-          let rankClass = "badge-common";
+          let rankClass = "badge-common rank-" + (idx + 1);
           let rankStyle = "background: rgba(255,255,255,0.1); color: white;";
           if (idx === 0) rankStyle = "background: rgba(251, 191, 36, 0.2); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.4); font-size: 1rem; font-weight: bold;";
           else if (idx === 1) rankStyle = "background: rgba(156, 163, 175, 0.2); color: #e5e7eb; border: 1px solid rgba(156, 163, 175, 0.4); font-size: 0.95rem; font-weight: bold;";
@@ -171,7 +176,7 @@
         %>
           <a href="/dancer/<%= d.unique_id %>" style="display: flex; padding: 1rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); text-decoration: none; color: inherit; align-items: center; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
             <div style="width: 60px; text-align: center;">
-              <span class="badge <%= rankClass %>" style="<%= rankStyle %> padding: 0.3rem 0.6rem; border-radius: 8px;"><%= idx + 1 %></span>
+              <span class="badge <%= rankClass %> leaderboard-rank-badge"><%= idx + 1 %></span>
             </div>
             <div style="width: 50px; text-align: center;">
               <% if (d.headshot_url) { %>
@@ -205,7 +210,7 @@
         </div>
         
         <% topDancersThisYear.forEach(function(d, idx) { 
-          let rankClass = "badge-common";
+          let rankClass = "badge-common rank-" + (idx + 1);
           let rankStyle = "background: rgba(255,255,255,0.1); color: white;";
           if (idx === 0) rankStyle = "background: rgba(251, 191, 36, 0.2); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.4); font-size: 1rem; font-weight: bold;";
           else if (idx === 1) rankStyle = "background: rgba(156, 163, 175, 0.2); color: #e5e7eb; border: 1px solid rgba(156, 163, 175, 0.4); font-size: 0.95rem; font-weight: bold;";
@@ -213,7 +218,7 @@
         %>
           <a href="/dancer/<%= d.unique_id %>" style="display: flex; padding: 1rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); text-decoration: none; color: inherit; align-items: center; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
             <div style="width: 60px; text-align: center;">
-              <span class="badge <%= rankClass %>" style="<%= rankStyle %> padding: 0.3rem 0.6rem; border-radius: 8px;"><%= idx + 1 %></span>
+              <span class="badge <%= rankClass %> leaderboard-rank-badge"><%= idx + 1 %></span>
             </div>
             <div style="width: 50px; text-align: center;">
               <% if (d.headshot_url) { %>
@@ -247,7 +252,7 @@
         </div>
         
         <% topDancersFirstPlaceThisYear.forEach(function(d, idx) { 
-          let rankClass = "badge-common";
+          let rankClass = "badge-common rank-" + (idx + 1);
           let rankStyle = "background: rgba(255,255,255,0.1); color: white;";
           if (idx === 0) rankStyle = "background: rgba(251, 191, 36, 0.2); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.4); font-size: 1rem; font-weight: bold;";
           else if (idx === 1) rankStyle = "background: rgba(156, 163, 175, 0.2); color: #e5e7eb; border: 1px solid rgba(156, 163, 175, 0.4); font-size: 0.95rem; font-weight: bold;";
@@ -255,7 +260,7 @@
         %>
           <a href="/dancer/<%= d.unique_id %>" style="display: flex; padding: 1rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); text-decoration: none; color: inherit; align-items: center; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
             <div style="width: 60px; text-align: center;">
-              <span class="badge <%= rankClass %>" style="<%= rankStyle %> padding: 0.3rem 0.6rem; border-radius: 8px;"><%= idx + 1 %></span>
+              <span class="badge <%= rankClass %> leaderboard-rank-badge"><%= idx + 1 %></span>
             </div>
             <div style="width: 50px; text-align: center;">
               <% if (d.headshot_url) { %>
