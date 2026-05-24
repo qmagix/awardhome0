@@ -2,6 +2,10 @@
 
 
 ## Interaction - 2026-05-24
+**User:** I saw it is significantly improved, with a sweeping reflective sheen, somehow I do not see any box shadow effect on the cards. can you double check?
+**AI:** You were completely right. Because the page background is a very dark slate, the dark grey drop shadows were blending in and becoming invisible. I updated the CSS to inject a vivid, colorful glowing ambient shadow (amber for organizations, emerald for studios) into the resting state, and significantly intensified the glow opacity during the hover animation to ensure it pops beautifully against the dark theme.
+
+## Interaction - 2026-05-24
 **User:** The front page org card have the hover-zoom effects now. Can you make the look of those card look more premium and higher-end?
 **AI:** Added new CSS classes `.premium-org-card` and `.premium-studio-card` with glassmorphism gradients, stronger borders, and improved shadow transitions. Applied these classes to the Organizations and Featured Studios lists on the homepage (`views/index.ejs`) to deliver a high-end, premium aesthetic.
 ## 2026-05-05

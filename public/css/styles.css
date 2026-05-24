@@ -674,6 +674,7 @@ footer {
   -webkit-backdrop-filter: blur(20px);
   box-shadow: 
     0 15px 35px rgba(0, 0, 0, 0.5),
+    0 0 20px rgba(251, 191, 36, 0.15),
     inset 0 0 20px rgba(251, 191, 36, 0.05);
   padding: 1.75rem 1.5rem;
   overflow: hidden;
@@ -701,7 +702,7 @@ footer {
   transform: translateY(-8px) scale(1.02);
   box-shadow: 
     0 25px 45px rgba(0, 0, 0, 0.7),
-    0 0 30px rgba(251, 191, 36, 0.2),
+    0 0 40px rgba(251, 191, 36, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
   border-color: rgba(251, 191, 36, 0.6);
 }
@@ -749,6 +750,7 @@ footer {
   -webkit-backdrop-filter: blur(20px);
   box-shadow: 
     0 15px 35px rgba(0, 0, 0, 0.5),
+    0 0 20px rgba(16, 185, 129, 0.15),
     inset 0 0 20px rgba(16, 185, 129, 0.05);
   padding: 1.75rem 1.5rem;
   overflow: hidden;
@@ -777,7 +779,7 @@ footer {
   transform: translateY(-8px) scale(1.02);
   box-shadow: 
     0 25px 45px rgba(0, 0, 0, 0.7),
-    0 0 30px rgba(16, 185, 129, 0.2),
+    0 0 40px rgba(16, 185, 129, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
   border-color: rgba(16, 185, 129, 0.6);
 }
