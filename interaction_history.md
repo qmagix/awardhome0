@@ -2,6 +2,10 @@
 
 
 ## Interaction - 2026-05-24
+**User:** Now please fix a bug for this page: http://localhost:3008/manage/studio/842, for the Public Dashboard Visibility form, when clicked save, somehow all the check circles becomes white and becomes confusing. Please check to see what;s wrong?
+**AI:** I fixed the issue. The cause was that when the profile form was submitted via POST, the server correctly updated the database but forgot to parse the raw JSON preferences back into a usable object before rendering the page. This caused the template to think all preferences were turned off, rendering the checkboxes as unchecked (white). I added the necessary parsing logic so the checkboxes correctly reflect your saved settings immediately after hitting save!
+
+## Interaction - 2026-05-24
 **User:** Better. Now please make "Add a Missing Award" button floating, so keep it visible when user scrolls the page, because one of the main function we wants to provide is to have user easily add missing award, right?
 **AI:** Yes, absolutely! I have updated the "Add a Missing Award" button to be a persistent floating action button (FAB) at the bottom right corner of the screen. This ensures the primary action of self-reporting awards is always just one click away, no matter how far down the user scrolls.
 

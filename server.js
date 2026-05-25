@@ -630,7 +630,28 @@ app.post('/manage/studio/:id/profile', requireAuth, async (req, res) => {
   `, [name, website_url, email, phone, logo_url, bio, instagram_handle, tiktok_handle, JSON.stringify(prefs), req.params.id]);
 
   const updatedStudio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
-  res.render('manage_studio', { studio: updatedStudio, success: 'Profile updated successfully!' });
+  
+  let parsedPrefs = {};
+  if (updatedStudio.public_preferences) {
+    try { parsedPrefs = JSON.parse(updatedStudio.public_preferences); } catch (e) { }
+  }
+  updatedStudio.prefs = parsedPrefs;
+
+  const baseName = updatedStudio.name.split(',')[0].trim();
+  const searchName = `%${baseName}%`;
+  const rejectedArray = updatedStudio.rejected_merges ? updatedStudio.rejected_merges.split(',') : [];
+
+  const similarStudios = await db.all(`
+    SELECT id, name, aka, status 
+    FROM studios 
+    WHERE (name LIKE ? OR aka LIKE ?)
+      AND id != ?
+      AND status != 'merged'
+  `, [searchName, searchName, updatedStudio.id]);
+
+  const potentialDuplicates = similarStudios.filter(s => !rejectedArray.includes(s.id.toString()));
+
+  res.render('manage_studio', { studio: updatedStudio, potentialDuplicates, success: 'Profile updated successfully!' });
 });
 
 app.get('/manage/studio/:id/roster/export', requireAuth, async (req, res) => {

@@ -2,6 +2,9 @@
 
 
 ## 2026-05-24
+Now please fix a bug for this page: http://localhost:3008/manage/studio/842, for the Public Dashboard Visibility form, when clicked save, somehow all the check circles becomes white and becomes confusing. Please check to see what;s wrong?
+
+## 2026-05-24
 Better. Now please make "Add a Missing Award" button floating, so keep it visible when user scrolls the page, because one of the main function we wants to provide is to have user easily add missing award, right?
 
 ## 2026-05-24
