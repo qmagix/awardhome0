@@ -2,6 +2,10 @@
 
 
 ## Interaction - 2026-05-24
+**User:** much better. Now for the dancer award cards like on this page, http://localhost:3008/dancer/DNC-55addb5a-jetta-bulow let's try the edge 3-D effect as well?
+**AI:** Absolutely! I applied the same 3D extrusion technique to the  class. The top and left borders remain at 1px (white/glassy), while the right and bottom borders are now 4px solid dark shadows (). This creates a very clean bevel that makes the trophy cards pop out of the page beautifully. Committed the changes to Git.
+
+## Interaction - 2026-05-24
 **User:** Good, now for the edge of those org cards, can you make the right and bottom side thicker so mimic a 3-D effects for those card? will that make them look even better?
 **AI:** Yes, applying asymmetric borders is a fantastic way to mimic physical depth! I updated the CSS to add a thick 4px border specifically to the right and bottom sides of the premium organization and studio cards, while keeping the top and left at 1px. Combined with the colored ambient drop shadows, this creates a convincing extruded 3D pop effect. Committed the changes cleanly.
 
