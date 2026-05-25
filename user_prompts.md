@@ -2,6 +2,9 @@
 
 
 ## 2026-05-24
+On this page : http://localhost:3008/manage/studio/842/awards, please change the "+ Single Report" button wording to "Add a Missing Award"?
+
+## 2026-05-24
 For the organizations that have 0 event in our system, no data imported yet, please do not show the since year part, it does not make sense.
 
 ## 2026-05-24

@@ -2,6 +2,10 @@
 
 
 ## Interaction - 2026-05-24
+**User:** On this page : http://localhost:3008/manage/studio/842/awards, please change the "+ Single Report" button wording to "Add a Missing Award"?
+**AI:** I have updated the button text in `views/manage_studio_awards.ejs` to "Add a Missing Award" as requested.
+
+## Interaction - 2026-05-24
 **User:** For the organizations that have 0 event in our system, no data imported yet, please do not show the since year part, it does not make sense.
 **AI:** Good catch! I updated the EJS templates (`index.ejs` and `index_admin.ejs`) to conditionally render the "(Since YYYY)" text only if the organization has at least 1 event (`org.event_count > 0`).
 
