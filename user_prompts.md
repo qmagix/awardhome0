@@ -2,6 +2,9 @@
 
 
 ## 2026-05-24
+Better. Now please make "Add a Missing Award" button floating, so keep it visible when user scrolls the page, because one of the main function we wants to provide is to have user easily add missing award, right?
+
+## 2026-05-24
 For the awards editor page like http://localhost:3008/manage/studio/842/awards, please separate the awards table by events as well, so it is more clear for the owner/admin, for them to have a better bird eye view and see what might need to be updated. also collapse each table first, only show the count stats for each event and let user to click open each details table?
 
 ## 2026-05-24

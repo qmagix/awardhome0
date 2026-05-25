@@ -62,7 +62,9 @@
         <p class="subtitle">Fix missing performance names, awards, and add group dancers.</p>
       </div>
       <div style="display: flex; gap: 0.5rem;">
-        <button class="btn btn-blue" onclick="document.getElementById('reportAwardModal').style.display='block'">Add a Missing Award</button>
+        <button class="btn btn-blue" style="position: fixed; bottom: 2rem; right: 2rem; z-index: 999; box-shadow: 0 4px 15px rgba(0,0,0,0.4); border-radius: 50px; padding: 1rem 1.5rem; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;" onclick="document.getElementById('reportAwardModal').style.display='block'">
+          <span style="font-size: 1.5rem; line-height: 1;">+</span> Add a Missing Award
+        </button>
         <button class="btn" style="background: var(--accent-gold); color: black; border: none;" onclick="document.getElementById('bulkUploadModal').style.display='block'">Bulk CSV Upload</button>
       </div>
     </div>
