@@ -614,7 +614,11 @@ footer {
 
 /* Premium Awards Styling */
 .premium-award-border {
-  border: 2px solid #fbbf24 !important;
+  border: 1px solid #fbbf24 !important;
+  border-top: 1px solid #fde047 !important;
+  border-left: 1px solid #fde047 !important;
+  border-right: 4px solid #b45309 !important;
+  border-bottom: 4px solid #b45309 !important;
   box-shadow: 0 0 15px rgba(251, 191, 36, 0.15) !important;
   background: linear-gradient(135deg, rgba(251, 191, 36, 0.05) 0%, rgba(0, 0, 0, 0) 100%) !important;
 }

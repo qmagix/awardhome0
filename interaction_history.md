@@ -2,8 +2,12 @@
 
 
 ## Interaction - 2026-05-24
+**User:** For those premium-trophy-card with premium-award-border, can you make the premium-award-border having the 3-D effects as well?
+**AI:** Done! I updated the  utility class to have a beautifully extruded 3D gold edge. It now uses a light gold () for the 1px top/left borders to catch the light, and a deep amber/bronze () for the thick 4px bottom/right borders to act as the shadow. This perfectly integrates with the glassmorphism trophy card below it. Committed the changes cleanly.
+
+## Interaction - 2026-05-24
 **User:** much better. Now for the dancer award cards like on this page, http://localhost:3008/dancer/DNC-55addb5a-jetta-bulow let's try the edge 3-D effect as well?
-**AI:** Absolutely! I applied the same 3D extrusion technique to the  class. The top and left borders remain at 1px (white/glassy), while the right and bottom borders are now 4px solid dark shadows (). This creates a very clean bevel that makes the trophy cards pop out of the page beautifully. Committed the changes to Git.
+**AI:** Absolutely! I applied the same 3D extrusion technique to the `.premium-trophy-card` class. The top and left borders remain at 1px (white/glassy), while the right and bottom borders are now 4px solid dark shadows (`rgba(0,0,0,0.4)`). This creates a very clean bevel that makes the trophy cards pop out of the page beautifully. Committed the changes to Git.
 
 ## Interaction - 2026-05-24
 **User:** Good, now for the edge of those org cards, can you make the right and bottom side thicker so mimic a 3-D effects for those card? will that make them look even better?

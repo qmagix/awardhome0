@@ -2,6 +2,9 @@
 
 
 ## 2026-05-24
+For those premium-trophy-card with premium-award-border, can you make the premium-award-border having the 3-D effects as well?
+
+## 2026-05-24
 much better. Now for the dancer award cards like on this page, http://localhost:3008/dancer/DNC-55addb5a-jetta-bulow let's try the edge 3-D effect as well?
 
 ## 2026-05-24
