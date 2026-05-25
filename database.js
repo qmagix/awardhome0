@@ -200,6 +200,7 @@ async function initDb() {
   try { await db.exec("ALTER TABLE organizations ADD COLUMN custom_icons TEXT"); } catch(e) {}
   try { await db.exec("ALTER TABLE organizations ADD COLUMN description TEXT"); } catch(e) {}
   try { await db.exec("ALTER TABLE organizations ADD COLUMN slogan TEXT"); } catch(e) {}
+  try { await db.exec("ALTER TABLE organizations ADD COLUMN data_since INTEGER"); } catch(e) {}
   try { await db.exec("ALTER TABLE events ADD COLUMN logo_url TEXT"); } catch(e) {}
 
   console.log("Database initialized.");

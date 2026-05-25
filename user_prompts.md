@@ -2,6 +2,9 @@
 
 
 ## 2026-05-24
+for front page http://localhost:3008 org cards, not all org events we have are since 2022, for some events we only have 2025 and 2026, so should be since 2025? maybe create a data_since field for the organization models table and pre-compute based on data so loads fast?
+
+## 2026-05-24
 For the premium-trophy-card without premium-award-border, please remove the lefe and bottom edge change, the reason is somehow they look strange, partly could be the gradient change issue... back to original seems to look better, for now.
 
 ## 2026-05-24

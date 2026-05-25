@@ -2177,9 +2177,9 @@ app.get('/', async (req, res) => {
   `);
 
   const orgs = await db.all(`
-    SELECT o.id, o.name, o.slug, COUNT(e.id) as event_count
+    SELECT o.id, o.name, o.slug, o.data_since, COUNT(e.id) as event_count
     FROM organizations o
-    LEFT JOIN events e ON o.id = e.org_id AND e.year >= 2022
+    LEFT JOIN events e ON o.id = e.org_id
     GROUP BY o.id
     ORDER BY o.name
   `);
