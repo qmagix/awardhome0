@@ -1767,6 +1767,25 @@ app.post('/manage/studio/:id/awards/:awardId/update', requireAuth, async (req, r
   res.redirect(`/manage/studio/${req.params.id}/awards${yearQuery}`);
 });
 
+app.post('/api/studio/:id/awards/:awardId/hall-of-fame', express.json(), requireAuth, async (req, res) => {
+  const db = await openDb();
+  const studio = await db.get('SELECT owner_id FROM studios WHERE id = ?', [req.params.id]);
+  if (!studio || (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+
+  const { status } = req.body; // expected: 1, -1, or 0
+  if (![1, 0, -1].includes(status)) return res.status(400).json({ error: 'Invalid status' });
+
+  try {
+    const result = await db.run('UPDATE awards SET is_hall_of_fame = ? WHERE id = ? AND studio_id = ?', [status, req.params.awardId, req.params.id]);
+    if (result.changes === 0) return res.status(404).json({ error: 'Award not found' });
+    res.json({ success: true, status });
+  } catch (err) {
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
 app.post('/manage/studio/:id/awards/:awardId/dancers', requireAuth, async (req, res) => {
   const db = await openDb();
   const studio = await db.get('SELECT owner_id FROM studios WHERE id = ?', [req.params.id]);
@@ -3032,25 +3051,31 @@ app.get('/studio/:id', async (req, res) => {
     LEFT JOIN dancers d ON a.dancer_id = d.id
     LEFT JOIN events e ON a.event_id = e.id
     LEFT JOIN organizations o ON e.org_id = o.id
-    WHERE a.studio_id = ? AND a.is_first_place = 1
+    WHERE a.studio_id = ? 
     AND (
-      LOWER(a.category || ' ' || COALESCE(a.award_type, '') || ' ' || COALESCE(a.performance_name, '')) LIKE '%scholarship%' OR
-      LOWER(a.category || ' ' || COALESCE(a.award_type, '') || ' ' || COALESCE(a.performance_name, '')) LIKE '%invite%' OR
-      LOWER(a.category || ' ' || COALESCE(a.award_type, '') || ' ' || COALESCE(a.performance_name, '')) LIKE '%title%' OR
-      LOWER(a.category || ' ' || COALESCE(a.award_type, '') || ' ' || COALESCE(a.performance_name, '')) LIKE '%photogenic%' OR
-      LOWER(a.category || ' ' || COALESCE(a.award_type, '') || ' ' || COALESCE(a.performance_name, '')) LIKE '%doy%' OR
-      LOWER(a.category || ' ' || COALESCE(a.award_type, '') || ' ' || COALESCE(a.performance_name, '')) LIKE '%dancer of the year%'
+      a.is_hall_of_fame = 1 OR (
+        (a.is_hall_of_fame IS NULL OR a.is_hall_of_fame = 0)
+        AND a.is_first_place = 1
+        AND (
+          LOWER(a.category || ' ' || COALESCE(a.award_type, '') || ' ' || COALESCE(a.performance_name, '')) LIKE '%scholarship%' OR
+          LOWER(a.category || ' ' || COALESCE(a.award_type, '') || ' ' || COALESCE(a.performance_name, '')) LIKE '%invite%' OR
+          LOWER(a.category || ' ' || COALESCE(a.award_type, '') || ' ' || COALESCE(a.performance_name, '')) LIKE '%title%' OR
+          LOWER(a.category || ' ' || COALESCE(a.award_type, '') || ' ' || COALESCE(a.performance_name, '')) LIKE '%photogenic%' OR
+          LOWER(a.category || ' ' || COALESCE(a.award_type, '') || ' ' || COALESCE(a.performance_name, '')) LIKE '%doy%' OR
+          LOWER(a.category || ' ' || COALESCE(a.award_type, '') || ' ' || COALESCE(a.performance_name, '')) LIKE '%dancer of the year%'
+        )
+        AND (
+          LOWER(a.category || ' ' || COALESCE(a.award_type, '')) LIKE '%national%' OR
+          LOWER(a.category || ' ' || COALESCE(a.award_type, '')) LIKE '%final%' OR
+          LOWER(a.category || ' ' || COALESCE(a.award_type, '')) LIKE '%grand%' OR
+          LOWER(a.category || ' ' || COALESCE(a.award_type, '')) LIKE '%title%' OR
+          LOWER(e.name) LIKE '%national%' OR
+          LOWER(e.name) LIKE '%final%'
+        )
+      )
     )
-    AND (
-      LOWER(a.category || ' ' || COALESCE(a.award_type, '')) LIKE '%national%' OR
-      LOWER(a.category || ' ' || COALESCE(a.award_type, '')) LIKE '%final%' OR
-      LOWER(a.category || ' ' || COALESCE(a.award_type, '')) LIKE '%grand%' OR
-      LOWER(a.category || ' ' || COALESCE(a.award_type, '')) LIKE '%title%' OR
-      LOWER(e.name) LIKE '%national%' OR
-      LOWER(e.name) LIKE '%final%'
-    )
-    ORDER BY e.year DESC, e.date_string DESC
-    LIMIT 12
+    ORDER BY a.is_hall_of_fame DESC, e.year DESC, e.date_string DESC
+    LIMIT 20
   `, [req.params.id]);
   
   if (topHallOfFame.length > 0) {

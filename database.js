@@ -121,6 +121,7 @@ async function initDb() {
       is_self_added BOOLEAN DEFAULT 0,
       verification_status TEXT DEFAULT 'unverified',
       merged_from_studio_id INTEGER REFERENCES studios(id),
+      is_hall_of_fame INTEGER DEFAULT 0,
       FOREIGN KEY (event_id) REFERENCES events(id),
       FOREIGN KEY (dancer_id) REFERENCES dancers(id),
       FOREIGN KEY (studio_id) REFERENCES studios(id)

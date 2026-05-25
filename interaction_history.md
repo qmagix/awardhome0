@@ -783,3 +783,7 @@ Advised the user to re-run the Revolution batch script to backfill the purged da
 - **Action:** Refactored `/studio/:id` to use SQLite aggregations instead of loading full award arrays. Implemented lazy loading for year tabs. Updated `styles.css` and `header.ejs` with deeper dark modes, enhanced glassmorphism, and the Outfit font.
 - **Result:** Server no longer crashes on massive studios. UI feels significantly more modern and responsive.
 
+## Task: Hall of Fame Curation
+- **Request:** "I think we really should have the ability for admin/owner to choose what to list on their hall of fame, right? What is the best way to to it?"
+- **Action:** Implemented a three-state (Pinned, Hidden, Auto-Detect) Hall of Fame curation system. Added `is_hall_of_fame` to the database, built an async toggle API, and updated the `manage_studio_awards.ejs` and `faq_admin.ejs` views.
+- **Result:** Admins can now fully customize their Hall of Fame while keeping the smart auto-detection functionality intact for new studios.
