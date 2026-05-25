@@ -2,8 +2,12 @@
 
 
 ## Interaction - 2026-05-24
+**User:** For the organizations that have 0 event in our system, no data imported yet, please do not show the since year part, it does not make sense.
+**AI:** Good catch! I updated the EJS templates (`index.ejs` and `index_admin.ejs`) to conditionally render the "(Since YYYY)" text only if the organization has at least 1 event (`org.event_count > 0`).
+
+## Interaction - 2026-05-24
 **User:** for front page http://localhost:3008 org cards, not all org events we have are since 2022, for some events we only have 2025 and 2026, so should be since 2025? maybe create a data_since field for the organization models table and pre-compute based on data so loads fast?
-**AI:** Great suggestion! To keep the homepage fast but accurate, I altered the SQLite database to add a  column to the  table. I wrote and executed a backfill script that correctly pre-computed the earliest year of events for each organization (e.g. StarQuest now correctly shows 2025). Finally, I updated the  route and the / views to dynamically output this value. Committed the changes to Git.
+**AI:** Great suggestion! To keep the homepage fast but accurate, I altered the SQLite database to add a `data_since` column to the `organizations` table. I wrote and executed a backfill script that correctly pre-computed the earliest year of events for each organization (e.g. StarQuest now correctly shows 2025). Finally, I updated the `server.js` route and the `index.ejs`/`index_admin.ejs` views to dynamically output this value. Committed the changes to Git.
 
 ## Interaction - 2026-05-24
 **User:** For the premium-trophy-card without premium-award-border, please remove the lefe and bottom edge change, the reason is somehow they look strange, partly could be the gradient change issue... back to original seems to look better, for now.

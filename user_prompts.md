@@ -2,6 +2,9 @@
 
 
 ## 2026-05-24
+For the organizations that have 0 event in our system, no data imported yet, please do not show the since year part, it does not make sense.
+
+## 2026-05-24
 for front page http://localhost:3008 org cards, not all org events we have are since 2022, for some events we only have 2025 and 2026, so should be since 2025? maybe create a data_since field for the organization models table and pre-compute based on data so loads fast?
 
 ## 2026-05-24
