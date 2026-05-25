@@ -2,6 +2,9 @@
 
 
 ## 2026-05-24
+For the premium-trophy-card without premium-award-border, please remove the lefe and bottom edge change, the reason is somehow they look strange, partly could be the gradient change issue... back to original seems to look better, for now.
+
+## 2026-05-24
 The deep amber/bronze seems too much and does not match with the light gold color well. How about some color closer to light. gold and have some more transparent/glassy color?
 
 ## 2026-05-24

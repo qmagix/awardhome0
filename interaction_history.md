@@ -2,8 +2,12 @@
 
 
 ## Interaction - 2026-05-24
+**User:** For the premium-trophy-card without premium-award-border, please remove the lefe and bottom edge change, the reason is somehow they look strange, partly could be the gradient change issue... back to original seems to look better, for now.
+**AI:** Makes complete sense. The  base uses a very distinct internal gradient to mimic glass, and sometimes adding harsh external bevels disrupts that glossy flow. I have reverted the  base right/bottom borders back to their original sleek 1px properties. The  (for the verified/highlighted cards) still retains the beautiful light gold extrusion effect.
+
+## Interaction - 2026-05-24
 **User:** The deep amber/bronze seems too much and does not match with the light gold color well. How about some color closer to light. gold and have some more transparent/glassy color?
-**AI:** Great call, the bronze was a bit heavy. I updated the  class to use semi-transparent light gold colors throughout. The main border is now  (a soft gold), the bright top/left highlights are  (light gold), and the thicker 4px bottom/right 3D edge is  (a more transparent gold). This softens the extrusion while keeping it cohesive and glassy. Committed the changes cleanly.
+**AI:** Great call, the bronze was a bit heavy. I updated the `.premium-award-border` class to use semi-transparent light gold colors throughout. The main border is now `rgba(251, 191, 36, 0.5)` (a soft gold), the bright top/left highlights are `rgba(253, 224, 71, 0.8)` (light gold), and the thicker 4px bottom/right 3D edge is `rgba(251, 191, 36, 0.4)` (a more transparent gold). This softens the extrusion while keeping it cohesive and glassy. Committed the changes cleanly.
 
 ## Interaction - 2026-05-24
 **User:** For those premium-trophy-card with premium-award-border, can you make the premium-award-border having the 3-D effects as well?
