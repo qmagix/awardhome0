@@ -124,7 +124,7 @@
 
       <div class="card glass-card" style="display: flex; justify-content: space-between; align-items: center; border-color: rgba(236, 72, 153, 0.3);">
         <div style="flex-grow: 1;">
-          <h4 style="margin: 0; color: var(--primary); font-size: 0.9rem; text-transform: uppercase;">Dancer Join Code</h4>
+          <h4 style="margin: 0; color: var(--primary); font-size: 0.9rem; text-transform: uppercase;">Award Claim Code</h4>
           <div style="display: flex; align-items: center; gap: 1rem; margin-top: 0.25rem;">
             <p style="margin: 0; font-size: 2rem; font-weight: 800; color: white; letter-spacing: 2px;"><%= studio.join_code %></p>
             <form action="/manage/studio/<%= studio.id %>/reset-code" method="POST" onsubmit="return confirm('Are you sure you want to reset this code? The old code will immediately stop working.')" style="margin: 0;">

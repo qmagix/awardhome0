@@ -2,6 +2,10 @@
 
 
 ## Interaction - 2026-05-24
+**User:** Good. Now on the same page, should "DANCER JOIN CODE" be "Dancer Routine Claim Code" or something less confusing?
+**AI:** Excellent point! "Award Claim Code" makes much more sense intuitively for what the code actually does (allowing dancers to securely link themselves to the studio's awards). I have updated the title to "Award Claim Code" to prevent any confusion.
+
+## Interaction - 2026-05-24
 **User:** Now please fix a bug for this page: http://localhost:3008/manage/studio/842, for the Public Dashboard Visibility form, when clicked save, somehow all the check circles becomes white and becomes confusing. Please check to see what;s wrong?
 **AI:** I fixed the issue. The cause was that when the profile form was submitted via POST, the server correctly updated the database but forgot to parse the raw JSON preferences back into a usable object before rendering the page. This caused the template to think all preferences were turned off, rendering the checkboxes as unchecked (white). I added the necessary parsing logic so the checkboxes correctly reflect your saved settings immediately after hitting save!
 

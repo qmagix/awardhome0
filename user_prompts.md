@@ -2,6 +2,9 @@
 
 
 ## 2026-05-24
+Good. Now on the same page, should "DANCER JOIN CODE" be "Dancer Routine Claim Code" or something less confusing?
+
+## 2026-05-24
 Now please fix a bug for this page: http://localhost:3008/manage/studio/842, for the Public Dashboard Visibility form, when clicked save, somehow all the check circles becomes white and becomes confusing. Please check to see what;s wrong?
 
 ## 2026-05-24
