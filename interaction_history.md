@@ -2,6 +2,10 @@
 
 
 ## Interaction - 2026-05-24
+**User:** For the awards editor page like http://localhost:3008/manage/studio/842/awards, please separate the awards table by events as well, so it is more clear for the owner/admin, for them to have a better bird eye view and see what might need to be updated. also collapse each table first, only show the count stats for each event and let user to click open each details table?
+**AI:** I completely redesigned the Awards Editor page. Instead of a single giant table, the awards are now grouped by Event Name and Year. Each event is presented as a sleek, clickable accordion header showing the event name and the total number of awards won. By default, they are all collapsed for a clean "bird's-eye view." Clicking any event header smoothly expands it to reveal the detailed awards table for just that event.
+
+## Interaction - 2026-05-24
 **User:** On this page : http://localhost:3008/manage/studio/842/awards, please change the "+ Single Report" button wording to "Add a Missing Award"?
 **AI:** I have updated the button text in `views/manage_studio_awards.ejs` to "Add a Missing Award" as requested.
 
