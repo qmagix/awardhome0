@@ -2,6 +2,9 @@
 
 
 ## 2026-05-24
+The deep amber/bronze seems too much and does not match with the light gold color well. How about some color closer to light. gold and have some more transparent/glassy color?
+
+## 2026-05-24
 For those premium-trophy-card with premium-award-border, can you make the premium-award-border having the 3-D effects as well?
 
 ## 2026-05-24
