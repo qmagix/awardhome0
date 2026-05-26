@@ -5,11 +5,13 @@ const slugify = require('slugify');
 async function fixDuplicates() {
   const db = await openDb();
   
-  // Find dancers with multiple studios
+  // Find unclaimed dancers with multiple studios
   const duplicates = await db.all(`
-    SELECT dancer_id, COUNT(*) as c 
-    FROM dancer_studios 
-    GROUP BY dancer_id 
+    SELECT ds.dancer_id, COUNT(*) as c 
+    FROM dancer_studios ds
+    JOIN dancers d ON d.id = ds.dancer_id
+    WHERE d.is_claimed = 0
+    GROUP BY ds.dancer_id 
     HAVING c > 1
   `);
   

@@ -228,16 +228,15 @@ async function scrapeYagp(url, dryRun = true) {
 
         // Ensure studio exists
         let studio_id = null;
-        if (award.studio) {
-          let studioRow = await db.get('SELECT id FROM studios WHERE name = ?', [award.studio]);
-          if (!studioRow) {
-            const studioUuid = generateStudioId(award.studio);
-            const joinCode = Array.from(crypto.randomFillSync(new Uint8Array(3))).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
-            const res = await db.run('INSERT INTO studios (unique_id, name, join_code) VALUES (?, ?, ?)', [studioUuid, award.studio, joinCode]);
-            studio_id = res.lastID;
-          } else {
-            studio_id = studioRow.id;
-          }
+        const studioName = award.studio || "Unknown Studio";
+        let studioRow = await db.get('SELECT id FROM studios WHERE name = ?', [studioName]);
+        if (!studioRow) {
+          const studioUuid = generateStudioId(studioName);
+          const joinCode = Array.from(crypto.randomFillSync(new Uint8Array(3))).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+          const res = await db.run('INSERT INTO studios (unique_id, name, join_code) VALUES (?, ?, ?)', [studioUuid, studioName, joinCode]);
+          studio_id = res.lastID;
+        } else {
+          studio_id = studioRow.id;
         }
 
         // Determine award_type based on category
@@ -252,12 +251,7 @@ async function scrapeYagp(url, dryRun = true) {
         if (award.dancer_name) {
            const names = Array.isArray(award.dancer_name) ? award.dancer_name : [award.dancer_name];
            for (const dName of names) {
-             let dancerRow;
-             if (studio_id) {
-               dancerRow = await db.get('SELECT d.id FROM dancers d JOIN dancer_studios ds ON d.id = ds.dancer_id WHERE d.name = ? AND ds.studio_id = ?', [dName, studio_id]);
-             } else {
-               dancerRow = await db.get('SELECT id FROM dancers WHERE name = ? LIMIT 1', [dName]);
-             }
+             let dancerRow = await db.get('SELECT d.id FROM dancers d JOIN dancer_studios ds ON d.id = ds.dancer_id WHERE d.name = ? AND ds.studio_id = ?', [dName, studio_id]);
              let d_id;
              if (!dancerRow) {
                // Generate standard unique ID

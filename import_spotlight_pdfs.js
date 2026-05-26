@@ -217,25 +217,19 @@ async function run() {
 
                 // Studio mapping
                 let studioId = null;
-                if (item.studio) {
-                    let studio = await db.get(`SELECT id FROM studios WHERE name = ?`, [item.studio]);
-                    if (!studio) {
-                        const res = await db.run(`INSERT INTO studios (unique_id, name, is_claimed) VALUES (?, ?, ?)`, [uuidv4(), item.studio, 0]);
-                        studioId = res.lastID;
-                    } else {
-                        studioId = studio.id;
-                    }
+                const studioName = item.studio || "Unknown Studio";
+                let studio = await db.get(`SELECT id FROM studios WHERE name = ?`, [studioName]);
+                if (!studio) {
+                    const res = await db.run(`INSERT INTO studios (unique_id, name, is_claimed) VALUES (?, ?, ?)`, [uuidv4(), studioName, 0]);
+                    studioId = res.lastID;
+                } else {
+                    studioId = studio.id;
                 }
 
                 // Dancer mapping
                 let dancerId = null;
                 if (item.dancer && awardType === 'Solo/Duo/Trio') {
-                    let dancer = null;
-                    if (studioId) {
-                        dancer = await db.get(`SELECT d.id FROM dancers d JOIN dancer_studios ds ON d.id = ds.dancer_id WHERE d.name = ? AND ds.studio_id = ?`, [item.dancer, studioId]);
-                    } else {
-                        dancer = await db.get(`SELECT id FROM dancers WHERE name = ? LIMIT 1`, [item.dancer]);
-                    }
+                    let dancer = await db.get(`SELECT d.id FROM dancers d JOIN dancer_studios ds ON d.id = ds.dancer_id WHERE d.name = ? AND ds.studio_id = ?`, [item.dancer, studioId]);
 
                     if (!dancer) {
                         const res = await db.run(`INSERT INTO dancers (unique_id, name) VALUES (?, ?)`, [uuidv4(), item.dancer]);
@@ -279,12 +273,7 @@ async function run() {
                     if (dancerId) {
                         const dancerNames = item.dancer.split(/&|,/).map(d => d.trim()).filter(d => d);
                         for (const dName of dancerNames) {
-                            let dInfo = null;
-                            if (studioId) {
-                                dInfo = await db.get(`SELECT d.id FROM dancers d JOIN dancer_studios ds ON d.id = ds.dancer_id WHERE d.name = ? AND ds.studio_id = ?`, [dName, studioId]);
-                            } else {
-                                dInfo = await db.get(`SELECT id FROM dancers WHERE name = ? LIMIT 1`, [dName]);
-                            }
+                            let dInfo = await db.get(`SELECT d.id FROM dancers d JOIN dancer_studios ds ON d.id = ds.dancer_id WHERE d.name = ? AND ds.studio_id = ?`, [dName, studioId]);
                             
                             if (!dInfo) {
                                 const dRes = await db.run(`INSERT INTO dancers (unique_id, name) VALUES (?, ?)`, [uuidv4(), dName]);

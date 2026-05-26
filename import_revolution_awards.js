@@ -36,8 +36,7 @@ async function getOrCreateEvent(orgId, url, dateString, location) {
 
 
 async function getOrCreateStudio(studioName) {
-  if (!studioName || studioName.trim() === '') return null;
-  const name = studioName.trim();
+  const name = studioName && studioName.trim() !== '' ? studioName.trim() : 'Unknown Studio';
   let studio = await db.getAsync('SELECT * FROM studios WHERE LOWER(name) = LOWER(?)', [name]);
   if (!studio) {
     const uniqueId = generateStudioId(name);
@@ -207,12 +206,7 @@ async function run() {
             if (dancerNames && award) {
               const dancers = dancerNames.split(',').map(d => d.trim()).filter(d => d.length > 0);
               for (const dancerName of dancers) {
-                let dancer = null;
-                if (studioId) {
-                  dancer = await db.getAsync('SELECT d.* FROM dancers d JOIN dancer_studios ds ON d.id = ds.dancer_id WHERE LOWER(d.name) = LOWER(?) AND ds.studio_id = ?', [dancerName, studioId]);
-                } else {
-                  dancer = await db.getAsync('SELECT * FROM dancers WHERE LOWER(name) = LOWER(?) LIMIT 1', [dancerName]);
-                }
+                let dancer = await db.getAsync('SELECT d.* FROM dancers d JOIN dancer_studios ds ON d.id = ds.dancer_id WHERE LOWER(d.name) = LOWER(?) AND ds.studio_id = ?', [dancerName, studioId]);
                 
                 if (!dancer) {
                   const uniqueId = generateDancerId(dancerName);

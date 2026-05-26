@@ -29,8 +29,7 @@ async function getOrCreateEvent(orgId, city, year) {
 }
 
 async function getOrCreateStudio(studioName) {
-  if (!studioName || studioName.trim() === '' || studioName.trim().toLowerCase() === 'n/a') return null;
-  const name = studioName.trim();
+  const name = studioName && studioName.trim() !== '' && studioName.trim().toLowerCase() !== 'n/a' ? studioName.trim() : 'Unknown Studio';
   let studio = await db.getAsync('SELECT * FROM studios WHERE LOWER(name) = LOWER(?)', [name]);
   if (!studio) {
     const uniqueId = generateStudioId(name);
@@ -124,13 +123,7 @@ async function processFile(filePath, filename, orgId) {
 
     // 2. Dancer Linking
     for (const dName of dancers) {
-      let dancer = null;
-      if (studioId) {
-        dancer = await db.getAsync('SELECT d.* FROM dancers d JOIN dancer_studios ds ON d.id = ds.dancer_id WHERE LOWER(d.name) = LOWER(?) AND ds.studio_id = ?', [dName, studioId]);
-      }
-      if (!dancer) {
-        dancer = await db.getAsync('SELECT * FROM dancers WHERE LOWER(name) = LOWER(?) LIMIT 1', [dName]);
-      }
+      let dancer = await db.getAsync('SELECT d.* FROM dancers d JOIN dancer_studios ds ON d.id = ds.dancer_id WHERE LOWER(d.name) = LOWER(?) AND ds.studio_id = ?', [dName, studioId]);
       
       if (!dancer) {
         const uniqueId = generateDancerId(dName);
