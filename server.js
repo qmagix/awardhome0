@@ -3519,6 +3519,7 @@ app.post('/api/feedback', requireAuth, async (req, res) => {
     return res.status(400).json({ error: 'Missing fields' });
   }
   try {
+    const db = await openDb();
     await db.run(
       'INSERT INTO feedback (user_id, type, message, page_url, status) VALUES (?, ?, ?, ?, ?)',
       [req.session.user.id, type, message, page_url || '', 'new']
@@ -3532,6 +3533,7 @@ app.post('/api/feedback', requireAuth, async (req, res) => {
 
 app.get('/admin/feedback', requireAdmin, async (req, res) => {
   try {
+    const db = await openDb();
     const filter = req.query.filter || 'all';
     let query = 'SELECT f.*, u.email as user_email FROM feedback f LEFT JOIN users u ON f.user_id = u.id';
     const params = [];
@@ -3552,6 +3554,7 @@ app.get('/admin/feedback', requireAdmin, async (req, res) => {
 
 app.post('/admin/feedback/:id/status', requireAdmin, async (req, res) => {
   try {
+    const db = await openDb();
     const { status } = req.body;
     await db.run('UPDATE feedback SET status = ? WHERE id = ?', [status, req.params.id]);
     res.json({ success: true });
@@ -3563,6 +3566,7 @@ app.post('/admin/feedback/:id/status', requireAdmin, async (req, res) => {
 
 app.post('/admin/feedback/:id/reply', requireAdmin, async (req, res) => {
   try {
+    const db = await openDb();
     const { reply } = req.body;
     const feedbackId = req.params.id;
     
@@ -3578,6 +3582,7 @@ app.post('/admin/feedback/:id/reply', requireAdmin, async (req, res) => {
 
 app.get('/my-feedback', requireAuth, async (req, res) => {
   try {
+    const db = await openDb();
     const feedbackList = await db.all('SELECT * FROM feedback WHERE user_id = ? ORDER BY created_at DESC', [req.session.user.id]);
     res.render('my_feedback', { user: req.session.user, feedbackList });
   } catch (err) {
