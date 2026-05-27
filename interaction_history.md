@@ -799,3 +799,11 @@ Advised the user to re-run the Revolution batch script to backfill the purged da
 ## Interaction - 2026-05-27
 **User:** Regarding Admin Email Replies, please do not send email, make make them showup on user account. It make the system more self contained and less relying on emails as emails are not very relaible these days.
 **AI:** I updated the feedback reply system. The admin reply feature no longer relies on sending emails via Resend. Instead, I added a new "My Feedback" dashboard accessible from the top navigation bar for all logged-in users. Users can now view their submitted feedback, check the status (Pending Review, Replied, Resolved), and read admin replies directly within their account, ensuring a fully self-contained support system.
+
+## Interaction - 2026-05-27
+**User:** Error inserting feedback: ReferenceError: db is not defined
+**AI:** I quickly resolved the `ReferenceError: db is not defined` crash that was occurring when submitting feedback. The issue happened because the database connection object (`db`) was not properly instantiated in the scope of the newly added feedback route handlers. I injected `const db = await openDb();` into all of the feedback-related backend routes (`POST /api/feedback`, `GET /admin/feedback`, etc.) to ensure the database can be queried successfully. Committed the fix to version control.
+
+## Interaction - 2026-05-27
+**User:** Error inserting feedback: Error: SQLITE_ERROR: no such table: feedback
+**AI:** I resolved the `SQLITE_ERROR: no such table: feedback` issue. Although the schema change (`CREATE TABLE IF NOT EXISTS feedback`) was correctly added to `database.js` earlier, the initialization script had not actually been executed by the Node.js process to build the table in SQLite. I manually ran `node database.js` in the terminal to execute the table initialization block. The `feedback` table is now successfully created in the database and ready to store user feedback.
