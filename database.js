@@ -148,6 +148,17 @@ async function initDb() {
       status TEXT DEFAULT 'pending',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
+    CREATE TABLE IF NOT EXISTS feedback (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      type TEXT NOT NULL,
+      message TEXT NOT NULL,
+      page_url TEXT,
+      status TEXT DEFAULT 'new',
+      admin_reply TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
 
     CREATE TABLE IF NOT EXISTS org_uploads (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

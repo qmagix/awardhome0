@@ -3511,6 +3511,96 @@ app.post('/api/claim-award', claimAwardLimiter, async (req, res) => {
   }
 });
 
+// --- Feedback Routes ---
+
+app.post('/api/feedback', requireAuth, async (req, res) => {
+  const { type, message, page_url } = req.body;
+  if (!type || !message) {
+    return res.status(400).json({ error: 'Missing fields' });
+  }
+  try {
+    await db.run(
+      'INSERT INTO feedback (user_id, type, message, page_url, status) VALUES (?, ?, ?, ?, ?)',
+      [req.session.user.id, type, message, page_url || '', 'new']
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error inserting feedback:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.get('/admin/feedback', requireAdmin, async (req, res) => {
+  try {
+    const filter = req.query.filter || 'all';
+    let query = 'SELECT f.*, u.email as user_email FROM feedback f LEFT JOIN users u ON f.user_id = u.id';
+    const params = [];
+    
+    if (filter !== 'all') {
+      query += ' WHERE f.status = ?';
+      params.push(filter);
+    }
+    query += ' ORDER BY f.created_at DESC';
+    
+    const feedbackList = await db.all(query, params);
+    res.render('admin_feedback', { user: req.session.user, feedbackList, filter });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server Error');
+  }
+});
+
+app.post('/admin/feedback/:id/status', requireAdmin, async (req, res) => {
+  try {
+    const { status } = req.body;
+    await db.run('UPDATE feedback SET status = ? WHERE id = ?', [status, req.params.id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.post('/admin/feedback/:id/reply', requireAdmin, async (req, res) => {
+  try {
+    const { reply } = req.body;
+    const feedbackId = req.params.id;
+    
+    // Update DB
+    await db.run('UPDATE feedback SET admin_reply = ?, status = ? WHERE id = ?', [reply, 'replied', feedbackId]);
+    
+    // Fetch user email to send reply
+    const feedback = await db.get('SELECT f.*, u.email as user_email FROM feedback f JOIN users u ON f.user_id = u.id WHERE f.id = ?', [feedbackId]);
+    
+    if (feedback && feedback.user_email && process.env.RESEND_API_KEY) {
+      const typeLabel = feedback.type === 'bug' ? 'Bug Report' : (feedback.type === 'feature_request' ? 'Feature Request' : 'Feedback');
+      await resend.emails.send({
+        from: 'onboarding@resend.dev',
+        to: feedback.user_email,
+        subject: `Response to your ${typeLabel}`,
+        html: `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+            <h2 style="color: #6366f1;">Thank you for your feedback!</h2>
+            <p>You recently submitted the following ${typeLabel.toLowerCase()}:</p>
+            <blockquote style="border-left: 4px solid #e5e7eb; padding-left: 1rem; color: #4b5563; font-style: italic;">
+              ${feedback.message}
+            </blockquote>
+            <p><strong>Admin Reply:</strong></p>
+            <p style="white-space: pre-wrap; background: #f3f4f6; padding: 1rem; border-radius: 8px;">${reply}</p>
+            <p style="margin-top: 2rem; font-size: 0.9rem; color: #9ca3af;">- The Dance Awards Team</p>
+          </div>
+        `
+      });
+    }
+    
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+
 const PORT = process.env.PORT || 3008;
 app.listen(PORT, async (err) => {
   if (err) {

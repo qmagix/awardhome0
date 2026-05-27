@@ -1,0 +1,105 @@
+<%- include('partials/header') %>
+<div class="container">
+  <div class="header-section" style="margin-bottom: 2rem;">
+    <h1>Feedback Management</h1>
+    <p class="subtitle">Review and respond to user feedback</p>
+  </div>
+  
+  <div style="margin-bottom: 2rem; display: flex; gap: 1rem;">
+    <a href="/admin/feedback?filter=all" class="btn <%= filter === 'all' ? 'btn-primary' : 'btn-outline' %>">All</a>
+    <a href="/admin/feedback?filter=new" class="btn <%= filter === 'new' ? 'btn-primary' : 'btn-outline' %>">New</a>
+    <a href="/admin/feedback?filter=replied" class="btn <%= filter === 'replied' ? 'btn-primary' : 'btn-outline' %>">Replied</a>
+    <a href="/admin/feedback?filter=resolved" class="btn <%= filter === 'resolved' ? 'btn-primary' : 'btn-outline' %>">Resolved</a>
+  </div>
+  
+  <% if (feedbackList.length === 0) { %>
+    <div class="card glass-card" style="text-align: center; padding: 3rem;">
+      <h3 style="color: var(--text-muted);">No feedback found.</h3>
+    </div>
+  <% } else { %>
+    <div class="grid" style="grid-template-columns: 1fr; gap: 1.5rem;">
+      <% feedbackList.forEach(fb => { %>
+        <div class="card glass-card" id="feedback-<%= fb.id %>" style="display: flex; flex-direction: column; gap: 1rem; border-left: 4px solid <%= fb.type === 'bug' ? '#ef4444' : (fb.type === 'feature_request' ? '#3b82f6' : '#10b981') %>;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                <span style="background: rgba(255,255,255,0.1); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">
+                  <%= fb.type.replace('_', ' ') %>
+                </span>
+                <span style="font-size: 0.9rem; color: var(--text-muted);"><%= new Date(fb.created_at).toLocaleString() %></span>
+              </div>
+              <h4 style="margin: 0; color: white;">From: <%= fb.user_email || 'Unknown User' %></h4>
+              <% if (fb.page_url) { %>
+                <a href="<%= fb.page_url %>" target="_blank" style="font-size: 0.8rem; color: var(--primary);">Submitted from: <%= fb.page_url %></a>
+              <% } %>
+            </div>
+            <div>
+              <select class="form-control" onchange="updateFeedbackStatus('<%= fb.id %>', this.value)" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 0.5rem; border-radius: 4px;">
+                <option value="new" <%= fb.status === 'new' ? 'selected' : '' %>>New</option>
+                <option value="replied" <%= fb.status === 'replied' ? 'selected' : '' %>>Replied</option>
+                <option value="resolved" <%= fb.status === 'resolved' ? 'selected' : '' %>>Resolved</option>
+              </select>
+            </div>
+          </div>
+          
+          <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; color: var(--text-color); font-size: 1rem; white-space: pre-wrap;"><%= fb.message %></div>
+          
+          <% if (fb.admin_reply) { %>
+            <div style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3); padding: 1rem; border-radius: 8px;">
+              <strong style="color: #6366f1; display: block; margin-bottom: 0.5rem;">Admin Reply Sent:</strong>
+              <div style="color: var(--text-color); white-space: pre-wrap;"><%= fb.admin_reply %></div>
+            </div>
+          <% } else { %>
+            <div style="margin-top: 1rem;">
+              <textarea id="reply-<%= fb.id %>" class="form-control" rows="3" placeholder="Write a reply (this will send an email to the user)..." style="width: 100%; padding: 0.75rem; border-radius: 8px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: white; resize: vertical; margin-bottom: 0.5rem;"></textarea>
+              <div style="text-align: right;">
+                <button class="btn btn-primary" onclick="sendReply('<%= fb.id %>')">Send Reply</button>
+              </div>
+            </div>
+          <% } %>
+        </div>
+      <% }); %>
+    </div>
+  <% } %>
+</div>
+
+<script>
+async function updateFeedbackStatus(id, status) {
+  try {
+    const res = await fetch(`/admin/feedback/${id}/status`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    });
+    if (!res.ok) throw new Error('Network error');
+    // Visual feedback?
+  } catch (err) {
+    alert('Error updating status');
+  }
+}
+
+async function sendReply(id) {
+  const replyContent = document.getElementById(`reply-${id}`).value.trim();
+  if (!replyContent) return alert('Please enter a reply.');
+  if (!confirm('Are you sure you want to send this reply via email to the user?')) return;
+  
+  try {
+    const res = await fetch(`/admin/feedback/${id}/reply`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reply: replyContent })
+    });
+    const data = await res.json();
+    if (data.success) {
+      alert('Reply sent successfully!');
+      window.location.reload();
+    } else {
+      alert('Error sending reply.');
+    }
+  } catch (err) {
+    alert('Network error.');
+  }
+}
+</script>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,91 @@
+<!-- Feedback Modal -->
+<div id="feedbackModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
+  <div class="glass-card" style="max-width: 500px; width: 90%; position: relative;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+      <h2 style="margin: 0; font-size: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" width="24" height="24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+        Send Feedback
+      </h2>
+      <button onclick="closeFeedbackModal()" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.5rem;">&times;</button>
+    </div>
+    
+    <div id="feedbackSuccessMessage" style="display: none; padding: 1rem; background: rgba(16, 185, 129, 0.1); border-left: 4px solid #10b981; border-radius: 4px; margin-bottom: 1rem; color: #10b981;">
+      Thank you! Your feedback has been successfully submitted and will be reviewed by our team.
+    </div>
+
+    <form id="feedbackForm" onsubmit="submitFeedback(event)">
+      <div class="form-group" style="margin-bottom: 1rem;">
+        <label for="feedbackType" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Type of Feedback</label>
+        <select id="feedbackType" name="type" required class="form-control" style="width: 100%; padding: 0.75rem; border-radius: 8px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: white;">
+          <option value="bug">🐛 Bug Report</option>
+          <option value="feature_request">✨ Feature Request</option>
+          <option value="general">💬 General Feedback</option>
+        </select>
+      </div>
+      
+      <div class="form-group" style="margin-bottom: 1.5rem;">
+        <label for="feedbackMessage" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Message</label>
+        <textarea id="feedbackMessage" name="message" required class="form-control" rows="5" placeholder="Please describe your issue or idea in detail..." style="width: 100%; padding: 0.75rem; border-radius: 8px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: white; resize: vertical;"></textarea>
+      </div>
+      
+      <input type="hidden" id="feedbackUrl" name="page_url">
+      
+      <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+        <button type="button" class="btn btn-outline" onclick="closeFeedbackModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="btnSubmitFeedback">Submit Feedback</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openFeedbackModal(e) {
+  if (e) e.preventDefault();
+  document.getElementById('feedbackModal').style.display = 'flex';
+  document.getElementById('feedbackUrl').value = window.location.href;
+  document.getElementById('feedbackSuccessMessage').style.display = 'none';
+  document.getElementById('feedbackForm').style.display = 'block';
+  document.getElementById('feedbackMessage').value = '';
+}
+
+function closeFeedbackModal() {
+  document.getElementById('feedbackModal').style.display = 'none';
+}
+
+async function submitFeedback(e) {
+  e.preventDefault();
+  const btn = document.getElementById('btnSubmitFeedback');
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+  
+  const payload = {
+    type: document.getElementById('feedbackType').value,
+    message: document.getElementById('feedbackMessage').value,
+    page_url: document.getElementById('feedbackUrl').value
+  };
+  
+  try {
+    const res = await fetch('/api/feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    
+    if (res.ok) {
+      document.getElementById('feedbackForm').style.display = 'none';
+      document.getElementById('feedbackSuccessMessage').style.display = 'block';
+      setTimeout(() => {
+        closeFeedbackModal();
+      }, 3000);
+    } else {
+      alert('Error submitting feedback. Please try again.');
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Network error. Please try again.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Submit Feedback';
+  }
+}
+</script>
