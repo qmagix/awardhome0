@@ -51,9 +51,9 @@
             </div>
           <% } else { %>
             <div style="margin-top: 1rem;">
-              <textarea id="reply-<%= fb.id %>" class="form-control" rows="3" placeholder="Write a reply (this will send an email to the user)..." style="width: 100%; padding: 0.75rem; border-radius: 8px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: white; resize: vertical; margin-bottom: 0.5rem;"></textarea>
+              <textarea id="reply-<%= fb.id %>" class="form-control" rows="3" placeholder="Write a reply that the user will see in their dashboard..." style="width: 100%; padding: 0.75rem; border-radius: 8px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: white; resize: vertical; margin-bottom: 0.5rem;"></textarea>
               <div style="text-align: right;">
-                <button class="btn btn-primary" onclick="sendReply('<%= fb.id %>')">Send Reply</button>
+                <button class="btn btn-primary" onclick="sendReply('<%= fb.id %>')">Submit Reply</button>
               </div>
             </div>
           <% } %>
@@ -72,7 +72,17 @@ async function updateFeedbackStatus(id, status) {
       body: JSON.stringify({ status })
     });
     if (!res.ok) throw new Error('Network error');
-    // Visual feedback?
+    
+    const currentFilter = '<%= filter %>';
+    if (currentFilter !== 'all' && currentFilter !== status) {
+      const card = document.getElementById(`feedback-${id}`);
+      if (card) {
+        card.style.transition = 'opacity 0.3s, transform 0.3s, margin 0.3s, padding 0.3s, height 0.3s';
+        card.style.opacity = '0';
+        card.style.transform = 'scale(0.95)';
+        setTimeout(() => card.remove(), 300);
+      }
+    }
   } catch (err) {
     alert('Error updating status');
   }
@@ -81,7 +91,7 @@ async function updateFeedbackStatus(id, status) {
 async function sendReply(id) {
   const replyContent = document.getElementById(`reply-${id}`).value.trim();
   if (!replyContent) return alert('Please enter a reply.');
-  if (!confirm('Are you sure you want to send this reply via email to the user?')) return;
+  if (!confirm('Are you sure you want to submit this reply?')) return;
   
   try {
     const res = await fetch(`/admin/feedback/${id}/reply`, {
@@ -91,8 +101,19 @@ async function sendReply(id) {
     });
     const data = await res.json();
     if (data.success) {
-      alert('Reply sent successfully!');
-      window.location.reload();
+      // Status is automatically 'replied' in backend.
+      const currentFilter = '<%= filter %>';
+      if (currentFilter !== 'all' && currentFilter !== 'replied') {
+        const card = document.getElementById(`feedback-${id}`);
+        if (card) {
+          card.style.transition = 'opacity 0.3s, transform 0.3s';
+          card.style.opacity = '0';
+          card.style.transform = 'scale(0.95)';
+          setTimeout(() => card.remove(), 300);
+        }
+      } else {
+        window.location.reload();
+      }
     } else {
       alert('Error sending reply.');
     }
