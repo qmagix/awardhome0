@@ -811,3 +811,7 @@ Advised the user to re-run the Revolution batch script to backfill the purged da
 ## Interaction - 2026-05-27
 **User:** Please improve the look and feel of the feeback form. http://localhost:3008/my-feedback, right now its left and right margin seems missing
 **AI:** I found and fixed the root cause of the missing margins on the `my-feedback` page! The `views/partials/header.ejs` file mistakenly contained a closing `</main>` tag instead of an opening `<main>` tag. This caused the main layout container to break, pushing the contents of the page outside of the defined flexbox layout which is responsible for adding the correct maximum width and margins via the `.container` CSS class. I've corrected the tag to an opening `<main>`, restoring the premium centered layout with proper margins for the My Feedback page and ensuring all other pages continue to render correctly. I've committed the changes to Git.
+
+## Interaction - 2026-05-27
+**User:** Can you double check? the popup feedback form still does not semm to have left right margin
+**AI:** You were totally right! I misunderstood and thought you meant the dashboard page itself, but the issue was indeed in the popup modal itself. The `.glass-card` styling in CSS didn't have intrinsic padding, so the form elements were touching the very edges of the modal. I just injected `padding: 2rem;` directly into the `feedback_modal.ejs` container, so now it has a beautiful, spacious margin all the way around the content. I've committed the fix!
