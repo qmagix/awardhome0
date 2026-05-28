@@ -12,6 +12,7 @@ const { parse } = require('csv-parse/sync');
 const { generateDancerId, generateStudioId } = require('./utils');
 const { runBackfillForEvent } = require('./backfill_utils');
 const { OpenAI } = require('openai');
+const { sendEmail } = require('./utils/mailer');
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -132,9 +133,6 @@ app.use((req, res, next) => {
   next();
 });
 
-const { Resend } = require('resend');
-const resend = new Resend(process.env.RESEND_API_KEY || 're_123456789');
-
 app.get('/register', (req, res) => res.render('register'));
 app.post('/register', async (req, res) => {
   const { email, password } = req.body;
@@ -151,16 +149,14 @@ app.post('/register', async (req, res) => {
   const token = Buffer.from(email + ':dance_secret').toString('base64');
   const verifyLink = `http://localhost:3000/verify-email?token=${token}&email=${encodeURIComponent(email)}`;
 
-  if (process.env.RESEND_API_KEY) {
-    try {
-      await resend.emails.send({
-        from: 'onboarding@resend.dev',
-        to: email,
-        subject: 'Verify your Dance Awards Account',
-        html: `<p>Click here to verify: <a href="${verifyLink}">${verifyLink}</a></p>`
-      });
-    } catch (e) {
-      console.error("Resend error:", e);
+  if (process.env.EMAIL_PROVIDER) {
+    const result = await sendEmail({
+      to: email,
+      subject: 'Verify your Dance Awards Account',
+      html: `<p>Click here to verify: <a href="${verifyLink}">${verifyLink}</a></p>`
+    });
+    if (!result.success) {
+      console.error("Failed to send verification email:", result.error);
     }
   } else {
     console.log(`[DEV MODE] Verification Link for ${email}: ${verifyLink}`);

@@ -823,3 +823,7 @@ Advised the user to re-run the Revolution batch script to backfill the purged da
 ## Interaction - 2026-05-27
 **User:** We now have RESEND_API_KEY in .env, can you pelase write a test script to make sure email works with this API key?
 **AI:** I wrote a `test_email.js` script to verify your `RESEND_API_KEY`. It successfully pulled the key from your `.env` file and triggered an API request to send a test email. I executed the script and received a successful response from the Resend API (`{ id: 'cdef580e-81df-4de3-ac3d-87f480cbc0ea' }`), confirming that your email integration is properly configured and functional! I've also checked this item off of your `TODOS_and_DONE.md` list.
+
+## Interaction - 2026-05-27
+**User:** Please design it in a way that we can switch between gmail and resend via a config switch in .env file. Likely we will use gmail in the beginning then switch to resend if the usage grows
+**AI:** I have successfully refactored the email architecture! I installed `nodemailer`, abstracted all email sending logic into a new reusable `utils/mailer.js` module, and updated `server.js` and `test_email.js` to route all email traffic through this new unified service. I also updated your `.env` file to include a new `EMAIL_PROVIDER` config switch (which can be set to `gmail` or `resend`) along with placeholders for your Gmail user and app password. You can now toggle seamlessly between the two providers by just changing that one line in your `.env` file! I've committed the changes to Git.
