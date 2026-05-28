@@ -18,6 +18,13 @@
 - [ ] Add API Rate Limiting to `/api/claim-award` to prevent brute-forcing of Join Codes.
 
 - [x] add to superadmin dashboard: number of studios have more than 15 awards, number of studios have email addresses. 
+- [x] Make sure resend API key and email function works
+- verify email based claim processes. 
+- Suggest best DB to use for production
+- file storage to aws S3. 
+- Make sure organization competitition result submission works (save to s3 works and how up for admin for db batch update and maintenance - make sure nothing breaks) 
+- Organization, studio, dancer marketing and testimony, FAQ. (testimony makes the org and studio and dancer standout)
+- 
 
 
 ## DONE
