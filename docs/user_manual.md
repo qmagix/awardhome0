@@ -69,9 +69,11 @@ By default, the server will be available at `http://localhost:3000`.
 
 ### Using the Awards Editor
 1. From your Studio Management Dashboard, click **Awards Editor** in the sidebar.
-2. You will see a list of all awards attributed to your studio.
-3. If an award is missing a performance name, place, or award type, you will see an input field. Type the missing info and click **Save**.
-4. To add dancers to a duet, trio, or group award, use the **Add Dancer** dropdown below the award to select from dancers already affiliated with your studio.
+2. By default, you will see a list of all awards attributed to your studio grouped by Competition/Event.
+3. Use the **Group By** toggles to view your awards organized by **Routines** (Performances) or by individual **Dancers**.
+4. When viewing by Routines or Dancers, you can use the **Sort By** toggles to arrange the list alphabetically (Name A-Z) or chronologically (Most Recent).
+5. If an award is missing a performance name, place, or award type, click the **Edit** button to update the data.
+6. To add dancers to a duet, trio, or group award, click **Edit** and use the **Add Group Dancer** search bar to link dancers from your roster.
 
 ### Using the Widget Builder
 1. From your Studio Management Dashboard, click **Widget Builder** in the sidebar.

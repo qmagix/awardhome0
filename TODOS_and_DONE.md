@@ -66,3 +66,4 @@
 - [x] Build Dancer Dashboard: Find Missing Awards search tool and Smart Auto-Backfill claiming.
 - [x] Enhance Studio Roster UI: Active/Inactive tabs, status toggles, and recent awards summary popup.
 - [x] Add dynamic milestone and celebratory banner for top-performing dancers on public profiles.
+- [x] Implement Awards Editor advanced grouping (by Event, Routine, Dancer) with multi-year sorting capabilities for Studio Admins.

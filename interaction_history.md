@@ -831,3 +831,12 @@ Advised the user to re-run the Revolution batch script to backfill the purged da
 ## Interaction - 2026-05-30
 **User:** Please create a milestone file summarizing what we have done so far, and then create a list of recommendations about what we should do before pushing to production and make the site/app live for users online.
 **AI:** I have compiled a comprehensive document detailing everything we've accomplished and the steps needed to prepare for a production launch! I created `docs/milestone_v1.md`, which is broken into two parts. Part 1 recaps our core architecture, design system, data pipelines, studio management suite, dancer experience, and admin tools. Part 2 outlines 7 critical pre-launch recommendations, including migrating the database to PostgreSQL (to handle concurrency), moving file uploads to AWS S3, securing the site with Cloudflare SSL/DDoS protection, and setting up error tracking. I have committed this new document to Git!
+
+## Add Award Routines and Dancers View for Studio Admin
+**User Request:** "For studio admin, please add award routines view and award dancers view. please make these sortable by name and year aswell"
+**Summary of Changes:**
+- Modified `server.js`'s `/manage/studio/:id/awards` route to accept `view`, `sort`, and `year=all` query parameters.
+- Re-wrote the grouping logic in `manage_studio_awards.ejs` to allow grouping awards by **Events**, **Routines**, or **Dancers**.
+- Added a view toggle and an "All Time" year selector.
+- Added sorting toggles (Name A-Z, Most Recent) that dynamically sort the Routine or Dancer groupings.
+- Updated documentation files (`features.md`, `docs/user_manual.md`, `TODOS_and_DONE.md`) to reflect these new capabilities.

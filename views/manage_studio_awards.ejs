@@ -70,40 +70,129 @@
     </div>
 
     <!-- Year Tabs -->
-    <% if (availableYears && availableYears.length > 0) { %>
-      <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; overflow-x: auto; padding-bottom: 0.5rem;">
+    <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; overflow-x: auto; padding-bottom: 0.5rem;">
+      <% if (availableYears && availableYears.length > 0) { %>
         <% availableYears.forEach(year => { %>
           <% if (selectedYear === year) { %>
-            <a href="?year=<%= year %>" class="btn" style="padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; background: var(--primary); color: white;">
+            <a href="?year=<%= year %>&view=<%= currentView %>&sort=<%= currentSort %>" class="btn" style="padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; background: var(--primary); color: white;">
               <%= year %>
             </a>
           <% } else { %>
-            <a href="?year=<%= year %>" class="btn" style="padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.1);">
+            <a href="?year=<%= year %>&view=<%= currentView %>&sort=<%= currentSort %>" class="btn" style="padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.1);">
               <%= year %>
             </a>
           <% } %>
         <% }) %>
+      <% } %>
+      <a href="?year=all&view=<%= currentView %>&sort=<%= currentSort %>" class="btn" style="padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; <%= selectedYear === 'all' ? 'background: var(--primary); color: white;' : 'background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.1);' %>">
+        All Time
+      </a>
+    </div>
+
+    <!-- View & Sort Toggles -->
+    <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+      <div style="display: flex; gap: 0.5rem; align-items: center;">
+        <span style="color: var(--text-muted); font-size: 0.9rem;">Group By:</span>
+        <a href="?year=<%= selectedYear || 'all' %>&view=events&sort=<%= currentSort %>" class="badge" style="<%= currentView === 'events' ? 'background: var(--primary); color: white;' : 'background: transparent; color: var(--text-muted); border: 1px solid rgba(255,255,255,0.2);' %> text-decoration: none; padding: 0.4rem 0.8rem;">🏆 Events</a>
+        <a href="?year=<%= selectedYear || 'all' %>&view=routines&sort=<%= currentSort %>" class="badge" style="<%= currentView === 'routines' ? 'background: var(--primary); color: white;' : 'background: transparent; color: var(--text-muted); border: 1px solid rgba(255,255,255,0.2);' %> text-decoration: none; padding: 0.4rem 0.8rem;">🎭 Routines</a>
+        <a href="?year=<%= selectedYear || 'all' %>&view=dancers&sort=<%= currentSort %>" class="badge" style="<%= currentView === 'dancers' ? 'background: var(--primary); color: white;' : 'background: transparent; color: var(--text-muted); border: 1px solid rgba(255,255,255,0.2);' %> text-decoration: none; padding: 0.4rem 0.8rem;">💃 Dancers</a>
       </div>
-    <% } %>
+      <% if (currentView === 'routines' || currentView === 'dancers') { %>
+      <div style="display: flex; gap: 0.5rem; align-items: center; padding-left: 1rem; border-left: 1px solid rgba(255,255,255,0.1);">
+        <span style="color: var(--text-muted); font-size: 0.9rem;">Sort By:</span>
+        <a href="?year=<%= selectedYear || 'all' %>&view=<%= currentView %>&sort=name" class="badge" style="<%= currentSort === 'name' ? 'background: rgba(255,255,255,0.2); color: white;' : 'background: transparent; color: var(--text-muted); border: 1px solid rgba(255,255,255,0.2);' %> text-decoration: none; padding: 0.4rem 0.8rem;">Name A-Z</a>
+        <a href="?year=<%= selectedYear || 'all' %>&view=<%= currentView %>&sort=year" class="badge" style="<%= currentSort === 'year' ? 'background: rgba(255,255,255,0.2); color: white;' : 'background: transparent; color: var(--text-muted); border: 1px solid rgba(255,255,255,0.2);' %> text-decoration: none; padding: 0.4rem 0.8rem;">Most Recent</a>
+      </div>
+      <% } %>
+    </div>
 
     <% 
       const groupedAwards = {};
-      awards.forEach(award => {
-        const key = award.event_name + '|||' + award.event_year;
-        if (!groupedAwards[key]) groupedAwards[key] = [];
-        groupedAwards[key].push(award);
+      const groupMetadata = {};
+      
+      if (currentView === 'events') {
+        awards.forEach(award => {
+          const key = award.event_name + '|||' + award.event_year;
+          if (!groupedAwards[key]) {
+            groupedAwards[key] = [];
+            groupMetadata[key] = { year: award.event_year, name: award.event_name };
+          }
+          groupedAwards[key].push(award);
+        });
+      } else if (currentView === 'routines') {
+        awards.forEach(award => {
+          const key = award.performance_name ? award.performance_name : 'Unspecified Routine';
+          if (!groupedAwards[key]) {
+            groupedAwards[key] = [];
+            groupMetadata[key] = { year: award.event_year, name: key };
+          }
+          if (award.event_year > groupMetadata[key].year) {
+             groupMetadata[key].year = award.event_year;
+          }
+          groupedAwards[key].push(award);
+        });
+      } else if (currentView === 'dancers') {
+        awards.forEach(award => {
+          const dancersForThisAward = new Set();
+          if (award.dancer_name) dancersForThisAward.add(award.dancer_name);
+          if (groupedDancers[award.id]) {
+            groupedDancers[award.id].forEach(d => dancersForThisAward.add(d.name));
+          }
+          
+          if (dancersForThisAward.size === 0) {
+             dancersForThisAward.add('Unspecified Dancer');
+          }
+
+          dancersForThisAward.forEach(dancerName => {
+            if (!groupedAwards[dancerName]) {
+              groupedAwards[dancerName] = [];
+              groupMetadata[dancerName] = { year: award.event_year, name: dancerName };
+            }
+            if (award.event_year > groupMetadata[dancerName].year) {
+              groupMetadata[dancerName].year = award.event_year;
+            }
+            groupedAwards[dancerName].push(award);
+          });
+        });
+      }
+
+      const sortedGroupKeys = Object.keys(groupedAwards).sort((a, b) => {
+        if (currentView === 'events') {
+          if (groupMetadata[b].year !== groupMetadata[a].year) {
+            return groupMetadata[b].year - groupMetadata[a].year;
+          }
+          return groupMetadata[a].name.localeCompare(groupMetadata[b].name);
+        } else {
+          if (currentSort === 'year') {
+             if (groupMetadata[b].year !== groupMetadata[a].year) {
+                return groupMetadata[b].year - groupMetadata[a].year;
+             }
+             return groupMetadata[a].name.localeCompare(groupMetadata[b].name);
+          } else {
+             return groupMetadata[a].name.localeCompare(groupMetadata[b].name);
+          }
+        }
       });
     %>
 
     <% if (awards.length === 0) { %>
       <div class="card glass-card" style="padding: 2rem; text-align: center; color: var(--text-muted);">
-        No awards found for this year.
+        No awards found for this selection.
       </div>
     <% } else { %>
-      <% Object.keys(groupedAwards).forEach((key, index) => { 
-           const eventAwards = groupedAwards[key];
-           const eventName = eventAwards[0].event_name;
-           const eventYear = eventAwards[0].event_year;
+      <% sortedGroupKeys.forEach((key, index) => { 
+           const groupAwards = groupedAwards[key];
+           let displayName = "";
+           let displaySubtitle = "";
+           if (currentView === 'events') {
+             displayName = groupMetadata[key].name;
+             displaySubtitle = `(${groupMetadata[key].year})`;
+           } else {
+             displayName = groupMetadata[key].name;
+             if (currentSort === 'year' || selectedYear === 'all') {
+                displaySubtitle = `(Latest: ${groupMetadata[key].year})`;
+             }
+           }
       %>
         <div class="card glass-card" style="margin-bottom: 1rem; overflow: hidden; padding: 0;">
           <div 
@@ -114,10 +203,10 @@
             onclick="const t = document.getElementById('table-<%= index %>'); const i = document.getElementById('icon-<%= index %>'); if(t.style.display==='none'){t.style.display='block'; i.innerText='▲';}else{t.style.display='none'; i.innerText='▼';}"
           >
             <div>
-              <h3 style="margin: 0; font-size: 1.1rem;"><%= eventName %> <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: normal;">(<%= eventYear %>)</span></h3>
+              <h3 style="margin: 0; font-size: 1.1rem;"><%= displayName %> <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: normal;"><%= displaySubtitle %></span></h3>
             </div>
             <div>
-              <span class="badge" style="background: rgba(236, 72, 153, 0.2); color: #f472b6;"><%= eventAwards.length %> Awards</span>
+              <span class="badge" style="background: rgba(236, 72, 153, 0.2); color: #f472b6;"><%= groupAwards.length %> Awards</span>
               <span id="icon-<%= index %>" style="margin-left: 0.5rem; color: var(--text-muted); font-size: 0.8rem;">▼</span>
             </div>
           </div>
@@ -126,7 +215,12 @@
             <table class="premium-table" style="width: 100%; min-width: 800px; margin: 0; border-top: none;">
               <thead>
                 <tr>
-                  <th>Performance Name</th>
+                  <% if (currentView !== 'events') { %>
+                    <th>Event (Year)</th>
+                  <% } %>
+                  <% if (currentView !== 'routines') { %>
+                    <th>Performance Name</th>
+                  <% } %>
                   <th>Place</th>
                   <th>Type & Category</th>
                   <th>Primary Dancer</th>
@@ -136,8 +230,16 @@
                 </tr>
               </thead>
               <tbody>
-                <% eventAwards.forEach(function(award) { %>
+                <% groupAwards.forEach(function(award) { %>
                   <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                    <% if (currentView !== 'events') { %>
+                    <td>
+                      <span style="font-weight: 500;"><%= award.event_name %></span>
+                      <div style="font-size: 0.8rem; color: var(--text-muted);"><%= award.event_year %></div>
+                    </td>
+                    <% } %>
+                    
+                    <% if (currentView !== 'routines') { %>
                     <td>
                       <% if (award.performance_name) { %>
                         <%= award.performance_name %>
@@ -148,6 +250,7 @@
                         <span style="color: var(--text-muted); font-style: italic;">Missing</span>
                       <% } %>
                     </td>
+                    <% } %>
                     
                     <td>
                       <% const formattedPlace = formatPlacement(award); %>

@@ -1687,21 +1687,26 @@ app.get('/manage/studio/:id/awards', requireAuth, async (req, res) => {
   `, [req.params.id]);
   const availableYears = yearsResult.map(r => r.year);
 
-  let selectedYear = req.query.year ? parseInt(req.query.year) : null;
+  let selectedYear = req.query.year || null;
   if (!selectedYear && availableYears.length > 0) {
     selectedYear = availableYears[0];
+  } else if (selectedYear !== 'all') {
+    selectedYear = parseInt(selectedYear);
   }
 
   let awards = [];
   if (selectedYear) {
+    let yearClause = selectedYear === 'all' ? '' : 'AND e.year = ?';
+    let params = selectedYear === 'all' ? [req.params.id] : [req.params.id, selectedYear];
+    
     awards = await db.all(`
       SELECT a.*, d.name as dancer_name, e.name as event_name, e.year as event_year 
       FROM awards a
       LEFT JOIN dancers d ON a.dancer_id = d.id
       LEFT JOIN events e ON a.event_id = e.id
-      WHERE a.studio_id = ? AND e.year = ?
+      WHERE a.studio_id = ? ${yearClause}
       ORDER BY e.date_string DESC
-    `, [req.params.id, selectedYear]);
+    `, params);
   }
 
   const studioDancers = await db.all(`
@@ -1714,14 +1719,17 @@ app.get('/manage/studio/:id/awards', requireAuth, async (req, res) => {
 
   let awardDancers = [];
   if (selectedYear) {
+    let yearClause = selectedYear === 'all' ? '' : 'AND e.year = ?';
+    let params = selectedYear === 'all' ? [req.params.id] : [req.params.id, selectedYear];
+
     awardDancers = await db.all(`
       SELECT ad.award_id, d.id as dancer_id, d.name 
       FROM award_dancers ad
       JOIN dancers d ON ad.dancer_id = d.id
       JOIN awards a ON ad.award_id = a.id
       JOIN events e ON a.event_id = e.id
-      WHERE a.studio_id = ? AND e.year = ?
-    `, [req.params.id, selectedYear]);
+      WHERE a.studio_id = ? ${yearClause}
+    `, params);
   }
 
   const groupedDancers = {};
@@ -1730,7 +1738,19 @@ app.get('/manage/studio/:id/awards', requireAuth, async (req, res) => {
     groupedDancers[row.award_id].push({ id: row.dancer_id, name: row.name });
   }
 
-  res.render('manage_studio_awards', { studio, awards, studioDancers, groupedDancers, availableYears, selectedYear });
+  const currentView = req.query.view || 'events';
+  const currentSort = req.query.sort || 'name';
+
+  res.render('manage_studio_awards', { 
+    studio, 
+    awards, 
+    studioDancers, 
+    groupedDancers, 
+    availableYears, 
+    selectedYear, 
+    currentView, 
+    currentSort 
+  });
 });
 
 app.post('/manage/studio/:id/awards/:awardId/update', requireAuth, async (req, res) => {

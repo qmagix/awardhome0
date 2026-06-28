@@ -12,7 +12,7 @@ This document outlines the core features of the Dance Awards Platform.
 - **Claim System:** Two-tiered approval (Automated Fast-Track vs Admin Review) to take ownership of a studio.
 - **Profile Customizer:** Edit bio, update logos, and link Instagram/TikTok handles.
 - **Widget Builder:** Generate copy-paste iframe code with custom color pickers to embed awards on external websites.
-- **Awards Editor:** Add existing dancers to awards, or manually input missing awards.
+- **Awards Editor:** Add existing dancers to awards, manually input missing awards, and group awards by Event, Routine, or Dancer. Includes sorting options to organize awards alphabetically by name or chronologically by the most recent year.
 - **Roster Management:** View the studio's full dancer roster and cycle the Secret Join Code.
 - **Verifications Dashboard:** Approve or deny pending award claims submitted by dancers.
 
