@@ -301,6 +301,46 @@ function requireSuperadmin(req, res, next) {
   next();
 }
 
+// Loads studio :id and verifies the logged-in user owns it (site admins pass).
+// Attaches the row as req.studio. Must run after requireAuth.
+async function requireStudioOwner(req, res, next) {
+  try {
+    const db = await openDb();
+    const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
+    if (!studio) return res.status(404).send('Studio not found');
+    const { id: userId, role } = req.session.user;
+    if (studio.owner_id !== userId && role !== 'admin' && role !== 'superadmin') {
+      return res.status(403).send('Forbidden: Not the owner');
+    }
+    req.studio = studio;
+    next();
+  } catch (err) {
+    next(err);
+  }
+}
+
+// Same for organizations. Superadmins always pass; allowAdmin: false keeps
+// regular admins out (branding/marketing are owner + superadmin only).
+// Attaches the row as req.org. Must run after requireAuth.
+function requireOrgOwner({ allowAdmin = true } = {}) {
+  return async (req, res, next) => {
+    try {
+      const db = await openDb();
+      const org = await db.get('SELECT * FROM organizations WHERE id = ?', [req.params.id]);
+      if (!org) return res.status(404).send('Organization not found');
+      const { id: userId, role } = req.session.user;
+      const hasAdminAccess = role === 'superadmin' || (allowAdmin && role === 'admin');
+      if (org.owner_id !== userId && !hasAdminAccess) {
+        return res.status(403).send('Forbidden: Not the owner');
+      }
+      req.org = org;
+      next();
+    } catch (err) {
+      next(err);
+    }
+  };
+}
+
 app.get('/claim/studio/:id', requireAuth, async (req, res) => {
   const db = await openDb();
   const studio = await db.get('SELECT id, name FROM studios WHERE id = ?', [req.params.id]);
@@ -383,14 +423,9 @@ app.post('/claim/dancer/:id', requireAuth, async (req, res) => {
 
 // Studio Management Routes
 // Organization Dashboard
-app.get('/manage/org/:id', requireAuth, async (req, res) => {
+app.get('/manage/org/:id', requireAuth, requireOrgOwner(), async (req, res) => {
   const db = await openDb();
-  const org = await db.get('SELECT * FROM organizations WHERE id = ?', [req.params.id]);
-  if (!org) return res.status(404).send('Organization not found');
-
-  if (org.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin') {
-    return res.status(403).send('Forbidden: You do not own this organization profile.');
-  }
+  const org = req.org;
 
   // Get stats
   const stats = await db.get(`
@@ -458,14 +493,9 @@ app.get('/manage/org/:id', requireAuth, async (req, res) => {
 const orgUpload = multer({ dest: 'tobeprocessed/org_uploads/' });
 const brandingUpload = multer({ dest: 'public/uploads/org_branding/' });
 
-app.post('/manage/org/:id/upload', requireAuth, orgUpload.single('results_file'), async (req, res) => {
+app.post('/manage/org/:id/upload', requireAuth, requireOrgOwner(), orgUpload.single('results_file'), async (req, res) => {
   const db = await openDb();
-  const org = await db.get('SELECT * FROM organizations WHERE id = ?', [req.params.id]);
-  if (!org) return res.status(404).send('Organization not found');
-
-  if (org.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin') {
-    return res.status(403).send('Forbidden');
-  }
+  const org = req.org;
 
   if (!req.file) {
     return res.status(400).send('No file uploaded');
@@ -482,14 +512,9 @@ app.post('/manage/org/:id/upload', requireAuth, orgUpload.single('results_file')
   res.redirect('/manage/org/' + org.id);
 });
 
-app.get('/manage/org/:id/branding', requireAuth, async (req, res) => {
+app.get('/manage/org/:id/branding', requireAuth, requireOrgOwner({ allowAdmin: false }), async (req, res) => {
   const db = await openDb();
-  const org = await db.get('SELECT * FROM organizations WHERE id = ?', [req.params.id]);
-  if (!org) return res.status(404).send('Org not found');
-
-  if (req.session.user.role !== 'superadmin' && org.owner_id !== req.session.user.id) {
-    return res.status(403).send('Unauthorized');
-  }
+  const org = req.org;
 
   // Get distinct award types (or categories if award_type is empty) for this org's events, ranked by frequency
   const awardTypes = await db.all(`
@@ -509,11 +534,9 @@ app.get('/manage/org/:id/branding', requireAuth, async (req, res) => {
   res.render('manage_org_branding', { org, awardTypes, customIcons, user: req.session.user });
 });
 
-app.post('/manage/org/:id/marketing', requireAuth, async (req, res) => {
+app.post('/manage/org/:id/marketing', requireAuth, requireOrgOwner({ allowAdmin: false }), async (req, res) => {
   const db = await openDb();
-  const org = await db.get('SELECT * FROM organizations WHERE id = ?', [req.params.id]);
-  if (!org) return res.status(404).send('Org not found');
-  if (req.session.user.role !== 'superadmin' && org.owner_id !== req.session.user.id) return res.status(403).send('Unauthorized');
+  const org = req.org;
 
   const { description, slogan } = req.body;
 
@@ -522,11 +545,9 @@ app.post('/manage/org/:id/marketing', requireAuth, async (req, res) => {
   res.redirect('/manage/org/' + org.id);
 });
 
-app.post('/manage/org/:id/branding/logo', requireAuth, brandingUpload.single('logo'), async (req, res) => {
+app.post('/manage/org/:id/branding/logo', requireAuth, requireOrgOwner({ allowAdmin: false }), brandingUpload.single('logo'), async (req, res) => {
   const db = await openDb();
-  const org = await db.get('SELECT * FROM organizations WHERE id = ?', [req.params.id]);
-  if (!org) return res.status(404).send('Org not found');
-  if (req.session.user.role !== 'superadmin' && org.owner_id !== req.session.user.id) return res.status(403).send('Unauthorized');
+  const org = req.org;
 
   if (!req.file) return res.redirect('/manage/org/' + org.id + '/branding');
 
@@ -536,11 +557,9 @@ app.post('/manage/org/:id/branding/logo', requireAuth, brandingUpload.single('lo
   res.redirect('/manage/org/' + org.id + '/branding');
 });
 
-app.post('/manage/org/:id/branding/logo-settings', requireAuth, async (req, res) => {
+app.post('/manage/org/:id/branding/logo-settings', requireAuth, requireOrgOwner({ allowAdmin: false }), async (req, res) => {
   const db = await openDb();
-  const org = await db.get('SELECT * FROM organizations WHERE id = ?', [req.params.id]);
-  if (!org) return res.status(404).send('Org not found');
-  if (req.session.user.role !== 'superadmin' && org.owner_id !== req.session.user.id) return res.status(403).send('Unauthorized');
+  const org = req.org;
 
   let customIcons = {};
   if (org.custom_icons) {
@@ -557,11 +576,9 @@ app.post('/manage/org/:id/branding/logo-settings', requireAuth, async (req, res)
   res.redirect('/manage/org/' + org.id + '/branding');
 });
 
-app.post('/manage/org/:id/branding/icon', requireAuth, brandingUpload.single('icon'), async (req, res) => {
+app.post('/manage/org/:id/branding/icon', requireAuth, requireOrgOwner({ allowAdmin: false }), brandingUpload.single('icon'), async (req, res) => {
   const db = await openDb();
-  const org = await db.get('SELECT * FROM organizations WHERE id = ?', [req.params.id]);
-  if (!org) return res.status(404).send('Org not found');
-  if (req.session.user.role !== 'superadmin' && org.owner_id !== req.session.user.id) return res.status(403).send('Unauthorized');
+  const org = req.org;
 
   const { icon_class, icon_key } = req.body;
   if (!icon_class) return res.status(400).send('Icon class required');
@@ -591,11 +608,9 @@ app.post('/manage/org/:id/branding/icon', requireAuth, brandingUpload.single('ic
   res.redirect('/manage/org/' + org.id + '/branding');
 });
 
-app.post('/manage/org/:id/branding/icon/delete', requireAuth, async (req, res) => {
+app.post('/manage/org/:id/branding/icon/delete', requireAuth, requireOrgOwner({ allowAdmin: false }), async (req, res) => {
   const db = await openDb();
-  const org = await db.get('SELECT * FROM organizations WHERE id = ?', [req.params.id]);
-  if (!org) return res.status(404).send('Org not found');
-  if (req.session.user.role !== 'superadmin' && org.owner_id !== req.session.user.id) return res.status(403).send('Unauthorized');
+  const org = req.org;
 
   const { icon_class, icon_key } = req.body;
   let customIcons = {};
@@ -619,12 +634,9 @@ app.post('/manage/org/:id/branding/icon/delete', requireAuth, async (req, res) =
   res.redirect('/manage/org/' + org.id + '/branding');
 });
 
-app.get('/manage/studio/:id', requireAuth, async (req, res) => {
+app.get('/manage/studio/:id', requireAuth, requireStudioOwner, async (req, res) => {
   const db = await openDb();
-  let studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
-
-  if (!studio) return res.status(404).send('Studio not found');
-  if (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin') return res.status(403).send('Forbidden: Not the owner');
+  let studio = req.studio;
 
   if (!studio.join_code) {
     const crypto = require('crypto');
@@ -659,13 +671,8 @@ app.get('/manage/studio/:id', requireAuth, async (req, res) => {
   res.render('manage_studio', { studio, potentialDuplicates });
 });
 
-app.post('/manage/studio/:id/reset-code', requireAuth, async (req, res) => {
+app.post('/manage/studio/:id/reset-code', requireAuth, requireStudioOwner, async (req, res) => {
   const db = await openDb();
-  // Ensure user owns this studio
-  if (req.session.user.role !== 'superadmin') {
-    const studio = await db.get('SELECT id FROM studios WHERE id = ? AND owner_id = ?', [req.params.id, req.session.user.id]);
-    if (!studio) return res.status(403).send('Forbidden');
-  }
 
   // Generate new 6-character code
   const crypto = require('crypto');
@@ -675,13 +682,11 @@ app.post('/manage/studio/:id/reset-code', requireAuth, async (req, res) => {
   res.redirect(`/manage/studio/${req.params.id}`);
 });
 
-app.post('/manage/studio/:id/profile', requireAuth, async (req, res) => {
+app.post('/manage/studio/:id/profile', requireAuth, requireStudioOwner, async (req, res) => {
   const { name, website_url, email, phone, logo_url, bio, instagram_handle, tiktok_handle } = req.body;
   const db = await openDb();
 
-  const studio = await db.get('SELECT owner_id FROM studios WHERE id = ?', [req.params.id]);
-  if (!studio) return res.status(404).send('Studio not found');
-  if (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin') return res.status(403).send('Forbidden: Not the owner');
+  const studio = req.studio;
 
   const prefs = {
     show_total_awards: req.body.show_total_awards === 'on',
@@ -724,11 +729,9 @@ app.post('/manage/studio/:id/profile', requireAuth, async (req, res) => {
   res.render('manage_studio', { studio: updatedStudio, potentialDuplicates, success: 'Profile updated successfully!' });
 });
 
-app.get('/manage/studio/:id/roster/export', requireAuth, async (req, res) => {
+app.get('/manage/studio/:id/roster/export', requireAuth, requireStudioOwner, async (req, res) => {
   const db = await openDb();
-  const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
-  if (!studio) return res.status(404).send('Studio not found');
-  if (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin') return res.status(403).send('Forbidden');
+  const studio = req.studio;
 
   const roster = await db.all(`
     SELECT d.name, d.unique_id, d.birthday, ds.status, ds.graduation_year,
@@ -753,11 +756,9 @@ app.get('/manage/studio/:id/roster/export', requireAuth, async (req, res) => {
   res.send(csvContent);
 });
 
-app.get('/manage/studio/:id/roster', requireAuth, async (req, res) => {
+app.get('/manage/studio/:id/roster', requireAuth, requireStudioOwner, async (req, res) => {
   const db = await openDb();
-  const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
-  if (!studio) return res.status(404).send('Studio not found');
-  if (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin') return res.status(403).send('Forbidden: Not the owner');
+  const studio = req.studio;
 
   const roster = await db.all(`
     SELECT d.id, d.unique_id, d.name, d.birthday, ds.status, ds.headshot_url, ds.graduation_year,
@@ -819,12 +820,11 @@ app.get('/manage/studio/:id/roster', requireAuth, async (req, res) => {
   res.render('manage_studio_roster', { studio, roster, duplicateSets });
 });
 
-app.post('/manage/studio/:id/roster/:dancerId/update', requireAuth, async (req, res) => {
+app.post('/manage/studio/:id/roster/:dancerId/update', requireAuth, requireStudioOwner, async (req, res) => {
   const { headshot_url, graduation_year, status, birthday } = req.body;
   const db = await openDb();
 
-  const studio = await db.get('SELECT owner_id FROM studios WHERE id = ?', [req.params.id]);
-  if (!studio || (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) return res.status(403).send('Forbidden');
+  const studio = req.studio;
 
   await db.run(`
     UPDATE dancer_studios 
@@ -839,14 +839,11 @@ app.post('/manage/studio/:id/roster/:dancerId/update', requireAuth, async (req, 
   res.redirect(`/manage/studio/${req.params.id}/roster`);
 });
 
-app.post('/manage/studio/:id/roster/:dancerId/toggle-status', requireAuth, async (req, res) => {
+app.post('/manage/studio/:id/roster/:dancerId/toggle-status', requireAuth, requireStudioOwner, async (req, res) => {
   const { new_status } = req.body;
   const db = await openDb();
 
-  const studio = await db.get('SELECT owner_id FROM studios WHERE id = ?', [req.params.id]);
-  if (!studio || (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) {
-    return res.status(403).json({ error: 'Forbidden' });
-  }
+  const studio = req.studio;
 
   if (new_status !== 'active' && new_status !== 'alumni') {
     return res.status(400).json({ error: 'Invalid status' });
@@ -866,12 +863,11 @@ app.post('/manage/studio/:id/roster/:dancerId/toggle-status', requireAuth, async
   }
 });
 
-app.post('/manage/studio/:id/awards/self-report', requireAuth, async (req, res) => {
+app.post('/manage/studio/:id/awards/self-report', requireAuth, requireStudioOwner, async (req, res) => {
   const { event_name, year, category, age_division, performance_name, place, dancer_ids } = req.body;
   const db = await openDb();
 
-  const studio = await db.get('SELECT owner_id FROM studios WHERE id = ?', [req.params.id]);
-  if (!studio || (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) return res.status(403).send('Forbidden');
+  const studio = req.studio;
 
   // Create a dummy event for self-reported awards if we don't have a structured one
   await db.run('INSERT INTO events (name, year, org_id) VALUES (?, ?, NULL)', [event_name, year]);
@@ -894,12 +890,11 @@ app.post('/manage/studio/:id/awards/self-report', requireAuth, async (req, res) 
   res.redirect(`/manage/studio/${req.params.id}/awards?year=${year}`);
 });
 
-app.post('/manage/studio/:id/awards/csv-preview', requireAuth, upload.single('csvFile'), async (req, res) => {
+app.post('/manage/studio/:id/awards/csv-preview', requireAuth, requireStudioOwner, upload.single('csvFile'), async (req, res) => {
   if (!req.file) return res.status(400).send('No file uploaded');
   const db = await openDb();
 
-  const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
-  if (!studio || (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) return res.status(403).send('Forbidden');
+  const studio = req.studio;
 
   try {
     const fileContent = fs.readFileSync(req.file.path, 'utf-8');
@@ -965,12 +960,11 @@ app.post('/manage/studio/:id/awards/csv-preview', requireAuth, upload.single('cs
   }
 });
 
-app.post('/manage/studio/:id/awards/csv-commit', requireAuth, async (req, res) => {
+app.post('/manage/studio/:id/awards/csv-commit', requireAuth, requireStudioOwner, async (req, res) => {
   const { preview_data } = req.body;
   const db = await openDb();
 
-  const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
-  if (!studio || (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) return res.status(403).send('Forbidden');
+  const studio = req.studio;
 
   if (preview_data) {
     let rows = [];
@@ -1058,12 +1052,11 @@ app.get('/api/dancers/search', requireAuth, async (req, res) => {
   res.json(dancers);
 });
 
-app.post('/manage/studio/:id/roster/merge', requireAuth, async (req, res) => {
+app.post('/manage/studio/:id/roster/merge', requireAuth, requireStudioOwner, async (req, res) => {
   const { primary_id, duplicate_id } = req.body;
   const db = await openDb();
 
-  const studio = await db.get('SELECT owner_id FROM studios WHERE id = ?', [req.params.id]);
-  if (!studio || (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) return res.status(403).send('Forbidden');
+  const studio = req.studio;
 
   if (!primary_id || !duplicate_id || primary_id === duplicate_id) {
     return res.status(400).send('Invalid merge parameters');
@@ -1101,12 +1094,11 @@ app.post('/manage/studio/:id/roster/merge', requireAuth, async (req, res) => {
 });
 
 // Clean Duplicate Set (1-Click Merge)
-app.post('/manage/studio/:id/roster/clean-duplicate-set', requireAuth, async (req, res) => {
+app.post('/manage/studio/:id/roster/clean-duplicate-set', requireAuth, requireStudioOwner, async (req, res) => {
   const { duplicate_name } = req.body;
   const db = await openDb();
 
-  const studio = await db.get('SELECT owner_id FROM studios WHERE id = ?', [req.params.id]);
-  if (!studio || (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) return res.status(403).json({ error: 'Forbidden' });
+  const studio = req.studio;
 
   if (!duplicate_name) return res.status(400).json({ error: 'Missing name' });
 
@@ -1156,12 +1148,11 @@ app.post('/manage/studio/:id/roster/clean-duplicate-set', requireAuth, async (re
 });
 
 // Ignore Duplicate Set
-app.post('/manage/studio/:id/roster/ignore-duplicate-set', requireAuth, async (req, res) => {
+app.post('/manage/studio/:id/roster/ignore-duplicate-set', requireAuth, requireStudioOwner, async (req, res) => {
   const { duplicate_name } = req.body;
   const db = await openDb();
 
-  const studio = await db.get('SELECT owner_id FROM studios WHERE id = ?', [req.params.id]);
-  if (!studio || (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) return res.status(403).json({ error: 'Forbidden' });
+  const studio = req.studio;
 
   if (!duplicate_name) return res.status(400).json({ error: 'Missing name' });
 
@@ -1174,10 +1165,9 @@ app.post('/manage/studio/:id/roster/ignore-duplicate-set', requireAuth, async (r
   }
 });
 
-app.post('/manage/studio/:id/roster/csv-preview', requireAuth, upload.single('roster_csv'), async (req, res) => {
+app.post('/manage/studio/:id/roster/csv-preview', requireAuth, requireStudioOwner, upload.single('roster_csv'), async (req, res) => {
   const db = await openDb();
-  const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
-  if (!studio || (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) return res.status(403).send('Forbidden');
+  const studio = req.studio;
 
   if (!req.file) return res.status(400).send('No file uploaded');
 
@@ -1235,13 +1225,12 @@ app.post('/manage/studio/:id/roster/csv-preview', requireAuth, upload.single('ro
   }
 });
 
-app.post('/manage/studio/:id/roster/csv-commit', requireAuth, async (req, res) => {
+app.post('/manage/studio/:id/roster/csv-commit', requireAuth, requireStudioOwner, async (req, res) => {
   const { resolution_data } = req.body;
   // resolution_data will be an array of { action: 'create'|'link'|'skip', dancer_id: ID_if_link, csv_row: {name, birthday, graduation_year, status} }
 
   const db = await openDb();
-  const studio = await db.get('SELECT owner_id FROM studios WHERE id = ?', [req.params.id]);
-  if (!studio || (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) return res.status(403).send('Forbidden');
+  const studio = req.studio;
 
   let parsedData;
   try {
@@ -1291,12 +1280,11 @@ app.post('/manage/studio/:id/roster/csv-commit', requireAuth, async (req, res) =
   }
 });
 
-app.post('/manage/studio/:id/roster/claim', requireAuth, async (req, res) => {
+app.post('/manage/studio/:id/roster/claim', requireAuth, requireStudioOwner, async (req, res) => {
   const { claim_unique_id, new_dancer_name, birthday } = req.body;
   const db = await openDb();
 
-  const studio = await db.get('SELECT owner_id FROM studios WHERE id = ?', [req.params.id]);
-  if (!studio || (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) return res.status(403).send('Forbidden');
+  const studio = req.studio;
 
   let finalDancerId = null;
 
@@ -1321,12 +1309,9 @@ app.post('/manage/studio/:id/roster/claim', requireAuth, async (req, res) => {
   res.redirect(`/manage/studio/${req.params.id}/roster`);
 });
 
-app.get('/manage/studio/:id/verifications', requireAuth, async (req, res) => {
+app.get('/manage/studio/:id/verifications', requireAuth, requireStudioOwner, async (req, res) => {
   const db = await openDb();
-  const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
-
-  if (!studio) return res.status(404).send('Studio not found');
-  if (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin') return res.status(403).send('Forbidden: Not the owner');
+  const studio = req.studio;
 
   const pendingAwards = await db.all(`
     SELECT ad.id as link_id, ad.award_id, d.name as dancer_name, d.unique_id, a.performance_name, a.award_type, e.name as event_name, e.year
@@ -1347,10 +1332,9 @@ app.get('/manage/studio/:id/verifications', requireAuth, async (req, res) => {
   res.render('manage_studio_verifications', { studio, pendingAwards, pendingRoster });
 });
 
-app.post('/manage/studio/:id/verifications/award/:link_id/approve', requireAuth, async (req, res) => {
+app.post('/manage/studio/:id/verifications/award/:link_id/approve', requireAuth, requireStudioOwner, async (req, res) => {
   const db = await openDb();
-  const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
-  if (!studio || (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) return res.status(403).send('Forbidden');
+  const studio = req.studio;
 
   const link = await db.get('SELECT dancer_id FROM award_dancers WHERE id = ?', [req.params.link_id]);
   if (link) {
@@ -1361,39 +1345,35 @@ app.post('/manage/studio/:id/verifications/award/:link_id/approve', requireAuth,
   res.redirect(`/manage/studio/${studio.id}/verifications`);
 });
 
-app.post('/manage/studio/:id/verifications/award/:link_id/deny', requireAuth, async (req, res) => {
+app.post('/manage/studio/:id/verifications/award/:link_id/deny', requireAuth, requireStudioOwner, async (req, res) => {
   const db = await openDb();
-  const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
-  if (!studio || (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) return res.status(403).send('Forbidden');
+  const studio = req.studio;
 
   await db.run("DELETE FROM award_dancers WHERE id = ?", [req.params.link_id]);
   res.redirect(`/manage/studio/${studio.id}/verifications`);
 });
 
-app.post('/manage/studio/:id/verifications/roster/:link_id/approve', requireAuth, async (req, res) => {
+app.post('/manage/studio/:id/verifications/roster/:link_id/approve', requireAuth, requireStudioOwner, async (req, res) => {
   const db = await openDb();
-  const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
-  if (!studio || (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) return res.status(403).send('Forbidden');
+  const studio = req.studio;
 
   await db.run('UPDATE dancer_studios SET status = "active" WHERE id = ?', [req.params.link_id]);
 
   res.redirect(`/manage/studio/${req.params.id}/verifications`);
 });
 
-app.post('/manage/studio/:id/verifications/roster/:link_id/deny', requireAuth, async (req, res) => {
+app.post('/manage/studio/:id/verifications/roster/:link_id/deny', requireAuth, requireStudioOwner, async (req, res) => {
   const db = await openDb();
-  const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
-  if (!studio || (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) return res.status(403).send('Forbidden');
+  const studio = req.studio;
 
   await db.run('DELETE FROM dancer_studios WHERE id = ?', [req.params.link_id]);
 
   res.redirect(`/manage/studio/${req.params.id}/verifications`);
 });
 
-app.post('/api/studios/:id/verifications/bulk', requireAuth, async (req, res) => {
+app.post('/api/studios/:id/verifications/bulk', requireAuth, requireStudioOwner, async (req, res) => {
   const db = await openDb();
-  const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
-  if (!studio || (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) return res.status(403).send('Forbidden');
+  const studio = req.studio;
 
   const { type, action, linkIds } = req.body;
   if (!Array.isArray(linkIds) || linkIds.length === 0) return res.status(400).json({ error: 'Invalid linkIds' });
@@ -1433,15 +1413,10 @@ app.post('/api/studios/:id/verifications/bulk', requireAuth, async (req, res) =>
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
-app.get('/manage/studio/:id/history', requireAuth, async (req, res) => {
+app.get('/manage/studio/:id/history', requireAuth, requireStudioOwner, async (req, res) => {
   const db = await openDb();
 
-  // Verify permissions
-  const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
-  if (!studio) return res.status(404).send('Studio not found');
-  if (req.session.user.role !== 'admin' && req.session.user.role !== 'superadmin' && studio.owner_id !== req.session.user.id) {
-    return res.status(403).send('Forbidden');
-  }
+  const studio = req.studio;
 
   const awards = await db.all(`
     SELECT a.*, e.name as event_name, e.year as event_year, o.id as org_id, o.name as org_name, o.logo_url as org_logo_url, o.custom_icons
@@ -1547,11 +1522,9 @@ app.get('/manage/studio/:id/history', requireAuth, async (req, res) => {
   res.render('manage_studio_history', { studio, orgs });
 });
 
-app.get('/manage/studio/:id/ai-summaries', requireAuth, async (req, res) => {
+app.get('/manage/studio/:id/ai-summaries', requireAuth, requireStudioOwner, async (req, res) => {
   const db = await openDb();
-  const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
-  if (!studio) return res.status(404).send('Studio not found');
-  if (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin') return res.status(403).send('Forbidden: Not the owner');
+  const studio = req.studio;
 
   const summaries = await db.all(`
     SELECT a.*, o.name as org_name, o.logo_url as org_logo
@@ -1580,17 +1553,12 @@ app.get('/manage/studio/:id/ai-summaries', requireAuth, async (req, res) => {
   });
 });
 
-app.get('/api/studio/:id/history/org/:org_id/summary', requireAuth, async (req, res) => {
+app.get('/api/studio/:id/history/org/:org_id/summary', requireAuth, requireStudioOwner, async (req, res) => {
   const db = await openDb();
   const studioId = req.params.id;
   const orgId = req.params.org_id;
 
-  // Verify permissions
-  const studio = await db.get('SELECT * FROM studios WHERE id = ?', [studioId]);
-  if (!studio) return res.status(404).send('Studio not found');
-  if (req.session.user.role !== 'admin' && req.session.user.role !== 'superadmin' && studio.owner_id !== req.session.user.id) {
-    return res.status(403).send('Forbidden');
-  }
+  const studio = req.studio;
 
   const org = await db.get('SELECT name FROM organizations WHERE id = ?', [orgId]);
   if (!org) return res.status(404).send('Org not found');
@@ -1677,18 +1645,14 @@ app.get('/api/studio/:id/history/org/:org_id/summary', requireAuth, async (req, 
   res.json({ orgName: org.name, groups });
 });
 
-app.post('/api/studio/:id/history/org/:org_id/ai-summary', requireAuth, async (req, res) => {
+app.post('/api/studio/:id/history/org/:org_id/ai-summary', requireAuth, requireStudioOwner, async (req, res) => {
   try {
     const db = await openDb();
     const studioId = req.params.id;
     const orgId = req.params.org_id;
     const { tone, awardsList, orgName } = req.body;
 
-    const studio = await db.get('SELECT * FROM studios WHERE id = ?', [studioId]);
-    if (!studio) return res.status(404).send('Studio not found');
-    if (req.session.user.role !== 'admin' && req.session.user.role !== 'superadmin' && studio.owner_id !== req.session.user.id) {
-      return res.status(403).send('Forbidden');
-    }
+    const studio = req.studio;
 
     const awardsText = awardsList.join('\n');
     let systemPrompt = `You are an expert marketing copywriter for a competitive dance studio. Write a concise, inspiring social media caption celebrating the studio's achievements at ${orgName} based on the provided list of awards.`;
@@ -1757,11 +1721,9 @@ app.put('/api/studio/ai-summary/:id', requireAuth, async (req, res) => {
   }
 });
 
-app.get('/manage/studio/:id/awards', requireAuth, async (req, res) => {
+app.get('/manage/studio/:id/awards', requireAuth, requireStudioOwner, async (req, res) => {
   const db = await openDb();
-  const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
-  if (!studio) return res.status(404).send('Studio not found');
-  if (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin') return res.status(403).send('Forbidden: Not the owner');
+  const studio = req.studio;
 
   const yearsResult = await db.all(`
     SELECT DISTINCT e.year
@@ -1838,10 +1800,9 @@ app.get('/manage/studio/:id/awards', requireAuth, async (req, res) => {
   });
 });
 
-app.post('/manage/studio/:id/awards/:awardId/update', requireAuth, async (req, res) => {
+app.post('/manage/studio/:id/awards/:awardId/update', requireAuth, requireStudioOwner, async (req, res) => {
   const db = await openDb();
-  const studio = await db.get('SELECT owner_id FROM studios WHERE id = ?', [req.params.id]);
-  if (!studio || (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) return res.status(403).send('Forbidden');
+  const studio = req.studio;
 
   const award = await db.get('SELECT * FROM awards WHERE id = ? AND studio_id = ?', [req.params.awardId, req.params.id]);
   if (!award) return res.status(404).send('Award not found');
@@ -1868,12 +1829,9 @@ app.post('/manage/studio/:id/awards/:awardId/update', requireAuth, async (req, r
   res.redirect(`/manage/studio/${req.params.id}/awards${yearQuery}`);
 });
 
-app.post('/api/studio/:id/awards/:awardId/hall-of-fame', express.json(), requireAuth, async (req, res) => {
+app.post('/api/studio/:id/awards/:awardId/hall-of-fame', express.json(), requireAuth, requireStudioOwner, async (req, res) => {
   const db = await openDb();
-  const studio = await db.get('SELECT owner_id FROM studios WHERE id = ?', [req.params.id]);
-  if (!studio || (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) {
-    return res.status(403).json({ error: 'Forbidden' });
-  }
+  const studio = req.studio;
 
   const { status } = req.body; // expected: 1, -1, or 0
   if (![1, 0, -1].includes(status)) return res.status(400).json({ error: 'Invalid status' });
@@ -1887,10 +1845,9 @@ app.post('/api/studio/:id/awards/:awardId/hall-of-fame', express.json(), require
   }
 });
 
-app.post('/manage/studio/:id/awards/:awardId/dancers', requireAuth, async (req, res) => {
+app.post('/manage/studio/:id/awards/:awardId/dancers', requireAuth, requireStudioOwner, async (req, res) => {
   const db = await openDb();
-  const studio = await db.get('SELECT owner_id FROM studios WHERE id = ?', [req.params.id]);
-  if (!studio || (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) return res.status(403).send('Forbidden');
+  const studio = req.studio;
 
   const yearQuery = req.query.year ? `?year=${req.query.year}` : '';
   let { dancer_name } = req.body;
@@ -1920,10 +1877,9 @@ app.post('/manage/studio/:id/awards/:awardId/dancers', requireAuth, async (req, 
   res.redirect(`/manage/studio/${req.params.id}/awards${yearQuery}`);
 });
 
-app.post('/manage/studio/:id/awards/:awardId/dancers/:dancerId/remove', requireAuth, async (req, res) => {
+app.post('/manage/studio/:id/awards/:awardId/dancers/:dancerId/remove', requireAuth, requireStudioOwner, async (req, res) => {
   const db = await openDb();
-  const studio = await db.get('SELECT owner_id FROM studios WHERE id = ?', [req.params.id]);
-  if (!studio || (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin')) return res.status(403).send('Forbidden');
+  const studio = req.studio;
 
   await db.run('DELETE FROM award_dancers WHERE award_id = ? AND dancer_id = ?', [req.params.awardId, req.params.dancerId]);
 
@@ -1932,11 +1888,9 @@ app.post('/manage/studio/:id/awards/:awardId/dancers/:dancerId/remove', requireA
 });
 
 // Widget Builder UI
-app.get('/manage/studio/:id/widget', requireAuth, async (req, res) => {
+app.get('/manage/studio/:id/widget', requireAuth, requireStudioOwner, async (req, res) => {
   const db = await openDb();
-  const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
-  if (!studio) return res.status(404).send('Studio not found');
-  if (studio.owner_id !== req.session.user.id && req.session.user.role !== 'superadmin' && req.session.user.role !== 'admin') return res.status(403).send('Forbidden');
+  const studio = req.studio;
 
   res.render('manage_studio_widget', { studio });
 });

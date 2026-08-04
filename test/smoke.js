@@ -24,6 +24,8 @@ const CHECKS = [
   ['GET', '/admin', [403], 'anonymous admin dashboard blocked'],
   ['GET', '/admin/users', [403], 'anonymous user management blocked'],
   ['PUT', '/api/studio/ai-summary/1', [302], 'anonymous ai-summary edit redirected to login'],
+  ['GET', '/manage/studio/1', [302], 'anonymous studio manage redirected to login'],
+  ['GET', '/manage/org/1', [302], 'anonymous org manage redirected to login'],
   ['POST', '/resend-verification', [200], 'resend-verification responds'],
 ];
 
