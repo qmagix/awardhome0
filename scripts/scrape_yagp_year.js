@@ -1,9 +1,9 @@
 const cheerio = require('cheerio');
 const { fetchWithCache } = require('./fetch_cache');
-const { openDb } = require('./database');
+const { openDb } = require('../database');
 const crypto = require('crypto');
 const slugify = require('slugify');
-const { generateDancerId, generateStudioId } = require('./utils');
+const { generateDancerId, generateStudioId } = require('../utils');
 
 async function scrapeYagp(url, dryRun = true) {
   console.log(`Fetching YAGP Results from ${url}...`);

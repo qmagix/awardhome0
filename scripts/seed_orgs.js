@@ -1,4 +1,4 @@
-const { openDb } = require('./database');
+const { openDb } = require('../database');
 
 async function seedOrgs() {
   const db = await openDb();

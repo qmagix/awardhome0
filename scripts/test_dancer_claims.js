@@ -1,4 +1,4 @@
-const { initDb } = require('./database');
+const { initDb } = require('../database');
 const assert = require('assert');
 
 async function runTest() {

@@ -1,4 +1,4 @@
-const { openDb } = require('./database');
+const { openDb } = require('../database');
 const crypto = require('crypto');
 const slugify = require('slugify');
 

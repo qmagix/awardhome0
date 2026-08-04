@@ -3,14 +3,14 @@ const cheerio = require('cheerio');
 const sqlite3 = require('sqlite3').verbose();
 const { promisify } = require('util');
 const crypto = require('crypto');
-const { generateDancerId, generateStudioId } = require('./utils');
+const { generateDancerId, generateStudioId } = require('../utils');
 // Promisify SQLite methods
 const db = new sqlite3.Database('./database.sqlite');
 db.runAsync = promisify(db.run.bind(db));
 db.getAsync = promisify(db.get.bind(db));
 db.allAsync = promisify(db.all.bind(db));
 
-async function getOrCreateOrg(orgName = 'Starpower Talent Competition') {
+async function getOrCreateOrg(orgName = 'Revolution Talent Competition') {
   const name = orgName;
   let org = await db.getAsync('SELECT * FROM organizations WHERE name = ?', [name]);
   if (!org) {
@@ -27,7 +27,7 @@ async function getOrCreateEvent(orgId, url, dateString, location) {
     // Attempt to extract year from date string (e.g. "April 17, 2026")
     const yearMatch = dateString.match(/\b(20[1-3][0-9])\b/);
     const year = yearMatch ? parseInt(yearMatch[1]) : new Date().getFullYear();
-    const name = `Starpower - ${location}`;
+    const name = `Revolution Talent - ${location}`;
     await db.runAsync('INSERT INTO events (org_id, name, year, date_string, url) VALUES (?, ?, ?, ?, ?)', [orgId, name, year, dateString, url]);
     event = await db.getAsync('SELECT * FROM events WHERE url = ? AND org_id = ?', [url, orgId]);
   }
@@ -48,7 +48,7 @@ async function getOrCreateStudio(studioName) {
 }
 
 async function run() {
-  const url = process.argv[2] || 'https://db-all-prod-p.s3.us-east-2.amazonaws.com/comps/327/117917/results-all-results.html';
+  const url = process.argv[2] || 'https://db-all-prod-p.s3.us-east-2.amazonaws.com/comps/326/118057/results-all-results--1-.html';
   const passedLocation = process.argv[3];
   
   console.log(`Fetching ${url}...`);
@@ -72,7 +72,7 @@ async function run() {
   console.log(`Event metadata: ${locationDateStr}`);
 
   // 2. Look up Org and Event
-  const org = await getOrCreateOrg('Starpower Talent Competition');
+  const org = await getOrCreateOrg();
   const event = await getOrCreateEvent(org.id, url, locationDateStr, locationDateStr.split('20')[0].trim()); // Rough heuristic for location name
   console.log(`Event DB Record ID: ${event.id} (Year: ${event.year})`);
 

@@ -1,16 +1,16 @@
+const axios = require('axios');
 const cheerio = require('cheerio');
 const sqlite3 = require('sqlite3').verbose();
-const { fetchWithCache } = require('./fetch_cache');
 const { promisify } = require('util');
 const crypto = require('crypto');
-const { generateDancerId, generateStudioId } = require('./utils');
+const { generateDancerId, generateStudioId } = require('../utils');
 // Promisify SQLite methods
 const db = new sqlite3.Database('./database.sqlite');
 db.runAsync = promisify(db.run.bind(db));
 db.getAsync = promisify(db.get.bind(db));
 db.allAsync = promisify(db.all.bind(db));
 
-async function getOrCreateOrg(orgName) {
+async function getOrCreateOrg(orgName = 'Starpower Talent Competition') {
   const name = orgName;
   let org = await db.getAsync('SELECT * FROM organizations WHERE name = ?', [name]);
   if (!org) {
@@ -21,14 +21,13 @@ async function getOrCreateOrg(orgName) {
   return org;
 }
 
-async function getOrCreateEvent(orgId, orgName, url, dateString, location) {
+async function getOrCreateEvent(orgId, url, dateString, location) {
   let event = await db.getAsync('SELECT * FROM events WHERE url = ? AND org_id = ?', [url, orgId]);
   if (!event) {
-    // Use explicitly passed year if available, otherwise try to extract it from date string
-    const explicitYear = parseInt(process.argv[5]);
+    // Attempt to extract year from date string (e.g. "April 17, 2026")
     const yearMatch = dateString.match(/\b(20[1-3][0-9])\b/);
-    const year = explicitYear || (yearMatch ? parseInt(yearMatch[1]) : new Date().getFullYear());
-    const name = `${orgName} - ${location}`;
+    const year = yearMatch ? parseInt(yearMatch[1]) : new Date().getFullYear();
+    const name = `Starpower - ${location}`;
     await db.runAsync('INSERT INTO events (org_id, name, year, date_string, url) VALUES (?, ?, ?, ?, ?)', [orgId, name, year, dateString, url]);
     event = await db.getAsync('SELECT * FROM events WHERE url = ? AND org_id = ?', [url, orgId]);
   }
@@ -49,29 +48,11 @@ async function getOrCreateStudio(studioName) {
 }
 
 async function run() {
-  const url = process.argv[2];
+  const url = process.argv[2] || 'https://db-all-prod-p.s3.us-east-2.amazonaws.com/comps/327/117917/results-all-results.html';
   const passedLocation = process.argv[3];
-  const passedOrgName = process.argv[4];
-  
-  if (!url || !passedLocation || !passedOrgName) {
-    console.error("Usage: node import_dancebug_awards.js <url> <locationDateStr> <orgName>");
-    process.exit(1);
-  }
   
   console.log(`Fetching ${url}...`);
-  let data;
-  try {
-    const orgSlug = passedOrgName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    const explicitYear = parseInt(process.argv[5]);
-    const yearMatch = passedLocation ? passedLocation.match(/\b(20[1-3][0-9])\b/) : null;
-    const resolvedYear = explicitYear || (yearMatch ? parseInt(yearMatch[1]) : new Date().getFullYear());
-    const response = await fetchWithCache(url, orgSlug, resolvedYear);
-    data = response.data;
-  } catch (err) {
-    console.error(`Failed to fetch ${url} - Status: ${err.response ? err.response.status : 'Unknown'} - Error: ${err.message} (${err.code})`);
-    console.error(err);
-    process.exit(1);
-  }
+  const { data } = await axios.get(url);
   const $ = cheerio.load(data);
   
   // Sanitize DOM
@@ -91,8 +72,8 @@ async function run() {
   console.log(`Event metadata: ${locationDateStr}`);
 
   // 2. Look up Org and Event
-  const org = await getOrCreateOrg(passedOrgName);
-  const event = await getOrCreateEvent(org.id, passedOrgName, url, locationDateStr, locationDateStr.split('20')[0].trim()); // Rough heuristic for location name
+  const org = await getOrCreateOrg('Starpower Talent Competition');
+  const event = await getOrCreateEvent(org.id, url, locationDateStr, locationDateStr.split('20')[0].trim()); // Rough heuristic for location name
   console.log(`Event DB Record ID: ${event.id} (Year: ${event.year})`);
 
   // 3. Parse Categories
@@ -171,7 +152,7 @@ async function run() {
           
           // Idempotency check: Only insert if it doesn't already exist
           const existingAward = await db.getAsync(
-            'SELECT id FROM awards WHERE event_id = ? AND category = ? AND performance_name = ? AND IFNULL(place, "") = IFNULL(?, "")',
+            'SELECT id FROM awards WHERE event_id = ? AND category = ? AND performance_name = ? AND place = ?',
             [event.id, categoryTitle, routine, place]
           );
 
@@ -208,7 +189,7 @@ async function run() {
             const studioId = studio ? studio.id : null;
 
             let award = await db.getAsync(
-              'SELECT id FROM awards WHERE event_id = ? AND category = ? AND performance_name = ? AND IFNULL(place, "") = IFNULL(?, "")',
+              'SELECT id FROM awards WHERE event_id = ? AND category = ? AND performance_name = ? AND place = ?',
               [event.id, categoryTitle, routine, 'Winner']
             );
 

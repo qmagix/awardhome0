@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { sendEmail } = require('./utils/mailer');
+const { sendEmail } = require('../utils/mailer');
 
 async function testEmail() {
   const provider = (process.env.EMAIL_PROVIDER || 'gmail').toLowerCase();

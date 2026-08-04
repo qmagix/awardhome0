@@ -1,65 +1,42 @@
+const axios = require('axios');
 const cheerio = require('cheerio');
-const { fetchWithCache } = require('./fetch_cache');
-const { openDb } = require('./database');
+const { openDb } = require('../database');
 const crypto = require('crypto');
 const slugify = require('slugify');
-const { generateDancerId, generateStudioId } = require('./utils');
+const { generateDancerId, generateStudioId } = require('../utils');
 
-async function scrapeRainbow(url, year = 2026) {
-  if (!url) {
-    url = `https://rainbowdance.com/results/${year}/824`;
-  }
+async function scrapeDanceKar() {
+  const url = 'https://dancekar.com/competition/results/2026/1900';
   console.log(`Fetching data from ${url}...`);
-  const { data } = await fetchWithCache(url, 'rainbow', year);
+  const { data } = await axios.get(url);
   const $ = cheerio.load(data);
   const db = await openDb();
 
-  let org = await db.get(`SELECT id FROM organizations WHERE slug = ?`, ['rainbow']);
+  // 1. Seed Organization
+  let org = await db.get(`SELECT id FROM organizations WHERE slug = ?`, ['kar']);
   if (!org) {
-    console.error("Rainbow organization not found. Please run seed_orgs.js first.");
-    return;
+    const res = await db.run(`INSERT INTO organizations (name, slug, website) VALUES (?, ?, ?)`, ['KAR Dance Competition', 'kar', 'https://dancekar.com']);
+    org = { id: res.lastID };
   }
 
+  // 2. Seed Event
   let event = await db.get(`SELECT id FROM events WHERE url = ?`, [url]);
   if (!event) {
-    // Extract title
-    const titleText = $('title').text() || 'Rainbow San Jose, CA';
-    let eventName = 'San Jose, CA';
-    let dateStr = '3/20/2026';
-    
-    // Parse title: Rainbow Dance Competition | San Jose, CA - 3/20/2026  Results & Highlights
-    const parts = titleText.split('|');
-    if (parts.length > 1) {
-       const subparts = parts[1].split('Results');
-       const locDate = subparts[0].trim();
-       const locDateParts = locDate.split(' - ');
-       if (locDateParts.length > 1) {
-           eventName = locDateParts[0].trim();
-           dateStr = locDateParts[1].trim();
-       } else {
-           eventName = locDate;
-       }
+    let eventName = 'Hayward, CA - 2/13/2026';
+    if (!eventName.toLowerCase().startsWith('kar')) {
+      eventName = `KAR - ${eventName}`;
     }
-
-    if (!eventName.toLowerCase().startsWith('rainbow')) {
-      eventName = `Rainbow - ${eventName}`;
-    }
-    const res = await db.run(`INSERT INTO events (org_id, name, year, date_string, url) VALUES (?, ?, ?, ?, ?)`, [org.id, eventName, year, dateStr, url]);
+    const res = await db.run(`INSERT INTO events (org_id, name, year, date_string, url) VALUES (?, ?, ?, ?, ?)`, [org.id, eventName, 2026, '2/13/2026', url]);
     event = { id: res.lastID };
   }
 
-  const tables = $('table');
+  const tables = $('table.table-bordered');
   console.log(`Found ${tables.length} tables to process.`);
 
   for (let i = 0; i < tables.length; i++) {
     const table = tables.eq(i);
     const categoryContainer = table.prev();
     const awardType = categoryContainer.text().trim() || 'Unknown Award Type';
-    
-    // Skip empty tables or tables that don't look like results
-    if (!awardType || awardType === 'Unknown Award Type' || table.find('thead th').length === 0) {
-      continue;
-    }
     
     // Parse headers to find column indices
     const headers = table.find('thead th').map((i, el) => $(el).text().trim()).get();
@@ -111,7 +88,7 @@ async function scrapeRainbow(url, year = 2026) {
 
       if (!studioName) continue;
 
-      // Ensure studio exists
+      // 3. Ensure studio exists (with unique_id)
       let studio = await db.get(`SELECT id FROM studios WHERE name = ?`, [studioName]);
       if (!studio) {
         const studioUuid = generateStudioId(studioName);
@@ -120,7 +97,7 @@ async function scrapeRainbow(url, year = 2026) {
       }
 
       let dancerId = null;
-      // Handle Dancer if it's a solo
+      // 4. Handle Dancer if it's a solo
       if (awardType.toLowerCase().includes('solo') && dancerNames) {
         let dancer = await db.get(`
           SELECT d.id FROM dancers d
@@ -134,36 +111,22 @@ async function scrapeRainbow(url, year = 2026) {
         }
         dancerId = dancer.id;
 
+        // 5. Ensure dancer_studios pivot exists
         const pivot = await db.get(`SELECT id FROM dancer_studios WHERE dancer_id = ? AND studio_id = ?`, [dancerId, studio.id]);
         if (!pivot) {
           await db.run(`INSERT INTO dancer_studios (dancer_id, studio_id) VALUES (?, ?)`, [dancerId, studio.id]);
         }
       }
 
-      let awardClass = 'adjudication';
-      const typeLower = awardType.toLowerCase();
-      if (typeLower.includes('high score') || typeLower.includes('overall') || typeLower.includes('champion') || typeLower.includes('place')) {
-        awardClass = 'overall';
-      } else if (typeLower.includes('scholarship') || typeLower.includes('dancer of the year')) {
-        awardClass = 'scholarship';
-      } else if (typeLower.includes('title') || typeLower.includes('miss') || typeLower.includes('mr.')) {
-        awardClass = 'title';
-      } else if (typeLower.includes('studio') || typeLower.includes('sportsmanship')) {
-        awardClass = 'studio';
-      } else if (typeLower.includes('judges') || typeLower.includes('entertaining') || typeLower.includes('choreography')) {
-        awardClass = 'special';
-      }
-
-      // Insert award if it doesn't already exist
       const existingAward = await db.get(
-        'SELECT id FROM awards WHERE event_id = ? AND category = ? AND performance_name = ? AND IFNULL(place, "") = IFNULL(?, "") AND award_class = ?',
-        [event.id, category, perfName, place, awardClass]
+        'SELECT id FROM awards WHERE event_id = ? AND category = ? AND performance_name = ? AND IFNULL(place, "") = IFNULL(?, "")',
+        [event.id, category, perfName, place]
       );
 
       if (!existingAward) {
         await db.run(
-          `INSERT INTO awards (event_id, place, performance_name, performance_number, award_class, award_type, category, dancer_id, studio_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [event.id, place, perfName, perfNumber, awardClass, awardType, category, dancerId, studio.id]
+          `INSERT INTO awards (event_id, place, performance_name, performance_number, award_type, category, dancer_id, studio_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          [event.id, place, perfName, perfNumber, awardType, category, dancerId, studio.id]
         );
       }
     }
@@ -172,7 +135,7 @@ async function scrapeRainbow(url, year = 2026) {
 }
 
 if (require.main === module) {
-  scrapeRainbow().then(() => {
+  scrapeDanceKar().then(() => {
     process.exit(0);
   }).catch(err => {
     console.error(err);
@@ -180,4 +143,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { scrapeRainbow };
+module.exports = { scrapeDanceKar };

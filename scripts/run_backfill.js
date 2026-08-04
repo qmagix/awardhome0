@@ -1,6 +1,6 @@
 const sqlite3 = require('sqlite3').verbose();
 const { promisify } = require('util');
-const { runBackfillForEvent } = require('./backfill_utils');
+const { runBackfillForEvent } = require('../backfill_utils');
 
 const db = new sqlite3.Database('./database.sqlite');
 db.all = promisify(db.all.bind(db));

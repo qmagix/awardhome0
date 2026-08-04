@@ -15,7 +15,7 @@ echo "=========================================================="
 
 echo ""
 echo ">>> Initializing Database Schema..."
-node database.js
+node ../database.js
 
 echo ">>> Seeding Organizations..."
 node seed_orgs.js

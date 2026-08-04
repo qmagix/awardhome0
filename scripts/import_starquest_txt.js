@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { openDb } = require('./database');
+const { openDb } = require('../database');
 
 async function getOrCreateOrg(orgName = 'Starquest') {
   const db = await openDb();

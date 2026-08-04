@@ -1,4 +1,4 @@
-const { openDb, initDb } = require('./database');
+const { openDb, initDb } = require('../database');
 
 async function main() {
   const db = await initDb();
