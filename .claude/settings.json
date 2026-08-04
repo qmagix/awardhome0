@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php artisan test)",
+      "Bash(php artisan test *)",
+      "Bash(npm run test:e2e)",
+      "Bash(npx tsc --noEmit)",
+      "Bash(npx tsc --noEmit *)",
+      "Bash(npm run typecheck)",
+      "Bash(npm run test:core)",
+      "Bash(php artisan route:list)",
+      "Bash(php artisan route:list *)",
+      "mcp__Claude_Preview__preview_screenshot",
+      "mcp__Claude_Browser__read_page"
+    ]
+  }
+}
