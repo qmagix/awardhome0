@@ -13,6 +13,10 @@ const { generateDancerId, generateStudioId } = require('./utils');
 const { runBackfillForEvent } = require('./backfill_utils');
 const { OpenAI } = require('openai');
 const { sendEmail } = require('./utils/mailer');
+const crypto = require('crypto');
+
+const PORT = process.env.PORT || 3008;
+const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -24,11 +28,28 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json()); // Added for JSON parsing
 app.use(express.urlencoded({ extended: true })); // Added for form parsing
+const SESSION_SECRET = process.env.SESSION_SECRET || (() => {
+  if (process.env.NODE_ENV === 'production') {
+    console.error('FATAL: SESSION_SECRET must be set in production.');
+    process.exit(1);
+  }
+  console.warn('WARNING: SESSION_SECRET not set — using a random secret; sessions will reset on restart.');
+  return crypto.randomBytes(32).toString('hex');
+})();
+
+const SqliteSessionStore = require('./utils/sessionStore');
+app.set('trust proxy', 1);
 app.use(session({
-  secret: 'dance-awards-secret-key-123', // In production, use env variable
+  store: new SqliteSessionStore(),
+  secret: SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: false } // Set to true if using https
+  cookie: {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production', // requires HTTPS (e.g. behind Cloudflare/nginx)
+    maxAge: 7 * 24 * 60 * 60 * 1000
+  }
 }));
 
 app.locals.formatPlacement = function (award) {
@@ -133,8 +154,14 @@ app.use((req, res, next) => {
   next();
 });
 
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 15,
+  message: 'Too many attempts from this IP, please try again after 15 minutes'
+});
+
 app.get('/register', (req, res) => res.render('register'));
-app.post('/register', async (req, res) => {
+app.post('/register', authLimiter, async (req, res) => {
   const { email, password } = req.body;
   const db = await openDb();
 
@@ -144,10 +171,14 @@ app.post('/register', async (req, res) => {
   }
 
   const hash = await bcrypt.hash(password, 10);
-  await db.run(`INSERT INTO users (email, password_hash) VALUES (?, ?)`, [email, hash]);
+  const token = crypto.randomBytes(32).toString('hex');
+  const expires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+  await db.run(
+    `INSERT INTO users (email, password_hash, verification_token, verification_token_expires) VALUES (?, ?, ?, ?)`,
+    [email, hash, token, expires]
+  );
 
-  const token = Buffer.from(email + ':dance_secret').toString('base64');
-  const verifyLink = `http://localhost:3000/verify-email?token=${token}&email=${encodeURIComponent(email)}`;
+  const verifyLink = `${BASE_URL}/verify-email?token=${token}`;
 
   if (process.env.EMAIL_PROVIDER) {
     const result = await sendEmail({
@@ -166,20 +197,28 @@ app.post('/register', async (req, res) => {
 });
 
 app.get('/verify-email', async (req, res) => {
-  const { token, email } = req.query;
-  const expectedToken = Buffer.from(email + ':dance_secret').toString('base64');
+  const { token } = req.query;
+  if (!token) return res.status(400).send('Invalid token');
 
-  if (token === expectedToken) {
-    const db = await openDb();
-    await db.run('UPDATE users SET is_verified = 1 WHERE email = ?', [email]);
-    res.send('<script>alert("Email verified!"); window.location.href="/login";</script>');
-  } else {
-    res.status(400).send('Invalid token');
+  const db = await openDb();
+  const user = await db.get('SELECT id, verification_token_expires FROM users WHERE verification_token = ?', [token]);
+  if (!user) return res.status(400).send('Invalid token');
+
+  if (!user.verification_token_expires || new Date(user.verification_token_expires).getTime() < Date.now()) {
+    const expired = await db.get('SELECT email FROM users WHERE id = ?', [user.id]);
+    return res.status(400).render('login', {
+      error: 'This verification link has expired. You can request a new one below.',
+      showResend: true,
+      prefillEmail: expired ? expired.email : ''
+    });
   }
+
+  await db.run('UPDATE users SET is_verified = 1, verification_token = NULL, verification_token_expires = NULL WHERE id = ?', [user.id]);
+  res.send('<script>alert("Email verified!"); window.location.href="/login";</script>');
 });
 
 app.get('/login', (req, res) => res.render('login'));
-app.post('/login', async (req, res) => {
+app.post('/login', authLimiter, async (req, res) => {
   const { email, password } = req.body;
   const db = await openDb();
 
@@ -189,7 +228,11 @@ app.post('/login', async (req, res) => {
   }
 
   if (!user.is_verified) {
-    return res.render('login', { error: 'Please verify your email first.' });
+    return res.render('login', {
+      error: 'Please verify your email first.',
+      showResend: true,
+      prefillEmail: email
+    });
   }
 
   req.session.user = { id: user.id, email: user.email, role: user.role };
@@ -204,6 +247,37 @@ app.post('/login', async (req, res) => {
   } else {
     res.redirect('/');
   }
+});
+
+app.post('/resend-verification', authLimiter, async (req, res) => {
+  const { email } = req.body;
+  const genericMessage = 'If an unverified account exists for that email, a new verification link has been sent.';
+  if (!email) return res.render('login', { message: genericMessage });
+
+  const db = await openDb();
+  const user = await db.get('SELECT id, is_verified FROM users WHERE email = ?', [email]);
+
+  if (user && !user.is_verified) {
+    const token = crypto.randomBytes(32).toString('hex');
+    const expires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    await db.run('UPDATE users SET verification_token = ?, verification_token_expires = ? WHERE id = ?', [token, expires, user.id]);
+
+    const verifyLink = `${BASE_URL}/verify-email?token=${token}`;
+    if (process.env.EMAIL_PROVIDER) {
+      const result = await sendEmail({
+        to: email,
+        subject: 'Verify your Dance Awards Account',
+        html: `<p>Click here to verify: <a href="${verifyLink}">${verifyLink}</a></p>`
+      });
+      if (!result.success) {
+        console.error("Failed to send verification email:", result.error);
+      }
+    } else {
+      console.log(`[DEV MODE] Verification Link for ${email}: ${verifyLink}`);
+    }
+  }
+
+  res.render('login', { message: genericMessage });
 });
 
 app.get('/logout', (req, res) => {
@@ -1656,11 +1730,22 @@ app.put('/api/studio/ai-summary/:id', requireAuth, async (req, res) => {
   try {
     const db = await openDb();
     const { text } = req.body;
-    
-    if (!req.session.user) return res.status(403).send('Forbidden');
-    
+
+    const summary = await db.get(`
+      SELECT ai.id, s.owner_id
+      FROM ai_summaries ai
+      JOIN studios s ON ai.studio_id = s.id
+      WHERE ai.id = ?
+    `, [req.params.id]);
+    if (!summary) return res.status(404).json({ error: 'Summary not found' });
+
+    const { id: userId, role } = req.session.user;
+    if (summary.owner_id !== userId && role !== 'admin' && role !== 'superadmin') {
+      return res.status(403).json({ error: 'Forbidden: Not the owner' });
+    }
+
     await db.run(`
-      UPDATE ai_summaries 
+      UPDATE ai_summaries
       SET user_edited_response = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `, [text, req.params.id]);
@@ -2314,14 +2399,14 @@ app.get('/studios', async (req, res) => {
   res.render('studios', { studios, currentPage: page, totalPages, q });
 });
 
-app.post('/api/studios/:id/investigate', express.json(), async (req, res) => {
+app.post('/api/studios/:id/investigate', requireAdmin, express.json(), async (req, res) => {
   const db = await openDb();
   const { investigate } = req.body;
   await db.run(`UPDATE studios SET needs_investigation = ? WHERE id = ?`, [investigate ? 1 : 0, req.params.id]);
   res.json({ success: true });
 });
 
-app.post('/api/studios/:id/feature', express.json(), async (req, res) => {
+app.post('/api/studios/:id/feature', requireAdmin, express.json(), async (req, res) => {
   const db = await openDb();
   const { feature } = req.body;
   await db.run(`UPDATE studios SET is_featured = ? WHERE id = ?`, [feature ? 1 : 0, req.params.id]);
@@ -2363,7 +2448,7 @@ app.get('/login/impersonate/:token', async (req, res) => {
   const user = await db.get('SELECT * FROM users WHERE id = ?', [record.target_user_id]);
   if (!user) return res.status(404).send('User not found.');
 
-  req.session.user = user;
+  req.session.user = { id: user.id, email: user.email, role: user.role };
   res.redirect(record.target_url);
 });
 
@@ -2763,7 +2848,7 @@ app.get('/admin/duplicates', requireSuperadmin, async (req, res) => {
   });
 });
 
-app.get('/admin/compare/studios', async (req, res) => {
+app.get('/admin/compare/studios', requireAdmin, async (req, res) => {
   const db = await openDb();
   const { id1, id2 } = req.query;
 
@@ -2824,7 +2909,7 @@ app.get('/admin/compare/studios', async (req, res) => {
   res.render('compare_studios', { allStudios, id1, id2, s1, s2, s1Events, s2Events, s1Dancers, s2Dancers });
 });
 
-app.post('/api/merge/studios', express.json(), async (req, res) => {
+app.post('/api/merge/studios', requireAdmin, express.json(), async (req, res) => {
   const db = await openDb();
   const { sourceId, targetId } = req.body;
   if (!sourceId || !targetId || sourceId === targetId) return res.status(400).json({ error: "Invalid IDs" });
@@ -2857,7 +2942,7 @@ app.post('/api/merge/studios', express.json(), async (req, res) => {
   }
 });
 
-app.post('/api/reject-merge/studios', express.json(), async (req, res) => {
+app.post('/api/reject-merge/studios', requireAdmin, express.json(), async (req, res) => {
   const db = await openDb();
   const { sourceId, targetId } = req.body;
   if (!sourceId || !targetId) return res.status(400).json({ error: "Invalid IDs" });
@@ -2875,7 +2960,7 @@ app.post('/api/reject-merge/studios', express.json(), async (req, res) => {
   }
 });
 
-app.post('/api/merge/dancers', express.json(), async (req, res) => {
+app.post('/api/merge/dancers', requireAdmin, express.json(), async (req, res) => {
   const db = await openDb();
   const { sourceId, targetId } = req.body;
   if (!sourceId || !targetId || sourceId === targetId) return res.status(400).json({ error: "Invalid IDs" });
@@ -3414,7 +3499,7 @@ app.get('/event/:id', async (req, res) => {
   res.render('event', { event, groupedAwards });
 });
 
-app.post('/admin/backfill-dancers/:event_id', async (req, res) => {
+app.post('/admin/backfill-dancers/:event_id', requireAdmin, async (req, res) => {
   const db = await openDb();
   const eventId = req.params.event_id;
 
@@ -3608,7 +3693,6 @@ app.get('/my-feedback', requireAuth, async (req, res) => {
 });
 
 
-const PORT = process.env.PORT || 3008;
 app.listen(PORT, async (err) => {
   if (err) {
     console.error("Failed to start server:", err);
