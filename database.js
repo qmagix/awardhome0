@@ -178,6 +178,27 @@ async function initDb() {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
+    CREATE TABLE IF NOT EXISTS ai_summaries (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      studio_id INTEGER,
+      org_id INTEGER,
+      tone TEXT,
+      prompt TEXT,
+      raw_awards_json TEXT,
+      original_ai_response TEXT,
+      user_edited_response TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (studio_id) REFERENCES studios(id),
+      FOREIGN KEY (org_id) REFERENCES organizations(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS studio_duplicate_exceptions (
+      studio_id INTEGER REFERENCES studios(id),
+      dancer_name TEXT COLLATE NOCASE,
+      PRIMARY KEY (studio_id, dancer_name)
+    );
+
     CREATE TABLE IF NOT EXISTS system_settings (
       key TEXT PRIMARY KEY,
       value TEXT
@@ -214,6 +235,12 @@ async function initDb() {
   try { await db.exec("ALTER TABLE organizations ADD COLUMN slogan TEXT"); } catch(e) {}
   try { await db.exec("ALTER TABLE organizations ADD COLUMN data_since INTEGER"); } catch(e) {}
   try { await db.exec("ALTER TABLE events ADD COLUMN logo_url TEXT"); } catch(e) {}
+  try { await db.exec("ALTER TABLE users ADD COLUMN verification_token TEXT"); } catch(e) {}
+  try { await db.exec("ALTER TABLE users ADD COLUMN verification_token_expires DATETIME"); } catch(e) {}
+  try { await db.exec("ALTER TABLE organizations ADD COLUMN award_metadata TEXT"); } catch(e) {}
+  try { await db.exec("ALTER TABLE studios ADD COLUMN public_preferences TEXT"); } catch(e) {}
+  try { await db.exec("ALTER TABLE awards ADD COLUMN award_class TEXT"); } catch(e) {}
+  try { await db.exec("ALTER TABLE awards ADD COLUMN is_first_place INTEGER DEFAULT 0"); } catch(e) {}
 
   console.log("Database initialized.");
   return db;
