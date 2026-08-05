@@ -28,7 +28,7 @@
                     </h1>
                     <p class="studio-name" style="margin-bottom: 0.5rem;">Affiliations:
                       <% dancer.studios.forEach((s, idx)=> { %>
-                        <strong><a href="/studio/<%= s.id %>">
+                        <strong><a href="/dance/studio/<%= s.id %>">
                             <%= s.name %>
                           </a></strong>
                         <%= idx < dancer.studios.length - 1 ? ', ' : '' %>

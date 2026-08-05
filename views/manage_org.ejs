@@ -72,7 +72,7 @@
                             </a>
                         <% } %>
                         <% if (topStudio) { %>
-                            <a href="/studio/<%= topStudio.id %>" target="_blank" class="btn btn-outline">
+                            <a href="/dance/studio/<%= topStudio.id %>" target="_blank" class="btn btn-outline">
                                 View Studio Mockup (<%= topStudio.name %>)
                             </a>
                         <% } %>
@@ -193,7 +193,7 @@
                             <tr class="event-row" data-year="<%= e.year %>" data-search="<%= (e.name + ' ' + (e.date_string || '')).toLowerCase() %>">
                                 <td><%= e.year %></td>
                                 <td><%= e.name %> <%= e.date_string ? '(' + e.date_string + ')' : '' %></td>
-                                <td><a href="/event/<%= e.id %>" target="_blank" class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">View Public Page</a></td>
+                                <td><a href="/dance/event/<%= e.id %>" target="_blank" class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">View Public Page</a></td>
                             </tr>
                         <% }) %>
                     </tbody>

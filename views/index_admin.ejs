@@ -8,7 +8,7 @@
   <h2>Competitions & Organizations</h2>
   <div class="grid" style="margin-bottom: 3rem;">
     <% orgs.forEach(function(org) { %>
-      <a href="/org/<%= org.slug %>" class="card glass-card hover-zoom" style="border-color: rgba(236, 72, 153, 0.3);">
+      <a href="/dance/org/<%= org.slug %>" class="card glass-card hover-zoom" style="border-color: rgba(236, 72, 153, 0.3);">
         <h3><%= org.name %></h3>
         <div style="margin-bottom: 1.5rem; color: var(--text-muted); font-size: 0.9rem;">
           <span class="badge" style="background: rgba(255, 255, 255, 0.1);"><%= org.event_count || 0 %> Events</span>
@@ -55,7 +55,7 @@
         else if (idx === 1) rankStyle = "background: rgba(156, 163, 175, 0.2); color: #e5e7eb; border: 1px solid rgba(156, 163, 175, 0.4); font-size: 0.95rem; font-weight: bold;";
         else if (idx === 2) rankStyle = "background: rgba(180, 83, 9, 0.2); color: #d97706; border: 1px solid rgba(180, 83, 9, 0.4); font-size: 0.9rem; font-weight: bold;";
       %>
-        <a href="/studio/<%= s.id %>" style="display: flex; padding: 1rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); text-decoration: none; color: inherit; align-items: center; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+        <a href="/dance/studio/<%= s.id %>" style="display: flex; padding: 1rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); text-decoration: none; color: inherit; align-items: center; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
           <div style="width: 60px; text-align: center;">
             <span class="badge <%= rankClass %>" style="<%= rankStyle %> padding: 0.3rem 0.6rem; border-radius: 8px;"><%= idx + 1 %></span>
           </div>
@@ -85,7 +85,7 @@
         else if (idx === 1) rankStyle = "background: rgba(156, 163, 175, 0.2); color: #e5e7eb; border: 1px solid rgba(156, 163, 175, 0.4); font-size: 0.95rem; font-weight: bold;";
         else if (idx === 2) rankStyle = "background: rgba(180, 83, 9, 0.2); color: #d97706; border: 1px solid rgba(180, 83, 9, 0.4); font-size: 0.9rem; font-weight: bold;";
       %>
-        <a href="/studio/<%= s.id %>" style="display: flex; padding: 1rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); text-decoration: none; color: inherit; align-items: center; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+        <a href="/dance/studio/<%= s.id %>" style="display: flex; padding: 1rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); text-decoration: none; color: inherit; align-items: center; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
           <div style="width: 60px; text-align: center;">
             <span class="badge <%= rankClass %>" style="<%= rankStyle %> padding: 0.3rem 0.6rem; border-radius: 8px;"><%= idx + 1 %></span>
           </div>
@@ -115,7 +115,7 @@
         else if (idx === 1) rankStyle = "background: rgba(156, 163, 175, 0.2); color: #e5e7eb; border: 1px solid rgba(156, 163, 175, 0.4); font-size: 0.95rem; font-weight: bold;";
         else if (idx === 2) rankStyle = "background: rgba(180, 83, 9, 0.2); color: #d97706; border: 1px solid rgba(180, 83, 9, 0.4); font-size: 0.9rem; font-weight: bold;";
       %>
-        <a href="/studio/<%= s.id %>" style="display: flex; padding: 1rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); text-decoration: none; color: inherit; align-items: center; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+        <a href="/dance/studio/<%= s.id %>" style="display: flex; padding: 1rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); text-decoration: none; color: inherit; align-items: center; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
           <div style="width: 60px; text-align: center;">
             <span class="badge <%= rankClass %>" style="<%= rankStyle %> padding: 0.3rem 0.6rem; border-radius: 8px;"><%= idx + 1 %></span>
           </div>

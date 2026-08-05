@@ -1,0 +1,1319 @@
+const express = require('express');
+const router = express.Router();
+const { openDb } = require('../../database');
+const { requireAuth, requireStudioOwner } = require('../../middleware/auth');
+const multer = require('multer');
+const upload = multer({ dest: 'uploads/' });
+const { OpenAI } = require('openai');
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const { generateDancerId } = require('../../utils.js');
+const { parse } = require('csv-parse/sync');
+const fs = require('fs');
+
+
+router.get('/manage/studio/:id', requireAuth, requireStudioOwner, async (req, res) => {
+  const db = await openDb();
+  let studio = req.studio;
+
+  if (!studio.join_code) {
+    const crypto = require('crypto');
+    const newCode = crypto.randomBytes(3).toString('hex').toUpperCase();
+    await db.run('UPDATE studios SET join_code = ? WHERE id = ?', [newCode, studio.id]);
+    studio.join_code = newCode;
+  }
+
+  const baseName = studio.name.split(',')[0].trim();
+  const searchName = `%${baseName}%`;
+  const rejectedArray = studio.rejected_merges ? studio.rejected_merges.split(',') : [];
+
+  const similarStudios = await db.all(`
+    SELECT id, name, aka, status 
+    FROM studios 
+    WHERE (name LIKE ? OR aka LIKE ?)
+      AND id != ?
+      AND status != 'merged'
+  `, [searchName, searchName, studio.id]);
+
+  const potentialDuplicates = similarStudios.filter(s => !rejectedArray.includes(s.id.toString()));
+
+  let prefs = {};
+  if (studio.public_preferences) {
+    try { prefs = JSON.parse(studio.public_preferences); } catch (e) { }
+  }
+  if (Object.keys(prefs).length === 0) {
+    prefs = { show_total_awards: true, show_events_attended: true, show_1st_place_finishes: true, show_1st_place_this_year: true, show_past_5_years: true, show_this_year: true };
+  }
+  studio.prefs = prefs;
+
+  res.render('manage_studio', { studio, potentialDuplicates });
+});
+
+
+router.post('/manage/studio/:id/reset-code', requireAuth, requireStudioOwner, async (req, res) => {
+  const db = await openDb();
+
+  // Generate new 6-character code
+  const crypto = require('crypto');
+  const newCode = crypto.randomBytes(3).toString('hex').toUpperCase();
+
+  await db.run('UPDATE studios SET join_code = ? WHERE id = ?', [newCode, req.params.id]);
+  res.redirect(`/manage/studio/${req.params.id}`);
+});
+
+
+router.post('/manage/studio/:id/profile', requireAuth, requireStudioOwner, async (req, res) => {
+  const { name, website_url, email, phone, logo_url, bio, instagram_handle, tiktok_handle } = req.body;
+  const db = await openDb();
+
+  const studio = req.studio;
+
+  const prefs = {
+    show_total_awards: req.body.show_total_awards === 'on',
+    show_events_attended: req.body.show_events_attended === 'on',
+    show_1st_place_finishes: req.body.show_1st_place_finishes === 'on',
+    show_1st_place_this_year: req.body.show_1st_place_this_year === 'on',
+    show_past_5_years: req.body.show_past_5_years === 'on',
+    show_this_year: req.body.show_this_year === 'on',
+    show_org_history: req.body.show_org_history === 'on'
+  };
+
+  await db.run(`
+    UPDATE studios 
+    SET name = ?, website_url = ?, email = ?, phone = ?, logo_url = ?, bio = ?, instagram_handle = ?, tiktok_handle = ?, public_preferences = ?
+    WHERE id = ?
+  `, [name, website_url, email, phone, logo_url, bio, instagram_handle, tiktok_handle, JSON.stringify(prefs), req.params.id]);
+
+  const updatedStudio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
+  
+  let parsedPrefs = {};
+  if (updatedStudio.public_preferences) {
+    try { parsedPrefs = JSON.parse(updatedStudio.public_preferences); } catch (e) { }
+  }
+  updatedStudio.prefs = parsedPrefs;
+
+  const baseName = updatedStudio.name.split(',')[0].trim();
+  const searchName = `%${baseName}%`;
+  const rejectedArray = updatedStudio.rejected_merges ? updatedStudio.rejected_merges.split(',') : [];
+
+  const similarStudios = await db.all(`
+    SELECT id, name, aka, status 
+    FROM studios 
+    WHERE (name LIKE ? OR aka LIKE ?)
+      AND id != ?
+      AND status != 'merged'
+  `, [searchName, searchName, updatedStudio.id]);
+
+  const potentialDuplicates = similarStudios.filter(s => !rejectedArray.includes(s.id.toString()));
+
+  res.render('manage_studio', { studio: updatedStudio, potentialDuplicates, success: 'Profile updated successfully!' });
+});
+
+
+router.get('/manage/studio/:id/roster/export', requireAuth, requireStudioOwner, async (req, res) => {
+  const db = await openDb();
+  const studio = req.studio;
+
+  const roster = await db.all(`
+    SELECT d.name, d.unique_id, d.birthday, ds.status, ds.graduation_year,
+           (SELECT COUNT(*) FROM award_dancers ad JOIN awards a ON ad.award_id = a.id WHERE ad.dancer_id = d.id AND a.studio_id = ds.studio_id) as total_awards
+    FROM dancers d
+    JOIN dancer_studios ds ON d.id = ds.dancer_id
+    WHERE ds.studio_id = ? AND ds.status != 'alumni'
+    ORDER BY d.name ASC
+  `, [req.params.id]);
+
+  let csvContent = "Name,Unique ID,Birthday,Status,Graduation Year,Total Awards\n";
+  for (const row of roster) {
+    const name = `"${row.name.replace(/"/g, '""')}"`;
+    const dob = row.birthday || "";
+    const status = row.status || "active";
+    const grad = row.graduation_year || "";
+    csvContent += `${name},${row.unique_id},${dob},${status},${grad},${row.total_awards}\n`;
+  }
+
+  res.setHeader('Content-Type', 'text/csv');
+  res.setHeader('Content-Disposition', `attachment; filename="studio_${studio.id}_active_roster.csv"`);
+  res.send(csvContent);
+});
+
+
+router.get('/manage/studio/:id/roster', requireAuth, requireStudioOwner, async (req, res) => {
+  const db = await openDb();
+  const studio = req.studio;
+
+  const roster = await db.all(`
+    SELECT d.id, d.unique_id, d.name, d.birthday, ds.status, ds.headshot_url, ds.graduation_year,
+           (SELECT COUNT(*) FROM award_dancers ad JOIN awards a ON ad.award_id = a.id WHERE ad.dancer_id = d.id AND a.studio_id = ds.studio_id) as total_awards
+    FROM dancers d
+    JOIN dancer_studios ds ON d.id = ds.dancer_id
+    WHERE ds.studio_id = ?
+    ORDER BY d.name ASC
+  `, [req.params.id]);
+
+  const studioAwardsRaw = await db.all(`
+    SELECT ad.dancer_id, a.place, a.category, a.performance_name, e.year, e.name as event_name
+    FROM award_dancers ad
+    JOIN awards a ON ad.award_id = a.id
+    JOIN events e ON a.event_id = e.id
+    WHERE a.studio_id = ?
+    ORDER BY e.year DESC, a.id DESC
+  `, [req.params.id]);
+
+  const awardsByDancer = {};
+  for (const award of studioAwardsRaw) {
+    if (!awardsByDancer[award.dancer_id]) awardsByDancer[award.dancer_id] = [];
+    if (awardsByDancer[award.dancer_id].length < 3) {
+      awardsByDancer[award.dancer_id].push(award);
+    }
+  }
+
+  roster.forEach(d => {
+    d.recent_awards = awardsByDancer[d.id] || [];
+  });
+
+  const suspectedDuplicatesRaw = await db.all(`
+    SELECT d.name, d.id, d.unique_id, d.birthday, d.claimed_by_user_id,
+           (SELECT COUNT(*) FROM award_dancers ad JOIN awards a ON ad.award_id = a.id WHERE ad.dancer_id = d.id AND a.studio_id = ds.studio_id) as total_awards
+    FROM dancers d
+    JOIN dancer_studios ds ON d.id = ds.dancer_id
+    WHERE ds.studio_id = ?
+      AND LOWER(d.name) IN (
+        SELECT LOWER(d2.name)
+        FROM dancers d2
+        JOIN dancer_studios ds2 ON d2.id = ds2.dancer_id
+        WHERE ds2.studio_id = ?
+        GROUP BY LOWER(d2.name)
+        HAVING COUNT(*) > 1
+      )
+      AND LOWER(d.name) NOT IN (
+        SELECT LOWER(dancer_name) FROM studio_duplicate_exceptions WHERE studio_id = ?
+      )
+    ORDER BY d.name ASC, total_awards DESC
+  `, [req.params.id, req.params.id, req.params.id]);
+
+  const duplicateSets = {};
+  suspectedDuplicatesRaw.forEach(row => {
+    const key = row.name.toLowerCase();
+    if (!duplicateSets[key]) duplicateSets[key] = { name: row.name, profiles: [] };
+    duplicateSets[key].profiles.push(row);
+  });
+
+  res.render('manage_studio_roster', { studio, roster, duplicateSets });
+});
+
+
+router.post('/manage/studio/:id/roster/:dancerId/update', requireAuth, requireStudioOwner, async (req, res) => {
+  const { headshot_url, graduation_year, status, birthday } = req.body;
+  const db = await openDb();
+
+  const studio = req.studio;
+
+  await db.run(`
+    UPDATE dancer_studios 
+    SET headshot_url = ?, graduation_year = ?, status = ?
+    WHERE studio_id = ? AND dancer_id = ?
+  `, [headshot_url || null, graduation_year || null, status || 'active', req.params.id, req.params.dancerId]);
+
+  if (birthday !== undefined) {
+    await db.run(`UPDATE dancers SET birthday = ? WHERE id = ?`, [birthday || null, req.params.dancerId]);
+  }
+
+  res.redirect(`/manage/studio/${req.params.id}/roster`);
+});
+
+
+router.post('/manage/studio/:id/roster/:dancerId/toggle-status', requireAuth, requireStudioOwner, async (req, res) => {
+  const { new_status } = req.body;
+  const db = await openDb();
+
+  const studio = req.studio;
+
+  if (new_status !== 'active' && new_status !== 'alumni') {
+    return res.status(400).json({ error: 'Invalid status' });
+  }
+
+  try {
+    await db.run(`
+      UPDATE dancer_studios 
+      SET status = ?
+      WHERE studio_id = ? AND dancer_id = ?
+    `, [new_status, req.params.id, req.params.dancerId]);
+
+    res.json({ success: true, status: new_status });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+
+router.post('/manage/studio/:id/awards/self-report', requireAuth, requireStudioOwner, async (req, res) => {
+  const { event_name, year, category, age_division, performance_name, place, dancer_ids } = req.body;
+  const db = await openDb();
+
+  const studio = req.studio;
+
+  // Create a dummy event for self-reported awards if we don't have a structured one
+  await db.run('INSERT INTO events (name, year, org_id) VALUES (?, ?, NULL)', [event_name, year]);
+  const event = await db.get('SELECT id FROM events ORDER BY id DESC LIMIT 1');
+
+  await db.run(`
+    INSERT INTO awards (event_id, place, performance_name, category, age_division, studio_id, is_self_added, verification_status) 
+    VALUES (?, ?, ?, ?, ?, ?, 1, 'unverified')
+  `, [event.id, place, performance_name, category, age_division, req.params.id]);
+
+  const award = await db.get('SELECT id FROM awards ORDER BY id DESC LIMIT 1');
+
+  if (dancer_ids) {
+    const ids = Array.isArray(dancer_ids) ? dancer_ids : [dancer_ids];
+    for (const dId of ids) {
+      await db.run('INSERT INTO award_dancers (award_id, dancer_id) VALUES (?, ?)', [award.id, dId]);
+    }
+  }
+
+  res.redirect(`/manage/studio/${req.params.id}/awards?year=${year}`);
+});
+
+
+router.post('/manage/studio/:id/awards/csv-preview', requireAuth, requireStudioOwner, upload.single('csvFile'), async (req, res) => {
+  if (!req.file) return res.status(400).send('No file uploaded');
+  const db = await openDb();
+
+  const studio = req.studio;
+
+  try {
+    const fileContent = fs.readFileSync(req.file.path, 'utf-8');
+    const records = parse(fileContent, { columns: true, skip_empty_lines: true, trim: true });
+
+    const previewData = [];
+    const roster = await db.all(`
+      SELECT d.id, d.name 
+      FROM dancer_studios ds
+      JOIN dancers d ON ds.dancer_id = d.id
+      WHERE ds.studio_id = ?
+    `, [req.params.id]);
+
+    for (const row of records) {
+      const findKey = (search) => Object.keys(row).find(k => k.toLowerCase().replace(/[^a-z0-9]/g, '').includes(search));
+
+      const eventName = row[findKey('competition')] || row[findKey('event')] || '';
+      const year = row[findKey('year')] || '';
+      const performanceName = row[findKey('routine')] || row[findKey('performance')] || '';
+      const place = row[findKey('place')] || row[findKey('result')] || '';
+      const category = row[findKey('category')] || '';
+      const ageDivision = row[findKey('agedivision')] || row[findKey('division')] || row[findKey('age')] || '';
+      const dancersStr = row[findKey('dancer')] || '';
+
+      const missing = [];
+      if (!eventName) missing.push('Competition Name');
+      if (!year) missing.push('Year');
+      if (!performanceName) missing.push('Routine Name');
+      if (!place) missing.push('Place');
+
+      const matchedDancers = [];
+      if (dancersStr) {
+        const names = dancersStr.split(',').map(n => n.trim()).filter(n => n);
+        for (const name of names) {
+          const match = roster.find(r => r.name.toLowerCase() === name.toLowerCase());
+          if (match) {
+            matchedDancers.push({ id: match.id, name: match.name, matched: true });
+          } else {
+            matchedDancers.push({ name: name, matched: false });
+          }
+        }
+      }
+
+      previewData.push({
+        event_name: eventName,
+        year: year,
+        performance_name: performanceName,
+        place: place,
+        category: category,
+        age_division: ageDivision,
+        dancers: matchedDancers,
+        isValid: missing.length === 0,
+        missing: missing
+      });
+    }
+
+    fs.unlinkSync(req.file.path);
+    res.render('manage_studio_awards_csv', { studio, previewData });
+  } catch (err) {
+    if (req.file) fs.unlinkSync(req.file.path);
+    console.error(err);
+    res.status(500).send('Error parsing CSV. Please ensure you are using the correct template format.');
+  }
+});
+
+
+router.post('/manage/studio/:id/awards/csv-commit', requireAuth, requireStudioOwner, async (req, res) => {
+  const { preview_data } = req.body;
+  const db = await openDb();
+
+  const studio = req.studio;
+
+  if (preview_data) {
+    let rows = [];
+    try {
+      rows = JSON.parse(preview_data);
+    } catch (e) {
+      return res.status(400).send('Invalid data format received.');
+    }
+
+    for (const row of rows) {
+      if (!row.isValid) continue;
+
+      let event = await db.get('SELECT id FROM events WHERE name = ? AND year = ? AND org_id IS NULL', [row.event_name, row.year]);
+      if (!event) {
+        await db.run('INSERT INTO events (name, year, org_id) VALUES (?, ?, NULL)', [row.event_name, row.year]);
+        event = await db.get('SELECT id FROM events ORDER BY id DESC LIMIT 1');
+      }
+
+      await db.run(`
+        INSERT INTO awards (event_id, place, performance_name, category, age_division, studio_id, is_self_added, verification_status)
+        VALUES (?, ?, ?, ?, ?, ?, 1, 'unverified')
+      `, [event.id, row.place, row.performance_name, row.category, row.age_division, req.params.id]);
+
+      const award = await db.get('SELECT id FROM awards ORDER BY id DESC LIMIT 1');
+
+      for (const d of row.dancers) {
+        if (d.matched && d.id) {
+          await db.run('INSERT INTO award_dancers (award_id, dancer_id) VALUES (?, ?)', [award.id, d.id]);
+        } else if (!d.matched && d.name) {
+          await db.run('INSERT INTO dancers (name) VALUES (?)', [d.name]);
+          const newDancer = await db.get('SELECT id FROM dancers ORDER BY id DESC LIMIT 1');
+          await db.run('INSERT INTO dancer_studios (dancer_id, studio_id) VALUES (?, ?)', [newDancer.id, req.params.id]);
+          await db.run('INSERT INTO award_dancers (award_id, dancer_id) VALUES (?, ?)', [award.id, newDancer.id]);
+        }
+      }
+    }
+  }
+
+  res.redirect(`/manage/studio/${req.params.id}/awards`);
+});
+
+
+router.get('/api/dancers/search', requireAuth, async (req, res) => {
+  if (req.session.user.role !== 'superadmin') return res.status(403).json({ error: 'Forbidden' });
+  const { q, studio } = req.query;
+  if (!q || q.length < 2) return res.json([]);
+  const db = await openDb();
+
+  let query = `
+    SELECT d.id, d.name, d.unique_id,
+           (SELECT COUNT(*) FROM award_dancers ad WHERE ad.dancer_id = d.id) as award_count,
+           (SELECT GROUP_CONCAT(s.name, ', ') 
+            FROM dancer_studios ds 
+            JOIN studios s ON ds.studio_id = s.id 
+            WHERE ds.dancer_id = d.id) as studio_names
+    FROM dancers d
+    WHERE d.name LIKE ?
+  `;
+  const params = [`%${q}%`];
+
+  const dancersRaw = await db.all(query, params);
+
+  // Filter by studio in JS since it's an alias from a subquery and SQLite is finicky
+  let dancers = dancersRaw;
+  if (studio && studio.length >= 2) {
+    const studioLower = studio.toLowerCase();
+    dancers = dancersRaw.filter(d => d.studio_names && d.studio_names.toLowerCase().includes(studioLower));
+  }
+
+  // Sort and limit
+  dancers = dancers.sort((a, b) => b.award_count - a.award_count).slice(0, 20);
+
+  for (let dancer of dancers) {
+    dancer.recent_routines = await db.all(`
+      SELECT a.performance_name, e.year, o.name as comp_name
+      FROM awards a
+      JOIN award_dancers ad ON a.id = ad.award_id
+      JOIN events e ON a.event_id = e.id
+      LEFT JOIN organizations o ON e.org_id = o.id
+      WHERE ad.dancer_id = ?
+      ORDER BY e.year DESC
+      LIMIT 3
+    `, [dancer.id]);
+  }
+
+  res.json(dancers);
+});
+
+
+router.post('/manage/studio/:id/roster/merge', requireAuth, requireStudioOwner, async (req, res) => {
+  const { primary_id, duplicate_id } = req.body;
+  const db = await openDb();
+
+  const studio = req.studio;
+
+  if (!primary_id || !duplicate_id || primary_id === duplicate_id) {
+    return res.status(400).send('Invalid merge parameters');
+  }
+
+  // Verify both dancers belong to this studio
+  const d1 = await db.get('SELECT id FROM dancer_studios WHERE dancer_id = ? AND studio_id = ?', [primary_id, req.params.id]);
+  const d2 = await db.get('SELECT id FROM dancer_studios WHERE dancer_id = ? AND studio_id = ?', [duplicate_id, req.params.id]);
+
+  if (!d1 || !d2) {
+    return res.status(403).send('Both dancers must be on your roster to merge them.');
+  }
+
+  try {
+    await db.run('BEGIN TRANSACTION');
+
+    // 1. Move all awards from duplicate to primary (use INSERT OR IGNORE to prevent UNIQUE constraint errors if they somehow both won the exact same award record)
+    await db.run('INSERT OR IGNORE INTO award_dancers (award_id, dancer_id) SELECT award_id, ? FROM award_dancers WHERE dancer_id = ?', [primary_id, duplicate_id]);
+    await db.run('DELETE FROM award_dancers WHERE dancer_id = ?', [duplicate_id]);
+
+    // 2. Move any OTHER studio affiliations the duplicate might have had (that aren't this studio)
+    await db.run('INSERT OR IGNORE INTO dancer_studios (dancer_id, studio_id, status) SELECT ?, studio_id, status FROM dancer_studios WHERE dancer_id = ?', [primary_id, duplicate_id]);
+    await db.run('DELETE FROM dancer_studios WHERE dancer_id = ?', [duplicate_id]);
+
+    // 3. Delete the duplicate dancer record
+    await db.run('DELETE FROM dancers WHERE id = ?', [duplicate_id]);
+
+    await db.run('COMMIT');
+    res.redirect(`/manage/studio/${req.params.id}/roster?success=Merge+completed`);
+  } catch (err) {
+    await db.run('ROLLBACK');
+    console.error(err);
+    res.status(500).send('Merge failed');
+  }
+});
+
+
+// Clean Duplicate Set (1-Click Merge)
+router.post('/manage/studio/:id/roster/clean-duplicate-set', requireAuth, requireStudioOwner, async (req, res) => {
+  const { duplicate_name } = req.body;
+  const db = await openDb();
+
+  const studio = req.studio;
+
+  if (!duplicate_name) return res.status(400).json({ error: 'Missing name' });
+
+  try {
+    // Fetch all profiles for this exact name in this studio
+    const profiles = await db.all(`
+      SELECT d.id, d.claimed_by_user_id,
+             (SELECT COUNT(*) FROM award_dancers ad JOIN awards a ON ad.award_id = a.id WHERE ad.dancer_id = d.id AND a.studio_id = ds.studio_id) as total_awards
+      FROM dancers d
+      JOIN dancer_studios ds ON d.id = ds.dancer_id
+      WHERE ds.studio_id = ? AND LOWER(d.name) = ?
+    `, [req.params.id, duplicate_name.trim().toLowerCase()]);
+
+    if (profiles.length < 2) return res.status(400).json({ error: 'No duplicates found for this name.' });
+
+    // Determine Primary
+    // Priority 1: Claimed
+    // Priority 2: Most awards
+    profiles.sort((a, b) => {
+      if (a.claimed_by_user_id && !b.claimed_by_user_id) return -1;
+      if (!a.claimed_by_user_id && b.claimed_by_user_id) return 1;
+      return b.total_awards - a.total_awards;
+    });
+
+    const primaryId = profiles[0].id;
+    const duplicatesToMerge = profiles.slice(1).map(p => p.id);
+
+    await db.run('BEGIN TRANSACTION');
+
+    for (let dupId of duplicatesToMerge) {
+      await db.run('INSERT OR IGNORE INTO award_dancers (award_id, dancer_id) SELECT award_id, ? FROM award_dancers WHERE dancer_id = ?', [primaryId, dupId]);
+      await db.run('DELETE FROM award_dancers WHERE dancer_id = ?', [dupId]);
+
+      await db.run('INSERT OR IGNORE INTO dancer_studios (dancer_id, studio_id, status) SELECT ?, studio_id, status FROM dancer_studios WHERE dancer_id = ?', [primaryId, dupId]);
+      await db.run('DELETE FROM dancer_studios WHERE dancer_id = ?', [dupId]);
+
+      await db.run('DELETE FROM dancers WHERE id = ?', [dupId]);
+    }
+
+    await db.run('COMMIT');
+    res.json({ success: true, merged: duplicatesToMerge.length });
+  } catch (err) {
+    await db.run('ROLLBACK');
+    console.error(err);
+    res.status(500).json({ error: 'Server Error' });
+  }
+});
+
+
+// Ignore Duplicate Set
+router.post('/manage/studio/:id/roster/ignore-duplicate-set', requireAuth, requireStudioOwner, async (req, res) => {
+  const { duplicate_name } = req.body;
+  const db = await openDb();
+
+  const studio = req.studio;
+
+  if (!duplicate_name) return res.status(400).json({ error: 'Missing name' });
+
+  try {
+    await db.run('INSERT OR IGNORE INTO studio_duplicate_exceptions (studio_id, dancer_name) VALUES (?, ?)', [req.params.id, duplicate_name.trim().toLowerCase()]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server Error' });
+  }
+});
+
+
+router.post('/manage/studio/:id/roster/csv-preview', requireAuth, requireStudioOwner, upload.single('roster_csv'), async (req, res) => {
+  const db = await openDb();
+  const studio = req.studio;
+
+  if (!req.file) return res.status(400).send('No file uploaded');
+
+  try {
+    const fileContent = fs.readFileSync(req.file.path, 'utf-8');
+    const records = parse(fileContent, { columns: true, skip_empty_lines: true, trim: true });
+
+    // We need 'name' at minimum
+    if (records.length > 0 && !records[0].name) {
+      // maybe they capitalized Name? Let's lowercase all keys
+      records.forEach(r => {
+        Object.keys(r).forEach(k => {
+          if (k.toLowerCase() !== k) {
+            r[k.toLowerCase()] = r[k];
+            delete r[k];
+          }
+        });
+      });
+
+      if (!records[0].name) {
+        fs.unlinkSync(req.file.path);
+        return res.status(400).send('CSV must have a "name" column.');
+      }
+    }
+
+    // Prepare resolution data
+    const previewData = [];
+    for (const row of records) {
+      if (!row.name) continue;
+
+      // Global search for this exact or partial name
+      const matches = await db.all(`
+        SELECT id, name, birthday, 
+        (SELECT COUNT(*) FROM award_dancers ad WHERE ad.dancer_id = dancers.id) as award_count
+        FROM dancers 
+        WHERE name LIKE ?
+        ORDER BY award_count DESC LIMIT 5
+      `, [`%${row.name}%`]);
+
+      previewData.push({
+        csv_row: row,
+        matches: matches
+      });
+    }
+
+    // Keep the file path so the commit phase can re-read it or we can pass JSON via form
+    // Since we have the previewData array, we will just render a resolution UI and pass the array back as JSON hidden input
+    fs.unlinkSync(req.file.path);
+
+    res.render('manage_studio_roster_csv', { studio, previewData });
+  } catch (error) {
+    if (req.file) fs.unlinkSync(req.file.path);
+    console.error(error);
+    res.status(500).send('Error parsing CSV. Please ensure it is a valid CSV file.');
+  }
+});
+
+
+router.post('/manage/studio/:id/roster/csv-commit', requireAuth, requireStudioOwner, async (req, res) => {
+  const { resolution_data } = req.body;
+  // resolution_data will be an array of { action: 'create'|'link'|'skip', dancer_id: ID_if_link, csv_row: {name, birthday, graduation_year, status} }
+
+  const db = await openDb();
+  const studio = req.studio;
+
+  let parsedData;
+  try {
+    parsedData = JSON.parse(resolution_data);
+  } catch (e) {
+    return res.status(400).send('Invalid resolution data');
+  }
+
+  const crypto = require('crypto');
+
+  try {
+    await db.run('BEGIN TRANSACTION');
+
+    for (const item of parsedData) {
+      if (item.action === 'skip') continue;
+
+      let dancerId = item.dancer_id;
+
+      if (item.action === 'create') {
+        const uniqueId = generateDancerId(item.csv_row.name);
+        await db.run('INSERT INTO dancers (unique_id, name, birthday) VALUES (?, ?, ?)', [uniqueId, item.csv_row.name, item.csv_row.birthday || null]);
+        const newDancer = await db.get('SELECT id FROM dancers ORDER BY id DESC LIMIT 1');
+        dancerId = newDancer.id;
+      }
+
+      if (dancerId) {
+        // Link to studio with pivot data
+        const status = 'active';
+        const gradYear = null;
+
+        await db.run(`
+          INSERT INTO dancer_studios (dancer_id, studio_id, status, graduation_year) 
+          VALUES (?, ?, ?, ?)
+          ON CONFLICT(dancer_id, studio_id) DO UPDATE SET 
+            status = excluded.status,
+            graduation_year = excluded.graduation_year
+        `, [dancerId, req.params.id, status, gradYear]);
+      }
+    }
+
+    await db.run('COMMIT');
+    res.redirect(`/manage/studio/${req.params.id}/roster?success=CSV+Import+Completed`);
+  } catch (err) {
+    await db.run('ROLLBACK');
+    console.error(err);
+    res.status(500).send('Import failed');
+  }
+});
+
+
+router.post('/manage/studio/:id/roster/claim', requireAuth, requireStudioOwner, async (req, res) => {
+  const { claim_unique_id, new_dancer_name, birthday } = req.body;
+  const db = await openDb();
+
+  const studio = req.studio;
+
+  let finalDancerId = null;
+
+  if (claim_unique_id) {
+    const existingDancer = await db.get('SELECT id FROM dancers WHERE unique_id = ?', [claim_unique_id.trim()]);
+    if (!existingDancer) {
+      return res.status(404).send('Dancer not found with that Unique ID.');
+    }
+    finalDancerId = existingDancer.id;
+  } else if (new_dancer_name) {
+    // Create new dancer
+    const uniqueId = generateDancerId(new_dancer_name);
+    await db.run('INSERT INTO dancers (unique_id, name, birthday) VALUES (?, ?, ?)', [uniqueId, new_dancer_name, birthday || null]);
+    const newDancer = await db.get('SELECT id FROM dancers ORDER BY id DESC LIMIT 1');
+    finalDancerId = newDancer.id;
+  }
+
+  if (finalDancerId) {
+    await db.run('INSERT OR IGNORE INTO dancer_studios (dancer_id, studio_id, status) VALUES (?, ?, ?)', [finalDancerId, req.params.id, 'active']);
+  }
+
+  res.redirect(`/manage/studio/${req.params.id}/roster`);
+});
+
+
+router.get('/manage/studio/:id/verifications', requireAuth, requireStudioOwner, async (req, res) => {
+  const db = await openDb();
+  const studio = req.studio;
+
+  const pendingAwards = await db.all(`
+    SELECT ad.id as link_id, ad.award_id, d.name as dancer_name, d.unique_id, a.performance_name, a.award_type, e.name as event_name, e.year
+    FROM award_dancers ad
+    JOIN dancers d ON ad.dancer_id = d.id
+    JOIN awards a ON ad.award_id = a.id
+    JOIN events e ON a.event_id = e.id
+    WHERE ad.status = 'pending' AND a.studio_id = ?
+  `, [studio.id]);
+
+  const pendingRoster = await db.all(`
+    SELECT ds.id as link_id, d.name as dancer_name, d.unique_id, ds.created_at
+    FROM dancer_studios ds
+    JOIN dancers d ON ds.dancer_id = d.id
+    WHERE ds.status = 'pending' AND ds.studio_id = ?
+  `, [studio.id]);
+
+  res.render('manage_studio_verifications', { studio, pendingAwards, pendingRoster });
+});
+
+
+router.post('/manage/studio/:id/verifications/award/:link_id/approve', requireAuth, requireStudioOwner, async (req, res) => {
+  const db = await openDb();
+  const studio = req.studio;
+
+  const link = await db.get('SELECT dancer_id FROM award_dancers WHERE id = ?', [req.params.link_id]);
+  if (link) {
+    await db.run("UPDATE award_dancers SET status = 'verified' WHERE id = ?", [req.params.link_id]);
+    await db.run("UPDATE dancer_studios SET status = 'active' WHERE dancer_id = ? AND studio_id = ?", [link.dancer_id, studio.id]);
+  }
+
+  res.redirect(`/manage/studio/${studio.id}/verifications`);
+});
+
+
+router.post('/manage/studio/:id/verifications/award/:link_id/deny', requireAuth, requireStudioOwner, async (req, res) => {
+  const db = await openDb();
+  const studio = req.studio;
+
+  await db.run("DELETE FROM award_dancers WHERE id = ?", [req.params.link_id]);
+  res.redirect(`/manage/studio/${studio.id}/verifications`);
+});
+
+
+router.post('/manage/studio/:id/verifications/roster/:link_id/approve', requireAuth, requireStudioOwner, async (req, res) => {
+  const db = await openDb();
+  const studio = req.studio;
+
+  await db.run('UPDATE dancer_studios SET status = "active" WHERE id = ?', [req.params.link_id]);
+
+  res.redirect(`/manage/studio/${req.params.id}/verifications`);
+});
+
+
+router.post('/manage/studio/:id/verifications/roster/:link_id/deny', requireAuth, requireStudioOwner, async (req, res) => {
+  const db = await openDb();
+  const studio = req.studio;
+
+  await db.run('DELETE FROM dancer_studios WHERE id = ?', [req.params.link_id]);
+
+  res.redirect(`/manage/studio/${req.params.id}/verifications`);
+});
+
+
+router.post('/api/studios/:id/verifications/bulk', requireAuth, requireStudioOwner, async (req, res) => {
+  const db = await openDb();
+  const studio = req.studio;
+
+  const { type, action, linkIds } = req.body;
+  if (!Array.isArray(linkIds) || linkIds.length === 0) return res.status(400).json({ error: 'Invalid linkIds' });
+
+  try {
+    if (type === 'award') {
+      if (action === 'approve') {
+        for (const link_id of linkIds) {
+          const link = await db.get('SELECT dancer_id FROM award_dancers WHERE id = ?', [link_id]);
+          if (link) {
+            await db.run("UPDATE award_dancers SET status = 'verified' WHERE id = ?", [link_id]);
+            await db.run("UPDATE dancer_studios SET status = 'active' WHERE dancer_id = ? AND studio_id = ?", [link.dancer_id, studio.id]);
+          }
+        }
+      } else if (action === 'deny') {
+        for (const link_id of linkIds) {
+          await db.run("DELETE FROM award_dancers WHERE id = ?", [link_id]);
+        }
+      }
+    } else if (type === 'roster') {
+      if (action === 'approve') {
+        for (const link_id of linkIds) {
+          await db.run("UPDATE dancer_studios SET status = 'active' WHERE id = ?", [link_id]);
+        }
+      } else if (action === 'deny') {
+        for (const link_id of linkIds) {
+          await db.run("DELETE FROM dancer_studios WHERE id = ?", [link_id]);
+        }
+      }
+    } else {
+      return res.status(400).json({ error: 'Invalid type' });
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+router.get('/manage/studio/:id/history', requireAuth, requireStudioOwner, async (req, res) => {
+  const db = await openDb();
+
+  const studio = req.studio;
+
+  const awards = await db.all(`
+    SELECT a.*, e.name as event_name, e.year as event_year, o.id as org_id, o.name as org_name, o.logo_url as org_logo_url, o.custom_icons
+    FROM awards a
+    JOIN events e ON a.event_id = e.id
+    JOIN organizations o ON e.org_id = o.id
+    WHERE a.studio_id = ?
+  `, [req.params.id]);
+
+  const awardIds = awards.map(a => a.id);
+  let awardDancersMap = {};
+  if (awardIds.length > 0) {
+    const placeholders = awardIds.map(() => '?').join(',');
+    const dancersData = await db.all(`
+      SELECT ad.award_id, d.name
+      FROM award_dancers ad
+      JOIN dancers d ON ad.dancer_id = d.id
+      WHERE ad.award_id IN (${placeholders})
+    `, awardIds);
+    
+    dancersData.forEach(row => {
+      if (!awardDancersMap[row.award_id]) awardDancersMap[row.award_id] = [];
+      awardDancersMap[row.award_id].push(row.name);
+    });
+  }
+
+  awards.forEach(a => {
+    a.dancers = awardDancersMap[a.id] || [];
+    if (a.custom_icons) {
+      try { a.customIconsObj = JSON.parse(a.custom_icons); } catch (e) { }
+    }
+  });
+
+  const orgsMap = {};
+
+  for (const award of awards) {
+    if (!orgsMap[award.org_id]) {
+      orgsMap[award.org_id] = {
+        id: award.org_id,
+        name: award.org_name,
+        logo_url: award.org_logo_url,
+        years: {},
+        total_awards_all_time: 0,
+        first_places_all_time: 0,
+        major_awards_all_time: 0
+      };
+    }
+    const org = orgsMap[award.org_id];
+    org.total_awards_all_time++;
+    if (award.is_first_place) org.first_places_all_time++;
+
+    const premiumDetails = app.locals.getPremiumDetails(award);
+    let isMajor = false;
+    if (award.is_first_place && premiumDetails.isPremium) {
+      const nameLower = (award.award_type || award.category || '').toLowerCase();
+      const eventNameLower = (award.event_name || '').toLowerCase();
+      if (nameLower.includes('national') || nameLower.includes('final') || nameLower.includes('grand') || nameLower.includes('title') || eventNameLower.includes('national') || eventNameLower.includes('final')) {
+        isMajor = true;
+        org.major_awards_all_time++;
+      }
+    }
+
+    if (!org.years[award.event_year]) {
+      org.years[award.event_year] = {
+        total_awards: 0,
+        first_places: 0,
+        major_awards: 0,
+        eventsMap: {}
+      };
+    }
+    const yr = org.years[award.event_year];
+    yr.total_awards++;
+    if (award.is_first_place) yr.first_places++;
+    if (isMajor) yr.major_awards++;
+
+    if (!yr.eventsMap[award.event_id]) {
+      yr.eventsMap[award.event_id] = {
+        name: award.event_name,
+        total_awards: 0,
+        first_places: 0,
+        major_awards: 0,
+        awards: []
+      };
+    }
+    const evt = yr.eventsMap[award.event_id];
+    evt.total_awards++;
+    if (award.is_first_place) evt.first_places++;
+    if (isMajor) evt.major_awards++;
+    evt.awards.push(award);
+  }
+
+  // Format map into array
+  const orgs = Object.values(orgsMap).map(org => {
+    Object.keys(org.years).forEach(year => {
+      org.years[year].events = Object.values(org.years[year].eventsMap).sort((a, b) => a.name.localeCompare(b.name));
+      delete org.years[year].eventsMap;
+    });
+    return org;
+  });
+
+  orgs.sort((a, b) => a.name.localeCompare(b.name));
+
+  res.render('manage_studio_history', { studio, orgs });
+});
+
+
+router.get('/manage/studio/:id/ai-summaries', requireAuth, requireStudioOwner, async (req, res) => {
+  const db = await openDb();
+  const studio = req.studio;
+
+  const summaries = await db.all(`
+    SELECT a.*, o.name as org_name, o.logo_url as org_logo
+    FROM ai_summaries a
+    JOIN organizations o ON a.org_id = o.id
+    WHERE a.studio_id = ?
+    ORDER BY a.created_at DESC
+  `, [studio.id]);
+
+  // Group by organization
+  const groupedSummaries = {};
+  for (const s of summaries) {
+    if (!groupedSummaries[s.org_name]) {
+      groupedSummaries[s.org_name] = {
+        org_name: s.org_name,
+        org_logo: s.org_logo,
+        items: []
+      };
+    }
+    groupedSummaries[s.org_name].items.push(s);
+  }
+
+  res.render('manage_studio_ai_summaries', { 
+    studio, 
+    groupedSummaries: Object.values(groupedSummaries).sort((a,b) => a.org_name.localeCompare(b.org_name))
+  });
+});
+
+
+router.get('/api/studio/:id/history/org/:org_id/summary', requireAuth, requireStudioOwner, async (req, res) => {
+  const db = await openDb();
+  const studioId = req.params.id;
+  const orgId = req.params.org_id;
+
+  const studio = req.studio;
+
+  const org = await db.get('SELECT name FROM organizations WHERE id = ?', [orgId]);
+  if (!org) return res.status(404).send('Org not found');
+  const isYagp = org.name.toLowerCase().includes('yagp');
+
+  const awards = await db.all(`
+    SELECT a.*, e.name as event_name, e.year as event_year
+    FROM awards a
+    JOIN events e ON a.event_id = e.id
+    WHERE a.studio_id = ? AND e.org_id = ?
+    ORDER BY e.year ASC, a.age_division ASC, a.place ASC
+  `, [studioId, orgId]);
+
+  if (awards.length === 0) return res.json({ summary: "No awards found for this organization." });
+
+  const awardIds = awards.map(a => a.id);
+  const awardDancersMap = {};
+  if (awardIds.length > 0) {
+    const placeholders = awardIds.map(() => '?').join(',');
+    const dancersData = await db.all(`
+      SELECT ad.award_id, d.name
+      FROM award_dancers ad
+      JOIN dancers d ON ad.dancer_id = d.id
+      WHERE ad.award_id IN (${placeholders})
+    `, awardIds);
+    dancersData.forEach(row => {
+      if (!awardDancersMap[row.award_id]) awardDancersMap[row.award_id] = [];
+      awardDancersMap[row.award_id].push(row.name);
+    });
+  }
+
+  const groups = {};
+
+  for (const award of awards) {
+    let groupKey = String(award.event_year);
+    if (award.event_name.toLowerCase().includes('final')) {
+      groupKey = `${award.event_year} Final`;
+    }
+    
+    if (!groups[groupKey]) groups[groupKey] = {};
+
+    let ageDiv = award.age_division || 'Others';
+    ageDiv = ageDiv.replace(/ AGE DIVISION/i, '').trim();
+    ageDiv = ageDiv.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+
+    if (ageDiv === 'Others' && isYagp && (award.category || '').toLowerCase().includes('ensemble')) {
+       ageDiv = 'Ensembles';
+    }
+
+    if (!groups[groupKey][ageDiv]) groups[groupKey][ageDiv] = [];
+
+    const placeLower = String(award.place || '').toLowerCase();
+    let emoji = '';
+    if (placeLower.includes('hope') || placeLower.includes('youth grand prix') || placeLower.includes('grand prix')) emoji = '👑 ';
+    else if (placeLower.includes('1st')) emoji = '🥇';
+    else if (placeLower.includes('2nd')) emoji = '🥈';
+    else if (placeLower.includes('3rd')) emoji = '🥉';
+    else if (placeLower.includes('top')) emoji = '🎖';
+
+    let cleanedCategory = award.category || award.award_type || '';
+    cleanedCategory = cleanedCategory.replace(/-?\s*DANCE CATEGORY\s*-?/i, ' ').trim();
+    cleanedCategory = cleanedCategory.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+
+    const dancers = awardDancersMap[award.id] ? awardDancersMap[award.id].join(', ') : '';
+    let suffix = award.event_name.toLowerCase().includes('final') ? '' : ', Regional';
+
+    let formattedPlace = award.place ? award.place : 'Award';
+    let agePrefix = (ageDiv !== 'Others' && ageDiv !== 'Ensembles') ? `${ageDiv} ` : '';
+    
+    let lineStr = `${emoji}${formattedPlace}, ${agePrefix}${cleanedCategory}`;
+    if (dancers) lineStr += ` (${dancers})`;
+    else if (award.performance_name) lineStr += ` [${award.performance_name}]`;
+    if (suffix) lineStr += suffix;
+
+    const autoCheck = placeLower.includes('1st') || placeLower.includes('2nd') || placeLower.includes('3rd') || placeLower.includes('hope') || placeLower.includes('grand prix');
+
+    groups[groupKey][ageDiv].push({
+      id: award.id,
+      text: lineStr,
+      autoCheck: autoCheck
+    });
+  }
+
+  res.json({ orgName: org.name, groups });
+});
+
+
+router.post('/api/studio/:id/history/org/:org_id/ai-summary', requireAuth, requireStudioOwner, async (req, res) => {
+  try {
+    const db = await openDb();
+    const studioId = req.params.id;
+    const orgId = req.params.org_id;
+    const { tone, awardsList, orgName } = req.body;
+
+    const studio = req.studio;
+
+    const awardsText = awardsList.join('\n');
+    let systemPrompt = `You are an expert marketing copywriter for a competitive dance studio. Write a concise, inspiring social media caption celebrating the studio's achievements at ${orgName} based on the provided list of awards.`;
+    
+    if (tone === 'Professional') {
+      systemPrompt = `You are a professional PR specialist for a competitive dance studio. Write a formal, concise press release blurb celebrating the studio's achievements at ${orgName} based on the provided list of awards. Avoid overly casual language or excessive emojis.`;
+    } else if (tone === 'Enthusiastic') {
+      systemPrompt = `You are an extremely enthusiastic marketing copywriter for a competitive dance studio. Write a highly energetic, inspiring social media caption celebrating the studio's achievements at ${orgName} based on the provided list of awards. Use emojis generously and make it sound exciting!`;
+    }
+
+    const prompt = `Awards List:\n${awardsText}\n\nWrite the marketing summary. Keep it under 150 words. Do not hallucinate any awards. Focus on podium placements (1st, 2nd, 3rd) and major awards.`;
+
+    const modelSetting = await db.get(`SELECT value FROM system_settings WHERE key = 'openai_model'`);
+    const aiModel = modelSetting ? modelSetting.value : 'gpt-4o-mini';
+
+    const response = await openai.chat.completions.create({
+      model: aiModel,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: prompt }
+      ]
+    });
+
+    const aiResponseText = response.choices[0].message.content.trim();
+
+    const result = await db.run(`
+      INSERT INTO ai_summaries (studio_id, org_id, tone, prompt, raw_awards_json, original_ai_response, user_edited_response)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `, [studioId, orgId, tone, prompt, JSON.stringify(awardsList), aiResponseText, aiResponseText]);
+
+    res.json({ id: result.lastID, text: aiResponseText });
+  } catch (error) {
+    console.error('OpenAI Error:', error);
+    res.status(500).json({ error: 'Failed to generate summary' });
+  }
+});
+
+
+router.put('/api/studio/ai-summary/:id', requireAuth, async (req, res) => {
+  try {
+    const db = await openDb();
+    const { text } = req.body;
+
+    const summary = await db.get(`
+      SELECT ai.id, s.owner_id
+      FROM ai_summaries ai
+      JOIN studios s ON ai.studio_id = s.id
+      WHERE ai.id = ?
+    `, [req.params.id]);
+    if (!summary) return res.status(404).json({ error: 'Summary not found' });
+
+    const { id: userId, role } = req.session.user;
+    if (summary.owner_id !== userId && role !== 'admin' && role !== 'superadmin') {
+      return res.status(403).json({ error: 'Forbidden: Not the owner' });
+    }
+
+    await db.run(`
+      UPDATE ai_summaries
+      SET user_edited_response = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `, [text, req.params.id]);
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('DB Update Error:', error);
+    res.status(500).json({ error: 'Failed to save edits' });
+  }
+});
+
+
+router.get('/manage/studio/:id/awards', requireAuth, requireStudioOwner, async (req, res) => {
+  const db = await openDb();
+  const studio = req.studio;
+
+  const yearsResult = await db.all(`
+    SELECT DISTINCT e.year
+    FROM awards a
+    JOIN events e ON a.event_id = e.id
+    WHERE a.studio_id = ?
+    ORDER BY e.year DESC
+  `, [req.params.id]);
+  const availableYears = yearsResult.map(r => r.year);
+
+  let selectedYear = req.query.year || null;
+  if (!selectedYear && availableYears.length > 0) {
+    selectedYear = availableYears[0];
+  } else if (selectedYear !== 'all') {
+    selectedYear = parseInt(selectedYear);
+  }
+
+  let awards = [];
+  if (selectedYear) {
+    let yearClause = selectedYear === 'all' ? '' : 'AND e.year = ?';
+    let params = selectedYear === 'all' ? [req.params.id] : [req.params.id, selectedYear];
+    
+    awards = await db.all(`
+      SELECT a.*, d.name as dancer_name, e.name as event_name, e.year as event_year 
+      FROM awards a
+      LEFT JOIN dancers d ON a.dancer_id = d.id
+      LEFT JOIN events e ON a.event_id = e.id
+      WHERE a.studio_id = ? ${yearClause}
+      ORDER BY e.date_string DESC
+    `, params);
+  }
+
+  const studioDancers = await db.all(`
+    SELECT d.id, d.name 
+    FROM dancers d
+    JOIN dancer_studios ds ON d.id = ds.dancer_id
+    WHERE ds.studio_id = ?
+    ORDER BY d.name ASC
+  `, [req.params.id]);
+
+  let awardDancers = [];
+  if (selectedYear) {
+    let yearClause = selectedYear === 'all' ? '' : 'AND e.year = ?';
+    let params = selectedYear === 'all' ? [req.params.id] : [req.params.id, selectedYear];
+
+    awardDancers = await db.all(`
+      SELECT ad.award_id, d.id as dancer_id, d.name 
+      FROM award_dancers ad
+      JOIN dancers d ON ad.dancer_id = d.id
+      JOIN awards a ON ad.award_id = a.id
+      JOIN events e ON a.event_id = e.id
+      WHERE a.studio_id = ? ${yearClause}
+    `, params);
+  }
+
+  const groupedDancers = {};
+  for (const row of awardDancers) {
+    if (!groupedDancers[row.award_id]) groupedDancers[row.award_id] = [];
+    groupedDancers[row.award_id].push({ id: row.dancer_id, name: row.name });
+  }
+
+  const currentView = req.query.view || 'events';
+  const currentSort = req.query.sort || 'name';
+
+  res.render('manage_studio_awards', { 
+    studio, 
+    awards, 
+    studioDancers, 
+    groupedDancers, 
+    availableYears, 
+    selectedYear, 
+    currentView, 
+    currentSort 
+  });
+});
+
+
+router.post('/manage/studio/:id/awards/:awardId/update', requireAuth, requireStudioOwner, async (req, res) => {
+  const db = await openDb();
+  const studio = req.studio;
+
+  const award = await db.get('SELECT * FROM awards WHERE id = ? AND studio_id = ?', [req.params.awardId, req.params.id]);
+  if (!award) return res.status(404).send('Award not found');
+
+  const { performance_name, place, award_type, category, age_division } = req.body;
+
+  if (performance_name && !award.performance_name) {
+    await db.run('UPDATE awards SET performance_name = ? WHERE id = ?', [performance_name, award.id]);
+  }
+  if (place && !award.place) {
+    await db.run('UPDATE awards SET place = ? WHERE id = ?', [place, award.id]);
+  }
+  if (award_type && !award.award_type) {
+    await db.run('UPDATE awards SET award_type = ? WHERE id = ?', [award_type, award.id]);
+  }
+  if (category !== undefined) {
+    await db.run('UPDATE awards SET category = ? WHERE id = ?', [category, award.id]);
+  }
+  if (age_division !== undefined) {
+    await db.run('UPDATE awards SET age_division = ? WHERE id = ?', [age_division, award.id]);
+  }
+
+  const yearQuery = req.query.year ? `?year=${req.query.year}` : '';
+  res.redirect(`/manage/studio/${req.params.id}/awards${yearQuery}`);
+});
+
+
+router.post('/api/studio/:id/awards/:awardId/hall-of-fame', express.json(), requireAuth, requireStudioOwner, async (req, res) => {
+  const db = await openDb();
+  const studio = req.studio;
+
+  const { status } = req.body; // expected: 1, -1, or 0
+  if (![1, 0, -1].includes(status)) return res.status(400).json({ error: 'Invalid status' });
+
+  try {
+    const result = await db.run('UPDATE awards SET is_hall_of_fame = ? WHERE id = ? AND studio_id = ?', [status, req.params.awardId, req.params.id]);
+    if (result.changes === 0) return res.status(404).json({ error: 'Award not found' });
+    res.json({ success: true, status });
+  } catch (err) {
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
+
+router.post('/manage/studio/:id/awards/:awardId/dancers', requireAuth, requireStudioOwner, async (req, res) => {
+  const db = await openDb();
+  const studio = req.studio;
+
+  const yearQuery = req.query.year ? `?year=${req.query.year}` : '';
+  let { dancer_name } = req.body;
+  if (!dancer_name) return res.redirect(`/manage/studio/${req.params.id}/awards${yearQuery}`);
+  dancer_name = dancer_name.trim();
+
+  try {
+    let dancer = await db.get(`
+      SELECT d.id FROM dancers d 
+      JOIN dancer_studios ds ON d.id = ds.dancer_id 
+      WHERE d.name = ? COLLATE NOCASE AND ds.studio_id = ?
+    `, [dancer_name, req.params.id]);
+
+    if (!dancer) {
+      const unique_id = generateDancerId(dancer_name);
+      const result = await db.run('INSERT INTO dancers (unique_id, name) VALUES (?, ?)', [unique_id, dancer_name]);
+      dancer = { id: result.lastID };
+    }
+
+    try {
+      await db.run('INSERT INTO dancer_studios (dancer_id, studio_id) VALUES (?, ?)', [dancer.id, req.params.id]);
+    } catch (e) { }
+
+    await db.run('INSERT INTO award_dancers (award_id, dancer_id) VALUES (?, ?)', [req.params.awardId, dancer.id]);
+  } catch (e) { console.error(e); }
+
+  res.redirect(`/manage/studio/${req.params.id}/awards${yearQuery}`);
+});
+
+
+router.post('/manage/studio/:id/awards/:awardId/dancers/:dancerId/remove', requireAuth, requireStudioOwner, async (req, res) => {
+  const db = await openDb();
+  const studio = req.studio;
+
+  await db.run('DELETE FROM award_dancers WHERE award_id = ? AND dancer_id = ?', [req.params.awardId, req.params.dancerId]);
+
+  const yearQuery = req.query.year ? `?year=${req.query.year}` : '';
+  res.redirect(`/manage/studio/${req.params.id}/awards${yearQuery}`);
+});
+
+
+// Widget Builder UI
+router.get('/manage/studio/:id/widget', requireAuth, requireStudioOwner, async (req, res) => {
+  const db = await openDb();
+  const studio = req.studio;
+
+  res.render('manage_studio_widget', { studio });
+});
+
+
+router.get('/my-studio', requireAuth, async (req, res) => {
+  const db = await openDb();
+  const ownedStudio = await db.get('SELECT id FROM studios WHERE owner_id = ? LIMIT 1', [req.session.user.id]);
+  if (ownedStudio) {
+    res.redirect(`/manage/studio/${ownedStudio.id}`);
+  } else {
+    res.send(`<script>alert("You haven't claimed a studio yet! Please search for your studio in the directory and click 'Claim this Studio' to gain management access."); window.location.href="/studios";</script>`);
+  }
+});
+
+module.exports = router;

@@ -8,8 +8,12 @@ const BASE = `http://localhost:${PORT}`;
 
 const CHECKS = [
   // [method, path, expected status(es), description]
-  ['GET', '/', [200], 'homepage'],
-  ['GET', '/studios', [200], 'studios list'],
+  ['GET', '/', [200], 'landing page (anonymous)'],
+  ['GET', '/style.css', [200], 'landing stylesheet'],
+  ['GET', '/dance', [200], 'dance vertical home'],
+  ['GET', '/dance/studios', [200], 'studios list'],
+  ['GET', '/studios', [301], 'legacy /studios redirects to /dance'],
+  ['GET', '/studio/1', [301], 'legacy studio profile redirects to /dance'],
   ['GET', '/login', [200], 'login page'],
   ['GET', '/register', [200], 'register page'],
   ['GET', '/faq/dancer', [200], 'dancer FAQ'],
@@ -60,6 +64,23 @@ async function main() {
   let failures = 0;
   try {
     await waitForServer();
+
+    // Real-content checks: hit an actual studio profile and dancer trophy
+    // case so the heaviest views render end-to-end.
+    try {
+      const { openDb } = require('../database');
+      const db = await openDb();
+      const studio = await db.get("SELECT id FROM studios WHERE status = 'active' ORDER BY id LIMIT 1");
+      const dancer = await db.get('SELECT unique_id FROM dancers ORDER BY id LIMIT 1');
+      const event = await db.get('SELECT id FROM events ORDER BY id LIMIT 1');
+      if (studio) CHECKS.push(['GET', `/dance/studio/${studio.id}`, [200], 'real studio profile renders']);
+      if (dancer) CHECKS.push(['GET', `/dancer/${dancer.unique_id}`, [200], 'real dancer trophy case renders']);
+      if (event) CHECKS.push(['GET', `/dance/event/${event.id}`, [403], 'event detail stays admin-gated']);
+      if (studio) CHECKS.push(['GET', `/widget/studio/${studio.id}`, [200], 'embeddable widget renders']);
+    } catch (e) {
+      console.log('NOTE: real-content checks skipped (' + e.message + ')');
+    }
+
     for (const [method, path, expected, desc] of CHECKS) {
       let status;
       try {
