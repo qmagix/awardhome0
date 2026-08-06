@@ -22,7 +22,7 @@ sudo systemctl restart awardhome
 echo "==> Health check"
 for i in $(seq 1 15); do
   if curl -fsS http://127.0.0.1:3008/healthz >/dev/null 2>&1; then
-    echo "OK — deployed $(git rev-parse --short HEAD)"
+    echo "OK — deployed $(sudo -u $APP_USER git rev-parse --short HEAD)"
     exit 0
   fi
   sleep 1
