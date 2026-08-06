@@ -8,6 +8,7 @@ const BASE = `http://localhost:${PORT}`;
 
 const CHECKS = [
   // [method, path, expected status(es), description]
+  ['GET', '/healthz', [200], 'health check'],
   ['GET', '/', [200], 'landing page (anonymous)'],
   ['GET', '/style.css', [200], 'landing stylesheet'],
   ['GET', '/dance', [200], 'dance vertical home'],

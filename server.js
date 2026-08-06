@@ -145,6 +145,17 @@ app.use((req, res, next) => {
   next();
 });
 
+// Health check for deploys / load balancers / monitoring
+app.get('/healthz', async (req, res) => {
+  try {
+    const db = await openDb();
+    await db.get('SELECT 1');
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ ok: false });
+  }
+});
+
 // ---- Routers ----
 app.use(require('./routes/auth'));
 app.use(require('./routes/dance/claims'));
