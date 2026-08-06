@@ -4,8 +4,14 @@
   <h1>Discover the Stars</h1>
   <p>Explore award-winning studios and dancers from top competitions.</p>
 </section>
+<nav class="section-nav" aria-label="Page sections">
+  <div class="section-nav-inner">
+    <a href="#competitions">Competitions</a>
+    <a href="#leaderboards">Leaderboards</a>
+  </div>
+</nav>
 <div class="container">
-  <h2>Competitions & Organizations</h2>
+  <h2 id="competitions" class="anchor-section">Competitions & Organizations</h2>
   <div class="grid" style="margin-bottom: 3rem;">
     <% orgs.forEach(function(org) { %>
       <a href="/dance/org/<%= org.slug %>" class="card glass-card hover-zoom" style="border-color: rgba(212, 175, 55, 0.3);">
@@ -22,7 +28,7 @@
   </div>
 
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-    <h2 style="margin: 0;">🏆 Global Leaderboards</h2>
+    <h2 id="leaderboards" class="anchor-section" style="margin: 0;">🏆 Global Leaderboards</h2>
     <div class="view-toggle" style="display: flex; gap: 0.5rem; background: rgba(0,0,0,0.3); padding: 0.3rem; border-radius: 8px;">
       <button id="btn-studios" class="btn btn-primary btn-sm" onclick="setLeaderboardView('studios')" style="border-radius: 6px;">Top Studios</button>
       <button id="btn-dancers" class="btn btn-outline btn-sm" onclick="setLeaderboardView('dancers')" style="border-radius: 6px; border: none;">Top Dancers</button>
