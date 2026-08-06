@@ -12,6 +12,7 @@ class SqliteSessionStore extends session.Store {
     super();
     this.ready = (async () => {
       const db = await open({ filename, driver: sqlite3.Database });
+      await db.exec('PRAGMA journal_mode = WAL; PRAGMA busy_timeout = 5000;');
       await db.exec('CREATE TABLE IF NOT EXISTS sessions (sid TEXT PRIMARY KEY, expires INTEGER, sess TEXT)');
       return db;
     })();

@@ -2,11 +2,29 @@ const sqlite3 = require('sqlite3').verbose();
 const { open } = require('sqlite');
 const path = require('path');
 
-async function openDb() {
-  return open({
-    filename: path.join(__dirname, 'database.sqlite'),
-    driver: sqlite3.Database
-  });
+// Single shared connection for the whole process. sqlite3 serializes
+// statements on one connection, and WAL + busy_timeout handle contention
+// with other processes (import scripts, sqlite3 CLI).
+// NOTE: foreign_keys stays OFF — the live data has known orphaned
+// awards.dancer_id references that must be cleaned up before enforcement.
+let dbPromise = null;
+
+function openDb() {
+  if (!dbPromise) {
+    dbPromise = (async () => {
+      const db = await open({
+        filename: path.join(__dirname, 'database.sqlite'),
+        driver: sqlite3.Database
+      });
+      await db.exec(`
+        PRAGMA journal_mode = WAL;
+        PRAGMA busy_timeout = 5000;
+        PRAGMA synchronous = NORMAL;
+      `);
+      return db;
+    })();
+  }
+  return dbPromise;
 }
 
 async function initDb() {
