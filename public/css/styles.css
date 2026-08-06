@@ -99,6 +99,7 @@ a:hover {
   margin: 0 auto;
   padding: 0.6rem 2rem;
   display: flex;
+  justify-content: center;
   gap: 1.75rem;
   white-space: nowrap;
 }
@@ -114,6 +115,20 @@ a:hover {
 .section-nav a:hover {
   color: var(--gold-light);
 }
+
+@media (max-width: 540px) {
+  .section-nav-inner {
+    justify-content: flex-start;
+    padding: 0.5rem 1rem;
+    gap: 1.1rem;
+  }
+
+  .section-nav a {
+    font-size: 0.72rem;
+    letter-spacing: 0.3px;
+  }
+}
+
 
 .anchor-section {
   scroll-margin-top: 120px;
