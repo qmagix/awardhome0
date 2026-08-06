@@ -1,0 +1,14 @@
+[Unit]
+Description=Litestream replication for AwardHome SQLite
+After=network.target awardhome.service
+
+[Service]
+Type=simple
+User=awardhome
+WorkingDirectory=/opt/awardhome
+ExecStart=/usr/bin/litestream replicate -config /opt/awardhome/litestream.yml
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

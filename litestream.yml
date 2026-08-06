@@ -1,0 +1,22 @@
+# Litestream continuous SQLite replication to AWS S3 (https://litestream.io)
+#
+# Credentials: on EC2, attach an IAM instance role with access to the bucket
+# (see docs/deployment.md) — no keys needed. Anywhere else, set
+# AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY in the environment.
+#
+# Run alongside the app (deploy/litestream.service does this):
+#   litestream replicate -config litestream.yml
+# Disaster recovery:
+#   litestream restore -config litestream.yml -o database.sqlite database.sqlite
+#
+# Path is relative to the working directory (systemd unit sets it to the app
+# dir), so the same config works locally and on the server.
+dbs:
+  - path: ./database.sqlite
+    replicas:
+      - type: s3
+        bucket: awardhome-backups-986110436623
+        path: database
+        region: us-east-1           # match your bucket's region
+        sync-interval: 10s
+        retention: 168h             # keep 7 days of snapshots + WAL
