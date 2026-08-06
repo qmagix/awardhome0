@@ -1,12 +1,18 @@
 :root {
-  --primary: #6366f1;
-  --primary-hover: #4f46e5;
-  --bg-color: #0f172a;
-  --text-color: #f8fafc;
-  --text-muted: #94a3b8;
-  --card-bg: rgba(30, 41, 59, 0.7);
-  --border-color: rgba(255, 255, 255, 0.1);
-  --glass-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(251, 191, 36, 0.08);
+  /* AwardHome black & gold system — shared with the landing page */
+  --primary: #d4af37;
+  --primary-hover: #f3e5ab;
+  --gold-light: #f3e5ab;
+  --gold-dark: #aa8529;
+  --gold-vivid: #fbbf24;
+  --gold-vivid-deep: #d97706;
+  --bg-color: #0a0a0a;
+  --bg-secondary: #111111;
+  --text-color: #ffffff;
+  --text-muted: #a0a0a0;
+  --card-bg: rgba(38, 38, 38, 0.72);
+  --border-color: rgba(212, 175, 55, 0.18);
+  --glass-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(212, 175, 55, 0.07);
 }
 
 * {
@@ -16,35 +22,67 @@
 }
 
 body {
-  font-family: 'Outfit', 'Inter', sans-serif;
+  font-family: 'Inter', sans-serif;
   background-color: var(--bg-color);
   color: var(--text-color);
   line-height: 1.6;
   background-image:
-    radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(236, 72, 153, 0.15) 0px, transparent 50%);
+    radial-gradient(at 20% 0%, rgba(212, 175, 55, 0.07) 0px, transparent 55%),
+    radial-gradient(at 100% 100%, rgba(170, 133, 41, 0.05) 0px, transparent 50%);
   background-attachment: fixed;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  position: relative;
+}
+
+/* Ambient glow — the landing's glow-orb carried into the app */
+body::before {
+  content: '';
+  position: fixed;
+  top: -120px;
+  right: 8%;
+  width: 380px;
+  height: 380px;
+  background: var(--primary);
+  filter: blur(140px);
+  opacity: 0.07;
+  pointer-events: none;
+  z-index: 0;
+}
+
+main, .glass-nav, footer {
+  position: relative;
+  z-index: 1;
+}
+
+h1, h2, h3, h4 {
+  font-family: 'Outfit', 'Inter', sans-serif;
+}
+
+.text-gold {
+  background: linear-gradient(135deg, var(--gold-vivid), var(--gold-vivid-deep));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 a {
-  color: #818cf8;
+  color: var(--primary);
   text-decoration: none;
   transition: color 0.2s;
 }
 
 a:hover {
-  color: #a5b4fc;
+  color: var(--gold-light);
 }
 
 /* Glassmorphism Utilities */
 .glass-nav {
-  background: rgba(15, 23, 42, 0.8);
+  background: rgba(10, 10, 10, 0.8);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -56,7 +94,7 @@ a:hover {
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-color);
   border-radius: 16px;
-  box-shadow: var(--glass-shadow);
+  box-shadow: var(--glass-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 /* Navigation */
@@ -70,10 +108,27 @@ a:hover {
 }
 
 .brand {
+  font-family: 'Outfit', sans-serif;
   font-size: 1.5rem;
   font-weight: 800;
   color: white;
-  letter-spacing: -0.5px;
+  letter-spacing: 1px;
+}
+
+.brand span {
+  color: var(--primary);
+}
+
+.brand-tag {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 3px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-left: 0.6rem;
+  vertical-align: middle;
+  border-left: 1px solid var(--border-color);
+  padding-left: 0.6rem;
 }
 
 /* Layout */
@@ -98,7 +153,7 @@ main {
   font-size: 3.5rem;
   font-weight: 800;
   margin-bottom: 1rem;
-  background: linear-gradient(to right, #fbbf24, #d97706);
+  background: linear-gradient(135deg, var(--gold-vivid), var(--gold-vivid-deep));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -131,7 +186,7 @@ main {
 
 .hover-zoom:hover {
   transform: translateY(-4px) scale(1.02);
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8), 0 0 30px rgba(251, 191, 36, 0.25);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8), 0 0 30px rgba(212, 175, 55, 0.25);
   border-color: rgba(255, 255, 255, 0.15);
 }
 
@@ -144,49 +199,53 @@ main {
 /* Buttons */
 .btn {
   display: inline-block;
-  padding: 0.5rem 1rem;
-  background: rgba(255, 255, 255, 0.1);
+  padding: 0.5rem 1.1rem;
+  background: rgba(255, 255, 255, 0.08);
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: 30px;
   font-size: 0.875rem;
   font-weight: 600;
   text-align: center;
   color: var(--text-color);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.25s ease;
 }
 
 .btn-primary {
-  background: var(--primary);
-  color: white;
-  border-color: var(--primary);
+  background: linear-gradient(135deg, var(--primary), var(--gold-dark));
+  color: #0a0a0a !important;
+  border-color: transparent;
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.25);
 }
 
 .btn-primary:hover {
-  background: var(--primary-hover);
-  color: white;
+  background: linear-gradient(135deg, var(--gold-light), var(--primary));
+  color: #0a0a0a !important;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
 }
 
 .btn-outline {
   background: transparent;
-  color: var(--text-color);
-  border-color: rgba(255, 255, 255, 0.3);
+  color: var(--primary);
+  border-color: rgba(212, 175, 55, 0.5);
 }
 
 .btn-outline:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.5);
+  background: var(--primary);
+  color: #0a0a0a;
+  border-color: var(--primary);
 }
 
 .btn-warning {
-  background: rgba(236, 72, 153, 0.2);
-  color: #f472b6;
-  border: 1px solid rgba(236, 72, 153, 0.5);
+  background: rgba(220, 38, 38, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(220, 38, 38, 0.4);
   cursor: pointer;
 }
 
 .btn-warning:hover {
-  background: #ec4899 !important;
+  background: #dc2626 !important;
   color: white;
 }
 
@@ -273,12 +332,20 @@ h2 {
 }
 
 .badge {
-  background: rgba(99, 102, 241, 0.2);
-  color: #a5b4fc;
+  background: rgba(212, 175, 55, 0.12);
+  color: var(--gold-light);
+  border: 1px solid rgba(212, 175, 55, 0.25);
   padding: 0.25rem 0.75rem;
   border-radius: 9999px;
   font-weight: 600;
   font-size: 0.875rem;
+}
+
+/* Award-count pills — vivid amber so the numbers lead */
+.badge-count {
+  background: rgba(251, 191, 36, 0.12);
+  color: var(--gold-vivid);
+  border-color: rgba(251, 191, 36, 0.35);
 }
 
 .sub-text {
@@ -303,12 +370,12 @@ h2 {
   font-size: 4rem;
   width: 100px;
   height: 100px;
-  background: linear-gradient(135deg, var(--primary), #ec4899);
+  background: linear-gradient(135deg, var(--primary), var(--gold-dark));
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 20px rgba(236, 72, 153, 0.3);
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
 }
 
 .profile-info h1 {
@@ -368,7 +435,7 @@ h2 {
   transform: translateY(-8px) scale(1.02);
   box-shadow:
     0 30px 50px rgba(0, 0, 0, 0.5),
-    0 0 20px rgba(234, 179, 8, 0.3),
+    0 0 20px rgba(212, 175, 55, 0.35),
     inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
@@ -405,7 +472,7 @@ h2 {
 }
 
 .tier-gold .award-place {
-  background: linear-gradient(to bottom right, #fde047, #d97706);
+  background: linear-gradient(to bottom right, #fde047, var(--gold-vivid-deep));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -477,7 +544,7 @@ h2 {
 }
 
 .premium-trophy-card .category {
-  color: #a5b4fc;
+  color: var(--gold-light);
   font-weight: 600;
   margin-bottom: 0.5rem;
   text-align: center;
@@ -613,20 +680,20 @@ footer {
 
 /* Premium Awards Styling */
 .premium-award-border {
-  border: 1px solid rgba(251, 191, 36, 0.5) !important;
+  border: 1px solid rgba(212, 175, 55, 0.5) !important;
   border-top: 1px solid rgba(253, 224, 71, 0.8) !important;
   border-left: 1px solid rgba(253, 224, 71, 0.8) !important;
-  border-right: 4px solid rgba(251, 191, 36, 0.4) !important;
-  border-bottom: 4px solid rgba(251, 191, 36, 0.4) !important;
-  box-shadow: 0 0 15px rgba(251, 191, 36, 0.15) !important;
-  background: linear-gradient(135deg, rgba(251, 191, 36, 0.05) 0%, rgba(0, 0, 0, 0) 100%) !important;
+  border-right: 4px solid rgba(212, 175, 55, 0.4) !important;
+  border-bottom: 4px solid rgba(212, 175, 55, 0.4) !important;
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.15) !important;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.05) 0%, rgba(0, 0, 0, 0) 100%) !important;
 }
 
 .badge-premium {
-  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%) !important;
+  background: linear-gradient(135deg, #d4af37 0%, #aa8529 100%) !important;
   color: #fff !important;
   border: none !important;
-  box-shadow: 0 2px 4px rgba(251, 191, 36, 0.4) !important;
+  box-shadow: 0 2px 4px rgba(212, 175, 55, 0.4) !important;
 }
 /* Leaderboard Styles */
 .leaderboard-rank-badge {
@@ -636,9 +703,9 @@ footer {
   color: white;
 }
 .rank-1.leaderboard-rank-badge {
-  background: rgba(251, 191, 36, 0.2);
-  color: #fbbf24;
-  border: 1px solid rgba(251, 191, 36, 0.4);
+  background: rgba(212, 175, 55, 0.2);
+  color: #d4af37;
+  border: 1px solid rgba(212, 175, 55, 0.4);
   font-size: 1rem;
   font-weight: bold;
 }
@@ -669,19 +736,19 @@ footer {
 /* Premium Org Card */
 .premium-org-card {
   position: relative;
-  background: linear-gradient(145deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
+  background: linear-gradient(145deg, rgba(46, 46, 46, 0.85) 0%, rgba(20, 20, 20, 0.95) 100%);
   border-radius: 16px;
-  border: 1px solid rgba(251, 191, 36, 0.3);
-  border-top: 1px solid rgba(251, 191, 36, 0.5);
-  border-left: 1px solid rgba(251, 191, 36, 0.4);
-  border-right: 4px solid rgba(251, 191, 36, 0.6);
-  border-bottom: 4px solid rgba(251, 191, 36, 0.6);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-top: 1px solid rgba(212, 175, 55, 0.5);
+  border-left: 1px solid rgba(212, 175, 55, 0.4);
+  border-right: 4px solid rgba(212, 175, 55, 0.6);
+  border-bottom: 4px solid rgba(212, 175, 55, 0.6);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   box-shadow: 
     0 15px 35px rgba(0, 0, 0, 0.5),
-    0 0 20px rgba(251, 191, 36, 0.15),
-    inset 0 0 20px rgba(251, 191, 36, 0.05);
+    0 0 20px rgba(212, 175, 55, 0.15),
+    inset 0 0 20px rgba(212, 175, 55, 0.05);
   padding: 1.75rem 1.5rem;
   overflow: hidden;
   transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease, border-color 0.4s ease;
@@ -708,9 +775,9 @@ footer {
   transform: translateY(-8px) scale(1.02);
   box-shadow: 
     0 25px 45px rgba(0, 0, 0, 0.7),
-    0 0 40px rgba(251, 191, 36, 0.4),
+    0 0 40px rgba(212, 175, 55, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  border-color: rgba(251, 191, 36, 0.6);
+  border-color: rgba(212, 175, 55, 0.6);
 }
 
 .premium-org-card:hover::before {
@@ -726,17 +793,17 @@ footer {
   font-size: 1.4rem;
   font-weight: 800;
   margin-bottom: 1rem;
-  background: linear-gradient(to right, #fbbf24, #f59e0b);
+  background: linear-gradient(to right, var(--gold-vivid), var(--gold-vivid-deep));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  text-shadow: 0 2px 10px rgba(251, 191, 36, 0.2);
+  text-shadow: 0 2px 10px rgba(212, 175, 55, 0.2);
 }
 
 .premium-org-card .badge-org {
-  background: rgba(251, 191, 36, 0.15);
-  color: #fbbf24;
-  border: 1px solid rgba(251, 191, 36, 0.3);
+  background: rgba(212, 175, 55, 0.15);
+  color: #d4af37;
+  border: 1px solid rgba(212, 175, 55, 0.3);
   padding: 0.35rem 0.8rem;
   border-radius: 20px;
   font-size: 0.85rem;
@@ -747,7 +814,7 @@ footer {
 /* Premium Studio Card */
 .premium-studio-card {
   position: relative;
-  background: linear-gradient(145deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
+  background: linear-gradient(145deg, rgba(46, 46, 46, 0.85) 0%, rgba(20, 20, 20, 0.95) 100%);
   border-radius: 16px;
   border: 1px solid rgba(16, 185, 129, 0.3);
   border-top: 1px solid rgba(16, 185, 129, 0.5);

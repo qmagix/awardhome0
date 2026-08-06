@@ -29,7 +29,7 @@
             <div>
               <span style="padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; 
                 <%= fb.status === 'new' ? 'background: rgba(251, 191, 36, 0.2); color: #fbbf24;' : 
-                    (fb.status === 'replied' ? 'background: rgba(99, 102, 241, 0.2); color: #818cf8;' : 
+                    (fb.status === 'replied' ? 'background: rgba(212, 175, 55, 0.2); color: #fbbf24;' : 
                     'background: rgba(16, 185, 129, 0.2); color: #10b981;') %>">
                 <%= fb.status === 'new' ? 'Pending Review' : (fb.status === 'replied' ? 'Replied' : 'Resolved') %>
               </span>
@@ -39,8 +39,8 @@
           <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; color: var(--text-color); font-size: 1rem; white-space: pre-wrap;"><%= fb.message %></div>
           
           <% if (fb.admin_reply) { %>
-            <div style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3); padding: 1rem; border-radius: 8px;">
-              <strong style="color: #818cf8; display: block; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+            <div style="background: rgba(212, 175, 55, 0.1); border: 1px solid rgba(212, 175, 55, 0.3); padding: 1rem; border-radius: 8px;">
+              <strong style="color: #fbbf24; display: block; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
                 Response from Dance Awards Team:
               </strong>

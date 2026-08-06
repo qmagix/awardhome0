@@ -41,7 +41,7 @@
                    style="width: 20px; height: 20px; cursor: pointer;">
           </div>
           
-          <div style="width: 150px; font-weight: 600; color: <%= c.is_first_place ? '#fbbf24' : 'var(--text-color)' %>;">
+          <div style="width: 150px; font-weight: 600; color: <%= c.is_first_place ? '#d4af37' : 'var(--text-color)' %>;">
             <span class="badge" style="<%= c.is_first_place ? 'background: rgba(251, 191, 36, 0.2); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3);' : '' %>">
               <%= c.place || '-' %>
             </span>
@@ -81,9 +81,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const placeContainer = e.target.closest('div').nextElementSibling;
       const badge = placeContainer.querySelector('.badge');
       if (isChecked) {
-        placeContainer.style.color = '#fbbf24';
+        placeContainer.style.color = '#d4af37';
         badge.style.background = 'rgba(251, 191, 36, 0.2)';
-        badge.style.color = '#fbbf24';
+        badge.style.color = '#d4af37';
         badge.style.border = '1px solid rgba(251, 191, 36, 0.3)';
       } else {
         placeContainer.style.color = 'var(--text-color)';

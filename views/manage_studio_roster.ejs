@@ -13,7 +13,7 @@
           </a>
         </li>
         <li>
-          <a href="/manage/studio/<%= studio.id %>/roster" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: white; background: rgba(236, 72, 153, 0.1); border-left: 3px solid var(--primary); font-weight: 600;">
+          <a href="/manage/studio/<%= studio.id %>/roster" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: white; background: rgba(212, 175, 55, 0.1); border-left: 3px solid var(--primary); font-weight: 600;">
             👥 Dancer Roster
           </a>
         </li>
@@ -67,7 +67,7 @@
         <p class="subtitle">Manage your team (<%= roster.filter(d => d.status !== 'alumni').length %> Active Dancers).</p>
       </div>
       <div style="display: flex; gap: 1rem;">
-        <button id="mergeBtn" class="btn" style="display: none; background: var(--primary); color: white;" onclick="openMergeModal()">Compare & Merge (2)</button>
+        <button id="mergeBtn" class="btn" style="display: none; background: var(--primary); color: #0a0a0a;" onclick="openMergeModal()">Compare & Merge (2)</button>
         <button class="btn btn-blue" onclick="window.location.href='/manage/studio/<%= studio.id %>/roster/export'">Export Roster CSV</button>
         <button class="btn btn-blue" onclick="document.getElementById('csvUploadModal').style.display='block'">Upload CSV</button>
         <button class="btn btn-blue" onclick="document.getElementById('claimDancerModal').style.display='block'">+ Add/Claim Dancer</button>
@@ -77,7 +77,7 @@
     <!-- Suspected Duplicates Widget -->
     <% if (Object.keys(duplicateSets).length > 0) { %>
       <div class="card glass-card" style="margin-bottom: 2rem; border-color: rgba(245, 158, 11, 0.3);">
-        <h3 style="color: #f59e0b; margin-top: 0;">⚠️ Suspected Duplicates Detected</h3>
+        <h3 style="color: #aa8529; margin-top: 0;">⚠️ Suspected Duplicates Detected</h3>
         <p style="color: var(--text-muted); margin-bottom: 1.5rem;">The following dancers have multiple profiles on your roster. Review and clean them up.</p>
         
         <div style="display: flex; flex-direction: column; gap: 1rem;">
@@ -99,7 +99,7 @@
                   </ul>
                 </div>
                 <div style="display: flex; gap: 0.5rem;">
-                  <button class="btn btn-blue" onclick="cleanDuplicateSet('<%= set.name %>')" style="background: #f59e0b; color: white;">1-Click Merge & Clean</button>
+                  <button class="btn btn-blue" onclick="cleanDuplicateSet('<%= set.name %>')" style="background: #aa8529; color: white;">1-Click Merge & Clean</button>
                   <button class="btn" style="background: rgba(255,255,255,0.1); color: white;" onclick="ignoreDuplicateSet('<%= set.name %>')">Mark as Different People</button>
                 </div>
               </div>

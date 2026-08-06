@@ -59,16 +59,16 @@
                 <% if (u.is_verified) { %>
                   <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">Verified</span>
                 <% } else { %>
-                  <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b;">Unverified</span>
+                  <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #aa8529;">Unverified</span>
                 <% } %>
               </td>
               <td>
                 <% if (u.role === 'superadmin') { %>
-                  <span class="badge" style="background: var(--primary); color: white;">Superadmin</span>
+                  <span class="badge" style="background: var(--primary); color: #0a0a0a;">Superadmin</span>
                 <% } else if (u.role === 'admin') { %>
                   <span class="badge" style="background: #3b82f6; color: white;">Admin</span>
                 <% } else if (u.role === 'studio_owner') { %>
-                  <span class="badge" style="background: #8b5cf6; color: white;">Studio Owner</span>
+                  <span class="badge" style="background: rgba(255, 255, 255, 0.15); color: #e0e0e0;">Studio Owner</span>
                 <% } else { %>
                   <span class="badge" style="background: rgba(255,255,255,0.1); color: var(--text-muted);">User</span>
                 <% } %>

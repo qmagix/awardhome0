@@ -8,7 +8,7 @@
   <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; align-items: center;">
     <form action="/admin/studios" method="GET" style="display: flex; gap: 0.5rem;">
       <input type="text" name="search" placeholder="Search studio by name..." value="<%= typeof search !== 'undefined' ? search : '' %>" style="padding: 0.5rem 1rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white; width: 300px;">
-      <button type="submit" class="btn" style="background: var(--primary); color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer;">Search</button>
+      <button type="submit" class="btn" style="background: var(--primary); color: #0a0a0a; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer;">Search</button>
       <% if (typeof search !== 'undefined' && search) { %>
         <a href="/admin/studios" class="btn btn-secondary" style="display: flex; align-items: center; text-decoration: none;">Clear</a>
       <% } %>

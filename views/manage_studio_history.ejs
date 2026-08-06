@@ -18,7 +18,7 @@
           </a>
         </li>
         <li>
-          <a href="/manage/studio/<%= studio.id %>/history" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: white; background: rgba(236, 72, 153, 0.1); border-left: 3px solid var(--primary); font-weight: 600;">
+          <a href="/manage/studio/<%= studio.id %>/history" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: white; background: rgba(212, 175, 55, 0.1); border-left: 3px solid var(--primary); font-weight: 600;">
             📊 Organization History
           </a>
         </li>
@@ -82,7 +82,7 @@
                   <h2 style="margin: 0; color: white; display: flex; align-items: center; gap: 1rem;">
                     <%= org.name %>
                   </h2>
-                  <button type="button" class="btn" style="background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); padding: 0.25rem 0.75rem; font-size: 0.8rem; margin-top: 0.5rem; width: fit-content; cursor: pointer;" data-studio-id="<%= studio.id %>" data-org-id="<%= org.id %>" data-org-name="<%= org.name %>" onclick="generateSummary(this.dataset.studioId, this.dataset.orgId, this.dataset.orgName)">
+                  <button type="button" class="btn" style="background: rgba(255, 255, 255, 0.08); color: #e0e0e0; border: 1px solid rgba(255, 255, 255, 0.15); padding: 0.25rem 0.75rem; font-size: 0.8rem; margin-top: 0.5rem; width: fit-content; cursor: pointer;" data-studio-id="<%= studio.id %>" data-org-id="<%= org.id %>" data-org-name="<%= org.name %>" onclick="generateSummary(this.dataset.studioId, this.dataset.orgId, this.dataset.orgName)">
                     📄 Generate Text Summary
                   </button>
                 </div>
@@ -98,7 +98,7 @@
                 </div>
                 <div>
                   <div style="font-size: 0.8rem; color: var(--text-muted);" title="Premium/National/Grand Titles">Major Awards ℹ️</div>
-                  <div style="font-size: 1.5rem; font-weight: bold; color: #f59e0b;"><%= org.major_awards_all_time %></div>
+                  <div style="font-size: 1.5rem; font-weight: bold; color: #aa8529;"><%= org.major_awards_all_time %></div>
                 </div>
               </div>
             </div>
@@ -116,7 +116,7 @@
                     <div style="display: flex; gap: 1rem; font-size: 0.9rem;">
                       <span style="color: var(--text-muted);">Awards: <strong style="color: white;"><%= yrData.total_awards %></strong></span>
                       <span style="color: var(--text-muted);">1st Places: <strong style="color: var(--primary);"><%= yrData.first_places %></strong></span>
-                      <span style="color: var(--text-muted);">Major: <strong style="color: #f59e0b;"><%= yrData.major_awards %></strong></span>
+                      <span style="color: var(--text-muted);">Major: <strong style="color: #aa8529;"><%= yrData.major_awards %></strong></span>
                     </div>
                   </summary>
                   <div style="padding: 0 1rem 1rem 1rem; border-top: 1px solid rgba(255,255,255,0.05); margin-top: 0.5rem; padding-top: 1rem;">
@@ -163,7 +163,7 @@
                                     <td style="padding: 0.5rem; color: var(--text-muted);">
                                       <%= award.category || award.award_type || 'N/A' %>
                                       <% if (award.age_division) { %>
-                                        <span class="badge" style="background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); font-size: 0.7rem; padding: 0.1rem 0.3rem; margin-left: 0.3rem;"><%= award.age_division %></span>
+                                        <span class="badge" style="background: rgba(255, 255, 255, 0.08); color: #e0e0e0; border: 1px solid rgba(255, 255, 255, 0.15); font-size: 0.7rem; padding: 0.1rem 0.3rem; margin-left: 0.3rem;"><%= award.age_division %></span>
                                       <% } %>
                                     </td>
                                   </tr>
@@ -202,7 +202,7 @@
           <option value="Enthusiastic">Tone: Enthusiastic (Social Media)</option>
           <option value="Professional">Tone: Professional (Press Release)</option>
         </select>
-        <button type="button" class="btn" id="btnGenerateAi" style="background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); flex: 1;" onclick="generateAiSummary()">✨ Generate AI Summary</button>
+        <button type="button" class="btn" id="btnGenerateAi" style="background: rgba(255, 255, 255, 0.08); color: #e0e0e0; border: 1px solid rgba(255, 255, 255, 0.15); flex: 1;" onclick="generateAiSummary()">✨ Generate AI Summary</button>
       </div>
 
       <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
@@ -258,7 +258,7 @@ async function generateSummary(studioId, orgId, orgName) {
     
     for (const year of sortedYears) {
       html += `<div class="summary-year-group" data-year="${year}" style="margin-bottom: 1.5rem;">`;
-      html += `<h3 style="margin-top: 0; margin-bottom: 0.5rem; color: #c084fc;">${year}</h3>`;
+      html += `<h3 style="margin-top: 0; margin-bottom: 0.5rem; color: #e0e0e0;">${year}</h3>`;
       
       const divKeys = Object.keys(data.groups[year]).sort();
       for (const div of divKeys) {

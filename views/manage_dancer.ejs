@@ -21,7 +21,7 @@
 
       <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem;" id="dancerNav">
         <li>
-          <a href="#profile" class="nav-link active" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: white; background: rgba(236, 72, 153, 0.1); border-left: 3px solid var(--primary); font-weight: 600;">
+          <a href="#profile" class="nav-link active" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: white; background: rgba(212, 175, 55, 0.1); border-left: 3px solid var(--primary); font-weight: 600;">
             👤 Profile Details
           </a>
         </li>
@@ -112,7 +112,7 @@
                   <% if (studio.status === 'active') { %>
                     <span style="background: rgba(16, 185, 129, 0.2); color: #10b981; padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.85rem; font-weight: 600;">Active</span>
                   <% } else { %>
-                    <span style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.85rem; font-weight: 600;">Pending Approval</span>
+                    <span style="background: rgba(245, 158, 11, 0.2); color: #aa8529; padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.85rem; font-weight: 600;">Pending Approval</span>
                   <% } %>
                 </div>
               </li>
@@ -187,7 +187,7 @@
       </div>
 
       <div class="card glass-card">
-        <h3 style="margin-top: 0; color: #a855f7;">Search Tools</h3>
+        <h3 style="margin-top: 0; color: #e0e0e0;">Search Tools</h3>
         <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.9rem;">
           Enter your name and an optional studio name prefix (e.g., "Elite") to scan our entire global database for unclaimed awards that match your identity.
         </p>
@@ -202,7 +202,7 @@
             <input type="text" id="search_studio" name="search_studio" placeholder="e.g. Elite" style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
           </div>
           <div style="width: 100%; margin-top: 1rem;">
-            <button type="submit" id="searchBtn" class="btn" style="background: #a855f7; color: white; border: none; padding: 0.75rem 1.5rem;">Scan Database</button>
+            <button type="submit" id="searchBtn" class="btn" style="background: #e0e0e0; color: white; border: none; padding: 0.75rem 1.5rem;">Scan Database</button>
           </div>
         </form>
 
@@ -275,7 +275,7 @@
               ${award.studio_name || 'Independent'}
             </td>
             <td>
-              <button class="btn claim-btn" data-id="${award.id}" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid #c084fc;">Claim Award</button>
+              <button class="btn claim-btn" data-id="${award.id}" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: rgba(255, 255, 255, 0.08); color: #e0e0e0; border: 1px solid #e0e0e0;">Claim Award</button>
             </td>
           `;
           tbody.appendChild(tr);
@@ -298,8 +298,8 @@
               if (data.success) {
                 evt.target.textContent = 'Pending Approval';
                 evt.target.style.background = 'rgba(245, 158, 11, 0.2)';
-                evt.target.style.color = '#f59e0b';
-                evt.target.style.border = '1px solid #f59e0b';
+                evt.target.style.color = '#aa8529';
+                evt.target.style.border = '1px solid #aa8529';
                 
                 if (data.backfilledCount > 0) {
                   alert(`Success! We also found and claimed ${data.backfilledCount} other awards for this routine via Smart Auto-Backfill!`);
@@ -345,7 +345,7 @@
 
       e.target.classList.add('active');
       e.target.style.color = 'white';
-      e.target.style.background = 'rgba(236, 72, 153, 0.1)';
+      e.target.style.background = 'rgba(212, 175, 55, 0.1)';
       e.target.style.borderLeft = '3px solid var(--primary)';
       e.target.style.fontWeight = '600';
 

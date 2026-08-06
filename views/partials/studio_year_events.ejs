@@ -5,7 +5,7 @@
       <h3 style="margin: 0; color: var(--text-color); font-size: 1.2rem;">🏆 <%= event.title %>
       </h3>
       <div style="display: flex; align-items: center; gap: 1rem;">
-        <span class="badge" style="background: rgba(236, 72, 153, 0.2); color: #f472b6;">
+        <span class="badge badge-count">
           <%= event.awards.length %> Awards
         </span>
         <span class="accordion-icon">▼</span>
@@ -46,7 +46,7 @@
                   </span></td>
                 <td>
                   <% if (award.age_division) { %>
-                    <div style="margin-bottom: 0.25rem;"><span class="badge" style="background: rgba(168, 85, 247, 0.2); color: #c084fc; font-size: 0.7rem; border: 1px solid rgba(168, 85, 247, 0.3);"><%= award.age_division %></span></div>
+                    <div style="margin-bottom: 0.25rem;"><span class="badge" style="background: rgba(255, 255, 255, 0.08); color: #e0e0e0; font-size: 0.7rem; border: 1px solid rgba(255, 255, 255, 0.15);"><%= award.age_division %></span></div>
                   <% } %>
                   <%= award.category || '-' %>
                 </td>

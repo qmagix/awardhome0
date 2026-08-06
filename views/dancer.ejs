@@ -41,7 +41,7 @@
                         <% if (dancer.instagram_handle) { %>
                           <a href="https://instagram.com/<%= dancer.instagram_handle.replace('@', '') %>"
                             target="_blank"
-                            style="color: #ec4899; text-decoration: none; display: flex; align-items: center; gap: 0.3rem; font-size: 0.9rem; background: rgba(236,72,153,0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">
+                            style="color: #fbbf24; text-decoration: none; display: flex; align-items: center; gap: 0.3rem; font-size: 0.9rem; background: rgba(236,72,153,0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">
                             📸 <%= dancer.instagram_handle %>
                           </a>
                           <% } %>
@@ -56,7 +56,7 @@
                   </div>
                   <div>
                     <button onclick="shareProfile()" class="btn btn-outline"
-                      style="border-color: #a855f7; color: #c084fc; display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; padding: 0.5rem 1rem;">
+                      style="border-color: #e0e0e0; color: #e0e0e0; display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; padding: 0.5rem 1rem;">
                       <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"
                         stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="18" cy="5" r="3"></circle>
@@ -77,16 +77,16 @@
                     Total Awards: <%= soloAwards.length + groupAwards.length + conventionAwards.length %>
                   </span>
                   <span class="badge"
-                    style="background: rgba(139, 92, 246, 0.2); color: #8b5cf6; font-size: 0.8rem; padding: 0.3rem 0.6rem;">
+                    style="background: rgba(255, 255, 255, 0.08); color: #e0e0e0; font-size: 0.8rem; padding: 0.3rem 0.6rem;">
                     Groups: <%= groupAwards.length %>
                   </span>
                   <span class="badge"
-                    style="background: rgba(236, 72, 153, 0.2); color: #ec4899; font-size: 0.8rem; padding: 0.3rem 0.6rem;">
+                    style="background: rgba(212, 175, 55, 0.2); color: #fbbf24; font-size: 0.8rem; padding: 0.3rem 0.6rem;">
                     Solos: <%= soloAwards.length %>
                   </span>
                   <% if (conventionAwards.length> 0) { %>
                     <span class="badge"
-                      style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; font-size: 0.8rem; padding: 0.3rem 0.6rem;">
+                      style="background: rgba(245, 158, 11, 0.2); color: #aa8529; font-size: 0.8rem; padding: 0.3rem 0.6rem;">
                       Special / Convention: <%= conventionAwards.length %>
                     </span>
                     <% } %>
@@ -102,8 +102,8 @@
 
                   <% if (totalAwardsCount> 20) { %>
                     <div
-                      style="margin-top: 1rem; padding: 1.5rem; background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(236, 72, 153, 0.15) 100%); border-radius: 8px; border: 1px solid rgba(236, 72, 153, 0.3); text-align: center;">
-                      <h3 style="margin-bottom: 0.5rem; color: #f472b6; font-size: 1.25rem;">🎉 Milestone Unlocked!</h3>
+                      style="margin-top: 1rem; padding: 1.5rem; background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(212, 175, 55, 0.15) 100%); border-radius: 8px; border: 1px solid rgba(212, 175, 55, 0.3); text-align: center;">
+                      <h3 style="margin-bottom: 0.5rem; color: #f3e5ab; font-size: 1.25rem;">🎉 Milestone Unlocked!</h3>
                       <p style="margin-bottom: 0; font-size: 1.05rem; color: var(--text-color); line-height: 1.5;">
                         <% if (totalAwardsCount>= 100) { %>
                           Incredible! You've earned <strong>
@@ -240,7 +240,7 @@
                                   <% } %>
                                     <% if (award.age_division) { %>
                                       <div style="margin-top: 0.25rem; margin-bottom: 0.25rem;"><span class="badge"
-                                          style="background: rgba(168, 85, 247, 0.2); color: #c084fc; font-size: 0.7rem; border: 1px solid rgba(168, 85, 247, 0.3); padding: 2px 6px;">
+                                          style="background: rgba(255, 255, 255, 0.08); color: #e0e0e0; font-size: 0.7rem; border: 1px solid rgba(255, 255, 255, 0.15); padding: 2px 6px;">
                                           <%= award.age_division %>
                                         </span></div>
                                       <% } %>
@@ -250,7 +250,7 @@
                                           </p>
                                           <% } %>
                                             <p class="sub-category"
-                                              style="color: #a5b4fc; font-weight: 600; margin-top: 0.5rem;">
+                                              style="color: #f3e5ab; font-weight: 600; margin-top: 0.5rem;">
                                               <%= award.event_name %> (<%= award.event_year %>)
                                             </p>
                     </div>
@@ -302,7 +302,7 @@
                     <%= award.award_type %><br>
                       <% if (award.age_division) { %>
                         <span class="badge"
-                          style="background: rgba(168, 85, 247, 0.2); color: #c084fc; font-size: 0.65rem; border: 1px solid rgba(168, 85, 247, 0.3); padding: 1px 4px; margin-bottom: 2px; display: inline-block;">
+                          style="background: rgba(255, 255, 255, 0.08); color: #e0e0e0; font-size: 0.65rem; border: 1px solid rgba(255, 255, 255, 0.15); padding: 1px 4px; margin-bottom: 2px; display: inline-block;">
                           <%= award.age_division %>
                         </span><br>
                         <% } %>
@@ -410,7 +410,7 @@
                                   <% } %>
                                     <% if (award.age_division) { %>
                                       <div style="margin-top: 0.25rem; margin-bottom: 0.25rem;"><span class="badge"
-                                          style="background: rgba(168, 85, 247, 0.2); color: #c084fc; font-size: 0.7rem; border: 1px solid rgba(168, 85, 247, 0.3); padding: 2px 6px;">
+                                          style="background: rgba(255, 255, 255, 0.08); color: #e0e0e0; font-size: 0.7rem; border: 1px solid rgba(255, 255, 255, 0.15); padding: 2px 6px;">
                                           <%= award.age_division %>
                                         </span></div>
                                       <% } %>
@@ -420,7 +420,7 @@
                                           </p>
                                           <% } %>
                                             <p class="sub-category"
-                                              style="color: #a5b4fc; font-weight: 600; margin-top: 0.5rem;">
+                                              style="color: #f3e5ab; font-weight: 600; margin-top: 0.5rem;">
                                               <%= award.event_name %> (<%= award.event_year %>)
                                             </p>
                     </div>
@@ -471,7 +471,7 @@
                     <%= award.award_type %><br>
                       <% if (award.age_division) { %>
                         <span class="badge"
-                          style="background: rgba(168, 85, 247, 0.2); color: #c084fc; font-size: 0.65rem; border: 1px solid rgba(168, 85, 247, 0.3); padding: 1px 4px; margin-bottom: 2px; display: inline-block;">
+                          style="background: rgba(255, 255, 255, 0.08); color: #e0e0e0; font-size: 0.65rem; border: 1px solid rgba(255, 255, 255, 0.15); padding: 1px 4px; margin-bottom: 2px; display: inline-block;">
                           <%= award.age_division %>
                         </span><br>
                         <% } %>
@@ -569,7 +569,7 @@
                                 <% } %>
                                   <% if (award.age_division) { %>
                                     <div style="margin-top: 0.25rem; margin-bottom: 0.25rem;"><span class="badge"
-                                        style="background: rgba(168, 85, 247, 0.2); color: #c084fc; font-size: 0.7rem; border: 1px solid rgba(168, 85, 247, 0.3); padding: 2px 6px;">
+                                        style="background: rgba(255, 255, 255, 0.08); color: #e0e0e0; font-size: 0.7rem; border: 1px solid rgba(255, 255, 255, 0.15); padding: 2px 6px;">
                                         <%= award.age_division %>
                                       </span></div>
                                     <% } %>
@@ -579,7 +579,7 @@
                                         </p>
                                         <% } %>
                                           <p class="sub-category"
-                                            style="color: #a5b4fc; font-weight: 600; margin-top: 0.5rem;">
+                                            style="color: #f3e5ab; font-weight: 600; margin-top: 0.5rem;">
                                             <%= award.event_name %> (<%= award.event_year %>)
                                           </p>
                   </div>
@@ -625,7 +625,7 @@
                   <%= award.award_type %><br>
                     <% if (award.age_division) { %>
                       <span class="badge"
-                        style="background: rgba(168, 85, 247, 0.2); color: #c084fc; font-size: 0.65rem; border: 1px solid rgba(168, 85, 247, 0.3); padding: 1px 4px; margin-bottom: 2px; display: inline-block;">
+                        style="background: rgba(255, 255, 255, 0.08); color: #e0e0e0; font-size: 0.65rem; border: 1px solid rgba(255, 255, 255, 0.15); padding: 1px 4px; margin-bottom: 2px; display: inline-block;">
                         <%= award.age_division %>
                       </span><br>
                       <% } %>
