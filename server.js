@@ -1,5 +1,7 @@
+require('./instrument'); // Sentry first — must precede all other requires
 require('dotenv').config();
 const { PORT } = require('./config');
+const morgan = require('morgan');
 const express = require('express');
 const session = require('express-session');
 const cron = require('node-cron');
@@ -17,6 +19,12 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'landing'), { index: false }));
+
+// Request logging to stdout (journald captures it in production). Static
+// assets never reach this (served above); health checks are skipped.
+app.use(morgan(':remote-addr :method :url :status :res[content-length]b :response-time ms', {
+  skip: (req) => req.path === '/healthz'
+}));
 app.use(express.json()); // Added for JSON parsing
 app.use(express.urlencoded({ extended: true })); // Added for form parsing
 const SESSION_SECRET = process.env.SESSION_SECRET || (() => {
@@ -165,6 +173,11 @@ app.use(require('./routes/dance/dancers'));
 app.use(require('./routes/admin'));
 app.use(require('./routes/feedback'));
 app.use(require('./routes/dance/public'));
+
+// Sentry error handler must come after routers, before our own handler
+if (process.env.SENTRY_DSN) {
+  require('@sentry/node').setupExpressErrorHandler(app);
+}
 
 // Central error handler (Express 5 forwards rejected promises here)
 app.use((err, req, res, next) => {

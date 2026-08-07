@@ -69,6 +69,8 @@ RESEND_FROM_EMAIL=                         # e.g. hello@awardhome.com (verified 
 
 OPENAI_API_KEY=                            # <-- fill in (AI summaries)
 
+SENTRY_DSN=                                # optional: error tracking (sentry.io project DSN)
+
 ENABLE_NIGHTLY_BACKUPS=true
 # S3 credentials NOT needed here if the instance has an IAM role (preferred).
 EOF

@@ -100,6 +100,18 @@ widen the policy to a `uploads/` prefix, or reuse the same bucket):
 (Requires `sudo apt install awscli`.) Move to direct-to-S3 uploads when
 volume justifies it.
 
+## Error tracking & request logs
+
+- **Request logs** go to stdout → journald: `journalctl -u awardhome -f`
+  shows every request with client IP (real IP via the Cloudflare snippet),
+  status, and response time. Static assets and /healthz are excluded.
+- **Sentry** (crash/error tracking): create a free project at sentry.io
+  (platform: Node.js/Express), copy the DSN into `SENTRY_DSN=` in
+  `/opt/awardhome/.env`, and `sudo systemctl restart awardhome`. Boot log
+  prints "Sentry error tracking enabled" when active. Unhandled route
+  errors are reported with request context; users still get the friendly
+  500 page. Without a DSN the integration is a no-op.
+
 ## Operations quick reference
 
 | What | Command |
