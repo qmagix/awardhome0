@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Private Beta — AwardHome</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <main style="display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 2rem;">
+    <div class="card glass-card" style="max-width: 440px; width: 100%; padding: 2.5rem; text-align: center;">
+      <div class="brand" style="margin-bottom: 1.5rem;">Award<span>Home</span><span class="brand-tag">Dance</span></div>
+      <h1 style="font-size: 1.6rem; margin-bottom: 0.75rem;">We're in private beta</h1>
+      <p style="color: var(--text-muted); margin-bottom: 1.75rem; line-height: 1.6;">
+        Invited studios and organizers: use the access link from your invite email,
+        or enter the beta password below.
+      </p>
+      <% if (error) { %>
+        <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #ef4444; padding: 0.75rem; border-radius: 6px; margin-bottom: 1.25rem;">
+          <%= error %>
+        </div>
+      <% } %>
+      <form action="/beta-unlock" method="POST" style="display: flex; flex-direction: column; gap: 1rem;">
+        <input type="hidden" name="next" value="<%= next %>">
+        <input type="password" name="key" placeholder="Beta password" required
+          style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white; text-align: center;">
+        <button type="submit" class="btn btn-primary" style="padding: 0.75rem;">Enter Beta</button>
+      </form>
+      <p style="margin-top: 1.5rem; font-size: 0.85rem; color: var(--text-muted);">
+        Already have an account? <a href="/login">Log in</a><br>
+        Want an invite? <a href="mailto:hello@awardhome.com?subject=Beta access request">hello@awardhome.com</a>
+      </p>
+    </div>
+  </main>
+</body>
+</html>

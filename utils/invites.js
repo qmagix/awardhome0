@@ -1,7 +1,7 @@
 const crypto = require('crypto');
 const { openDb } = require('../database');
 const { sendEmail } = require('./mailer');
-const { BASE_URL } = require('../config');
+const { BASE_URL, BETA_MODE, BETA_KEY } = require('../config');
 
 // Studio invite machinery. Emails are personalized with real award counts
 // and leaderboard rank; every send is recorded in studio_invites and the
@@ -27,7 +27,8 @@ function escapeHtml(s) {
 
 function buildStudioInvite({ studio, totalAwards, firstPlaces, rank }) {
   const name = escapeHtml(studio.name);
-  const profileUrl = `${BASE_URL}/dance/studio/${studio.id}`;
+  const profileUrl = `${BASE_URL}/dance/studio/${studio.id}` +
+    (BETA_MODE && BETA_KEY ? `?beta=${BETA_KEY}` : '');
   const subject = `${studio.name}: ${totalAwards.toLocaleString()} awards, all in one place`;
 
   let rankHtml = '';
@@ -41,6 +42,7 @@ function buildStudioInvite({ studio, totalAwards, firstPlaces, rank }) {
   <div style="font-family: Arial, Helvetica, sans-serif; color: #222; max-width: 560px; margin: 0 auto; line-height: 1.55;">
     <p>Hi ${name} team,</p>
 
+    ${BETA_MODE ? '<p style="background: #faf6e8; border: 1px solid #d4af37; border-radius: 8px; padding: 10px 14px;"><strong>You\'re invited to our private beta.</strong> The link below is your early-access pass — AwardHome opens to the public soon, and beta studios get a head start.</p>' : ''}
     <p>Congratulations on a great season. Your competition results are already live on
     <strong>AwardHome</strong> — we aggregate results from 14 competitions (YAGP, KAR, Starpower,
     NYCDA, Showstopper, Rainbow, and more) into a single digital trophy case: over 900,000 awards

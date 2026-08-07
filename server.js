@@ -166,6 +166,21 @@ app.get('/healthz', async (req, res) => {
   }
 });
 
+// Private-beta gate for the public data surfaces (see middleware/beta.js).
+// Landing, auth, widgets, unsubscribe, and healthz stay open.
+const { betaGate } = require('./middleware/beta');
+app.use(['/dance', '/dancer'], betaGate);
+
+app.post('/beta-unlock', (req, res) => {
+  const { BETA_KEY } = require('./config');
+  const nextUrl = (req.body.next || '/dance').startsWith('/') ? req.body.next || '/dance' : '/dance';
+  if (BETA_KEY && req.body.key === BETA_KEY) {
+    req.session.betaAccess = true;
+    return res.redirect(nextUrl);
+  }
+  res.status(401).render('beta_gate', { error: 'Incorrect password. Check your invite email for the access link.', next: nextUrl, pageTitle: 'Private Beta' });
+});
+
 // ---- Routers ----
 app.use(require('./routes/auth'));
 app.use(require('./routes/dance/claims'));
