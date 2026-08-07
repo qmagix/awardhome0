@@ -115,8 +115,10 @@ router.get('/faq/organizer', (req, res) => {
 });
 
 
-// One-click unsubscribe from invite emails (HMAC-signed, no login needed)
-router.get('/unsubscribe', async (req, res) => {
+// One-click unsubscribe from invite emails (HMAC-signed, no login needed).
+// GET serves humans clicking the footer link; POST serves RFC 8058
+// one-click unsubscribe from mail clients (params stay in the query string).
+router.all('/unsubscribe', async (req, res) => {
   const { e, t } = req.query;
   if (!e || !t) return res.status(400).send('Invalid unsubscribe link.');
   let email;

@@ -27,7 +27,7 @@ if (emailProvider === 'resend' && process.env.RESEND_API_KEY) {
  * @param {string} options.html - Email body (HTML)
  * @returns {Promise<{success: boolean, data?: any, error?: any}>}
  */
-async function sendEmail({ to, subject, html }) {
+async function sendEmail({ to, subject, html, headers }) {
   if (emailProvider === 'resend') {
     if (!resend) {
       console.error("[Mailer] Resend API Key is missing. Email not sent.");
@@ -39,6 +39,7 @@ async function sendEmail({ to, subject, html }) {
         to,
         subject,
         html,
+        ...(headers ? { headers } : {}),
       });
       if (error) {
         console.error("[Mailer] Resend Error:", error);
@@ -60,6 +61,7 @@ async function sendEmail({ to, subject, html }) {
         to,
         subject,
         html,
+        ...(headers ? { headers } : {}),
       });
       return { success: true, data: info };
     } catch (err) {

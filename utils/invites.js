@@ -118,7 +118,13 @@ async function sendStudioInvite(studioId, { sentBy = null, overrideEmail = null 
     rank: rankRow ? rankRow.rank : null
   });
 
-  const result = await sendEmail({ to: overrideEmail || email, subject, html });
+  const result = await sendEmail({
+    to: overrideEmail || email, subject, html,
+    headers: {
+      'List-Unsubscribe': `<${unsubscribeLink(email)}>`,
+      'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
+    }
+  });
   if (!result.success) return { success: false, error: 'Send failed: ' + JSON.stringify(result.error).slice(0, 200) };
 
   if (!overrideEmail) {

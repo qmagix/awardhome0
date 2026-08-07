@@ -58,6 +58,7 @@ async function main() {
       PORT: String(PORT),
       EMAIL_PROVIDER: '',          // never send real email from the smoke test
       ENABLE_NIGHTLY_BACKUPS: 'false',
+      BETA_MODE: 'false',          // smoke tests the real pages, not the beta gate
     },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
