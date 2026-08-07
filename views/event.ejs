@@ -1,7 +1,7 @@
 <%- include('partials/header') %>
 <div class="container">
   <div class="header-section">
-    <h1><%= event.org_name %> - <%= event.name %></h1>
+    <h1><%= formatEventTitle(event.name, event.org_name, event.year) %></h1>
     <p class="subtitle"><%= event.date_string %> (<%= event.year %>)</p>
   </div>
   

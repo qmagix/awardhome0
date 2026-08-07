@@ -3,6 +3,7 @@ const router = express.Router();
 const { openDb } = require('../../database');
 const { logStudioActivity } = require('../../utils/activity');
 const { cached } = require('../../utils/cache');
+const { formatEventTitle } = require('../../utils/format');
 const { BASE_URL } = require('../../config');
 const path = require('path');
 
@@ -235,17 +236,27 @@ router.get('/dance', async (req, res) => {
 });
 
 
+// Public organization showcase: branding + stats + event history. Per-event
+// award detail stays admin-only (the event pages keep their gate).
 router.get('/dance/org/:slug', async (req, res) => {
-  if (!req.session || !req.session.user || (req.session.user.role !== 'admin' && req.session.user.role !== 'superadmin')) {
-    return res.status(403).send('Detailed event data is only available to platform administrators.');
-  }
-
   const db = await openDb();
   const org = await db.get(`SELECT * FROM organizations WHERE slug = ?`, [req.params.slug]);
   if (!org) return res.status(404).send('Organization not found');
 
+  const stats = await db.get(`
+    SELECT COUNT(DISTINCT a.id) AS totalAwards,
+           COUNT(DISTINCT a.studio_id) AS totalStudios,
+           MIN(e.year) AS firstYear
+    FROM events e LEFT JOIN awards a ON a.event_id = e.id
+    WHERE e.org_id = ?
+  `, [org.id]);
+
   const events = await db.all(`
-    SELECT * FROM events WHERE org_id = ? ORDER BY year DESC, date_string DESC
+    SELECT e.*, COUNT(a.id) AS award_count
+    FROM events e LEFT JOIN awards a ON a.event_id = e.id
+    WHERE e.org_id = ?
+    GROUP BY e.id
+    ORDER BY e.year DESC, e.date_string DESC
   `, [org.id]);
 
   const eventsByYearMap = new Map();
@@ -262,7 +273,13 @@ router.get('/dance/org/:slug', async (req, res) => {
     events
   }));
 
-  res.render('org', { org, groupedData, eventsCount: events.length, user: req.session.user });
+  const isAdmin = req.session && req.session.user && (req.session.user.role === 'admin' || req.session.user.role === 'superadmin');
+  res.render('org', {
+    org, groupedData, stats, isAdmin,
+    eventsCount: events.length,
+    pageTitle: org.name,
+    pageDesc: `${org.name} on AwardHome: ${stats.totalAwards} awards across ${events.length} events since ${stats.firstYear || ''}.`
+  });
 });
 
 
@@ -298,7 +315,7 @@ router.get('/dance/studios', async (req, res) => {
     LIMIT ? OFFSET ?
   `, [...queryParams, limit, offset]);
 
-  res.render('studios', { studios, currentPage: page, totalPages, q });
+  res.render('studios', { studios, currentPage: page, totalPages, q, pageTitle: 'Studio Directory' });
 });
 
 
@@ -534,8 +551,8 @@ router.get('/dance/studio/:id', async (req, res) => {
       const eventsMap = new Map();
       firstYearAwards.forEach(award => {
         award.dancers = fyDancerMap[award.id] || (award.dancer_name ? [{ name: award.dancer_name, unique_id: award.unique_id }] : []);
-        const eventKey = `${award.org_name} - ${award.event_name} (${award.date_string})`;
-        if (!eventsMap.has(eventKey)) eventsMap.set(eventKey, { title: eventKey, eventId: award.event_id, awards: [] });
+        const eventKey = award.event_id;
+        if (!eventsMap.has(eventKey)) eventsMap.set(eventKey, { title: formatEventTitle(award.event_name, award.org_name, award.event_year), eventId: award.event_id, awards: [] });
         eventsMap.get(eventKey).awards.push(award);
       });
       groupedData[0].events = Array.from(eventsMap.values());
@@ -572,7 +589,12 @@ router.get('/dance/studio/:id', async (req, res) => {
   });
   orgsHistory.sort((a, b) => a.name.localeCompare(b.name));
 
-  res.render('studio', { studio, mergedIntoStudio, groupedData, quickStats, hallOfFame: topHallOfFame, alumni, hasAwards: quickStats.totalAwards > 0, orgsHistory });
+  res.render('studio', {
+    studio, mergedIntoStudio, groupedData, quickStats, hallOfFame: topHallOfFame, alumni,
+    hasAwards: quickStats.totalAwards > 0, orgsHistory,
+    pageTitle: studio.name,
+    pageDesc: `${studio.name} on AwardHome: ${quickStats.totalAwards} dance awards across ${quickStats.totalEvents} competition events${quickStats.sinceYear ? ' since ' + quickStats.sinceYear : ''}.`
+  });
 });
 
 
@@ -618,10 +640,10 @@ router.get('/api/studio/:id/year/:year', async (req, res) => {
       award.dancers = [];
     }
 
-    const eventKey = `${award.org_name} - ${award.event_name} (${award.date_string})`;
+    const eventKey = award.event_id;
     if (!eventsMap.has(eventKey)) {
       eventsMap.set(eventKey, {
-        title: eventKey,
+        title: formatEventTitle(award.event_name, award.org_name, award.event_year),
         eventId: award.event_id,
         awards: []
       });
@@ -654,7 +676,7 @@ router.get('/dancer/:unique_id', async (req, res) => {
   dancer.studios = studios;
 
   const awards = await db.all(`
-    SELECT DISTINCT a.*, e.name as event_name, e.year as event_year, o.logo_url, o.custom_icons,
+    SELECT DISTINCT a.*, e.name as event_name, e.year as event_year, o.name as org_name, o.logo_url, o.custom_icons,
       (SELECT COUNT(*) FROM award_dancers ad2 WHERE ad2.award_id = a.id) as dancer_count
     FROM awards a
     LEFT JOIN events e ON a.event_id = e.id
@@ -703,7 +725,12 @@ router.get('/dancer/:unique_id', async (req, res) => {
   conventionAwards.forEach(a => yearsMap.get(yearOf(a)).convention.push(a));
   const yearSections = [...yearsMap.values()];
 
-  res.render('dancer', { dancer, soloAwards, groupAwards, conventionAwards, yearSections });
+  const totalAwardCount = soloAwards.length + groupAwards.length + conventionAwards.length;
+  res.render('dancer', {
+    dancer, soloAwards, groupAwards, conventionAwards, yearSections,
+    pageTitle: dancer.name,
+    pageDesc: `${dancer.name}'s digital trophy case on AwardHome: ${totalAwardCount} dance awards.`
+  });
 });
 
 

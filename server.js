@@ -51,6 +51,8 @@ app.use(session({
   }
 }));
 
+app.locals.formatEventTitle = require('./utils/format').formatEventTitle;
+
 app.locals.formatPlacement = function (award) {
   // Backwards compatibility if a string/null is passed directly
   let place = award;

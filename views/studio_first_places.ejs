@@ -33,8 +33,7 @@
             <%= award.event_year %>
           </div>
           <div style="flex-grow: 1; color: var(--text-muted); font-size: 0.95rem; padding-right: 1rem;">
-            <%= award.event_name %>
-            <div style="font-size: 0.8rem; opacity: 0.7;"><%= award.org_name %></div>
+            <%= formatEventTitle(award.event_name, award.org_name) %>
           </div>
           <div style="flex-grow: 1; font-weight: 600; color: white;">
             <%= award.performance_name %>

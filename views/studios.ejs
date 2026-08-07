@@ -2,7 +2,7 @@
 <div class="container">
   <div class="header-section">
     <h1>Studio Directory</h1>
-    <p class="subtitle">Browse and manage all registered dance studios</p>
+    <p class="subtitle">Browse award-winning dance studios from competitions nationwide</p>
   </div>
 
   <form method="GET" action="/dance/studios" style="margin-top: 2rem; display: flex; gap: 1rem;">
@@ -22,8 +22,10 @@
             <th>Location</th>
             <th>Events Attended</th>
             <th>Total Awards</th>
+            <% if (user && (user.role === 'admin' || user.role === 'superadmin')) { %>
             <th>Status</th>
             <th>Actions</th>
+            <% } %>
           </tr>
         </thead>
         <tbody>
@@ -37,6 +39,7 @@
               <td><%= studio.address || 'Unknown' %></td>
               <td><%= studio.total_events %></td>
               <td><span class="badge badge-count"><%= studio.total_awards %></span></td>
+              <% if (user && (user.role === 'admin' || user.role === 'superadmin')) { %>
               <td>
                 <% if (studio.needs_investigation) { %>
                   <span class="badge" style="background: rgba(239, 68, 68, 0.2); color: #ef4444;">Needs Review</span>
@@ -52,6 +55,7 @@
                   <%= studio.needs_investigation ? 'Clear Flag' : 'Flag' %>
                 </button>
               </td>
+              <% } %>
             </tr>
           <% }); %>
         </tbody>

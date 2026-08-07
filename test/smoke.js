@@ -79,6 +79,8 @@ async function main() {
       if (dancer) CHECKS.push(['GET', `/dancer/${dancer.unique_id}`, [200], 'real dancer trophy case renders']);
       if (event) CHECKS.push(['GET', `/dance/event/${event.id}`, [403], 'event detail stays admin-gated']);
       if (studio) CHECKS.push(['GET', `/widget/studio/${studio.id}`, [200], 'embeddable widget renders']);
+      const org = await db.get('SELECT slug FROM organizations ORDER BY id LIMIT 1');
+      if (org) CHECKS.push(['GET', `/dance/org/${org.slug}`, [200], 'org page is public']);
     } catch (e) {
       console.log('NOTE: real-content checks skipped (' + e.message + ')');
     }

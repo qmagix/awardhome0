@@ -232,7 +232,7 @@
       <% awards.forEach(award => { %>
         <div class="award-card <%= isPremiumAward(award) ? 'premium-award-border' : '' %>">
           <div class="award-header">
-            <span class="event-name"><%= award.event_name %></span>
+            <span class="event-name"><%= formatEventTitle(award.event_name) %></span>
             <span class="year"><%= award.year %></span>
           </div>
           <div class="performance"><%= award.performance_name || 'Routine' %></div>

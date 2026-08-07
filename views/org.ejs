@@ -1,83 +1,78 @@
 <%- include('partials/header') %>
 <div class="container">
-  <div class="header-section">
-    <h1><%= org.name %></h1>
-    <% if (org.slogan) { %>
-      <p class="subtitle" style="color: var(--accent-gold); font-size: 1.2rem; margin-top: -0.5rem; font-weight: 500;"><%= org.slogan %></p>
-    <% } %>
-    <p class="subtitle">Events & Competitions (<%= eventsCount %> Total)</p>
-    <% if (org.description) { %>
-      <div style="max-width: 800px; margin: 1rem auto 1.5rem auto; color: var(--text-color); line-height: 1.6; background: rgba(0,0,0,0.2); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); text-align: left;">
-        <%= org.description %>
+
+  <!-- Org identity -->
+  <div class="card glass-card" style="padding: 2.5rem; margin-bottom: 2rem;">
+    <div style="display: flex; align-items: center; gap: 2rem; flex-wrap: wrap;">
+      <% if (org.logo_url) { %>
+        <img src="<%= org.logo_url %>" alt="<%= org.name %> logo"
+          style="width: 96px; height: 96px; border-radius: 16px; object-fit: contain; background: rgba(255,255,255,0.05); padding: 8px;">
+      <% } %>
+      <div style="flex: 1; min-width: 260px;">
+        <h1 style="margin: 0 0 0.25rem; font-size: 2.2rem;"><%= org.name %></h1>
+        <% if (org.slogan) { %>
+          <p class="text-gold" style="font-weight: 600; margin: 0 0 0.5rem;"><%= org.slogan %></p>
+        <% } %>
+        <% if (org.description) { %>
+          <p style="color: var(--text-muted); max-width: 640px; margin: 0; line-height: 1.6;"><%= org.description %></p>
+        <% } %>
       </div>
-    <% } %>
-    <% if (org.website) { %>
-      <a href="<%= org.website %>" target="_blank" style="color: var(--primary);">Visit Official Website</a>
-    <% } %>
-  </div>
-  
-  <h2 style="margin-bottom: 1.5rem;">Events Archive</h2>
-  
-  <% if (eventsCount === 0) { %>
-    <p>No events found for this organization yet.</p>
-  <% } else { %>
-    <!-- Yearly Tabs -->
-    <div class="tabs-container">
-      <ul class="year-tabs" id="yearTabs">
-        <% groupedData.forEach(function(yearGroup, index) { %>
-          <li class="tab-item <%= index === 0 ? 'active' : '' %>" data-target="year-<%= yearGroup.year %>">
-            <%= yearGroup.year %> (<%= yearGroup.events.length %>)
-          </li>
-        <% }); %>
-      </ul>
     </div>
 
-    <!-- Year Content Sections -->
-    <div class="tab-content-container" style="margin-top: 2rem;">
-      <% groupedData.forEach(function(yearGroup, index) { %>
-        <div class="tab-pane <%= index === 0 ? 'active' : '' %>" id="year-<%= yearGroup.year %>">
-          <div class="grid">
-            <% yearGroup.events.forEach(function(event) { %>
-              <div class="card glass-card" style="display: flex; flex-direction: column; justify-content: space-between;">
-                <div>
-                  <h3 style="margin-top: 0;"><%= event.name %></h3>
-                  <p style="color: var(--text-muted); margin-bottom: 0.5rem;"><i class="fas fa-calendar-alt"></i> <%= event.date_string %></p>
-                </div>
-                <div style="margin-top: 1.5rem;">
-                  <a href="/dance/event/<%= event.id %>" class="btn" style="width: 100%; text-align: center;">View Event Awards &rarr;</a>
-                </div>
-              </div>
-            <% }); %>
+    <!-- Stats strip -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-top: 2rem;">
+      <div style="text-align: center;">
+        <div style="font-size: 2rem; font-weight: 800;" class="text-gold"><%= eventsCount %></div>
+        <div style="font-size: 0.8rem; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted);">Events</div>
+      </div>
+      <div style="text-align: center;">
+        <div style="font-size: 2rem; font-weight: 800;" class="text-gold"><%= (stats.totalAwards || 0).toLocaleString() %></div>
+        <div style="font-size: 0.8rem; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted);">Awards Recorded</div>
+      </div>
+      <div style="text-align: center;">
+        <div style="font-size: 2rem; font-weight: 800;" class="text-gold"><%= (stats.totalStudios || 0).toLocaleString() %></div>
+        <div style="font-size: 0.8rem; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted);">Studios Awarded</div>
+      </div>
+      <% if (stats.firstYear) { %>
+        <div style="text-align: center;">
+          <div style="font-size: 2rem; font-weight: 800;" class="text-gold"><%= stats.firstYear %></div>
+          <div style="font-size: 0.8rem; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted);">On AwardHome Since</div>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Event history -->
+  <h2>Event History</h2>
+  <% groupedData.forEach(function(g) { %>
+    <h3 class="year-divider"><%= g.year %></h3>
+    <div class="card glass-card" style="padding: 0; overflow: hidden; margin-bottom: 1.5rem;">
+      <% g.events.forEach(function(event, i) { %>
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.5rem; <%= i > 0 ? 'border-top: 1px solid rgba(255,255,255,0.05);' : '' %>">
+          <div style="color: var(--text-color); font-weight: 600;">
+            <% if (isAdmin) { %>
+              <a href="/dance/event/<%= event.id %>" style="color: inherit;"><%= formatEventTitle(event.name, org.name) %></a>
+            <% } else { %>
+              <%= formatEventTitle(event.name, org.name) %>
+            <% } %>
           </div>
+          <% if (event.award_count > 0) { %>
+            <span class="badge badge-count" style="flex-shrink: 0;"><%= event.award_count.toLocaleString() %> Awards</span>
+          <% } %>
         </div>
       <% }); %>
     </div>
-  <% } %>
+  <% }); %>
+
+  <!-- Organizer CTA -->
+  <div class="card glass-card" style="padding: 2rem; margin: 2.5rem 0; text-align: center;">
+    <h3 style="margin: 0 0 0.5rem;">Are you the organizer of <%= org.name %>?</h3>
+    <p style="color: var(--text-muted); max-width: 560px; margin: 0 auto 1.25rem;">
+      AwardHome is free for organizers. Claim this page to add your logo, custom trophy
+      icons, and marketing profile — your brand on every award your dancers share.
+    </p>
+    <a href="mailto:hello@awardhome.com?subject=Organizer claim: <%= org.name %>" class="btn btn-primary">Claim this page</a>
+  </div>
+
 </div>
-
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const tabs = document.querySelectorAll('.tab-item');
-    const panes = document.querySelectorAll('.tab-pane');
-
-    tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        // Remove active class from all tabs & panes
-        tabs.forEach(t => t.classList.remove('active'));
-        panes.forEach(p => p.classList.remove('active'));
-
-        // Add active class to clicked tab
-        tab.classList.add('active');
-        
-        // Show corresponding pane
-        const targetId = tab.getAttribute('data-target');
-        const targetPane = document.getElementById(targetId);
-        if (targetPane) {
-          targetPane.classList.add('active');
-        }
-      });
-    });
-  });
-</script>
-
 <%- include('partials/footer') %>
