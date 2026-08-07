@@ -223,6 +223,26 @@ cron.schedule('30 3 * * *', async () => {
   }
 });
 
+// Weekly referential-integrity check (Sunday 4 AM). We deliberately do NOT
+// enable PRAGMA foreign_keys (it would break legacy import scripts and slow
+// parent deletes without new indexes) — instead, drift is detected here and
+// reported so it can be repaired with scripts/fix_orphaned_awards.js.
+cron.schedule('0 4 * * 0', async () => {
+  try {
+    const db = await openDb();
+    const violations = await db.all('PRAGMA foreign_key_check');
+    if (violations.length > 0) {
+      const summary = `Integrity check: ${violations.length} foreign-key violation(s) found (e.g. ${JSON.stringify(violations[0])})`;
+      console.error(summary);
+      if (process.env.SENTRY_DSN) require('@sentry/node').captureMessage(summary, 'warning');
+    } else {
+      console.log('Integrity check: clean');
+    }
+  } catch (err) {
+    console.error('Integrity check failed:', err);
+  }
+});
+
 // Setup automated nightly backups at 3:00 AM
 if (process.env.ENABLE_NIGHTLY_BACKUPS === 'true') {
   cron.schedule('0 3 * * *', () => {
