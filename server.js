@@ -173,8 +173,9 @@ app.use(['/dance', '/dancer'], betaGate);
 
 app.post('/beta-unlock', (req, res) => {
   const { BETA_KEY } = require('./config');
-  const nextUrl = (req.body.next || '/dance').startsWith('/') ? req.body.next || '/dance' : '/dance';
-  if (BETA_KEY && req.body.key === BETA_KEY) {
+  const body = req.body || {};
+  const nextUrl = (body.next || '/dance').startsWith('/') ? body.next || '/dance' : '/dance';
+  if (BETA_KEY && body.key === BETA_KEY) {
     req.session.betaAccess = true;
     return res.redirect(nextUrl);
   }

@@ -60,7 +60,7 @@ router.post('/claim/studio/:id', requireAuth, async (req, res) => {
 // One-page apply: creates the account AND files the claim together.
 // Auto-approval deliberately waits for email verification (see auth.js).
 router.post('/claim/studio/:id/apply', applyLimiter, async (req, res) => {
-  const { contact_name, email, password, phone, role, proof } = req.body;
+  const { contact_name, email, password, phone, role, proof } = req.body || {};
   const db = await openDb();
 
   const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
