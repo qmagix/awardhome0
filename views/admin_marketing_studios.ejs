@@ -2,29 +2,71 @@
 <div class="container">
   <div class="header-section">
     <a href="/admin" class="btn btn-outline" style="margin-bottom: 1rem; display: inline-block;">&larr; Back to Dashboard</a>
-    <h1>Marketing Target Studios</h1>
-    <p class="subtitle">Studios with an email address and > 15 awards (<%= studios.length %> total)</p>
+    <h1>Invite Studios</h1>
+    <p class="subtitle">Unclaimed studios with an email address (<%= studios.length %> matching). Tip: rank 101&ndash;300 studios have the strongest incentive &mdash; a few added results could put them in the homepage top 100.</p>
+    <form method="GET" action="/admin/marketing/studios" style="display: flex; gap: 1rem; align-items: center; margin-top: 1rem; flex-wrap: wrap;">
+      <label style="color: var(--text-muted); font-size: 0.9rem;">Awards between</label>
+      <input type="number" name="min" value="<%= minAwards %>" min="1" style="width: 90px; padding: 0.5rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+      <label style="color: var(--text-muted); font-size: 0.9rem;">and</label>
+      <input type="number" name="max" value="<%= maxAwards || '' %>" min="1" placeholder="no cap" style="width: 90px; padding: 0.5rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+      <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1.25rem;">Filter</button>
+    </form>
   </div>
 
   <div class="card glass-card" style="overflow-x: auto;">
     <table class="data-table" id="marketingTable" style="width: 100%; text-align: left; border-collapse: collapse;">
       <thead>
         <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
-          <th style="padding: 1rem; cursor: pointer;" onclick="sortTable(0, 'number')">ID &#x21D5;</th>
+          <th style="padding: 1rem; cursor: pointer;" onclick="sortTable(0, 'number')">Rank &#x21D5;</th>
           <th style="padding: 1rem; cursor: pointer;" onclick="sortTable(1, 'string')">Studio Name &#x21D5;</th>
           <th style="padding: 1rem; cursor: pointer;" onclick="sortTable(2, 'string')">Email &#x21D5;</th>
-          <th style="padding: 1rem; cursor: pointer;" onclick="sortTable(3, 'number')">Award Count &#x21D5;</th>
-          <th style="padding: 1rem;">Action</th>
+          <th style="padding: 1rem; cursor: pointer;" onclick="sortTable(3, 'string')">Phone &#x21D5;</th>
+          <th style="padding: 1rem; cursor: pointer;" onclick="sortTable(4, 'number')">Awards &#x21D5;</th>
+          <th style="padding: 1rem;">Invite</th>
         </tr>
       </thead>
       <tbody>
         <% studios.forEach(s => { %>
-          <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-            <td style="padding: 1rem;"><%= s.id %></td>
-            <td style="padding: 1rem; font-weight: 600;"><%= s.name %></td>
-            <td style="padding: 1rem; color: #10b981;"><a href="mailto:<%= s.email %>" style="color: #10b981; text-decoration: none;"><%= s.email %></a></td>
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);" id="row-<%= s.id %>">
+            <td style="padding: 1rem;">
+              <% if (s.rank && s.rank <= 100) { %><span class="badge badge-count">#<%= s.rank %></span>
+              <% } else if (s.rank && s.rank <= 300) { %><span class="badge" style="background: rgba(212,175,55,0.08); color: var(--gold-light);">#<%= s.rank %></span>
+              <% } else { %><span style="color: var(--text-muted);">#<%= s.rank || '—' %></span><% } %>
+            </td>
+            <td style="padding: 1rem; font-weight: 600;"><a href="/dance/studio/<%= s.id %>" target="_blank" style="color: inherit;"><%= s.name %></a></td>
+            <td style="padding: 1rem;">
+              <span id="email-view-<%= s.id %>" style="color: #10b981; cursor: pointer;" title="Click to edit"
+                onclick="editField('email', <%= s.id %>)"><%= s.email %> <span style="opacity: 0.45;">✎</span></span>
+              <span id="email-edit-<%= s.id %>" style="display: none; white-space: nowrap;">
+                <input id="email-input-<%= s.id %>" type="text" value="<%= s.email %>"
+                  style="width: 220px; padding: 0.3rem 0.5rem; background: rgba(0,0,0,0.4); border: 1px solid var(--primary); color: white; border-radius: 6px; font-size: 0.85rem;"
+                  onkeydown="if(event.key==='Enter'){saveField('email', <%= s.id %>)} else if(event.key==='Escape'){cancelField('email', <%= s.id %>)}">
+                <button class="btn btn-primary" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;" onclick="saveField('email', <%= s.id %>)">Save</button>
+                <button class="btn" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;" onclick="cancelField('email', <%= s.id %>)">Cancel</button>
+              </span>
+            </td>
+            <td style="padding: 1rem;">
+              <span id="phone-view-<%= s.id %>" style="color: var(--text-muted); cursor: pointer;" title="Click to edit"
+                onclick="editField('phone', <%= s.id %>)"><%= s.phone || '—' %> <span style="opacity: 0.45;">✎</span></span>
+              <span id="phone-edit-<%= s.id %>" style="display: none; white-space: nowrap;">
+                <input id="phone-input-<%= s.id %>" type="text" value="<%= s.phone || '' %>"
+                  style="width: 150px; padding: 0.3rem 0.5rem; background: rgba(0,0,0,0.4); border: 1px solid var(--primary); color: white; border-radius: 6px; font-size: 0.85rem;"
+                  onkeydown="if(event.key==='Enter'){saveField('phone', <%= s.id %>)} else if(event.key==='Escape'){cancelField('phone', <%= s.id %>)}">
+                <button class="btn btn-primary" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;" onclick="saveField('phone', <%= s.id %>)">Save</button>
+                <button class="btn" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;" onclick="cancelField('phone', <%= s.id %>)">Cancel</button>
+              </span>
+            </td>
             <td style="padding: 1rem;"><span class="badge"><%= s.award_count %></span></td>
-            <td style="padding: 1rem;"><a href="/dance/studio/<%= s.id %>" class="btn btn-outline" style="padding: 0.25rem 0.75rem; font-size: 0.8rem;" target="_blank">View</a></td>
+            <td style="padding: 1rem; white-space: nowrap;">
+              <% if (s.suppressed) { %>
+                <span class="badge" style="background: rgba(220,38,38,0.15); color: #f87171;">Unsubscribed</span>
+              <% } else if (s.invited_at) { %>
+                <span class="badge" style="background: rgba(16,185,129,0.15); color: #10b981;" title="<%= s.invited_at %>">Invited <%= s.invited_at.slice(0, 10) %></span>
+              <% } else { %>
+                <a href="/admin/marketing/studios/<%= s.id %>/invite-preview" target="_blank" class="btn btn-outline" style="padding: 0.25rem 0.75rem; font-size: 0.8rem;">Preview</a>
+                <button class="btn btn-primary" style="padding: 0.25rem 0.75rem; font-size: 0.8rem;" onclick="sendInvite(<%= s.id %>, this)">Send</button>
+              <% } %>
+            </td>
           </tr>
         <% }); %>
       </tbody>
@@ -33,7 +75,7 @@
 </div>
 
 <script>
-let sortDirections = [true, true, true, true];
+let sortDirections = [true, true, true, true, true];
 
 function sortTable(columnIndex, type) {
   const table = document.getElementById("marketingTable");
@@ -72,4 +114,58 @@ function sortTable(columnIndex, type) {
 }
 </style>
 
+<script>
+function editField(kind, id) {
+  document.getElementById(kind + '-view-' + id).style.display = 'none';
+  document.getElementById(kind + '-edit-' + id).style.display = 'inline';
+  const input = document.getElementById(kind + '-input-' + id);
+  input.focus();
+  input.select();
+}
+
+function cancelField(kind, id) {
+  document.getElementById(kind + '-edit-' + id).style.display = 'none';
+  document.getElementById(kind + '-view-' + id).style.display = 'inline';
+}
+
+async function saveField(kind, id) {
+  const input = document.getElementById(kind + '-input-' + id);
+  const value = input.value.trim();
+  try {
+    const res = await fetch(`/admin/marketing/studios/${id}/update-` + kind, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ [kind]: value })
+    });
+    const data = await res.json();
+    if (!data.success) { alert('Not saved: ' + (data.error || 'unknown error')); return; }
+    const view = document.getElementById(kind + '-view-' + id);
+    view.innerHTML = (value ? value : '<em style="color: var(--text-muted);">—</em>') + ' <span style="opacity: 0.45;">✎</span>';
+    cancelField(kind, id);
+  } catch (e) {
+    alert('Not saved: ' + e.message);
+  }
+}
+
+async function sendInvite(studioId, btn) {
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+  try {
+    const res = await fetch(`/admin/marketing/studios/${studioId}/send-invite`, { method: 'POST' });
+    const data = await res.json();
+    const cell = btn.parentElement;
+    if (data.success) {
+      cell.innerHTML = '<span class="badge" style="background: rgba(16,185,129,0.15); color: #10b981;">Invited just now</span>';
+    } else {
+      btn.disabled = false;
+      btn.textContent = 'Send';
+      alert('Not sent: ' + (data.error || 'unknown error'));
+    }
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = 'Send';
+    alert('Not sent: ' + e.message);
+  }
+}
+</script>
 <%- include('partials/footer') %>

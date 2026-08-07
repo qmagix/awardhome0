@@ -3,6 +3,7 @@ const router = express.Router();
 const { openDb } = require('../database');
 const { logStudioActivity } = require('../utils/activity');
 const { computeFeaturedStudios } = require('../utils/featured');
+const { sendStudioInvite, buildStudioInvite } = require('../utils/invites');
 const { invalidate } = require('../utils/cache');
 const { requireAdmin, requireSuperadmin } = require('../middleware/auth');
 const bcrypt = require('bcrypt');
@@ -148,16 +149,82 @@ router.get('/admin', requireAdmin, async (req, res) => {
 // Admin: Marketing Studios
 router.get('/admin/marketing/studios', requireAdmin, async (req, res) => {
   const db = await openDb();
+  const minAwards = parseInt(req.query.min) || 15;
+  const maxAwards = parseInt(req.query.max) || 0; // 0 = no cap
+
+  // Global rank over all active studios by award count (invite copy uses it)
+  const ranked = await db.all(`
+    SELECT a.studio_id, COUNT(*) AS c FROM awards a
+    JOIN studios st ON st.id = a.studio_id AND st.status = 'active'
+    GROUP BY a.studio_id ORDER BY c DESC
+  `);
+  const rankMap = new Map(ranked.map((r, i) => [r.studio_id, i + 1]));
+
   const studios = await db.all(`
-    SELECT s.id, s.name, s.email, COUNT(a.id) as award_count
+    SELECT s.id, s.name, s.email, s.phone, s.is_claimed, COUNT(a.id) as award_count,
+      (SELECT MAX(sent_at) FROM studio_invites si WHERE si.studio_id = s.id) AS invited_at,
+      (SELECT 1 FROM email_suppressions es WHERE es.email = LOWER(TRIM(s.email))) AS suppressed
     FROM studios s
     JOIN awards a ON s.id = a.studio_id
-    WHERE s.email IS NOT NULL AND s.email != ''
+    WHERE s.email IS NOT NULL AND s.email != '' AND s.status = 'active' AND s.is_claimed = 0
     GROUP BY s.id
-    HAVING award_count > 15
+    HAVING award_count >= ? ${'AND award_count <= ?'.repeat(maxAwards > 0 ? 1 : 0)}
     ORDER BY award_count DESC
-  `);
-  res.render('admin_marketing_studios', { studios });
+  `, maxAwards > 0 ? [minAwards, maxAwards] : [minAwards]);
+
+  studios.forEach(s2 => { s2.rank = rankMap.get(s2.id) || null; });
+  res.render('admin_marketing_studios', { studios, minAwards, maxAwards, pageTitle: 'Invite Studios' });
+});
+
+// Send a studio invite (records to studio_invites; refuses repeats/unsubscribed)
+router.post('/admin/marketing/studios/:id/send-invite', requireAdmin, async (req, res) => {
+  try {
+    const result = await sendStudioInvite(parseInt(req.params.id), { sentBy: req.session.user.id });
+    res.status(result.success ? 200 : 400).json(result);
+  } catch (err) {
+    console.error('Invite send failed:', err);
+    res.status(500).json({ success: false, error: 'Internal error' });
+  }
+});
+
+// Inline email correction from the invite cockpit (empty clears the email)
+router.post('/admin/marketing/studios/:id/update-email', requireAdmin, async (req, res) => {
+  const email = (req.body.email || '').trim();
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ success: false, error: 'Invalid email format' });
+  }
+  const db = await openDb();
+  const studio = await db.get('SELECT id FROM studios WHERE id = ?', [req.params.id]);
+  if (!studio) return res.status(404).json({ success: false, error: 'Studio not found' });
+  await db.run('UPDATE studios SET email = ? WHERE id = ?', [email || null, req.params.id]);
+  res.json({ success: true, email });
+});
+
+// Inline phone correction from the invite cockpit (empty clears it)
+router.post('/admin/marketing/studios/:id/update-phone', requireAdmin, async (req, res) => {
+  const phone = (req.body.phone || '').trim();
+  if (phone && !/^[0-9+()\-.\s]{7,30}$/.test(phone)) {
+    return res.status(400).json({ success: false, error: 'Invalid phone format' });
+  }
+  const db = await openDb();
+  const studio = await db.get('SELECT id FROM studios WHERE id = ?', [req.params.id]);
+  if (!studio) return res.status(404).json({ success: false, error: 'Studio not found' });
+  await db.run('UPDATE studios SET phone = ? WHERE id = ?', [phone || null, req.params.id]);
+  res.json({ success: true, phone });
+});
+
+// Render the exact email HTML for eyeballing before sending
+router.get('/admin/marketing/studios/:id/invite-preview', requireAdmin, async (req, res) => {
+  const db = await openDb();
+  const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
+  if (!studio) return res.status(404).send('Studio not found');
+  const stats = await db.get('SELECT COUNT(*) AS totalAwards, SUM(CASE WHEN is_first_place = 1 THEN 1 ELSE 0 END) AS firstPlaces FROM awards WHERE studio_id = ?', [studio.id]);
+  const rankRow = await db.get(`SELECT COUNT(*) + 1 AS rank FROM (
+    SELECT a.studio_id, COUNT(*) AS c FROM awards a
+    JOIN studios st ON st.id = a.studio_id AND st.status = 'active'
+    GROUP BY a.studio_id HAVING c > ?)`, [stats.totalAwards]);
+  const { subject, html } = buildStudioInvite({ studio, totalAwards: stats.totalAwards || 0, firstPlaces: stats.firstPlaces || 0, rank: rankRow.rank });
+  res.send(`<div style="background:#f4f4f4;padding:16px;font-family:Arial;">Subject: <strong>${subject}</strong></div>` + html);
 });
 
 

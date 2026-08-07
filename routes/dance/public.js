@@ -4,6 +4,7 @@ const { openDb } = require('../../database');
 const { logStudioActivity } = require('../../utils/activity');
 const { cached } = require('../../utils/cache');
 const { formatEventTitle } = require('../../utils/format');
+const { unsubscribeToken } = require('../../utils/invites');
 const { BASE_URL } = require('../../config');
 const path = require('path');
 
@@ -113,6 +114,29 @@ router.get('/faq/organizer', (req, res) => {
   res.render('faq_organizer', { user: req.session.user });
 });
 
+
+// One-click unsubscribe from invite emails (HMAC-signed, no login needed)
+router.get('/unsubscribe', async (req, res) => {
+  const { e, t } = req.query;
+  if (!e || !t) return res.status(400).send('Invalid unsubscribe link.');
+  let email;
+  try {
+    email = Buffer.from(String(e), 'base64url').toString('utf8');
+  } catch {
+    return res.status(400).send('Invalid unsubscribe link.');
+  }
+  if (!email || unsubscribeToken(email) !== t) return res.status(400).send('Invalid unsubscribe link.');
+
+  const db = await openDb();
+  await db.run('INSERT OR IGNORE INTO email_suppressions (email) VALUES (?)', [email.toLowerCase()]);
+  res.send(`<!DOCTYPE html><html><head><title>Unsubscribed — AwardHome</title></head>
+    <body style="background:#0a0a0a;color:#fff;font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;">
+      <div style="text-align:center;max-width:420px;padding:2rem;">
+        <h1 style="color:#d4af37;">You're unsubscribed</h1>
+        <p style="color:#a0a0a0;">We won't send any more emails to this address. Your studio's public results page is unaffected.</p>
+      </div>
+    </body></html>`);
+});
 
 // AwardHome umbrella landing for anonymous visitors; logged-in users go
 // straight to the dance vertical home.

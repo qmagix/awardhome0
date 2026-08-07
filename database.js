@@ -226,6 +226,23 @@ async function initDb() {
     CREATE INDEX IF NOT EXISTS idx_studio_activity_studio_time ON studio_activity(studio_id, created_at);
     CREATE INDEX IF NOT EXISTS idx_studio_activity_time ON studio_activity(created_at);
 
+    CREATE TABLE IF NOT EXISTS studio_invites (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      studio_id INTEGER NOT NULL REFERENCES studios(id),
+      email TEXT NOT NULL,
+      subject TEXT,
+      message_id TEXT,
+      sent_by INTEGER REFERENCES users(id),
+      sent_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE INDEX IF NOT EXISTS idx_studio_invites_studio ON studio_invites(studio_id);
+
+    CREATE TABLE IF NOT EXISTS email_suppressions (
+      email TEXT PRIMARY KEY,
+      reason TEXT DEFAULT 'unsubscribe',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
     CREATE TABLE IF NOT EXISTS system_settings (
       key TEXT PRIMARY KEY,
       value TEXT
