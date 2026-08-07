@@ -9,7 +9,17 @@
           style="width: 96px; height: 96px; border-radius: 16px; object-fit: contain; background: rgba(255,255,255,0.05); padding: 8px;">
       <% } %>
       <div style="flex: 1; min-width: 260px;">
-        <h1 style="margin: 0 0 0.25rem; font-size: 2.2rem;"><%= org.name %></h1>
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap;">
+          <h1 style="margin: 0 0 0.25rem; font-size: 2.2rem;"><%= org.name %></h1>
+          <div style="display: flex; align-items: center; gap: 1rem; flex-shrink: 0;">
+            <% if (!org.owner_id) { %>
+              <a href="#" onclick="openOrgBenefitsModal(event)" style="color: var(--primary); font-weight: 600; text-decoration: underline; font-size: 0.9rem;">Why Claim?</a>
+              <a href="mailto:hello@awardhome.com?subject=Organizer claim: <%= org.name %>" class="btn btn-primary">Claim This Page</a>
+            <% } else if (typeof user !== 'undefined' && user && user.id === org.owner_id) { %>
+              <a href="/manage/org/<%= org.id %>" class="btn btn-outline">Manage Organization</a>
+            <% } %>
+          </div>
+        </div>
         <% if (org.slogan) { %>
           <p class="text-gold" style="font-weight: 600; margin: 0 0 0.5rem;"><%= org.slogan %></p>
         <% } %>
@@ -75,4 +85,72 @@
   </div>
 
 </div>
+
+<!-- Organizer Benefits Modal -->
+<div id="org-benefits-modal"
+  style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 9999; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;">
+  <div class="card glass-card"
+    style="position: relative; max-width: 520px; width: 90%; padding: 2.5rem; transform: scale(0.95); transition: transform 0.3s ease;">
+    <button onclick="closeOrgBenefitsModal()"
+      style="position: absolute; top: 1rem; right: 1rem; background: transparent; border: none; color: white; font-size: 1.5rem; cursor: pointer;">&times;</button>
+    <h2 style="margin-top: 0; margin-bottom: 1.5rem; color: var(--primary); display: flex; align-items: center; gap: 0.5rem;">
+      ✨ Why Claim Your Organization?</h2>
+
+    <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 1.25rem;">
+      <li style="display: flex; align-items: flex-start; gap: 1rem;">
+        <span style="font-size: 1.5rem;">🏆</span>
+        <div>
+          <strong style="display: block; font-size: 1.05rem; margin-bottom: 0.25rem; color: white;">Your Brand on Every Trophy</strong>
+          <span style="color: var(--text-muted); font-size: 0.9rem;">Upload your logo and custom trophy icons — they appear on every award card your dancers share on social media.</span>
+        </div>
+      </li>
+      <li style="display: flex; align-items: flex-start; gap: 1rem;">
+        <span style="font-size: 1.5rem;">📣</span>
+        <div>
+          <strong style="display: block; font-size: 1.05rem; margin-bottom: 0.25rem; color: white;">Marketing Profile</strong>
+          <span style="color: var(--text-muted); font-size: 0.9rem;">Add your slogan and description so this page pitches your competition to every studio browsing AwardHome.</span>
+        </div>
+      </li>
+      <li style="display: flex; align-items: flex-start; gap: 1rem;">
+        <span style="font-size: 1.5rem;">📊</span>
+        <div>
+          <strong style="display: block; font-size: 1.05rem; margin-bottom: 0.25rem; color: white;">Attendance Insights</strong>
+          <span style="color: var(--text-muted); font-size: 0.9rem;">See analytics on the studios attending your events — including how many other competitions they attend each year.</span>
+        </div>
+      </li>
+      <li style="display: flex; align-items: flex-start; gap: 1rem;">
+        <span style="font-size: 1.5rem;">🗂️</span>
+        <div>
+          <strong style="display: block; font-size: 1.05rem; margin-bottom: 0.25rem; color: white;">Permanent Results Archive</strong>
+          <span style="color: var(--text-muted); font-size: 0.9rem;">We host your results forever, interactively — no more "where can I find last year's results?" emails.</span>
+        </div>
+      </li>
+    </ul>
+
+    <a href="mailto:hello@awardhome.com?subject=Organizer claim: <%= org.name %>" class="btn btn-primary"
+      style="display: block; text-align: center; margin-top: 2rem;">Claim This Page — It's Free</a>
+  </div>
+</div>
+
+<script>
+  function openOrgBenefitsModal(e) {
+    if (e) e.preventDefault();
+    const m = document.getElementById('org-benefits-modal');
+    m.style.display = 'flex';
+    setTimeout(() => {
+      m.style.opacity = '1';
+      m.querySelector('.card').style.transform = 'scale(1)';
+    }, 10);
+  }
+  function closeOrgBenefitsModal() {
+    const m = document.getElementById('org-benefits-modal');
+    m.style.opacity = '0';
+    m.querySelector('.card').style.transform = 'scale(0.95)';
+    setTimeout(() => { m.style.display = 'none'; }, 300);
+  }
+  document.addEventListener('click', function (event) {
+    const m = document.getElementById('org-benefits-modal');
+    if (event.target === m) closeOrgBenefitsModal();
+  });
+</script>
 <%- include('partials/footer') %>
