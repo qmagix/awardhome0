@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { openDb } = require('../../database');
 const { logStudioActivity } = require('../../utils/activity');
+const { cached } = require('../../utils/cache');
 const { BASE_URL } = require('../../config');
 const path = require('path');
 
@@ -124,7 +125,11 @@ router.get('/', (req, res) => {
 router.get(['/studios', '/studio/:id', '/studio/:id/first-places', '/org/:slug', '/event/:id'],
   (req, res) => res.redirect(301, '/dance' + req.originalUrl));
 
+// Homepage data is identical for every visitor and expensive to compute
+// (7 aggregations over ~900k awards) — cache it for 5 minutes. Featured
+// changes invalidate the key (see utils/featured.js).
 router.get('/dance', async (req, res) => {
+  const data = await cached('dance-home', 5 * 60 * 1000, async () => {
   const db = await openDb();
 
   const featuredStudios = await db.all(`
@@ -216,6 +221,10 @@ router.get('/dance', async (req, res) => {
     ORDER BY o.name
   `);
 
+  return { featuredStudios, topStudios, topStudiosThisYear, topStudiosFirstPlaceThisYear, topDancers, topDancersThisYear, topDancersFirstPlaceThisYear, orgs };
+  });
+
+  const { featuredStudios, topStudios, topStudiosThisYear, topStudiosFirstPlaceThisYear, topDancers, topDancersThisYear, topDancersFirstPlaceThisYear, orgs } = data;
   const isAdmin = req.session && req.session.user && (req.session.user.role === 'admin' || req.session.user.role === 'superadmin');
 
   if (isAdmin) {

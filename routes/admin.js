@@ -3,6 +3,7 @@ const router = express.Router();
 const { openDb } = require('../database');
 const { logStudioActivity } = require('../utils/activity');
 const { computeFeaturedStudios } = require('../utils/featured');
+const { invalidate } = require('../utils/cache');
 const { requireAdmin, requireSuperadmin } = require('../middleware/auth');
 const bcrypt = require('bcrypt');
 const { runBackfillForEvent } = require('../backfill_utils');
@@ -20,6 +21,7 @@ router.post('/api/studios/:id/feature', requireAdmin, express.json(), async (req
   const db = await openDb();
   const { feature } = req.body;
   await db.run(`UPDATE studios SET is_featured = ? WHERE id = ?`, [feature ? 1 : 0, req.params.id]);
+  invalidate('dance-home');
   res.json({ success: true });
 });
 

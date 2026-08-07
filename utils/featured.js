@@ -1,4 +1,5 @@
 const { openDb } = require('../database');
+const { invalidate } = require('./cache');
 
 // Featured-studio auto-rotation. Published policy (see /faq/admin):
 // eligibility = claimed + logo + bio; score = recent verified activity with
@@ -94,6 +95,8 @@ async function computeFeaturedStudios() {
     await db.run('ROLLBACK');
     throw err;
   }
+
+  invalidate('dance-home');
 
   return {
     selected: scored.map((r, i) => ({ rank: i + 1, studio_id: r.id, score: Math.round(r.score * 10) / 10 })),
