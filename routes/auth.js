@@ -5,6 +5,7 @@ const rateLimit = require('express-rate-limit');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const { sendEmail } = require('../utils/mailer');
+const { domainsMatch, approveStudioClaim } = require('../utils/claims');
 const { BASE_URL } = require('../config');
 
 const authLimiter = rateLimit({
@@ -68,11 +69,37 @@ router.get('/verify-email', async (req, res) => {
   }
 
   await db.run('UPDATE users SET is_verified = 1, verification_token = NULL, verification_token_expires = NULL WHERE id = ?', [user.id]);
-  res.send('<script>alert("Email verified!"); window.location.href="/login";</script>');
+
+  // Now that the email is verified, run the domain fast-track on any
+  // pending studio claims filed by this account.
+  const verified = await db.get('SELECT id, email FROM users WHERE id = ?', [user.id]);
+  const pendingClaims = await db.all(`
+    SELECT sc.studio_id, st.website_url, st.name
+    FROM studio_claims sc JOIN studios st ON st.id = sc.studio_id
+    WHERE sc.user_id = ? AND sc.status = 'pending' AND st.is_claimed = 0
+  `, [user.id]);
+
+  let approvedName = null;
+  let pendingName = null;
+  for (const claim of pendingClaims) {
+    if (domainsMatch(claim.website_url, verified.email)) {
+      await approveStudioClaim(db, { userId: user.id, studioId: claim.studio_id });
+      approvedName = claim.name;
+    } else {
+      pendingName = claim.name;
+    }
+  }
+
+  let msg = 'Email verified! Log in below.';
+  if (approvedName) msg = `Email verified — and your claim for ${approvedName} was auto-approved (your email domain matches the studio website). Log in to manage your studio.`;
+  else if (pendingName) msg = `Email verified! Your claim for ${pendingName} is now awaiting admin review — log in to check its status.`;
+  res.render('login', { message: msg });
 });
 
 
-router.get('/login', (req, res) => res.render('login'));
+router.get('/login', (req, res) => res.render('login', {
+  next: typeof req.query.next === 'string' && req.query.next.startsWith('/') ? req.query.next : null
+}));
 router.post('/login', authLimiter, async (req, res) => {
   const { email, password } = req.body;
   const db = await openDb();
@@ -91,6 +118,9 @@ router.post('/login', authLimiter, async (req, res) => {
   }
 
   req.session.user = { id: user.id, email: user.email, role: user.role };
+
+  const nextUrl = typeof req.body.next === 'string' && req.body.next.startsWith('/') ? req.body.next : null;
+  if (nextUrl) return res.redirect(nextUrl);
 
   if (user.role === 'admin' || user.role === 'superadmin') {
     return res.redirect('/admin');

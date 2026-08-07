@@ -35,6 +35,8 @@ const CHECKS = [
   ['POST', '/admin/featured/recompute', [403], 'anonymous featured recompute blocked'],
   ['POST', '/admin/marketing/studios/1/send-invite', [403], 'anonymous invite send blocked'],
   ['GET', '/unsubscribe?e=bogus&t=bad', [400], 'bad unsubscribe token rejected'],
+  ['GET', '/claim/studio/1', [200], 'claim page public (one-page apply)'],
+  ['POST', '/claim/studio/1/apply', [400], 'apply validates input'],
 ];
 
 async function waitForServer(timeoutMs = 15000) {

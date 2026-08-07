@@ -1,36 +1,93 @@
 <%- include('partials/header') %>
-<div class="container" style="max-width: 600px; margin-top: 4rem;">
+<div class="container" style="max-width: 620px; margin-top: 3rem;">
   <div class="card glass-card" style="padding: 2.5rem;">
-    <h2 style="margin-top: 0; color: var(--primary);">Claim Studio</h2>
-    <p style="color: var(--text-muted); margin-bottom: 2rem;">
-      You are applying to claim and manage <strong><%= studio.name %></strong>.
-    </p>
+    <h2 style="margin-top: 0; color: var(--primary);">Claim <%= studio.name %></h2>
 
-    <% if (typeof error !== 'undefined' && error) { %>
-      <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #ef4444; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem;">
-        <%= error %>
+    <% if (typeof success !== 'undefined' && success) { %>
+      <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.25); color: #10b981; padding: 1.25rem; border-radius: 8px; line-height: 1.6;">
+        <%= success %>
       </div>
-    <% } %>
+    <% } else if (studio.is_claimed) { %>
+      <p style="color: var(--text-muted);">This studio has already been claimed. If you believe this is an
+        error, contact <a href="mailto:hello@awardhome.com">hello@awardhome.com</a>.</p>
+    <% } else { %>
 
-    <form action="/claim/studio/<%= studio.id %>" method="POST" style="display: flex; flex-direction: column; gap: 1.5rem;"
-      <% if (user && user.role === 'superadmin') { %>
-        onsubmit="return confirm('You are a superadmin! Are you sure you want to claim this studio? (It is better to use a regular test account if you need to test this flow).');"
+      <% if (typeof error !== 'undefined' && error) { %>
+        <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #ef4444; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem;">
+          <%= error %>
+          <% if (typeof showLogin !== 'undefined' && showLogin) { %>
+            <div style="margin-top: 0.75rem;"><a href="/login?next=/claim/studio/<%= studio.id %>" class="btn btn-primary" style="padding: 0.4rem 1rem; font-size: 0.85rem;">Log in to continue</a></div>
+          <% } %>
+        </div>
       <% } %>
-    >
-      <div>
-        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Your Role / Affiliation</label>
-        <input type="text" name="role" required placeholder="e.g. Studio Director, Owner" style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;">
-      </div>
-      <div>
-        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Phone Number</label>
-        <input type="tel" name="phone" required placeholder="For verification purposes" style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;">
-      </div>
-      <div>
-        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Additional Proof (Optional)</label>
-        <textarea name="proof" rows="4" placeholder="Link to staff page showing your name, or any other verification details" style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;"></textarea>
-      </div>
-      <button type="submit" class="btn" style="background: var(--primary); color: #0a0a0a; border: none; padding: 1rem; font-weight: 600; border-radius: 6px; cursor: pointer;">Submit Claim Request</button>
-    </form>
+
+      <% if (user) { %>
+        <!-- Logged-in: short claim form -->
+        <p style="color: var(--text-muted); margin-bottom: 2rem;">
+          You are applying to claim and manage <strong><%= studio.name %></strong> as <strong><%= user.email %></strong>.
+        </p>
+        <form action="/claim/studio/<%= studio.id %>" method="POST" style="display: flex; flex-direction: column; gap: 1.5rem;"
+          <% if (user.role === 'superadmin') { %>
+            onsubmit="return confirm('You are a superadmin! Are you sure you want to claim this studio? (It is better to use a regular test account if you need to test this flow).');"
+          <% } %>
+        >
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Your Role / Affiliation</label>
+            <input type="text" name="role" required placeholder="e.g. Studio Director, Owner" style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;">
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Phone Number</label>
+            <input type="tel" name="phone" required placeholder="For verification purposes" style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;">
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Additional Proof (Optional)</label>
+            <textarea name="proof" rows="4" placeholder="Link to staff page showing your name, or any other verification details" style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary" style="padding: 1rem; font-weight: 600;">Submit Claim Request</button>
+        </form>
+
+      <% } else { %>
+        <!-- Anonymous: account + claim in one step -->
+        <p style="color: var(--text-muted); margin-bottom: 0.5rem;">
+          One form, two minutes: this creates your AwardHome account and files your claim
+          for <strong><%= studio.name %></strong> together.
+        </p>
+        <p style="color: var(--gold-light); font-size: 0.9rem; margin-bottom: 2rem;">
+          Tip: use your studio email — if its domain matches your studio's website,
+          your claim is approved instantly when you verify.
+        </p>
+        <form action="/claim/studio/<%= studio.id %>/apply" method="POST" style="display: flex; flex-direction: column; gap: 1.25rem;">
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Your Name</label>
+            <input type="text" name="contact_name" required placeholder="e.g. Jane Miller" style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;">
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Your Role / Affiliation</label>
+            <input type="text" name="role" required placeholder="e.g. Studio Director, Owner" style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;">
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Studio Email</label>
+            <input type="email" name="email" required placeholder="you@yourstudio.com" style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;">
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Phone Number</label>
+            <input type="tel" name="phone" required placeholder="For verification purposes" style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;">
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Create a Password</label>
+            <input type="password" name="password" required minlength="8" placeholder="At least 8 characters" style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;">
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Additional Proof (Optional)</label>
+            <textarea name="proof" rows="3" placeholder="Link to staff page showing your name, or any other verification details" style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary" style="padding: 1rem; font-weight: 600;">Create Account &amp; Claim Studio</button>
+        </form>
+        <p style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">
+          Already have an account? <a href="/login?next=/claim/studio/<%= studio.id %>">Log in to claim</a>
+        </p>
+      <% } %>
+    <% } %>
   </div>
 </div>
 <%- include('partials/footer') %>
