@@ -217,6 +217,15 @@ async function initDb() {
       PRIMARY KEY (studio_id, dancer_name)
     );
 
+    CREATE TABLE IF NOT EXISTS studio_activity (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      studio_id INTEGER NOT NULL REFERENCES studios(id),
+      action TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE INDEX IF NOT EXISTS idx_studio_activity_studio_time ON studio_activity(studio_id, created_at);
+    CREATE INDEX IF NOT EXISTS idx_studio_activity_time ON studio_activity(created_at);
+
     CREATE TABLE IF NOT EXISTS system_settings (
       key TEXT PRIMARY KEY,
       value TEXT
@@ -259,6 +268,9 @@ async function initDb() {
   try { await db.exec("ALTER TABLE studios ADD COLUMN public_preferences TEXT"); } catch(e) {}
   try { await db.exec("ALTER TABLE awards ADD COLUMN award_class TEXT"); } catch(e) {}
   try { await db.exec("ALTER TABLE awards ADD COLUMN is_first_place INTEGER DEFAULT 0"); } catch(e) {}
+  try { await db.exec("ALTER TABLE studios ADD COLUMN auto_featured_rank INTEGER"); } catch(e) {}
+  try { await db.exec("ALTER TABLE studios ADD COLUMN auto_featured_since DATETIME"); } catch(e) {}
+  try { await db.exec("ALTER TABLE studios ADD COLUMN auto_feature_cooldown_until DATETIME"); } catch(e) {}
 
   console.log("Database initialized.");
   return db;

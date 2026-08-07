@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { openDb } = require('../../database');
 const { requireAuth, requireStudioOwner } = require('../../middleware/auth');
+const { logStudioActivity } = require('../../utils/activity');
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' });
 const { OpenAI } = require('openai');
@@ -82,6 +83,7 @@ router.post('/manage/studio/:id/profile', requireAuth, requireStudioOwner, async
     SET name = ?, website_url = ?, email = ?, phone = ?, logo_url = ?, bio = ?, instagram_handle = ?, tiktok_handle = ?, public_preferences = ?
     WHERE id = ?
   `, [name, website_url, email, phone, logo_url, bio, instagram_handle, tiktok_handle, JSON.stringify(prefs), req.params.id]);
+  logStudioActivity(req.params.id, 'profile_update', { dedupMinutes: 1440 });
 
   const updatedStudio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
   
@@ -271,6 +273,7 @@ router.post('/manage/studio/:id/awards/self-report', requireAuth, requireStudioO
     }
   }
 
+  logStudioActivity(req.params.id, 'award_self_report', { dedupMinutes: 60 });
   res.redirect(`/manage/studio/${req.params.id}/awards?year=${year}`);
 });
 
@@ -389,6 +392,7 @@ router.post('/manage/studio/:id/awards/csv-commit', requireAuth, requireStudioOw
     }
   }
 
+  logStudioActivity(req.params.id, 'awards_csv_commit', { dedupMinutes: 60 });
   res.redirect(`/manage/studio/${req.params.id}/awards`);
 });
 
@@ -664,6 +668,7 @@ router.post('/manage/studio/:id/roster/csv-commit', requireAuth, requireStudioOw
     }
 
     await db.run('COMMIT');
+    logStudioActivity(req.params.id, 'roster_csv_commit', { dedupMinutes: 60 });
     res.redirect(`/manage/studio/${req.params.id}/roster?success=CSV+Import+Completed`);
   } catch (err) {
     await db.run('ROLLBACK');
@@ -735,6 +740,7 @@ router.post('/manage/studio/:id/verifications/award/:link_id/approve', requireAu
   if (link) {
     await db.run("UPDATE award_dancers SET status = 'verified' WHERE id = ?", [req.params.link_id]);
     await db.run("UPDATE dancer_studios SET status = 'active' WHERE dancer_id = ? AND studio_id = ?", [link.dancer_id, studio.id]);
+    logStudioActivity(studio.id, 'verification_action', { dedupMinutes: 60 });
   }
 
   res.redirect(`/manage/studio/${studio.id}/verifications`);
@@ -806,6 +812,7 @@ router.post('/api/studios/:id/verifications/bulk', requireAuth, requireStudioOwn
       return res.status(400).json({ error: 'Invalid type' });
     }
 
+    logStudioActivity(studio.id, 'verification_action', { dedupMinutes: 60 });
     res.json({ success: true });
   } catch (err) {
     console.error(err);
@@ -1086,6 +1093,7 @@ router.post('/api/studio/:id/history/org/:org_id/ai-summary', requireAuth, requi
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `, [studioId, orgId, tone, prompt, JSON.stringify(awardsList), aiResponseText, aiResponseText]);
 
+    logStudioActivity(studioId, 'ai_summary', { dedupMinutes: 60 });
     res.json({ id: result.lastID, text: aiResponseText });
   } catch (error) {
     console.error('OpenAI Error:', error);

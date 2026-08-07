@@ -199,6 +199,17 @@ app.listen(PORT, async (err) => {
   }
 });
 
+// Nightly featured-studio rotation at 3:30 AM (see utils/featured.js)
+cron.schedule('30 3 * * *', async () => {
+  try {
+    const { computeFeaturedStudios } = require('./utils/featured');
+    const result = await computeFeaturedStudios();
+    console.log(`Featured rotation: ${result.selected.length} studios selected`);
+  } catch (err) {
+    console.error('Featured rotation failed:', err);
+  }
+});
+
 // Setup automated nightly backups at 3:00 AM
 if (process.env.ENABLE_NIGHTLY_BACKUPS === 'true') {
   cron.schedule('0 3 * * *', () => {

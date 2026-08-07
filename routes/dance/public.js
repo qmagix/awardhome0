@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { openDb } = require('../../database');
+const { logStudioActivity } = require('../../utils/activity');
 const { BASE_URL } = require('../../config');
 const path = require('path');
 
@@ -9,6 +10,7 @@ const path = require('path');
 router.get('/widget/studio/:id', async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.removeHeader('X-Frame-Options');
+  logStudioActivity(req.params.id, 'widget_embed', { dedupMinutes: 1440 });
 
   const db = await openDb();
   const studio = await db.get('SELECT name, logo_url FROM studios WHERE id = ?', [req.params.id]);
@@ -28,7 +30,7 @@ router.get('/widget/studio/:id', async (req, res) => {
   const awardsRaw = await db.all(baseQuery, [req.params.id]);
 
   const theme = req.query.theme || 'dark';
-  const primaryColor = req.query.primary || 'ec4899';
+  const primaryColor = req.query.primary || 'd4af37';
   const bg = req.query.bg || (theme === 'dark' ? '000000' : 'ffffff');
   const layout = req.query.layout || 'list';
   const premiumOnly = req.query.premiumOnly === 'true';
@@ -62,7 +64,7 @@ router.get('/widget/studio/:id', async (req, res) => {
         }
       }
 
-      const isPremium = app.locals.isPremiumAward(award);
+      const isPremium = req.app.locals.isPremiumAward(award);
 
       if (premiumOnly && topPlacementsOnly) {
         return isPremium && isTopPlace;
@@ -129,9 +131,10 @@ router.get('/dance', async (req, res) => {
     SELECT s.id, s.name, COUNT(DISTINCT a.id) as total_awards
     FROM studios s
     LEFT JOIN awards a ON s.id = a.studio_id
-    WHERE s.is_featured = 1
+    WHERE s.is_featured = 1 OR s.auto_featured_rank IS NOT NULL
     GROUP BY s.id
-    ORDER BY s.name
+    ORDER BY s.is_featured DESC, s.auto_featured_rank ASC, s.name
+    LIMIT 12
   `);
 
   let excludeIds = featuredStudios.map(s => s.id);

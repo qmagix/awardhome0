@@ -32,6 +32,7 @@ const CHECKS = [
   ['GET', '/manage/studio/1', [302], 'anonymous studio manage redirected to login'],
   ['GET', '/manage/org/1', [302], 'anonymous org manage redirected to login'],
   ['POST', '/resend-verification', [200], 'resend-verification responds'],
+  ['POST', '/admin/featured/recompute', [403], 'anonymous featured recompute blocked'],
 ];
 
 async function waitForServer(timeoutMs = 15000) {

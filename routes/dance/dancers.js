@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { openDb } = require('../../database');
+const { logStudioActivity } = require('../../utils/activity');
 const { requireAuth } = require('../../middleware/auth');
 const rateLimit = require('express-rate-limit');
 const { generateDancerId } = require('../../utils.js');
@@ -289,6 +290,7 @@ router.post('/api/claim-award', claimAwardLimiter, async (req, res) => {
       finalUniqueId = generatedUniqueId;
     }
 
+    if (studio_id) logStudioActivity(studio_id, 'award_claim');
     res.json({ success: true, newUniqueId: generatedUniqueId, dancerName, dancerUniqueId: finalUniqueId, backfilledAwards });
   } catch (err) {
     console.error(err);

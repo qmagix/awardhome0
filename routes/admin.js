@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const { openDb } = require('../database');
+const { logStudioActivity } = require('../utils/activity');
+const { computeFeaturedStudios } = require('../utils/featured');
 const { requireAdmin, requireSuperadmin } = require('../middleware/auth');
 const bcrypt = require('bcrypt');
 const { runBackfillForEvent } = require('../backfill_utils');
@@ -277,6 +279,17 @@ router.get('/admin/claims', requireAdmin, async (req, res) => {
 });
 
 
+// Recompute the auto-featured studio rotation on demand (also runs nightly)
+router.post('/admin/featured/recompute', requireSuperadmin, async (req, res) => {
+  try {
+    const result = await computeFeaturedStudios();
+    res.json({ success: true, ...result });
+  } catch (err) {
+    console.error('Featured recompute failed:', err);
+    res.status(500).json({ error: 'Recompute failed' });
+  }
+});
+
 router.post('/admin/claims/:id/approve', requireAdmin, async (req, res) => {
   const db = await openDb();
   const claim = await db.get('SELECT * FROM studio_claims WHERE id = ?', [req.params.id]);
@@ -285,6 +298,7 @@ router.post('/admin/claims/:id/approve', requireAdmin, async (req, res) => {
   await db.run('UPDATE studios SET is_claimed = 1, owner_id = ? WHERE id = ?', [claim.user_id, claim.studio_id]);
   await db.run('UPDATE studio_claims SET status = "approved" WHERE id = ?', [claim.id]);
   await db.run('UPDATE users SET role = "studio_owner" WHERE id = ? AND role = "user"', [claim.user_id]);
+  logStudioActivity(claim.studio_id, 'claim_approved');
 
   res.redirect('/admin/claims');
 });

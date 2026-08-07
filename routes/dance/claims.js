@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { openDb } = require('../../database');
+const { logStudioActivity } = require('../../utils/activity');
 const { requireAuth } = require('../../middleware/auth');
 
 
@@ -52,6 +53,7 @@ router.post('/claim/studio/:id', requireAuth, async (req, res) => {
       req.session.user.role = 'studio_owner';
     }
 
+    logStudioActivity(studio.id, 'claim_approved');
     return res.send(`<script>alert("Congratulations! Your email domain matched the studio's website. Your claim has been auto-approved."); window.location.href="/studio/${studio.id}";</script>`);
   } else {
     // Normal pending claim
