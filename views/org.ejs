@@ -26,6 +26,12 @@
         <% if (org.description) { %>
           <p style="color: var(--text-muted); max-width: 640px; margin: 0; line-height: 1.6;"><%= org.description %></p>
         <% } %>
+        <% if (org.website) { %>
+          <% const orgSite = org.website.match(/^https?:\/\//) ? org.website : 'https://' + org.website; %>
+          <a href="<%= orgSite %>" target="_blank" rel="noopener" class="btn btn-outline" style="margin-top: 1rem; display: inline-flex; align-items: center; gap: 0.4rem;">
+            Visit Website &amp; Register for Events ↗
+          </a>
+        <% } %>
       </div>
     </div>
 
@@ -116,6 +122,13 @@
         <div>
           <strong style="display: block; font-size: 1.05rem; margin-bottom: 0.25rem; color: white;">Attendance Insights</strong>
           <span style="color: var(--text-muted); font-size: 0.9rem;">See analytics on the studios attending your events — including how many other competitions they attend each year.</span>
+        </div>
+      </li>
+      <li style="display: flex; align-items: flex-start; gap: 1rem;">
+        <span style="font-size: 1.5rem;">🎟️</span>
+        <div>
+          <strong style="display: block; font-size: 1.05rem; margin-bottom: 0.25rem; color: white;">Drive Event Registrations</strong>
+          <span style="color: var(--text-muted); font-size: 0.9rem;">Link your event registration site right from this page — every dancer and studio browsing your results is one click from signing up for your next event.</span>
         </div>
       </li>
       <li style="display: flex; align-items: flex-start; gap: 1rem;">

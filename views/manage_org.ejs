@@ -95,6 +95,11 @@
                             <label>Event Description</label>
                             <textarea name="description" rows="4" placeholder="Describe what makes your competition special..." class="form-control" style="background: rgba(0,0,0,0.3); color: white; resize: vertical;"><%= org.description || '' %></textarea>
                         </div>
+                        <div class="form-group" style="margin-top: 1rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Website / Registration Link</label>
+                            <input type="text" name="website" placeholder="e.g. https://yourcompetition.com/register" value="<%= org.website || '' %>" class="form-control" style="background: rgba(0,0,0,0.3); color: white;">
+                            <small style="color: var(--text-muted);">Shown on your public page so dancers and studios can register for your events.</small>
+                        </div>
                         <button type="submit" class="btn save-btn" style="margin-top: 1rem;">Save Marketing Profile</button>
                     </form>
                 </div>

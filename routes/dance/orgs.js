@@ -125,9 +125,9 @@ router.post('/manage/org/:id/marketing', requireAuth, requireOrgOwner({ allowAdm
   const db = await openDb();
   const org = req.org;
 
-  const { description, slogan } = req.body;
+  const { description, slogan, website } = req.body;
 
-  await db.run('UPDATE organizations SET description = ?, slogan = ? WHERE id = ?', [description, slogan, org.id]);
+  await db.run('UPDATE organizations SET description = ?, slogan = ?, website = ? WHERE id = ?', [description, slogan, website, org.id]);
 
   res.redirect('/manage/org/' + org.id);
 });
