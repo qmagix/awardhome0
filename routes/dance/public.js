@@ -661,7 +661,7 @@ router.get('/dancer/:unique_id', async (req, res) => {
     LEFT JOIN organizations o ON e.org_id = o.id
     LEFT JOIN award_dancers ad ON a.id = ad.award_id
     WHERE a.dancer_id = ? OR ad.dancer_id = ?
-    ORDER BY a.award_type, a.place
+    ORDER BY e.year DESC, a.award_type, a.place
   `, [dancer.id, dancer.id]);
 
   awards.forEach(a => {
@@ -689,7 +689,21 @@ router.get('/dancer/:unique_id', async (req, res) => {
   const soloAwards = performanceAwards.filter(a => a.dancer_count <= 1 && (!a.category || !a.category.toLowerCase().includes('group')));
   const groupAwards = performanceAwards.filter(a => a.dancer_count > 1 || (a.category && a.category.toLowerCase().includes('group')));
 
-  res.render('dancer', { dancer, soloAwards, groupAwards, conventionAwards });
+  // Year-first timeline: newest season on top (query is already year DESC,
+  // so Map insertion order is correct; undated awards land last), with the
+  // original category order (Group, Solo, Special) inside each year.
+  const yearOf = (a) => a.event_year || 'Undated';
+  const yearsMap = new Map();
+  for (const a of awards) {
+    const y = yearOf(a);
+    if (!yearsMap.has(y)) yearsMap.set(y, { year: y, group: [], solo: [], convention: [] });
+  }
+  groupAwards.forEach(a => yearsMap.get(yearOf(a)).group.push(a));
+  soloAwards.forEach(a => yearsMap.get(yearOf(a)).solo.push(a));
+  conventionAwards.forEach(a => yearsMap.get(yearOf(a)).convention.push(a));
+  const yearSections = [...yearsMap.values()];
+
+  res.render('dancer', { dancer, soloAwards, groupAwards, conventionAwards, yearSections });
 });
 
 

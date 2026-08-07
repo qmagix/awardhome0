@@ -1,0 +1,95 @@
+            <div class="premium-trophy-card <%= isPremiumAward(award) ? 'premium-award-border' : '' %>">
+              <% if (!award.is_self_added) { %>
+                <div class="verified-badge" title="Official Verified Award">
+                  <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" width="14"
+                    height="14">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                  </svg>
+                </div>
+                <% } %>
+                  <% const placeText=formatPlacement(award); let placeClass='award-place award-place-large' ; if
+                    (placeText.length> 25) {
+                    placeClass = 'award-place award-place-small';
+                    } else if (placeText.length > 12) {
+                    placeClass = 'award-place award-place-medium';
+                    }
+
+                    let tier = 'tier-star';
+                    let icon = '⭐';
+                    const pLower = placeText.toLowerCase();
+                    const typeLower = (award.award_type || '').toLowerCase();
+
+                    if (isPremiumAward(award)) {
+                    tier = 'tier-gold'; icon = getPremiumDetails(award).icon;
+                    } else if (pLower.includes('1st') || pLower === 'winner' || pLower.includes('first') || pLower ===
+                    'champion') {
+                    tier = 'tier-gold'; icon = '🏆';
+                    } else if (pLower.includes('2nd') || pLower.includes('second')) {
+                    tier = 'tier-silver'; icon = '🥈';
+                    } else if (pLower.includes('3rd') || pLower.includes('third')) {
+                    tier = 'tier-bronze'; icon = '🥉';
+                    } else if (pLower.includes('4th') || pLower.includes('5th') || pLower.includes('6th') ||
+                    pLower.includes('7th') || pLower.includes('8th') || pLower.includes('9th') ||
+                    pLower.includes('10th')) {
+                    // keep as star
+                    } else if (pLower.includes('miss') || typeLower.includes('miss') || pLower.includes('mr ') ||
+                    typeLower.includes('mr ')) {
+                    tier = 'tier-gold'; icon = '🏆';
+                    }
+
+                    if (pLower.includes('1st runner')) { tier = 'tier-silver'; icon = '🥈'; }
+                    else if (pLower.includes('2nd runner')) { tier = 'tier-bronze'; icon = '🥉'; }
+                    %>
+                    <div class="content-wrapper <%= tier %>">
+                      <div class="trophy-icon">
+                        <% const customIconSolo=getCustomIcon(award, award.customIconsObj); %>
+                          <% if (customIconSolo) { %>
+                            <img src="<%= customIconSolo %>" alt="Icon"
+                              style="width: 1.5rem; height: 1.5rem; object-fit: contain;">
+                            <% } else { %>
+                              <%= icon %>
+                                <% } %>
+                      </div>
+                      <% if (award.logo_url && !(award.customIconsObj && award.customIconsObj.hide_logo)) { %>
+                        <img src="<%= award.logo_url %>"
+                          style="position: absolute; top: 0.5rem; left: 0.5rem; width: 24px; height: 24px; object-fit: contain; opacity: 0.6; border-radius: 4px;"
+                          title="<%= award.org_name %> Logo">
+                        <% } %>
+                          <div class="<%= placeClass %>">
+                            <%= placeText %>
+                          </div>
+                          <% if (award.is_self_added) { %>
+                            <span class="badge"
+                              style="background: rgba(234, 179, 8, 0.2); color: #eab308; font-size: 0.6rem; margin-bottom: 0.5rem;"
+                              title="Unverified manually reported award">Self-Reported</span>
+                            <% } %>
+                              <% if (award.performance_name) { %>
+                                <p class="category">
+                                  <%= award.award_type %>
+                                </p>
+                                <h3>
+                                  <%= award.performance_name %>
+                                </h3>
+                                <% } else { %>
+                                  <h3>
+                                    <%= award.award_type %>
+                                  </h3>
+                                  <% } %>
+                                    <% if (award.age_division) { %>
+                                      <div style="margin-top: 0.25rem; margin-bottom: 0.25rem;"><span class="badge"
+                                          style="background: rgba(255, 255, 255, 0.08); color: #e0e0e0; font-size: 0.7rem; border: 1px solid rgba(255, 255, 255, 0.15); padding: 2px 6px;">
+                                          <%= award.age_division %>
+                                        </span></div>
+                                      <% } %>
+                                        <% if (award.category) { %>
+                                          <p class="sub-category">
+                                            <%= award.category %>
+                                          </p>
+                                          <% } %>
+                                            <p class="sub-category"
+                                              style="color: #f3e5ab; font-weight: 600; margin-top: 0.5rem;">
+                                              <%= award.event_name %> (<%= award.event_year %>)
+                                            </p>
+                    </div>
+            </div>
+            

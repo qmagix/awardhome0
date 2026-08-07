@@ -134,6 +134,31 @@ a:hover {
   scroll-margin-top: 120px;
 }
 
+/* Year dividers inside award sections (dancer trophy case) */
+.year-divider {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--primary);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.4rem;
+  margin: 1.75rem 0 1.25rem;
+  letter-spacing: 0.5px;
+}
+
+.year-divider:first-child {
+  margin-top: 0.5rem;
+}
+
+/* Category eyebrow under each year (dancer timeline) */
+.type-divider {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 1.1rem 0 0.75rem;
+}
+
 /* Glassmorphism Utilities */
 .glass-nav {
   background: rgba(10, 10, 10, 0.8);
