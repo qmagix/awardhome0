@@ -37,6 +37,9 @@ const CHECKS = [
   ['GET', '/unsubscribe?e=bogus&t=bad', [400], 'bad unsubscribe token rejected'],
   ['GET', '/claim/studio/1', [200], 'claim page public (one-page apply)'],
   ['POST', '/claim/studio/1/apply', [400], 'apply validates input'],
+  ['POST', '/claim/dancer/1/apply', [400, 404], 'dancer apply validates input'],
+  ['GET', '/dance/api/search?q=a', [200], 'hero search rejects short query gracefully'],
+  ['GET', '/dance/api/search?q=dance', [200], 'hero search returns results'],
 ];
 
 async function waitForServer(timeoutMs = 15000) {
@@ -78,10 +81,11 @@ async function main() {
       const { openDb } = require('../database');
       const db = await openDb();
       const studio = await db.get("SELECT id FROM studios WHERE status = 'active' ORDER BY id LIMIT 1");
-      const dancer = await db.get('SELECT unique_id FROM dancers ORDER BY id LIMIT 1');
+      const dancer = await db.get('SELECT id, unique_id FROM dancers ORDER BY id LIMIT 1');
       const event = await db.get('SELECT id FROM events ORDER BY id LIMIT 1');
       if (studio) CHECKS.push(['GET', `/dance/studio/${studio.id}`, [200], 'real studio profile renders']);
       if (dancer) CHECKS.push(['GET', `/dancer/${dancer.unique_id}`, [200], 'real dancer trophy case renders']);
+      if (dancer) CHECKS.push(['GET', `/claim/dancer/${dancer.id}`, [200], 'dancer claim page public (one-page apply)']);
       if (event) CHECKS.push(['GET', `/dance/event/${event.id}`, [403], 'event detail stays admin-gated']);
       if (studio) CHECKS.push(['GET', `/widget/studio/${studio.id}`, [200], 'embeddable widget renders']);
       const org = await db.get('SELECT slug FROM organizations ORDER BY id LIMIT 1');

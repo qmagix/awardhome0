@@ -90,9 +90,17 @@ router.get('/verify-email', async (req, res) => {
     }
   }
 
+  // Dancer claims are always manually reviewed (no fast-track) — just
+  // report the pending status.
+  const pendingDancer = await db.get(`
+    SELECT d.name FROM dancer_claims dc JOIN dancers d ON d.id = dc.dancer_id
+    WHERE dc.user_id = ? AND dc.status = 'pending' LIMIT 1
+  `, [user.id]);
+
   let msg = 'Email verified! Log in below.';
   if (approvedName) msg = `Email verified — and your claim for ${approvedName} was auto-approved (your email domain matches the studio website). Log in to manage your studio.`;
   else if (pendingName) msg = `Email verified! Your claim for ${pendingName} is now awaiting admin review — log in to check its status.`;
+  else if (pendingDancer) msg = `Email verified! Your claim for ${pendingDancer.name}'s profile is now awaiting review — our team checks every dancer claim to keep profiles secure. Log in to check its status.`;
   res.render('login', { message: msg });
 });
 

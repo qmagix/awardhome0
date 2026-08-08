@@ -1,33 +1,92 @@
 <%- include('partials/header') %>
-<div class="container" style="max-width: 600px; margin-top: 2rem;">
-  <h2>Claim Dancer Profile</h2>
-  <p class="text-muted">You are claiming ownership of the profile for <strong><%= dancer.name %></strong>.</p>
-  
-  <% if (typeof error !== 'undefined' && error) { %>
-    <div class="alert alert-danger"><%= error %></div>
-  <% } %>
+<div class="container" style="max-width: 620px; margin-top: 3rem;">
+  <div class="card glass-card" style="padding: 2.5rem;">
+    <h2 style="margin-top: 0; color: var(--primary);">Claim <%= dancer.name %></h2>
 
-  <div class="card" style="margin-top: 1.5rem;">
-    <div class="card-body">
-      <form action="/claim/dancer/<%= dancer.id %>" method="POST">
-        <div class="mb-3">
-          <label for="relationship" class="form-label">Relationship to Dancer</label>
-          <select class="form-select" id="relationship" name="relationship" required>
-            <option value="">Select...</option>
-            <option value="Parent/Guardian">I am the Parent/Guardian</option>
-            <option value="Self">I am the Dancer</option>
-          </select>
+    <% if (typeof success !== 'undefined' && success) { %>
+      <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.25); color: #10b981; padding: 1.25rem; border-radius: 8px; line-height: 1.6;">
+        <%= success %>
+      </div>
+    <% } else if (dancer.is_claimed) { %>
+      <p style="color: var(--text-muted);">This dancer profile has already been claimed. If you believe this is an
+        error, contact <a href="mailto:hello@awardhome.com">hello@awardhome.com</a>.</p>
+    <% } else { %>
+
+      <% if (typeof error !== 'undefined' && error) { %>
+        <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #ef4444; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem;">
+          <%= error %>
+          <% if (typeof showLogin !== 'undefined' && showLogin) { %>
+            <div style="margin-top: 0.75rem;"><a href="/login?next=/claim/dancer/<%= dancer.id %>" class="btn btn-primary" style="padding: 0.4rem 1rem; font-size: 0.85rem;">Log in to continue</a></div>
+          <% } %>
         </div>
-        <div class="mb-3">
-          <label for="proof" class="form-label">Proof of Identity</label>
-          <textarea class="form-control" id="proof" name="proof" rows="4" placeholder="Please provide details (e.g. your studio affiliation, Instagram handle, etc.) so we can verify your claim." required></textarea>
-        </div>
-        <div class="alert alert-info">
-          <strong>Note:</strong> All dancer claims are manually reviewed by our administrators to ensure profile security.
-        </div>
-        <button type="submit" class="btn btn-primary w-100">Submit Claim Request</button>
-      </form>
-    </div>
+      <% } %>
+
+      <% if (user) { %>
+        <!-- Logged-in: short claim form -->
+        <p style="color: var(--text-muted); margin-bottom: 2rem;">
+          You are applying to claim and manage the profile for <strong><%= dancer.name %></strong> as <strong><%= user.email %></strong>.
+        </p>
+        <form action="/claim/dancer/<%= dancer.id %>" method="POST" style="display: flex; flex-direction: column; gap: 1.5rem;">
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Relationship to Dancer</label>
+            <select name="relationship" required style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;">
+              <option value="">Select…</option>
+              <option value="Parent/Guardian">I am the Parent/Guardian</option>
+              <option value="Self">I am the Dancer</option>
+            </select>
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Proof of Identity</label>
+            <textarea name="proof" rows="4" required placeholder="Details we can verify — your studio affiliation, Instagram handle, teacher's name, etc." style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;"></textarea>
+          </div>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">
+            All dancer claims are manually reviewed by our team to keep profiles secure.
+          </p>
+          <button type="submit" class="btn btn-primary" style="padding: 1rem; font-weight: 600;">Submit Claim Request</button>
+        </form>
+
+      <% } else { %>
+        <!-- Anonymous: account + claim in one step -->
+        <p style="color: var(--text-muted); margin-bottom: 0.5rem;">
+          One form, two minutes: this creates your AwardHome account and files your claim
+          for <strong><%= dancer.name %></strong> together.
+        </p>
+        <p style="color: var(--gold-light); font-size: 0.9rem; margin-bottom: 2rem;">
+          Every dancer claim is reviewed by our team to keep profiles secure —
+          you'll get access shortly after verifying your email.
+        </p>
+        <form action="/claim/dancer/<%= dancer.id %>/apply" method="POST" style="display: flex; flex-direction: column; gap: 1.25rem;">
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Your Name</label>
+            <input type="text" name="contact_name" required placeholder="e.g. Jane Miller" style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;">
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Relationship to Dancer</label>
+            <select name="relationship" required style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;">
+              <option value="">Select…</option>
+              <option value="Parent/Guardian">I am the Parent/Guardian</option>
+              <option value="Self">I am the Dancer</option>
+            </select>
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Email</label>
+            <input type="email" name="email" required placeholder="you@example.com" style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;">
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Create a Password</label>
+            <input type="password" name="password" required minlength="8" placeholder="At least 8 characters" style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;">
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Proof of Identity</label>
+            <textarea name="proof" rows="3" required placeholder="Details we can verify — your studio affiliation, Instagram handle, teacher's name, etc." style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary" style="padding: 1rem; font-weight: 600;">Create Account &amp; Claim Profile</button>
+        </form>
+        <p style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">
+          Already have an account? <a href="/login?next=/claim/dancer/<%= dancer.id %>">Log in to claim</a>
+        </p>
+      <% } %>
+    <% } %>
   </div>
 </div>
 <%- include('partials/footer') %>
