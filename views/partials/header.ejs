@@ -12,7 +12,8 @@
   <nav class="glass-nav">
     <div class="nav-content" style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
       <a href="/dance" class="brand">Award<span>Home</span><span class="brand-tag">Dance</span></a>
-      <div style="display: flex; gap: 1rem; align-items: center;">
+      <button class="nav-toggle" aria-label="Menu" aria-expanded="false" onclick="var l=document.getElementById('nav-links');var open=l.classList.toggle('open');this.setAttribute('aria-expanded',open);">☰</button>
+      <div class="nav-links" id="nav-links">
         <% if (typeof user !== 'undefined' && user) { %>
           <% if (user.role === 'admin' || user.role === 'superadmin') { %>
             <a href="/admin" style="color: white; text-decoration: none; font-weight: 600;">Dashboard</a>
@@ -35,7 +36,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
             Send Feedback
           </a>
-          <span style="color: var(--text-muted); font-size: 0.9rem;"><%= user.email %></span>
+          <span class="nav-email" style="color: var(--text-muted); font-size: 0.9rem;"><%= user.email %></span>
           <a href="/logout" style="color: var(--primary); text-decoration: none; font-weight: 600;">Logout</a>
         <% } else { %>
           <a href="/login" style="color: white; text-decoration: none; font-weight: 600;">Login</a>
