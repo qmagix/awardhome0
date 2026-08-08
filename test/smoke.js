@@ -30,6 +30,7 @@ const CHECKS = [
   ['GET', '/admin/users', [403], 'anonymous user management blocked'],
   ['PUT', '/api/studio/ai-summary/1', [302], 'anonymous ai-summary edit redirected to login'],
   ['GET', '/manage/studio/1', [302], 'anonymous studio manage redirected to login'],
+  ['POST', '/manage/studio/1/onboarding/dismiss', [302], 'anonymous onboarding dismiss redirected to login'],
   ['GET', '/manage/org/1', [302], 'anonymous org manage redirected to login'],
   ['POST', '/resend-verification', [200], 'resend-verification responds'],
   ['POST', '/admin/featured/recompute', [403], 'anonymous featured recompute blocked'],

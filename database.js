@@ -288,6 +288,7 @@ async function initDb() {
   try { await db.exec("ALTER TABLE studios ADD COLUMN auto_featured_rank INTEGER"); } catch(e) {}
   try { await db.exec("ALTER TABLE studios ADD COLUMN auto_featured_since DATETIME"); } catch(e) {}
   try { await db.exec("ALTER TABLE studios ADD COLUMN auto_feature_cooldown_until DATETIME"); } catch(e) {}
+  try { await db.exec("ALTER TABLE studios ADD COLUMN onboarding_dismissed INTEGER DEFAULT 0"); } catch(e) {}
 
   console.log("Database initialized.");
   return db;

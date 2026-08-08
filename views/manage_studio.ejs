@@ -57,6 +57,50 @@
       <p class="subtitle">Update your studio's public information and appearance.</p>
     </div>
 
+    <!-- Onboarding Checklist -->
+    <% if (typeof onboarding !== 'undefined' && onboarding) { %>
+      <div class="card glass-card" style="margin-bottom: 2rem; border-color: rgba(212, 175, 55, 0.35);">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 1rem;">
+          <h3 style="margin: 0; color: var(--gold-vivid);">
+            <% if (onboarding.complete) { %>🏆 You're all set!<% } else { %>🚀 Get the most out of AwardHome<% } %>
+          </h3>
+          <form action="/manage/studio/<%= studio.id %>/onboarding/dismiss" method="POST" style="margin: 0;">
+            <button type="submit" style="background: none; border: none; color: var(--text-muted); font-size: 0.8rem; cursor: pointer; text-decoration: underline; padding: 0;">Hide this</button>
+          </form>
+        </div>
+        <div style="display: flex; align-items: center; gap: 1rem; margin: 1rem 0 1.25rem 0;">
+          <div style="flex-grow: 1; height: 8px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden;">
+            <div style="width: <%= Math.round(onboarding.doneCount / onboarding.total * 100) %>%; height: 100%; background: linear-gradient(90deg, var(--primary), var(--gold-vivid)); border-radius: 4px;"></div>
+          </div>
+          <span style="color: var(--text-muted); font-size: 0.85rem; white-space: nowrap;"><%= onboarding.doneCount %> of <%= onboarding.total %> complete</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+          <% onboarding.steps.forEach(step => { %>
+            <div style="display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.5rem 0.25rem;">
+              <span style="flex-shrink: 0; width: 1.5rem; height: 1.5rem; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; <%= step.done ? 'background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4);' : 'background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.15);' %>">
+                <%= step.done ? '✓' : '' %>
+              </span>
+              <div>
+                <% if (!step.done && step.href) { %>
+                  <a href="<%= step.href %>" style="color: white; font-weight: 600; text-decoration: none; border-bottom: 1px dotted var(--primary);"><%= step.label %></a>
+                <% } else { %>
+                  <span style="color: <%= step.done ? 'var(--text-muted)' : 'white' %>; font-weight: 600; <%= step.done ? 'text-decoration: line-through; text-decoration-color: rgba(255,255,255,0.3);' : '' %>"><%= step.label %></span>
+                <% } %>
+                <% if (!step.done && step.hint) { %>
+                  <div style="color: var(--text-muted); font-size: 0.82rem; margin-top: 0.15rem;"><%= step.hint %></div>
+                <% } %>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+        <% if (!onboarding.complete) { %>
+          <p style="margin: 1rem 0 0 0; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-size: 0.85rem;">
+            💡 Studios with a logo and bio become eligible for the <strong style="color: var(--gold-vivid);">Featured Studios</strong> spotlight on the homepage — and activity like verifying awards and dancer claims moves you up.
+          </p>
+        <% } %>
+      </div>
+    <% } %>
+
     <!-- Merge Suggestions -->
     <% if (typeof potentialDuplicates !== 'undefined' && potentialDuplicates.length > 0) { %>
       <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem;">
@@ -122,7 +166,7 @@
         <div style="font-size: 2rem;">👁️</div>
       </div>
 
-      <div class="card glass-card" style="display: flex; justify-content: space-between; align-items: center; border-color: rgba(212, 175, 55, 0.3);">
+      <div id="claim-code" class="card glass-card" style="display: flex; justify-content: space-between; align-items: center; border-color: rgba(212, 175, 55, 0.3);">
         <div style="flex-grow: 1;">
           <h4 style="margin: 0; color: var(--primary); font-size: 0.9rem; text-transform: uppercase;">Award Claim Code</h4>
           <div style="display: flex; align-items: center; gap: 1rem; margin-top: 0.25rem;">
@@ -187,7 +231,7 @@
         </div>
 
         <!-- Branding -->
-        <div>
+        <div id="branding">
           <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-muted);">Logo Image URL</label>
           <input type="text" name="logo_url" value="<%= studio.logo_url || '' %>" placeholder="https://example.com/logo.png" style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;">
           <p style="margin: 0.5rem 0 0 0; font-size: 0.8rem; color: var(--text-muted);">Must be a direct link to an image file (e.g. .jpg, .png)</p>

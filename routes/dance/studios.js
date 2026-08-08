@@ -46,7 +46,41 @@ router.get('/manage/studio/:id', requireAuth, requireStudioOwner, async (req, re
   }
   studio.prefs = prefs;
 
-  res.render('manage_studio', { studio, potentialDuplicates });
+  const onboarding = await buildOnboarding(db, studio);
+  res.render('manage_studio', { studio, potentialDuplicates, onboarding });
+});
+
+
+// Post-claim onboarding checklist: every step is auto-detected from real
+// data, no manual check-off. Logo + bio double as featured-eligibility.
+async function buildOnboarding(db, studio) {
+  if (studio.onboarding_dismissed) return null;
+  const acted = async (...actions) => !!(await db.get(
+    `SELECT 1 FROM studio_activity WHERE studio_id = ? AND action IN (${actions.map(() => '?').join(',')}) LIMIT 1`,
+    [studio.id, ...actions]
+  ));
+  const steps = [
+    { key: 'claim', label: 'Claim your studio', done: true, href: null },
+    { key: 'logo', label: 'Add your logo', done: !!(studio.logo_url && studio.logo_url.trim()), href: '#branding',
+      hint: 'A direct image link — it appears on your public page and the homepage.' },
+    { key: 'bio', label: 'Write your studio bio', done: !!(studio.bio && studio.bio.trim()), href: '#branding',
+      hint: 'A few sentences about what makes your studio special.' },
+    { key: 'awards', label: 'Review & add awards', done: await acted('award_self_report', 'awards_csv_commit', 'verification_action'), href: `/manage/studio/${studio.id}/awards`,
+      hint: 'Check what our detectives found; add anything missing.' },
+    { key: 'widget', label: 'Embed your trophy widget', done: await acted('widget_embed'), href: `/manage/studio/${studio.id}/widget`,
+      hint: 'A live award counter for your own website.' },
+    { key: 'dancers', label: 'Invite dancers with your claim code', done: await acted('award_claim'), href: '#claim-code',
+      hint: 'Dancers use the code to claim their awards on their own profiles.' },
+  ];
+  const doneCount = steps.filter(s => s.done).length;
+  return { steps, doneCount, total: steps.length, complete: doneCount === steps.length };
+}
+
+
+router.post('/manage/studio/:id/onboarding/dismiss', requireAuth, requireStudioOwner, async (req, res) => {
+  const db = await openDb();
+  await db.run('UPDATE studios SET onboarding_dismissed = 1 WHERE id = ?', [req.params.id]);
+  res.redirect(`/manage/studio/${req.params.id}`);
 });
 
 
@@ -107,7 +141,8 @@ router.post('/manage/studio/:id/profile', requireAuth, requireStudioOwner, async
 
   const potentialDuplicates = similarStudios.filter(s => !rejectedArray.includes(s.id.toString()));
 
-  res.render('manage_studio', { studio: updatedStudio, potentialDuplicates, success: 'Profile updated successfully!' });
+  const onboarding = await buildOnboarding(db, updatedStudio);
+  res.render('manage_studio', { studio: updatedStudio, potentialDuplicates, onboarding, success: 'Profile updated successfully!' });
 });
 
 
