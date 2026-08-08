@@ -39,6 +39,8 @@ const CHECKS = [
   ['GET', '/claim/studio/1', [200], 'claim page public (one-page apply)'],
   ['POST', '/claim/studio/1/apply', [400], 'apply validates input'],
   ['POST', '/claim/dancer/1/apply', [400, 404], 'dancer apply validates input'],
+  ['GET', '/dance/leaderboard/studios-alltime', [200], 'leaderboard fragment renders'],
+  ['GET', '/dance/leaderboard/bogus', [404], 'unknown leaderboard rejected'],
   ['GET', '/dance/api/search?q=a', [200], 'hero search rejects short query gracefully'],
   ['GET', '/dance/api/search?q=dance', [200], 'hero search returns results'],
 ];

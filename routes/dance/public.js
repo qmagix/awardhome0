@@ -156,8 +156,7 @@ router.get(['/studios', '/studio/:id', '/studio/:id/first-places', '/org/:slug',
 // Homepage data is identical for every visitor and expensive to compute
 // (7 aggregations over ~900k awards) — cache it for 5 minutes. Featured
 // changes invalidate the key (see utils/featured.js).
-router.get('/dance', async (req, res) => {
-  const data = await cached('dance-home', 5 * 60 * 1000, async () => {
+async function loadHomepageData() {
   const db = await openDb();
 
   const featuredStudios = await db.all(`
@@ -208,7 +207,7 @@ router.get('/dance', async (req, res) => {
   `);
 
   const topDancers = await db.all(`
-    SELECT d.id, d.unique_id, d.name, d.is_claimed, COUNT(ad.id) as total_awards
+    SELECT d.id, d.unique_id, d.name, d.is_claimed, d.headshot_url, COUNT(ad.id) as total_awards
     FROM dancers d
     JOIN award_dancers ad ON d.id = ad.dancer_id
     JOIN awards a ON ad.award_id = a.id
@@ -218,7 +217,7 @@ router.get('/dance', async (req, res) => {
   `);
 
   const topDancersThisYear = await db.all(`
-    SELECT d.id, d.unique_id, d.name, d.is_claimed, COUNT(ad.id) as total_awards
+    SELECT d.id, d.unique_id, d.name, d.is_claimed, d.headshot_url, COUNT(ad.id) as total_awards
     FROM dancers d
     JOIN award_dancers ad ON d.id = ad.dancer_id
     JOIN awards a ON ad.award_id = a.id
@@ -230,7 +229,7 @@ router.get('/dance', async (req, res) => {
   `);
 
   const topDancersFirstPlaceThisYear = await db.all(`
-    SELECT d.id, d.unique_id, d.name, d.is_claimed, COUNT(ad.id) as total_awards
+    SELECT d.id, d.unique_id, d.name, d.is_claimed, d.headshot_url, COUNT(ad.id) as total_awards
     FROM dancers d
     JOIN award_dancers ad ON d.id = ad.dancer_id
     JOIN awards a ON ad.award_id = a.id
@@ -250,16 +249,36 @@ router.get('/dance', async (req, res) => {
   `);
 
   return { featuredStudios, topStudios, topStudiosThisYear, topStudiosFirstPlaceThisYear, topDancers, topDancersThisYear, topDancersFirstPlaceThisYear, orgs };
-  });
+}
 
-  const { featuredStudios, topStudios, topStudiosThisYear, topStudiosFirstPlaceThisYear, topDancers, topDancersThisYear, topDancersFirstPlaceThisYear, orgs } = data;
+// Leaderboards render only the top rows inline; the rest load on demand
+// (see /dance/leaderboard/:board). Cuts the homepage payload ~85%.
+const LEADERBOARD_PREVIEW = 25;
+
+router.get('/dance', async (req, res) => {
+  const data = await cached('dance-home', 5 * 60 * 1000, loadHomepageData);
   const isAdmin = req.session && req.session.user && (req.session.user.role === 'admin' || req.session.user.role === 'superadmin');
+  res.render(isAdmin ? 'index_admin' : 'index', { ...data, previewCount: LEADERBOARD_PREVIEW });
+});
 
-  if (isAdmin) {
-    res.render('index_admin', { featuredStudios, topStudios, topStudiosThisYear, topStudiosFirstPlaceThisYear, topDancers, topDancersThisYear, topDancersFirstPlaceThisYear, orgs });
-  } else {
-    res.render('index', { featuredStudios, topStudios, topStudiosThisYear, topStudiosFirstPlaceThisYear, topDancers, topDancersThisYear, topDancersFirstPlaceThisYear, orgs });
-  }
+
+// Remainder of a homepage leaderboard as a server-rendered HTML fragment.
+// Slices the same cached data the homepage used — no extra DB work.
+const BOARDS = {
+  'studios-alltime': ['topStudios', 'studio'],
+  'studios-thisyear': ['topStudiosThisYear', 'studio'],
+  'studios-firstplaces': ['topStudiosFirstPlaceThisYear', 'studio'],
+  'dancers-alltime': ['topDancers', 'dancer'],
+  'dancers-thisyear': ['topDancersThisYear', 'dancer'],
+  'dancers-firstplaces': ['topDancersFirstPlaceThisYear', 'dancer'],
+};
+
+router.get('/dance/leaderboard/:board', async (req, res) => {
+  const spec = BOARDS[req.params.board];
+  if (!spec) return res.status(404).send('Unknown leaderboard');
+  const data = await cached('dance-home', 5 * 60 * 1000, loadHomepageData);
+  const rows = data[spec[0]].slice(LEADERBOARD_PREVIEW);
+  res.render('partials/leaderboard_rows', { rows, type: spec[1], offset: LEADERBOARD_PREVIEW });
 });
 
 
