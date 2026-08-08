@@ -1,0 +1,57 @@
+<div class="hero-search">
+  <input type="text" id="hero-search-input" placeholder="Find your dancer or studio…"
+    autocomplete="off" spellcheck="false" aria-label="Search dancers and studios">
+  <div id="hero-search-results" class="hero-search-results" style="display: none;"></div>
+</div>
+<script>
+(function () {
+  const input = document.getElementById('hero-search-input');
+  const panel = document.getElementById('hero-search-results');
+  let timer = null;
+  let firstHref = null;
+
+  function esc(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function render(data) {
+    const rows = [];
+    if (data.studios.length) {
+      rows.push('<div class="hs-group">Studios</div>');
+      data.studios.forEach(s => rows.push(
+        `<a class="hs-row" href="/dance/studio/${s.id}"><span>${esc(s.name)}</span><span class="badge badge-count">${s.awards}</span></a>`));
+    }
+    if (data.dancers.length) {
+      rows.push('<div class="hs-group">Dancers</div>');
+      data.dancers.forEach(d => rows.push(
+        `<a class="hs-row" href="/dancer/${encodeURIComponent(d.unique_id)}"><span>${esc(d.name)}${d.studios ? `<small>${esc(d.studios)}</small>` : ''}</span><span class="badge badge-count">${d.awards}</span></a>`));
+    }
+    if (!rows.length) rows.push('<div class="hs-empty">No matches yet — try a different spelling.</div>');
+    panel.innerHTML = rows.join('');
+    const first = panel.querySelector('a.hs-row');
+    firstHref = first ? first.getAttribute('href') : null;
+    panel.style.display = 'block';
+  }
+
+  input.addEventListener('input', () => {
+    clearTimeout(timer);
+    const q = input.value.trim();
+    if (q.length < 2) { panel.style.display = 'none'; return; }
+    timer = setTimeout(async () => {
+      try {
+        const res = await fetch('/dance/api/search?q=' + encodeURIComponent(q));
+        if (res.ok) render(await res.json());
+      } catch (e) { /* network hiccup — keep quiet */ }
+    }, 250);
+  });
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && firstHref) { window.location.href = firstHref; }
+    if (e.key === 'Escape') { panel.style.display = 'none'; }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.hero-search')) panel.style.display = 'none';
+  });
+})();
+</script>

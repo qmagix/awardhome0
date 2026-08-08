@@ -74,6 +74,8 @@ SENTRY_DSN=                                # optional: error tracking (sentry.io
 BETA_MODE=false                            # true = private beta gate on /dance + /dancer
 BETA_ACCESS_KEY=                           # beta password / magic-link key
 
+SEARCH_RATE_LIMIT=30                       # hero search: max requests/min per IP
+
 ENABLE_NIGHTLY_BACKUPS=true
 # S3 credentials NOT needed here if the instance has an IAM role (preferred).
 EOF

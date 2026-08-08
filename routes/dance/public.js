@@ -5,6 +5,7 @@ const { logStudioActivity } = require('../../utils/activity');
 const { cached } = require('../../utils/cache');
 const { formatEventTitle } = require('../../utils/format');
 const { unsubscribeToken } = require('../../utils/invites');
+const rateLimit = require('express-rate-limit');
 const { BASE_URL } = require('../../config');
 const path = require('path');
 
@@ -308,6 +309,42 @@ router.get('/dance/org/:slug', async (req, res) => {
   });
 });
 
+
+// Typeahead search across studios and dancers (hero search box).
+// Lives under /dance so the private-beta gate covers it. Rate-limited
+// hard: real users type a handful of queries; bulk enumeration of the
+// dataset through a 6-result window at 30 req/min is uneconomical.
+const searchLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: parseInt(process.env.SEARCH_RATE_LIMIT, 10) || 30,
+  message: { studios: [], dancers: [], error: 'Slow down a little.' }
+});
+
+router.get('/dance/api/search', searchLimiter, async (req, res) => {
+  const q = (req.query.q || '').trim();
+  if (q.length < 2) return res.json({ studios: [], dancers: [] });
+  const db = await openDb();
+  const like = `%${q}%`;
+
+  const studios = await db.all(`
+    SELECT s.id, s.name, COUNT(a.id) AS awards
+    FROM studios s LEFT JOIN awards a ON a.studio_id = s.id
+    WHERE s.name LIKE ? AND s.status = 'active'
+    GROUP BY s.id ORDER BY awards DESC LIMIT 6
+  `, [like]);
+
+  const dancers = await db.all(`
+    SELECT d.id, d.unique_id, d.name,
+      (SELECT COUNT(*) FROM award_dancers ad WHERE ad.dancer_id = d.id) AS awards,
+      (SELECT GROUP_CONCAT(s2.name, ', ') FROM dancer_studios ds
+        JOIN studios s2 ON s2.id = ds.studio_id WHERE ds.dancer_id = d.id) AS studios
+    FROM dancers d
+    WHERE d.name LIKE ?
+    ORDER BY awards DESC LIMIT 6
+  `, [like]);
+
+  res.json({ studios, dancers });
+});
 
 router.get('/dance/studios', async (req, res) => {
   const db = await openDb();
