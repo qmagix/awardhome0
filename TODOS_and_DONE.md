@@ -13,7 +13,6 @@
 - [ ] Launch-day SEO: sitemap.xml for studio/dancer pages (replaces the public directory as the crawl path once BETA_MODE=false).
 
 ### Features
-- [ ] Dancer award card on mobile should scale like an image: font size (and padding, spacing, radii, icons) should shrink/grow proportionally as the card resizes with the window, keeping the same visual composition at every width. Likely approach: fixed aspect-ratio wrapper + CSS container query units (cqw) for all internal sizing instead of fixed px/rem.
 - [ ] Show dancer vanity chip (#Tag) on homepage leaderboard rows and share cards (field: dancers.vanity_tag, chip style: .vanity-chip; add vanity_tag to the three dancer leaderboard queries in routes/dance/public.js and render in views/partials/leaderboard_rows.ejs). The #Tag itself shipped on dancer profiles 2026-08-08.
 - [ ] Email notifications for studio admins when new pending claims/verifications arrive (claims currently email only the claimant for verification; nothing notifies the studio owner of pending roster/award requests).
 - [ ] Testimonials for organizations, studios, and dancers (makes them stand out; FAQ pages and org marketing profiles are done — this is the missing piece).
@@ -47,6 +46,7 @@
 - [x] Data cleanup — garbled scraped studio names (scripts/cleanup_garbled_studios.js): 3 category-header pseudo-studios deactivated, 55 en-dash result-line studios merged via dancer/event evidence, 2 renamed; /dance/studios top now clean.
 - [x] Data cleanup — tab-name dedup (scripts/dedup_tab_studios.js): 566 StarQuest tab-variant studios merged into proven twins (≥2 shared dancer names required — same-named studios in different places are NOT assumed identical), 1,544 renamed tabs→spaces, 553 unproven kept separate + flagged.
 - [x] Studio directory (/dance/studios) admin-gated to prevent bulk scraping; public discovery via search + leaderboards + featured; landing CTA repointed to hero search.
+- [x] Dancer award card scales like an image (2026-08-09): fixed-aspect card is a CSS container, all internal sizing in cqw — fonts/padding/radii/icons shrink proportionally with card width on mobile; rem fallback for old browsers.
 
 ### Earlier features (previously untracked)
 - [x] Global feedback system with admin replies + My Feedback dashboard.
