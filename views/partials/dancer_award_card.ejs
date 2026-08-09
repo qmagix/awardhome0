@@ -36,7 +36,7 @@
 %>
 <div class="flip-card" role="button" tabindex="0" aria-label="Flip award card"
   onclick="this.classList.toggle('flipped')"
-  onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.classList.toggle('flipped');}">
+  onkeydown="if(event.target===this&&(event.key==='Enter'||event.key===' ')){event.preventDefault();this.classList.toggle('flipped');}">
   <div class="flip-card-inner">
             <div class="premium-trophy-card flip-front <%= isPremiumAward(award) ? 'premium-award-border' : '' %>">
               <% if (!award.is_self_added) { %>
@@ -116,7 +116,24 @@
       <% if (award.performance_name) { %>
         <div class="tcb-perf">&ldquo;<%= award.performance_name %>&rdquo;</div>
       <% } %>
+      <% const typeDupes = award.award_type && award.award_type.trim().toLowerCase() === placeText.trim().toLowerCase();
+         const catParts = [typeDupes ? null : award.award_type, award.age_division, award.category].filter(Boolean); %>
+      <% if (catParts.length) { %>
+        <div class="tcb-cat"><%= catParts.join(' · ') %></div>
+      <% } %>
       <div class="tcb-event"><%= formatEventTitle(award.event_name, award.org_name, award.event_year) %></div>
+      <%
+        // "won 4th" but "was named Winner" / "were named Miss Mini Dance"
+        const shareVerb = /^\d/.test(placeText) ? 'won' : (isGroup ? 'were named' : 'was named');
+        const shareBits = [dancer.name, isGroup ? 'and teammates' : null, shareVerb, placeText];
+        if (award.performance_name) shareBits.push(`with "${award.performance_name}"`);
+        shareBits.push('at ' + formatEventTitle(award.event_name, award.org_name, award.event_year), '🏆');
+      %>
+      <button class="tcb-share" type="button" aria-label="Share this award" title="Share this award"
+        data-share-text="<%= shareBits.filter(Boolean).join(' ') %>"
+        onclick="event.stopPropagation(); shareAwardCard(this);">
+        <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+      </button>
       <div class="tcb-brand">AwardHome</div>
     </div>
   </div>

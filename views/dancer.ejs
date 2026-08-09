@@ -425,6 +425,23 @@
       rows.forEach(row => tbody.appendChild(row));
     }
 
+    function shareAwardCard(btn) {
+      const text = btn.dataset.shareText;
+      const url = window.location.href;
+      if (navigator.share) {
+        navigator.share({ title: '<%= dancer.name %> | AwardHome', text: text, url: url })
+          .catch((error) => console.log('Error sharing', error));
+      } else {
+        navigator.clipboard.writeText(text + ' ' + url)
+          .then(() => {
+            const original = btn.innerHTML;
+            btn.innerHTML = '✓';
+            setTimeout(() => { btn.innerHTML = original; }, 1500);
+          })
+          .catch(() => alert('Failed to copy.'));
+      }
+    }
+
     function shareProfile() {
       if (navigator.share) {
         navigator.share({
