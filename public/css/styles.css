@@ -533,6 +533,400 @@ a:hover {
   border-color: #6d5626;
 }
 
+/* Formerly inline styles in dancer_award_card.ejs, extracted so the
+   container-query sizing below can reach them. */
+.flip-card .trophy-custom-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  object-fit: contain;
+}
+
+.flip-card .card-org-logo {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  opacity: 0.6;
+  border-radius: 4px;
+}
+
+.flip-card .badge-self-reported {
+  background: rgba(234, 179, 8, 0.2);
+  color: #eab308;
+  font-size: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+
+.flip-card .age-division-row {
+  margin: 0.25rem 0;
+}
+
+.flip-card .badge-age-division {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e0e0e0;
+  font-size: 0.7rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 2px 6px;
+}
+
+.flip-card .event-line {
+  color: #f3e5ab;
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+
+/* ---- Image-like proportional scaling for the dancer award card ----
+   The card is a fixed-aspect container; every internal size (fonts,
+   padding, spacing, radii, icons) is in cqw, so the whole composition
+   zooms as one unit when the grid column narrows (esp. on mobile) —
+   like an image. Values are calibrated to the desktop design widths
+   (portrait 300px: 1cqw = 3px; landscape 460px: 1cqw = 4.6px), so
+   full-size rendering matches the rem-based fallback above, which
+   browsers without container-query support keep using. */
+@supports (container-type: inline-size) {
+  .awards-grid .flip-card {
+    container-type: inline-size;
+  }
+
+  /* -- Front face, portrait -- */
+  .flip-card .premium-trophy-card {
+    padding: 8cqw;
+    border-radius: 5.3cqw;
+  }
+
+  .flip-card .premium-trophy-card .trophy-icon {
+    font-size: 32cqw;
+    margin-bottom: 2.7cqw;
+  }
+
+  .flip-card .trophy-custom-icon {
+    width: 8cqw;
+    height: 8cqw;
+  }
+
+  .flip-card .card-org-logo {
+    top: 2.7cqw;
+    left: 2.7cqw;
+    width: 8cqw;
+    height: 8cqw;
+    border-radius: 1.3cqw;
+  }
+
+  .flip-card .premium-trophy-card .verified-badge {
+    top: 5.3cqw;
+    right: 5.3cqw;
+    width: 8cqw;
+    height: 8cqw;
+  }
+
+  .flip-card .premium-trophy-card .verified-badge svg {
+    width: 4.7cqw;
+    height: 4.7cqw;
+  }
+
+  .flip-card .premium-trophy-card .award-place {
+    margin-bottom: 2.7cqw;
+  }
+
+  .flip-card .premium-trophy-card .award-place-large {
+    font-size: 13.3cqw;
+  }
+
+  .flip-card .premium-trophy-card .award-place-medium {
+    font-size: 8cqw;
+  }
+
+  .flip-card .premium-trophy-card .award-place-small {
+    font-size: 5.9cqw;
+  }
+
+  .flip-card .premium-trophy-card h3 {
+    font-size: 6.7cqw;
+    margin-bottom: 2.7cqw;
+  }
+
+  .flip-card .premium-trophy-card h3.long-text {
+    font-size: 5.1cqw;
+  }
+
+  .flip-card .premium-trophy-card .category {
+    font-size: 4.3cqw;
+    letter-spacing: 0.33cqw;
+    margin-bottom: 2.7cqw;
+  }
+
+  .flip-card .premium-trophy-card .sub-category {
+    font-size: 4.8cqw;
+    margin-bottom: 1.3cqw;
+  }
+
+  .flip-card .badge-self-reported {
+    font-size: 3.2cqw;
+    margin-bottom: 2.7cqw;
+  }
+
+  .flip-card .age-division-row {
+    margin: 1.3cqw 0;
+  }
+
+  .flip-card .badge-age-division {
+    font-size: 3.7cqw;
+    padding: 0.7cqw 2cqw;
+  }
+
+  .flip-card .event-line {
+    margin-top: 2.7cqw;
+  }
+
+  /* -- Back face (certificate), portrait -- */
+  .flip-card .trophy-card-back {
+    padding: 6.7cqw;
+    border-radius: 5.3cqw;
+  }
+
+  .flip-card .trophy-card-back .tcb-icon {
+    font-size: 8.5cqw;
+    margin-bottom: 1.9cqw;
+  }
+
+  .flip-card .trophy-card-back .tcb-eyebrow {
+    font-size: 3.5cqw;
+    letter-spacing: 0.83cqw;
+    margin-bottom: 1.6cqw;
+  }
+
+  .flip-card .trophy-card-back .tcb-name {
+    font-size: 7.2cqw;
+  }
+
+  .flip-card .trophy-card-back .tcb-tag {
+    margin-top: 1.6cqw;
+    padding: 0.53cqw 2.9cqw;
+    font-size: 4cqw;
+  }
+
+  .flip-card .trophy-card-back .tcb-with {
+    font-size: 4.3cqw;
+    margin-top: 1.6cqw;
+  }
+
+  .flip-card .trophy-card-back .tcb-rule {
+    width: 15.3cqw;
+    height: 0.67cqw;
+    margin: 3.7cqw 0;
+  }
+
+  .flip-card .trophy-card-back .tcb-place {
+    font-size: 5.3cqw;
+  }
+
+  .flip-card .trophy-card-back .tcb-perf {
+    font-size: 4.8cqw;
+    margin-top: 1.3cqw;
+  }
+
+  .flip-card .trophy-card-back .tcb-cat {
+    font-size: 3.8cqw;
+    letter-spacing: 0.17cqw;
+    margin-top: 1.6cqw;
+  }
+
+  .flip-card .trophy-card-back .tcb-event {
+    font-size: 4cqw;
+    margin-top: 2.4cqw;
+  }
+
+  .flip-card .trophy-card-back .tcb-brand {
+    font-size: 3.2cqw;
+    bottom: 3.2cqw;
+    right: 4.8cqw;
+    letter-spacing: 0.33cqw;
+  }
+
+  .flip-card .trophy-card-back .tcb-share {
+    bottom: 2.7cqw;
+    left: 3.5cqw;
+    width: 9.3cqw;
+    height: 9.3cqw;
+  }
+
+  .flip-card .trophy-card-back .tcb-share svg {
+    width: 4.3cqw;
+    height: 4.3cqw;
+  }
+
+  /* -- Landscape variant: same physical design at its wider 460px basis,
+     so every value is the portrait pixel size / 4.6. -- */
+  .awards-grid.landscape .flip-card .premium-trophy-card {
+    padding: 5.2cqw;
+    border-radius: 3.5cqw;
+  }
+
+  .awards-grid.landscape .flip-card .content-wrapper {
+    gap: 5.2cqw;
+    padding: 0 3.5cqw;
+  }
+
+  .awards-grid.landscape .flip-card .trophy-icon {
+    font-size: 12.2cqw;
+    margin-bottom: 0;
+  }
+
+  .awards-grid.landscape .flip-card .trophy-custom-icon {
+    width: 5.2cqw;
+    height: 5.2cqw;
+  }
+
+  .awards-grid.landscape .flip-card .card-org-logo {
+    top: 1.7cqw;
+    left: 1.7cqw;
+    width: 5.2cqw;
+    height: 5.2cqw;
+    border-radius: 0.9cqw;
+  }
+
+  .awards-grid.landscape .flip-card .premium-trophy-card .verified-badge {
+    top: 3.5cqw;
+    right: 3.5cqw;
+    width: 5.2cqw;
+    height: 5.2cqw;
+  }
+
+  .awards-grid.landscape .flip-card .premium-trophy-card .verified-badge svg {
+    width: 3cqw;
+    height: 3cqw;
+  }
+
+  .awards-grid.landscape .flip-card .card-body .award-place {
+    margin-bottom: 0.9cqw;
+  }
+
+  .awards-grid.landscape .flip-card .premium-trophy-card .award-place-large {
+    font-size: 8.7cqw;
+  }
+
+  .awards-grid.landscape .flip-card .premium-trophy-card .award-place-medium {
+    font-size: 5.2cqw;
+  }
+
+  .awards-grid.landscape .flip-card .premium-trophy-card .award-place-small {
+    font-size: 3.8cqw;
+  }
+
+  .awards-grid.landscape .flip-card .card-body h3 {
+    font-size: 4.3cqw;
+    margin-bottom: 0.9cqw;
+  }
+
+  .awards-grid.landscape .flip-card .card-body h3.long-text {
+    font-size: 3.3cqw;
+  }
+
+  .awards-grid.landscape .flip-card .card-body .category {
+    font-size: 2.8cqw;
+    letter-spacing: 0.22cqw;
+    margin-bottom: 0.9cqw;
+  }
+
+  .awards-grid.landscape .flip-card .card-body .sub-category {
+    font-size: 3.1cqw;
+    margin-bottom: 0.4cqw;
+  }
+
+  .awards-grid.landscape .flip-card .badge-self-reported {
+    font-size: 2.1cqw;
+    margin-bottom: 1.7cqw;
+  }
+
+  .awards-grid.landscape .flip-card .badge-age-division {
+    font-size: 2.4cqw;
+    padding: 0.4cqw 1.3cqw;
+  }
+
+  .awards-grid.landscape .flip-card .event-line {
+    margin-top: 1.7cqw;
+  }
+
+  .awards-grid.landscape .trophy-card-back {
+    padding: 3.5cqw 5.2cqw;
+    border-radius: 3.5cqw;
+    gap: 4.3cqw;
+  }
+
+  .awards-grid.landscape .trophy-card-back .tcb-icon {
+    font-size: 5.6cqw;
+    margin-bottom: 1.2cqw;
+  }
+
+  .awards-grid.landscape .trophy-card-back .tcb-eyebrow {
+    font-size: 2.3cqw;
+    letter-spacing: 0.54cqw;
+    margin-bottom: 1cqw;
+  }
+
+  .awards-grid.landscape .trophy-card-back .tcb-name {
+    font-size: 4.7cqw;
+  }
+
+  .awards-grid.landscape .trophy-card-back .tcb-tag {
+    margin-top: 1cqw;
+    padding: 0.35cqw 1.9cqw;
+    font-size: 2.6cqw;
+  }
+
+  .awards-grid.landscape .trophy-card-back .tcb-with {
+    font-size: 2.8cqw;
+    margin-top: 1cqw;
+  }
+
+  .awards-grid.landscape .trophy-card-back .tcb-rule {
+    width: 0.43cqw;
+    height: 55%;
+    margin: 0;
+  }
+
+  .awards-grid.landscape .trophy-card-back .tcb-place {
+    font-size: 3.5cqw;
+  }
+
+  .awards-grid.landscape .trophy-card-back .tcb-perf {
+    font-size: 3.1cqw;
+    margin-top: 0.9cqw;
+  }
+
+  .awards-grid.landscape .trophy-card-back .tcb-cat {
+    font-size: 2.5cqw;
+    letter-spacing: 0.11cqw;
+    margin-top: 1cqw;
+  }
+
+  .awards-grid.landscape .trophy-card-back .tcb-event {
+    font-size: 2.6cqw;
+    margin-top: 1.6cqw;
+  }
+
+  .awards-grid.landscape .trophy-card-back .tcb-brand {
+    font-size: 2.1cqw;
+    bottom: 2.1cqw;
+    right: 3.1cqw;
+    letter-spacing: 0.22cqw;
+  }
+
+  .awards-grid.landscape .trophy-card-back .tcb-share {
+    bottom: 1.7cqw;
+    left: 2.3cqw;
+    width: 6.1cqw;
+    height: 6.1cqw;
+  }
+
+  .awards-grid.landscape .trophy-card-back .tcb-share svg {
+    width: 2.8cqw;
+    height: 2.8cqw;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .flip-card-inner {
     transition: none;

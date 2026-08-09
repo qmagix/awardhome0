@@ -51,15 +51,13 @@
                       <div class="trophy-icon">
                         <% const customIconSolo=getCustomIcon(award, award.customIconsObj); %>
                           <% if (customIconSolo) { %>
-                            <img src="<%= customIconSolo %>" alt="Icon"
-                              style="width: 1.5rem; height: 1.5rem; object-fit: contain;">
+                            <img src="<%= customIconSolo %>" alt="Icon" class="trophy-custom-icon">
                             <% } else { %>
                               <%= icon %>
                                 <% } %>
                       </div>
                       <% if (award.logo_url && !(award.customIconsObj && award.customIconsObj.hide_logo)) { %>
-                        <img src="<%= award.logo_url %>"
-                          style="position: absolute; top: 0.5rem; left: 0.5rem; width: 24px; height: 24px; object-fit: contain; opacity: 0.6; border-radius: 4px;"
+                        <img src="<%= award.logo_url %>" class="card-org-logo"
                           title="<%= award.org_name %> Logo">
                         <% } %>
                       <div class="card-body">
@@ -67,8 +65,7 @@
                             <%= placeText %>
                           </div>
                           <% if (award.is_self_added) { %>
-                            <span class="badge"
-                              style="background: rgba(234, 179, 8, 0.2); color: #eab308; font-size: 0.6rem; margin-bottom: 0.5rem;"
+                            <span class="badge badge-self-reported"
                               title="Unverified manually reported award">Self-Reported</span>
                             <% } %>
                               <% if (award.performance_name) { %>
@@ -84,8 +81,7 @@
                                   </h3>
                                   <% } %>
                                     <% if (award.age_division) { %>
-                                      <div style="margin-top: 0.25rem; margin-bottom: 0.25rem;"><span class="badge"
-                                          style="background: rgba(255, 255, 255, 0.08); color: #e0e0e0; font-size: 0.7rem; border: 1px solid rgba(255, 255, 255, 0.15); padding: 2px 6px;">
+                                      <div class="age-division-row"><span class="badge badge-age-division">
                                           <%= award.age_division %>
                                         </span></div>
                                       <% } %>
@@ -94,8 +90,7 @@
                                             <%= award.category %>
                                           </p>
                                           <% } %>
-                                            <p class="sub-category"
-                                              style="color: #f3e5ab; font-weight: 600; margin-top: 0.5rem;">
+                                            <p class="sub-category event-line">
                                               <%= formatEventTitle(award.event_name, award.org_name, award.event_year) %>
                                             </p>
                       </div>
