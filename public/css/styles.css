@@ -239,6 +239,143 @@ a:hover {
   margin: 1.1rem 0 0.75rem;
 }
 
+/* Award card flip (dancer trophy case easter egg): front is the classic
+   dark glass card, back is a champagne certificate bearing the dancer's
+   name — deliberately a different scheme as a design A/B probe. */
+.flip-card {
+  perspective: 1400px;
+  cursor: pointer;
+  outline: none;
+}
+
+.flip-card:focus-visible .flip-card-inner {
+  box-shadow: 0 0 0 2px var(--gold-vivid);
+  border-radius: 16px;
+}
+
+.flip-card-inner {
+  position: relative;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.65s cubic-bezier(0.4, 0.2, 0.2, 1);
+}
+
+.flip-card.flipped .flip-card-inner {
+  transform: rotateY(180deg);
+}
+
+.flip-card .flip-front {
+  height: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.trophy-card-back {
+  position: absolute;
+  inset: 0;
+  transform: rotateY(180deg);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 20% 15%, rgba(255, 255, 255, 0.55), transparent 45%),
+    linear-gradient(160deg, #f9f0d8 0%, #efdcb0 55%, #e3c98f 100%);
+  border: 1px solid #c9a961;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), inset 0 0 0 4px rgba(255, 255, 255, 0.5), inset 0 0 0 5px rgba(160, 128, 60, 0.35);
+  color: #3a2f18;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 1.25rem;
+  overflow: hidden;
+}
+
+.trophy-card-back .tcb-icon {
+  font-size: 1.6rem;
+  margin-bottom: 0.35rem;
+}
+
+.trophy-card-back .tcb-eyebrow {
+  font-size: 0.65rem;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: #8a6d35;
+  margin-bottom: 0.3rem;
+}
+
+.trophy-card-back .tcb-name {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1.15;
+  color: #2a2110;
+}
+
+.trophy-card-back .tcb-tag {
+  display: inline-block;
+  margin-top: 0.3rem;
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid #b08d45;
+  background: rgba(255, 255, 255, 0.45);
+  color: #8a6d35;
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+
+.trophy-card-back .tcb-with {
+  font-style: italic;
+  font-size: 0.8rem;
+  color: #6d5626;
+  margin-top: 0.3rem;
+}
+
+.trophy-card-back .tcb-rule {
+  width: 46px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #b08d45, transparent);
+  margin: 0.7rem 0;
+}
+
+.trophy-card-back .tcb-place {
+  font-weight: 800;
+  font-size: 1rem;
+  color: #7a5c1e;
+}
+
+.trophy-card-back .tcb-perf {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #3a2f18;
+  margin-top: 0.25rem;
+}
+
+.trophy-card-back .tcb-event {
+  font-size: 0.75rem;
+  color: #6d5626;
+  margin-top: 0.45rem;
+}
+
+.trophy-card-back .tcb-brand {
+  position: absolute;
+  bottom: 0.6rem;
+  right: 0.9rem;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgba(138, 109, 53, 0.55);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flip-card-inner {
+    transition: none;
+  }
+}
+
 /* Dancer vanity tag — display-only decoration next to the immutable ID */
 .vanity-chip {
   display: inline-block;

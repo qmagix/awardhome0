@@ -169,7 +169,7 @@
               <h4 class="type-divider"><%= cat[0] %></h4>
               <div class="awards-grid">
                 <% cat[1].forEach(function(award) { %>
-                  <%- include('partials/dancer_award_card', { award: award }) %>
+                  <%- include('partials/dancer_award_card', { award: award, isGroupAward: cat[0] === 'Group Awards' }) %>
                 <% }); %>
               </div>
             <% } %>
