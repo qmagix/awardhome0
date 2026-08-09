@@ -54,7 +54,14 @@
                       </div>
                       <% } %>
                   </div>
-                  <div>
+                  <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.6rem;">
+                    <% if (!dancer.is_claimed) { %>
+                      <a href="/claim/dancer/<%= dancer.id %>" class="btn"
+                        style="background: var(--primary); color: #0a0a0a; border: none; padding: 0.5rem 1.5rem; font-weight: 600; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3); text-decoration: none; display: inline-block; white-space: nowrap;">Claim this Dancer</a>
+                    <% } else if (typeof user !== 'undefined' && user && user.id === dancer.claimed_by_user_id) { %>
+                      <a href="/manage/dancer/<%= dancer.id %>" class="btn btn-secondary"
+                        style="display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none; border-color: var(--primary); color: white; background: rgba(212, 175, 55, 0.1); white-space: nowrap;">Manage Profile</a>
+                    <% } %>
                     <button onclick="shareProfile()" class="btn btn-outline"
                       style="border-color: #e0e0e0; color: #e0e0e0; display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; padding: 0.5rem 1rem;">
                       <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"
@@ -136,8 +143,8 @@
                             awards and get things wrong for various reasons. You can add awards and fix issues by
                             claiming this account for yourself or your dancer.
                           </p>
-                          <a href="/claim/dancer/<%= dancer.id %>" class="btn btn-outline-primary btn-sm">Claim this
-                            Dancer</a>
+                          <a href="/claim/dancer/<%= dancer.id %>" class="btn"
+                            style="background: var(--primary); color: #0a0a0a; border: none; padding: 0.5rem 1.25rem; font-weight: 600; border-radius: 8px; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3); text-decoration: none; display: inline-block; font-size: 0.9rem;">Claim this Dancer</a>
                         </div>
                         <% } %>
               </div>

@@ -363,9 +363,9 @@
       </ul>
 
       <div style="margin-top: 2.5rem; text-align: center;">
-        <button class="btn" onclick="closeBenefitsModal(); alert('Claim process coming soon!')"
-          style="background: var(--primary); color: #0a0a0a; border: none; padding: 0.75rem 2rem; font-size: 1.1rem; font-weight: 600; border-radius: 8px; cursor: pointer; width: 100%; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);">Claim
-          Your Studio Now</button>
+        <a href="/claim/studio/<%= studio.id %>" class="btn"
+          style="background: var(--primary); color: #0a0a0a; border: none; padding: 0.75rem 2rem; font-size: 1.1rem; font-weight: 600; border-radius: 8px; cursor: pointer; display: block; text-align: center; text-decoration: none; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);">Claim
+          Your Studio Now</a>
       </div>
     </div>
   </div>
