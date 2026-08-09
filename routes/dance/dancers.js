@@ -5,6 +5,7 @@ const { logStudioActivity } = require('../../utils/activity');
 const { requireAuth } = require('../../middleware/auth');
 const rateLimit = require('express-rate-limit');
 const { generateDancerId } = require('../../utils.js');
+const { validateVanityTag } = require('../../utils/vanity');
 
 router.get('/my-dancer', requireAuth, async (req, res) => {
   const db = await openDb();
@@ -56,12 +57,18 @@ router.post('/manage/dancer/:id/update', requireAuth, async (req, res) => {
     return res.status(403).send('Forbidden');
   }
 
-  const { name, birthday, headshot_url, graduation_year, instagram_handle, tiktok_handle } = req.body;
+  const { name, birthday, headshot_url, graduation_year, instagram_handle, tiktok_handle, vanity_tag } = req.body;
+
+  const vanity = validateVanityTag(vanity_tag);
+  if (!vanity.ok) {
+    return res.send(`<script>alert(${JSON.stringify('Vanity tag not saved: ' + vanity.error)}); window.location.href="/manage/dancer/${req.params.id}";</script>`);
+  }
+
   await db.run(`
-    UPDATE dancers 
-    SET name = ?, birthday = ?, headshot_url = ?, graduation_year = ?, instagram_handle = ?, tiktok_handle = ?
+    UPDATE dancers
+    SET name = ?, birthday = ?, headshot_url = ?, graduation_year = ?, instagram_handle = ?, tiktok_handle = ?, vanity_tag = ?
     WHERE id = ?
-  `, [name, birthday || null, headshot_url || null, graduation_year || null, instagram_handle || null, tiktok_handle || null, req.params.id]);
+  `, [name, birthday || null, headshot_url || null, graduation_year || null, instagram_handle || null, tiktok_handle || null, vanity.tag, req.params.id]);
 
   res.redirect(`/manage/dancer/${req.params.id}`);
 });

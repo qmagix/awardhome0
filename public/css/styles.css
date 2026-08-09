@@ -239,6 +239,21 @@ a:hover {
   margin: 1.1rem 0 0.75rem;
 }
 
+/* Dancer vanity tag — display-only decoration next to the immutable ID */
+.vanity-chip {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.18), rgba(217, 119, 6, 0.12));
+  border: 1px solid rgba(251, 191, 36, 0.45);
+  color: var(--gold-vivid);
+  font-weight: 700;
+  font-size: 0.85em;
+  letter-spacing: 0.3px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
 /* Load-the-rest footer inside leaderboard cards */
 .lb-more {
   padding: 1rem 1.5rem;

@@ -34,7 +34,7 @@
                         <%= idx < dancer.studios.length - 1 ? ', ' : '' %>
                           <% }); %>
                     </p>
-                    <p class="unique-id" style="margin-bottom: 0.5rem;">ID: <code><%= dancer.unique_id %></code></p>
+                    <p class="unique-id" style="margin-bottom: 0.5rem;">ID: <code><%= dancer.unique_id %></code><% if (dancer.vanity_tag) { %> <span class="vanity-chip">#<%= dancer.vanity_tag %></span><% } %></p>
 
                     <% if (dancer.instagram_handle || dancer.tiktok_handle) { %>
                       <div class="social-links" style="display: flex; gap: 1rem; margin-bottom: 0.5rem;">
