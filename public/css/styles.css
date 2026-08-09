@@ -257,6 +257,96 @@ a:hover {
   height: 100%;
 }
 
+/* Layout-agnostic blocks: portrait stacks them (the original design),
+   landscape reflows them side by side. */
+.flip-card .card-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+}
+
+.trophy-card-back .tcb-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+}
+
+/* Landscape variant (golden ratio rotated) — toggled per visitor,
+   persisted in localStorage as an A/B design probe. */
+.awards-grid.landscape {
+  grid-template-columns: repeat(auto-fill, minmax(min(440px, 100%), 1fr));
+}
+
+.awards-grid.landscape .flip-card {
+  aspect-ratio: 1.618 / 1;
+}
+
+.awards-grid.landscape .flip-card .content-wrapper {
+  flex-direction: row;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0 1rem;
+}
+
+.awards-grid.landscape .flip-card .trophy-icon {
+  font-size: 3.5rem;
+  margin-bottom: 0;
+  flex-shrink: 0;
+}
+
+.awards-grid.landscape .flip-card .card-body {
+  flex: 1;
+  height: 100%;
+  justify-content: center;
+  align-items: flex-start;
+  text-align: left;
+  min-width: 0;
+}
+
+/* The card children carry text-align:center for portrait; in the
+   landscape row every text block must rag left or multi-line text
+   re-centers itself against its single-line neighbors. */
+.awards-grid.landscape .flip-card .card-body .award-place,
+.awards-grid.landscape .flip-card .card-body h3,
+.awards-grid.landscape .flip-card .card-body .category,
+.awards-grid.landscape .flip-card .card-body .sub-category {
+  text-align: left;
+}
+
+.awards-grid.landscape .flip-card .card-body .award-place {
+  margin-bottom: 0.25rem;
+}
+
+.awards-grid.landscape .flip-card .card-body h3 {
+  margin-bottom: 0.25rem;
+}
+
+.awards-grid.landscape .flip-card .card-body .category {
+  margin-bottom: 0.25rem;
+}
+
+.awards-grid.landscape .trophy-card-back {
+  flex-direction: row;
+  gap: 1.25rem;
+  padding: 1rem 1.5rem;
+}
+
+.awards-grid.landscape .trophy-card-back .tcb-col {
+  flex: 1;
+  justify-content: center;
+}
+
+.awards-grid.landscape .trophy-card-back .tcb-rule {
+  width: 2px;
+  height: 55%;
+  align-self: center;
+  margin: 0;
+  flex-shrink: 0;
+  background: linear-gradient(180deg, transparent, #b08d45, transparent);
+}
+
 .flip-card:focus-visible .flip-card-inner {
   box-shadow: 0 0 0 2px var(--gold-vivid);
   border-radius: 16px;

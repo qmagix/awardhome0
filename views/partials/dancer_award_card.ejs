@@ -62,6 +62,7 @@
                           style="position: absolute; top: 0.5rem; left: 0.5rem; width: 24px; height: 24px; object-fit: contain; opacity: 0.6; border-radius: 4px;"
                           title="<%= award.org_name %> Logo">
                         <% } %>
+                      <div class="card-body">
                           <div class="<%= placeClass %>">
                             <%= placeText %>
                           </div>
@@ -97,31 +98,36 @@
                                               style="color: #f3e5ab; font-weight: 600; margin-top: 0.5rem;">
                                               <%= formatEventTitle(award.event_name, award.org_name, award.event_year) %>
                                             </p>
+                      </div>
                     </div>
             </div>
 
     <!-- Back face: champagne certificate with the dancer's name (easter egg) -->
     <div class="trophy-card-back">
-      <div class="tcb-icon"><%= icon %></div>
-      <div class="tcb-eyebrow">Presented to</div>
-      <div class="tcb-name"><%= dancer.name %></div>
-      <% if (dancer.vanity_tag) { %>
-        <div class="tcb-tag">#<%= dancer.vanity_tag %></div>
-      <% } %>
-      <% if (isGroup) { %>
-        <div class="tcb-with">together with teammates</div>
-      <% } %>
+      <div class="tcb-col tcb-who">
+        <div class="tcb-icon"><%= icon %></div>
+        <div class="tcb-eyebrow">Presented to</div>
+        <div class="tcb-name"><%= dancer.name %></div>
+        <% if (dancer.vanity_tag) { %>
+          <div class="tcb-tag">#<%= dancer.vanity_tag %></div>
+        <% } %>
+        <% if (isGroup) { %>
+          <div class="tcb-with">together with teammates</div>
+        <% } %>
+      </div>
       <div class="tcb-rule"></div>
-      <div class="tcb-place"><%= placeText %></div>
-      <% if (award.performance_name) { %>
-        <div class="tcb-perf">&ldquo;<%= award.performance_name %>&rdquo;</div>
-      <% } %>
-      <% const typeDupes = award.award_type && award.award_type.trim().toLowerCase() === placeText.trim().toLowerCase();
-         const catParts = [typeDupes ? null : award.award_type, award.age_division, award.category].filter(Boolean); %>
-      <% if (catParts.length) { %>
-        <div class="tcb-cat"><%= catParts.join(' · ') %></div>
-      <% } %>
-      <div class="tcb-event"><%= formatEventTitle(award.event_name, award.org_name, award.event_year) %></div>
+      <div class="tcb-col tcb-what">
+        <div class="tcb-place"><%= placeText %></div>
+        <% if (award.performance_name) { %>
+          <div class="tcb-perf">&ldquo;<%= award.performance_name %>&rdquo;</div>
+        <% } %>
+        <% const typeDupes = award.award_type && award.award_type.trim().toLowerCase() === placeText.trim().toLowerCase();
+           const catParts = [typeDupes ? null : award.award_type, award.age_division, award.category].filter(Boolean); %>
+        <% if (catParts.length) { %>
+          <div class="tcb-cat"><%= catParts.join(' · ') %></div>
+        <% } %>
+        <div class="tcb-event"><%= formatEventTitle(award.event_name, award.org_name, award.event_year) %></div>
+      </div>
       <%
         // "won 4th" but "was named Winner" / "were named Miss Mini Dance"
         const shareVerb = /^\d/.test(placeText) ? 'won' : (isGroup ? 'were named' : 'was named');

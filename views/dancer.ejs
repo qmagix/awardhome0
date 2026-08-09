@@ -152,6 +152,11 @@
     </div>
 
     <div style="display: flex; justify-content: flex-end; align-items: center; margin-top: 2rem; margin-bottom: 1rem;">
+      <div class="view-toggle" id="shape-toggle" style="margin-right: 1rem;">
+        <button id="btn-portrait" class="btn btn-primary btn-sm" onclick="setCardShape('portrait')" title="Portrait cards">▯ Portrait</button>
+        <button id="btn-landscape" class="btn btn-outline btn-sm" onclick="setCardShape('landscape')"
+          style="margin-left: 0.5rem;" title="Landscape cards">▭ Landscape</button>
+      </div>
       <div class="view-toggle">
         <button id="btn-grid-view" class="btn btn-primary btn-sm" onclick="setView('grid')">Grid View</button>
         <button id="btn-table-view" class="btn btn-outline btn-sm" onclick="setView('table')"
@@ -369,11 +374,28 @@
       <% } %>
   </div>
   <script>
+    // Card shape (portrait = original design, landscape = A/B variant).
+    // Persisted per visitor so future analytics can read the preference.
+    function setCardShape(shape) {
+      document.querySelectorAll('.awards-grid').forEach(g => g.classList.toggle('landscape', shape === 'landscape'));
+      const bp = document.getElementById('btn-portrait');
+      const bl = document.getElementById('btn-landscape');
+      const active = shape === 'landscape' ? bl : bp;
+      const inactive = shape === 'landscape' ? bp : bl;
+      active.classList.add('btn-primary'); active.classList.remove('btn-outline');
+      inactive.classList.add('btn-outline'); inactive.classList.remove('btn-primary');
+      try { localStorage.setItem('awardCardShape', shape); } catch (e) { }
+    }
+    try {
+      if (localStorage.getItem('awardCardShape') === 'landscape') setCardShape('landscape');
+    } catch (e) { }
+
     function setView(viewMode) {
       const grids = document.querySelectorAll('.awards-view-grid');
       const tables = document.querySelectorAll('.awards-view-table');
       const btnGrid = document.getElementById('btn-grid-view');
       const btnTable = document.getElementById('btn-table-view');
+      document.getElementById('shape-toggle').style.display = viewMode === 'grid' ? '' : 'none';
 
       if (viewMode === 'grid') {
         grids.forEach(el => el.style.display = 'grid');
