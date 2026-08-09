@@ -27,6 +27,7 @@
           You are applying to claim and manage the profile for <strong><%= dancer.name %></strong> as <strong><%= user.email %></strong>.
         </p>
         <form action="/claim/dancer/<%= dancer.id %>" method="POST" style="display: flex; flex-direction: column; gap: 1.5rem;">
+          <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
           <div>
             <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Relationship to Dancer</label>
             <select name="relationship" required style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;">
@@ -56,6 +57,7 @@
           you'll get access shortly after verifying your email.
         </p>
         <form action="/claim/dancer/<%= dancer.id %>/apply" method="POST" style="display: flex; flex-direction: column; gap: 1.25rem;">
+          <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
           <div>
             <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Your Name</label>
             <input type="text" name="contact_name" required placeholder="e.g. Jane Miller" style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;">

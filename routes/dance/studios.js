@@ -4,7 +4,20 @@ const { openDb } = require('../../database');
 const { requireAuth, requireStudioOwner } = require('../../middleware/auth');
 const { logStudioActivity } = require('../../utils/activity');
 const multer = require('multer');
-const upload = multer({ dest: 'uploads/' });
+// CSV imports only (roster + awards). Rejections surface as 400s via the
+// central error handler (err.status = 400).
+const upload = multer({
+  dest: 'uploads/',
+  limits: { fileSize: 5 * 1024 * 1024, files: 1 },
+  fileFilter: (req, file, cb) => {
+    const isCsv = /\.csv$/i.test(file.originalname || '') ||
+      ['text/csv', 'application/csv', 'application/vnd.ms-excel'].includes(file.mimetype);
+    if (isCsv) return cb(null, true);
+    const err = new Error('Only .csv files are accepted.');
+    err.status = 400;
+    cb(err);
+  },
+});
 const { OpenAI } = require('openai');
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const { generateDancerId } = require('../../utils.js');

@@ -28,17 +28,17 @@ const CHECKS = [
   ['POST', '/admin/backfill-dancers/1', [403], 'anonymous backfill blocked'],
   ['GET', '/admin', [403], 'anonymous admin dashboard blocked'],
   ['GET', '/admin/users', [403], 'anonymous user management blocked'],
-  ['PUT', '/api/studio/ai-summary/1', [302], 'anonymous ai-summary edit redirected to login'],
+  ['PUT', '/api/studio/ai-summary/1', [403], 'anonymous ai-summary edit blocked (CSRF)'],
   ['GET', '/manage/studio/1', [302], 'anonymous studio manage redirected to login'],
-  ['POST', '/manage/studio/1/onboarding/dismiss', [302], 'anonymous onboarding dismiss redirected to login'],
+  ['POST', '/manage/studio/1/onboarding/dismiss', [403], 'anonymous onboarding dismiss blocked (CSRF)'],
   ['GET', '/manage/org/1', [302], 'anonymous org manage redirected to login'],
-  ['POST', '/resend-verification', [200], 'resend-verification responds'],
+  ['POST', '/resend-verification', [403], 'tokenless resend-verification blocked (CSRF)'],
   ['POST', '/admin/featured/recompute', [403], 'anonymous featured recompute blocked'],
   ['POST', '/admin/marketing/studios/1/send-invite', [403], 'anonymous invite send blocked'],
   ['GET', '/unsubscribe?e=bogus&t=bad', [400], 'bad unsubscribe token rejected'],
   ['GET', '/claim/studio/1', [200], 'claim page public (one-page apply)'],
-  ['POST', '/claim/studio/1/apply', [400], 'apply validates input'],
-  ['POST', '/claim/dancer/1/apply', [400, 404], 'dancer apply validates input'],
+  ['POST', '/claim/studio/1/apply', [403], 'tokenless claim apply blocked (CSRF)'],
+  ['POST', '/claim/dancer/1/apply', [403], 'tokenless dancer apply blocked (CSRF)'],
   ['GET', '/dance/leaderboard/studios-alltime', [200], 'leaderboard fragment renders'],
   ['GET', '/dance/leaderboard/bogus', [404], 'unknown leaderboard rejected'],
   ['GET', '/dance/api/search?q=a', [200], 'hero search rejects short query gracefully'],
@@ -97,13 +97,39 @@ async function main() {
       console.log('NOTE: real-content checks skipped (' + e.message + ')');
     }
 
-    for (const [method, path, expected, desc] of CHECKS) {
+    // CSRF-aware checks: fetch a page to obtain a session cookie + token,
+    // then confirm state-changing endpoints work WITH the token (so the
+    // original validation/auth behavior is still exercised end-to-end).
+    let csrfHeaders = null;
+    try {
+      const loginRes = await fetch(BASE + '/login');
+      const cookie = (loginRes.headers.getSetCookie ? loginRes.headers.getSetCookie() : [loginRes.headers.get('set-cookie')])
+        .filter(Boolean).map(c => c.split(';')[0]).join('; ');
+      const tokenMatch = (await loginRes.text()).match(/<meta name="csrf-token" content="([^"]+)"/);
+      if (cookie && tokenMatch) {
+        csrfHeaders = { 'Content-Type': 'application/json', 'Cookie': cookie, 'X-CSRF-Token': tokenMatch[1] };
+        CHECKS.push(
+          ['POST', '/resend-verification', [200], 'resend-verification responds (with CSRF token)', csrfHeaders],
+          ['POST', '/claim/studio/1/apply', [400], 'apply validates input (with CSRF token)', csrfHeaders],
+          ['POST', '/claim/dancer/1/apply', [400, 404], 'dancer apply validates input (with CSRF token)', csrfHeaders],
+          ['POST', '/manage/studio/1/onboarding/dismiss', [302], 'anonymous onboarding dismiss redirected to login (with CSRF token)', csrfHeaders],
+        );
+      } else {
+        failures++;
+        console.log('FAIL  could not extract session cookie + CSRF token from /login');
+      }
+    } catch (e) {
+      failures++;
+      console.log('FAIL  CSRF token bootstrap errored: ' + e.message);
+    }
+
+    for (const [method, path, expected, desc, headers] of CHECKS) {
       let status;
       try {
         const res = await fetch(BASE + path, {
           method,
           redirect: 'manual',
-          headers: { 'Content-Type': 'application/json' },
+          headers: headers || { 'Content-Type': 'application/json' },
           body: method === 'GET' ? undefined : '{}',
         });
         status = res.status;

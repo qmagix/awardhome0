@@ -3,6 +3,7 @@ require('dotenv').config();
 const { PORT } = require('./config');
 const morgan = require('morgan');
 const express = require('express');
+const helmet = require('helmet');
 const session = require('express-session');
 const cron = require('node-cron');
 const bcrypt = require('bcrypt');
@@ -15,6 +16,29 @@ const crypto = require('crypto');
 
 
 const app = express();
+
+// Security headers. CSP permits the app's inline scripts/styles and Google
+// Fonts. frame-ancestors is deliberately omitted so framing stays governed by
+// X-Frame-Options alone — the widget route removes that header to remain
+// embeddable on external sites (routes/dance/public.js). CORP is cross-origin
+// because widgets and invite emails hot-link images from this domain.
+app.use(helmet({
+  contentSecurityPolicy: {
+    useDefaults: true,
+    directives: {
+      'script-src': ["'self'", "'unsafe-inline'"],
+      'script-src-attr': ["'unsafe-inline'"],
+      'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      'font-src': ["'self'", 'https://fonts.gstatic.com', 'data:'],
+      'img-src': ["'self'", 'data:', 'https:'],
+      'frame-ancestors': null,
+      // Would rewrite http://localhost asset URLs to https in dev
+      ...(process.env.NODE_ENV === 'production' ? {} : { 'upgrade-insecure-requests': null }),
+    },
+  },
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+}));
+
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -166,6 +190,13 @@ app.get('/healthz', async (req, res) => {
   }
 });
 
+// CSRF protection: issue a per-session token (after /healthz so monitor pings
+// never create sessions) and verify it on every unsafe-method request. Must
+// precede the beta gate and all routers. See middleware/csrf.js.
+const { issueCsrfToken, verifyCsrf } = require('./middleware/csrf');
+app.use(issueCsrfToken);
+app.use(verifyCsrf);
+
 // Private-beta gate for the public data surfaces (see middleware/beta.js).
 // Landing, auth, widgets, unsubscribe, and healthz stay open.
 const { betaGate } = require('./middleware/beta');
@@ -199,8 +230,15 @@ if (process.env.SENTRY_DSN) {
 
 // Central error handler (Express 5 forwards rejected promises here)
 app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
   if (res.headersSent) return next(err);
+  // Upload rejections (multer limits/fileFilter) are client errors, not crashes
+  if (err && (err.name === 'MulterError' || err.status === 400)) {
+    const msg = err.name === 'MulterError' && err.code === 'LIMIT_FILE_SIZE'
+      ? 'File too large. Please upload a smaller file.'
+      : (err.message || 'Bad request.');
+    return res.status(400).send(msg);
+  }
+  console.error('Unhandled error:', err);
   res.status(500).send('Something went wrong. Please try again.');
 });
 

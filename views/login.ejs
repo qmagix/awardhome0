@@ -14,11 +14,13 @@
     <% } %>
     <% if (typeof showResend !== 'undefined' && showResend) { %>
       <form action="/resend-verification" method="POST" style="margin-bottom: 1.5rem; text-align: center;">
+        <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
         <input type="hidden" name="email" value="<%= typeof prefillEmail !== 'undefined' ? prefillEmail : '' %>">
         <button type="submit" class="btn" style="background: transparent; color: var(--primary); border: 1px solid var(--primary); padding: 0.5rem 1rem; font-weight: 600; border-radius: 6px; cursor: pointer;">Resend verification email</button>
       </form>
     <% } %>
     <form action="/login" method="POST" style="display: flex; flex-direction: column; gap: 1.25rem;">
+      <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
       <% if (typeof next !== 'undefined' && next) { %><input type="hidden" name="next" value="<%= next %>"><% } %>
       <div>
         <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-muted);">Email</label>

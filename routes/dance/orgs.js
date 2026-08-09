@@ -74,9 +74,36 @@ router.get('/manage/org/:id', requireAuth, requireOrgOwner(), async (req, res) =
 });
 
 
-// Configure multer for org uploads
-const orgUpload = multer({ dest: 'tobeprocessed/org_uploads/' });
-const brandingUpload = multer({ dest: 'public/uploads/org_branding/' });
+// Configure multer for org uploads. Rejections surface as 400s via the
+// central error handler (err.status = 400).
+const orgUpload = multer({
+  dest: 'tobeprocessed/org_uploads/',
+  limits: { fileSize: 20 * 1024 * 1024, files: 1 },
+  fileFilter: (req, file, cb) => {
+    if (/\.(csv|xlsx|xls)$/i.test(file.originalname || '')) return cb(null, true);
+    const err = new Error('Only .csv, .xlsx, or .xls result files are accepted.');
+    err.status = 400;
+    cb(err);
+  },
+});
+
+// Branding images land in the publicly served uploads dir. Multer's random
+// extension-less filenames mean they can never be served as HTML/JS, but we
+// still restrict to raster image types — SVG is excluded (scriptable), and
+// both the extension and the client-declared MIME type must look like an image.
+const IMAGE_MIMES = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/avif']);
+const brandingUpload = multer({
+  dest: 'public/uploads/org_branding/',
+  limits: { fileSize: 5 * 1024 * 1024, files: 1 },
+  fileFilter: (req, file, cb) => {
+    if (IMAGE_MIMES.has(file.mimetype) && /\.(png|jpe?g|webp|gif|avif)$/i.test(file.originalname || '')) {
+      return cb(null, true);
+    }
+    const err = new Error('Only PNG, JPG, WebP, GIF, or AVIF images are accepted.');
+    err.status = 400;
+    cb(err);
+  },
+});
 
 router.post('/manage/org/:id/upload', requireAuth, requireOrgOwner(), orgUpload.single('results_file'), async (req, res) => {
   const db = await openDb();

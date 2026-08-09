@@ -13,6 +13,7 @@
       </div>
     <% } %>
     <form action="/register" method="POST" style="display: flex; flex-direction: column; gap: 1.25rem;">
+      <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
       <div>
         <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-muted);">Email</label>
         <input type="email" name="email" required style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;">
