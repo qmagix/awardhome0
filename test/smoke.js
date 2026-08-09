@@ -12,7 +12,7 @@ const CHECKS = [
   ['GET', '/', [200], 'landing page (anonymous)'],
   ['GET', '/style.css', [200], 'landing stylesheet'],
   ['GET', '/dance', [200], 'dance vertical home'],
-  ['GET', '/dance/studios', [200], 'studios list'],
+  ['GET', '/dance/studios', [403], 'studio directory admin-gated'],
   ['GET', '/studios', [301], 'legacy /studios redirects to /dance'],
   ['GET', '/studio/1', [301], 'legacy studio profile redirects to /dance'],
   ['GET', '/login', [200], 'login page'],

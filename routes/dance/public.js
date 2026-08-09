@@ -7,6 +7,7 @@ const { formatEventTitle } = require('../../utils/format');
 const { unsubscribeToken } = require('../../utils/invites');
 const rateLimit = require('express-rate-limit');
 const { BASE_URL } = require('../../config');
+const { requireAdmin } = require('../../middleware/auth');
 const path = require('path');
 
 
@@ -365,7 +366,10 @@ router.get('/dance/api/search', searchLimiter, async (req, res) => {
   res.json({ studios, dancers });
 });
 
-router.get('/dance/studios', async (req, res) => {
+// Admin-only: the full paginated directory is a scrape target (17k studios
+// with award counts). Public users find studios via search, leaderboards,
+// and the featured section.
+router.get('/dance/studios', requireAdmin, async (req, res) => {
   const db = await openDb();
 
   const page = parseInt(req.query.page) || 1;
