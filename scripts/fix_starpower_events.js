@@ -3,7 +3,7 @@ const cheerio = require('cheerio');
 const sqlite3 = require('sqlite3').verbose();
 const { promisify } = require('util');
 
-const db = new sqlite3.Database('./database.sqlite');
+const db = new sqlite3.Database(require('path').join(__dirname, '..', 'database.sqlite'));
 db.allAsync = promisify(db.all.bind(db));
 db.runAsync = promisify(db.run.bind(db));
 

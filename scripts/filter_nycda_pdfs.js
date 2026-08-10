@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const dir = path.join(__dirname, 'tobeprocessed', 'pdf', 'nycda');
+const dir = path.join(__dirname, '..', 'tobeprocessed', 'pdf', 'nycda');
 const files = fs.readdirSync(dir);
 
 const nonResultKeywords = [

@@ -3,19 +3,7 @@ const cheerio = require('cheerio');
 const { spawnSync } = require('child_process');
 const { fetchWithCache } = require('./fetch_cache');
 
-const YEARS_MAP = {
-  2026: 2054,
-  2025: 2053,
-  2024: 2052,
-  2023: 2051,
-  2022: 2050,
-  2021: 2049,
-  2020: 2048,
-  2019: 2047,
-  2018: 2021,
-  2017: 2020,
-  2016: 4
-};
+const { YEARS_MAP } = require('./dancebug_years');
 
 
 const COMPETITIONS = {

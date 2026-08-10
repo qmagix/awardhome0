@@ -3,13 +3,18 @@ const cheerio = require('cheerio');
 const fs = require('fs');
 const path = require('path');
 
-const TARGET_DIR = path.join(__dirname, 'tobeprocessed', 'pdf', 'showstopper');
+const TARGET_DIR = path.join(__dirname, '..', 'tobeprocessed', 'pdf', 'showstopper');
 const SOURCE_URL = 'https://www.goshowstopper.com/competitions/results/';
 
 // Ensure base directory exists
 if (!fs.existsSync(TARGET_DIR)) {
   fs.mkdirSync(TARGET_DIR, { recursive: true });
 }
+
+// Skip PDFs fetched in past runs (otherwise the filename-collision loop
+// below re-downloads everything under "-1.pdf" suffixed names every run).
+const { loadManifest } = require('../utils/pdf_manifest');
+const manifest = loadManifest(TARGET_DIR);
 
 function sanitizeFilename(str) {
   return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -100,6 +105,7 @@ async function run() {
       }
 
       for (const item of linksForYear) {
+        if (manifest.has(item.url)) continue;
         const baseFilename = sanitizeFilename(item.location);
         let pdfPath = path.join(yearDir, `${baseFilename}.pdf`);
         let jsonPath = path.join(yearDir, `${baseFilename}.json`);
@@ -126,6 +132,7 @@ async function run() {
             downloaded_at: new Date().toISOString()
           };
           fs.writeFileSync(jsonPath, JSON.stringify(metadata, null, 2));
+          manifest.add(item.url);
         }
       }
     }

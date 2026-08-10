@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const PDFParser = require("pdf2json");
 
-const dir = path.join(__dirname, 'tobeprocessed', 'pdf', 'nycda');
+const dir = path.join(__dirname, '..', 'tobeprocessed', 'pdf', 'nycda');
 const txtDir = path.join(dir, 'txt');
 
 if (!fs.existsSync(txtDir)) {

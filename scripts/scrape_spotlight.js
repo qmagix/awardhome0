@@ -8,7 +8,7 @@ const TARGET_URLS = [
   'https://www.spotlightevents.com/results/archive'
 ];
 
-const OUTPUT_DIR = path.join(__dirname, 'tobeprocessed', 'pdf', 'spotlight');
+const OUTPUT_DIR = path.join(__dirname, '..', 'tobeprocessed', 'pdf', 'spotlight');
 
 if (!fs.existsSync(OUTPUT_DIR)) {
   fs.mkdirSync(OUTPUT_DIR, { recursive: true });

@@ -12,7 +12,7 @@ const crypto = require('crypto');
  * @returns {Promise<{data: string}>} - An object matching the axios response signature.
  */
 async function fetchWithCache(url, orgSlug, year, extraFilename = null) {
-  const rawDir = path.join(__dirname, 'raw', orgSlug, String(year));
+  const rawDir = path.join(__dirname, '..', 'raw', orgSlug, String(year));
   
   if (!fs.existsSync(rawDir)) {
     fs.mkdirSync(rawDir, { recursive: true });

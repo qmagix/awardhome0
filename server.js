@@ -299,6 +299,28 @@ cron.schedule('0 4 * * 0', async () => {
   }
 });
 
+// Weekly award-data update (Monday 5 AM): incremental re-scrape of the
+// web-scraped orgs + new-PDF downloads via scripts/weekly_update.js.
+// Long-running, so spawned as a child process; the summary lands in the
+// app log, failures go to Sentry. Enable on prod only (dev shouldn't scrape).
+if (process.env.ENABLE_WEEKLY_SCRAPE === 'true') {
+  cron.schedule('0 5 * * 1', () => {
+    const { spawn } = require('child_process');
+    console.log('Starting weekly award-data update...');
+    const child = spawn('node', [path.join(__dirname, 'scripts', 'weekly_update.js')], { cwd: __dirname });
+    let out = '';
+    child.stdout.on('data', d => { out += d; });
+    child.stderr.on('data', d => { out += d; });
+    child.on('close', (code) => {
+      const marker = out.indexOf('================ WEEKLY');
+      console.log(marker > -1 ? out.slice(marker) : out.slice(-2000));
+      if (code !== 0 && process.env.SENTRY_DSN) {
+        require('@sentry/node').captureMessage(`Weekly award update exited ${code}:\n${out.slice(-1500)}`, 'error');
+      }
+    });
+  });
+}
+
 // Setup automated nightly backups at 3:00 AM
 if (process.env.ENABLE_NIGHTLY_BACKUPS === 'true') {
   cron.schedule('0 3 * * *', () => {

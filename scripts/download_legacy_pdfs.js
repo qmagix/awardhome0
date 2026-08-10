@@ -26,7 +26,7 @@ const YEARS_MAP = {
 };
 
 const BASE_URL = 'https://www.dancebug.com/rf/events_list.php';
-const TARGET_DIR = path.join(__dirname, 'tobeprocessed', 'pdf');
+const TARGET_DIR = path.join(__dirname, '..', 'tobeprocessed', 'pdf');
 
 // Ensure base directory exists
 if (!fs.existsSync(TARGET_DIR)) {

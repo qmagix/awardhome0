@@ -4,7 +4,7 @@ const sqlite3 = require('sqlite3').verbose();
 const { promisify } = require('util');
 const { generateDancerId, generateStudioId } = require('../utils');
 
-const db = new sqlite3.Database('./database.sqlite');
+const db = new sqlite3.Database(require('path').join(__dirname, '..', 'database.sqlite'));
 db.runAsync = promisify(db.run.bind(db));
 db.getAsync = promisify(db.get.bind(db));
 

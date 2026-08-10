@@ -3,7 +3,7 @@ const path = require('path');
 const pdf = require('pdf-parse');
 
 async function run() {
-  const file = path.join(__dirname, 'tobeprocessed', 'pdf', 'nycda', 'TBD-houston_Houston-results.pdf');
+  const file = path.join(__dirname, '..', 'tobeprocessed', 'pdf', 'nycda', 'TBD-houston_Houston-results.pdf');
   const dataBuffer = fs.readFileSync(file);
   
   pdf(dataBuffer).then(function(data) {

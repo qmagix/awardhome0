@@ -3,9 +3,11 @@ const cheerio = require('cheerio');
 const fs = require('fs');
 const path = require('path');
 
-const TARGET_DIR = path.join(__dirname, 'tobeprocessed', 'pdf', 'starquest');
+const TARGET_DIR = path.join(__dirname, '..', 'tobeprocessed', 'pdf', 'starquest');
 
 // Ensure base directory exists
+const { loadManifest } = require('../utils/pdf_manifest');
+
 if (!fs.existsSync(TARGET_DIR)) {
   fs.mkdirSync(TARGET_DIR, { recursive: true });
 }
@@ -68,6 +70,9 @@ async function scrapeStarquestYear(url, year) {
       console.log(`Found ${linksFound.length} PDF results for Starquest ${year}. Downloading...`);
       
       for (const item of linksFound) {
+        // Skip PDFs fetched in past runs (otherwise the filename-collision
+        // loop below re-downloads everything under suffixed names).
+        if (manifest.has(item.url)) continue;
         const baseFilename = `${sanitizeFilename(item.location)}-${year}`;
         let pdfPath = path.join(TARGET_DIR, `${baseFilename}.pdf`);
         let jsonPath = path.join(TARGET_DIR, `${baseFilename}.json`);
@@ -94,6 +99,7 @@ async function scrapeStarquestYear(url, year) {
             downloaded_at: new Date().toISOString()
           };
           fs.writeFileSync(jsonPath, JSON.stringify(metadata, null, 2));
+          manifest.add(item.url);
         }
       }
     } else {
@@ -103,6 +109,8 @@ async function scrapeStarquestYear(url, year) {
     console.error(`Error scraping Starquest ${year}: ${err.message}`);
   }
 }
+
+const manifest = loadManifest(TARGET_DIR);
 
 async function run() {
   console.log('Starting Starquest PDF Results Downloader...');

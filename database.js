@@ -263,6 +263,20 @@ async function initDb() {
       PRIMARY KEY (org_id, category, award_type, place)
     );
 
+    -- Fetch bookkeeping for the weekly scrape updater (scripts/weekly_update.js).
+    -- One row per cached page file under scripts/raw/; first_fetched_at drives
+    -- the "unsettled window" (recently discovered pages get refetched weekly
+    -- until they age out), content_hash detects late edits for reporting.
+    CREATE TABLE IF NOT EXISTS scrape_log (
+      file_path TEXT PRIMARY KEY,
+      org_dir TEXT,
+      year TEXT,
+      first_fetched_at DATETIME,
+      last_fetched_at DATETIME,
+      content_hash TEXT,
+      last_changed_at DATETIME
+    );
+
     INSERT OR IGNORE INTO system_settings (key, value) VALUES ('openai_model', 'gpt-4o-mini');
 
     -- Performance Indexes
@@ -305,6 +319,14 @@ async function initDb() {
   try { await db.exec("ALTER TABLE studios ADD COLUMN auto_feature_cooldown_until DATETIME"); } catch(e) {}
   try { await db.exec("ALTER TABLE studios ADD COLUMN onboarding_dismissed INTEGER DEFAULT 0"); } catch(e) {}
   try { await db.exec("ALTER TABLE dancers ADD COLUMN vanity_tag TEXT"); } catch(e) {}
+  try {
+    // Importers leave created_at NULL; weekly_update.js stamps NULLs after
+    // each run, which is also how it detects "events added by this run".
+    await db.exec("ALTER TABLE events ADD COLUMN created_at DATETIME");
+    // Column just created: stamp pre-existing events with the era of the last
+    // full scrape so they read as long-settled rather than brand new.
+    await db.exec("UPDATE events SET created_at = '2026-05-15 00:00:00'");
+  } catch(e) {}
 
   console.log("Database initialized.");
   return db;

@@ -2,7 +2,7 @@ const sqlite3 = require('sqlite3').verbose();
 const { promisify } = require('util');
 const { runBackfillForEvent } = require('../backfill_utils');
 
-const db = new sqlite3.Database('./database.sqlite');
+const db = new sqlite3.Database(require('path').join(__dirname, '..', 'database.sqlite'));
 db.all = promisify(db.all.bind(db));
 db.get = promisify(db.get.bind(db));
 db.run = promisify(db.run.bind(db));

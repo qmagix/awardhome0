@@ -3,7 +3,7 @@ const path = require('path');
 const PDFParser = require("pdf2json");
 const { normalizeName } = require('../utils/normalize_names');
 
-const dir = path.join(__dirname, 'tobeprocessed', 'pdf', 'starquest');
+const dir = path.join(__dirname, '..', 'tobeprocessed', 'pdf', 'starquest');
 const txtDir = path.join(dir, 'txt');
 
 if (!fs.existsSync(txtDir)) {

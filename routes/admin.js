@@ -769,12 +769,7 @@ router.post('/api/admin/org/:orgId/categories/toggle', express.json(), async (re
 //             special award) but the combo isn't counted;
 //   odd     — counted as a 1st although the place string doesn't look
 //             like one (usually a manual toggle worth double-checking).
-const FIRSTISH_SQL = "LOWER(TRIM(a.place)) IN ('1', '1st', 'winner', '1st place', 'first place')";
-const NOT_EXCLUDED_SQL = [
-  'invite', 'invitation', 'scholar', 'photogenic', 'headshot', 'entertainment',
-  'choreography', 'costume', 'sportsmanship', 'spirit', 'class act', 'wild one',
-  'wild $', 'discovery spotlight', 'palooza', 'battle', 'voucher', 'kindness', 'nominations'
-].map(t => `LOWER(COALESCE(a.category, '')) NOT LIKE '%${t}%'`).join(' AND ');
+const { FIRSTISH_SQL, NOT_EXCLUDED_SQL } = require('../utils/first_place');
 
 router.get('/admin/first-places', requireSuperadmin, async (req, res) => {
   const db = await openDb();

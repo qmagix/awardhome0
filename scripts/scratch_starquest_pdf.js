@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const PDFParser = require("pdf2json");
 
-const file = process.argv[2] || path.join(__dirname, 'tobeprocessed', 'pdf', 'starquest', 'orlando-fl-2026.pdf');
+const file = process.argv[2] || path.join(__dirname, '..', 'tobeprocessed', 'pdf', 'starquest', 'orlando-fl-2026.pdf');
 
 async function testPdf() {
   const dataBuffer = fs.readFileSync(file);

@@ -1,5 +1,5 @@
 const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database('./database.sqlite');
+const db = new sqlite3.Database(require('path').join(__dirname, '..', 'database.sqlite'));
 
 const studioId = 842;
 const orgId = 5;

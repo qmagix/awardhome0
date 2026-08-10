@@ -36,8 +36,8 @@ async function getOrCreateStudio(studioName) {
 }
 
 async function runImport() {
-  const txtDir = path.join(__dirname, 'tobeprocessed', 'pdf', 'starquest', 'txt');
-  const jsonDir = path.join(__dirname, 'tobeprocessed', 'pdf', 'starquest'); // Metadata JSONs are in the root starquest folder
+  const txtDir = path.join(__dirname, '..', 'tobeprocessed', 'pdf', 'starquest', 'txt');
+  const jsonDir = path.join(__dirname, '..', 'tobeprocessed', 'pdf', 'starquest'); // Metadata JSONs are in the root starquest folder
   const files = fs.readdirSync(txtDir).filter(f => f.endsWith('.txt'));
 
   const db = await openDb();

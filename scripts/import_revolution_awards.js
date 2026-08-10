@@ -5,7 +5,7 @@ const { promisify } = require('util');
 const crypto = require('crypto');
 const { generateDancerId, generateStudioId } = require('../utils');
 // Promisify SQLite methods
-const db = new sqlite3.Database('./database.sqlite');
+const db = new sqlite3.Database(require('path').join(__dirname, '..', 'database.sqlite'));
 db.runAsync = promisify(db.run.bind(db));
 db.getAsync = promisify(db.get.bind(db));
 db.allAsync = promisify(db.all.bind(db));

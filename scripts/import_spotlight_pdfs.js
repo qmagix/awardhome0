@@ -6,7 +6,7 @@ const PDFParser = require('pdf2json');
 const { v4: uuidv4 } = require('uuid');
 
 const DB_PATH = path.join(__dirname, 'database.sqlite');
-const PDF_DIR = path.join(__dirname, 'tobeprocessed', 'pdf', 'spotlight');
+const PDF_DIR = path.join(__dirname, '..', 'tobeprocessed', 'pdf', 'spotlight');
 
 function toTitleCase(str) {
     if (!str) return str;

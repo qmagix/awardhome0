@@ -7,7 +7,7 @@ const TARGET_APIS = [
   'https://www.starbound.net/wp-json/acf/v3/posts/79/?per_page=1000'    // Nationals
 ];
 
-const OUTPUT_DIR = path.join(__dirname, 'tobeprocessed', 'pdf', 'starbound');
+const OUTPUT_DIR = path.join(__dirname, '..', 'tobeprocessed', 'pdf', 'starbound');
 
 if (!fs.existsSync(OUTPUT_DIR)) {
   fs.mkdirSync(OUTPUT_DIR, { recursive: true });

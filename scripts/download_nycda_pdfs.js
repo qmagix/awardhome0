@@ -4,7 +4,7 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 
 const BASE_URL = 'https://www.nycdance.com';
-const OUTPUT_DIR = path.join(__dirname, 'tobeprocessed', 'pdf', 'nycda');
+const OUTPUT_DIR = path.join(__dirname, '..', 'tobeprocessed', 'pdf', 'nycda');
 
 // Ensure output directory exists
 if (!fs.existsSync(OUTPUT_DIR)) {

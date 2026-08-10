@@ -2,7 +2,7 @@ const fs = require('fs');
 const PDFParser = require('pdf2json');
 const path = require('path');
 
-const targetPdf = path.join(__dirname, 'tobeprocessed', 'pdf', 'spotlight', 'spotlightevents_ABQ-Results-2026-UPDATE.pdf');
+const targetPdf = path.join(__dirname, '..', 'tobeprocessed', 'pdf', 'spotlight', 'spotlightevents_ABQ-Results-2026-UPDATE.pdf');
 
 function extract() {
   let pdfParser = new PDFParser(this, 1);

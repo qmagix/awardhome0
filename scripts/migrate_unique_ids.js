@@ -2,7 +2,7 @@ const sqlite3 = require('sqlite3').verbose();
 const { promisify } = require('util');
 const { generateDancerId, generateStudioId } = require('../utils');
 
-const db = new sqlite3.Database('./database.sqlite');
+const db = new sqlite3.Database(require('path').join(__dirname, '..', 'database.sqlite'));
 const dbAll = promisify(db.all.bind(db));
 const dbRun = promisify(db.run.bind(db));
 
