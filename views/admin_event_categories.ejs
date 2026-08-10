@@ -1,0 +1,116 @@
+<%- include('partials/header') %>
+
+<div class="container" style="max-width: 1200px; margin-top: 2rem;">
+  <div style="margin-bottom: 2rem;">
+    <a href="/admin/first-places" style="color: var(--primary); text-decoration: none; display: flex; align-items: center; gap: 0.5rem; font-weight: 600; margin-bottom: 1rem;">
+      &larr; Back to 1st-Place Audit
+    </a>
+    <h1 style="margin: 0;"><%= event.name %> <span style="color: var(--text-muted); font-weight: 400;">(<%= event.year %>)</span></h1>
+    <p style="color: var(--text-muted); margin-top: 0.5rem;">
+      <% if (event.org_name) { %><%= event.org_name %> &middot; <% } %>
+      Every place / award type / category combination given at this event. Toggle the checkbox to include or
+      exclude a combination from the competitive "1st Place" count. Changes apply to <strong>this event only</strong>
+      and save instantly<% if (event.org_slug) { %> — for org-wide changes use the
+      <a href="/admin/org/<%= event.org_slug %>/categories" style="color: var(--primary);">organization categories page</a><% } %>.
+    </p>
+  </div>
+
+  <div class="card glass-card" style="padding: 0; overflow: hidden; margin-bottom: 4rem;">
+    <div style="display: flex; padding: 1rem 1.5rem; background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: bold; color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase;">
+      <div style="width: 80px; text-align: center;">1st?</div>
+      <div style="width: 140px;">Place</div>
+      <div style="width: 220px;">Award Type</div>
+      <div style="flex-grow: 1;">Category</div>
+      <div style="width: 160px;">Flag</div>
+      <div style="width: 90px; text-align: right;">Count</div>
+    </div>
+
+    <div style="max-height: 72vh; overflow-y: auto;" class="custom-scrollbar">
+      <% categories.forEach(function (c) { %>
+        <% const mixed = c.is_first_place !== c.min_first_place; %>
+        <div style="display: flex; padding: 0.9rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); align-items: center; <%= c.flag ? 'background: rgba(251, 191, 36, 0.05);' : '' %>" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='<%= c.flag ? 'rgba(251, 191, 36, 0.05)' : 'transparent' %>'">
+
+          <div style="width: 80px; text-align: center;">
+            <input type="checkbox" class="is-first-place-toggle"
+              data-category="<%= c.category || '' %>"
+              data-award-type="<%= c.award_type || '' %>"
+              data-place="<%= c.place || '' %>"
+              <%= c.is_first_place ? 'checked' : '' %>
+              style="width: 20px; height: 20px; cursor: pointer;">
+          </div>
+
+          <div style="width: 140px; font-weight: 600;">
+            <span class="badge" style="<%= c.is_first_place ? 'background: rgba(251, 191, 36, 0.2); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3);' : '' %>">
+              <%= c.place || '-' %>
+            </span>
+          </div>
+
+          <div style="width: 220px; color: var(--text-muted); font-size: 0.95rem;"><%= c.award_type || '-' %></div>
+
+          <div style="flex-grow: 1; font-size: 0.9rem; color: var(--text-color);"><%= c.category || '-' %></div>
+
+          <div style="width: 160px;">
+            <% if (c.flag === 'missing') { %>
+              <span class="badge" style="background: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3);">looks 1st — not counted</span>
+            <% } else if (c.flag === 'odd') { %>
+              <span class="badge" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);">counted — check place</span>
+            <% } %>
+            <% if (mixed) { %>
+              <span class="badge" style="background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3);" title="Some awards in this combination are counted and some are not — toggling normalizes all of them.">partial</span>
+            <% } %>
+          </div>
+
+          <div style="width: 90px; text-align: right; color: var(--text-muted);"><%= c.award_count %></div>
+        </div>
+      <% }); %>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const eventId = '<%= event.id %>';
+    document.querySelectorAll('.is-first-place-toggle').forEach(toggle => {
+      toggle.addEventListener('change', async (e) => {
+        const isChecked = e.target.checked;
+        try {
+          const response = await fetch(`/api/admin/event/${eventId}/categories/toggle`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              category: e.target.dataset.category === '' ? null : e.target.dataset.category,
+              award_type: e.target.dataset.awardType === '' ? null : e.target.dataset.awardType,
+              place: e.target.dataset.place === '' ? null : e.target.dataset.place,
+              is_first_place: isChecked
+            })
+          });
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.error || 'Failed to update');
+          const badge = e.target.closest('div').nextElementSibling.querySelector('.badge');
+          if (isChecked) {
+            badge.style.background = 'rgba(251, 191, 36, 0.2)';
+            badge.style.color = '#fbbf24';
+            badge.style.border = '1px solid rgba(251, 191, 36, 0.3)';
+          } else {
+            badge.style.background = 'rgba(255,255,255,0.1)';
+            badge.style.color = 'white';
+            badge.style.border = 'none';
+          }
+        } catch (err) {
+          console.error('Error toggling status:', err);
+          alert('Failed to update first place status. See console for details.');
+          e.target.checked = !isChecked;
+        }
+      });
+    });
+  });
+</script>
+
+<style>
+  .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.1); }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 4px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
+</style>
+
+<%- include('partials/footer') %>

@@ -75,6 +75,15 @@
       <a href="/admin/orgs" class="btn btn-primary" style="display: block; text-align: center;">Open Org Directory</a>
     </div>
 
+    <!-- First-Place Audit -->
+    <% if (user && user.role === 'superadmin') { %>
+    <div class="card glass-card">
+      <h3 style="color: var(--gold-vivid, #fbbf24); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">🥇 1st-Place Audit</h3>
+      <p class="sub-text" style="margin-bottom: 1.5rem;">Review which award types count as competitive 1st places, event by event, with suspicious combinations flagged.</p>
+      <a href="/admin/first-places" class="btn btn-outline" style="display: block; text-align: center; border-color: #fbbf24; color: #fbbf24;">Open 1st-Place Audit</a>
+    </div>
+    <% } %>
+
     <!-- Accounts & Impersonation -->
     <div class="card glass-card">
       <h3 style="color: var(--accent-gold); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">🔑 Account Impersonation</h3>

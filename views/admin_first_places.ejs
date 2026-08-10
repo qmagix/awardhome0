@@ -1,0 +1,77 @@
+<%- include('partials/header') %>
+
+<div class="container" style="max-width: 1200px; margin-top: 2rem;">
+  <div style="margin-bottom: 2rem;">
+    <a href="/admin" style="color: var(--primary); text-decoration: none; font-weight: 600;">&larr; Back to Admin</a>
+    <h1 style="margin: 0.75rem 0 0;">1st-Place Audit</h1>
+    <p style="color: var(--text-muted); margin-top: 0.5rem; max-width: 62rem;">
+      Every event with its competitive 1st-place count and two suspicion signals:
+      <span style="color: #fbbf24; font-weight: 600;">looks 1st</span> — awards whose place reads like a first
+      (and isn't a special-award category) but aren't counted; and
+      <span style="color: #ef4444; font-weight: 600;">odd 1st</span> — awards counted although the place string doesn't
+      look like a first. Open an event to review and correct its combinations; org-wide review is on each
+      organization's Categories page.
+    </p>
+  </div>
+
+  <%
+    const flaggedEvents = events.filter(e => e.missing_firsts > 0 || e.odd_firsts > 0);
+  %>
+  <div class="card glass-card" style="padding: 1rem 1.5rem; margin-bottom: 1.5rem; display: flex; gap: 2.5rem; flex-wrap: wrap;">
+    <div><strong style="font-size: 1.3rem;"><%= events.length %></strong> <span style="color: var(--text-muted);">events</span></div>
+    <div><strong style="font-size: 1.3rem; color: <%= flaggedEvents.length ? '#fbbf24' : '#10b981' %>;"><%= flaggedEvents.length %></strong> <span style="color: var(--text-muted);">with flags</span></div>
+    <div><strong style="font-size: 1.3rem;"><%= events.reduce((s, e) => s + (e.first_places || 0), 0).toLocaleString() %></strong> <span style="color: var(--text-muted);">1st places counted</span></div>
+    <label style="margin-left: auto; display: flex; align-items: center; gap: 0.5rem; color: var(--text-muted); cursor: pointer;">
+      <input type="checkbox" id="flagged-only" onchange="document.querySelectorAll('.event-row.clean').forEach(r => r.style.display = this.checked ? 'none' : 'flex'); document.querySelectorAll('.org-head').forEach(h => h.style.display = (this.checked && h.dataset.flagged === '0') ? 'none' : 'block');">
+      Show flagged only
+    </label>
+  </div>
+
+  <div class="card glass-card" style="padding: 0; overflow: hidden; margin-bottom: 4rem;">
+    <div style="display: flex; padding: 1rem 1.5rem; background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: bold; color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase;">
+      <div style="flex-grow: 1;">Event</div>
+      <div style="width: 70px; text-align: right;">Year</div>
+      <div style="width: 100px; text-align: right;">Awards</div>
+      <div style="width: 100px; text-align: right;">1st Places</div>
+      <div style="width: 110px; text-align: right;">Looks 1st</div>
+      <div style="width: 100px; text-align: right;">Odd 1st</div>
+      <div style="width: 110px; text-align: right;"></div>
+    </div>
+
+    <div style="max-height: 72vh; overflow-y: auto;" class="custom-scrollbar">
+      <% let prevOrg = null; %>
+      <% events.forEach(function (e) { %>
+        <% const flagged = e.missing_firsts > 0 || e.odd_firsts > 0; %>
+        <% if (e.org_name !== prevOrg) { prevOrg = e.org_name;
+             const orgFlagged = events.some(x => x.org_name === e.org_name && (x.missing_firsts > 0 || x.odd_firsts > 0)); %>
+          <div class="org-head" data-flagged="<%= orgFlagged ? 1 : 0 %>" style="padding: 0.85rem 1.5rem; background: rgba(212, 175, 55, 0.08); border-bottom: 1px solid rgba(255,255,255,0.08); font-weight: 700; color: var(--primary);">
+            <%= e.org_name || 'No organization' %>
+            <% if (e.org_slug) { %>
+              <a href="/admin/org/<%= e.org_slug %>/categories" style="font-weight: 500; font-size: 0.8rem; color: var(--text-muted); margin-left: 0.75rem; text-decoration: none;">org-wide categories &rarr;</a>
+            <% } %>
+          </div>
+        <% } %>
+        <div class="event-row <%= flagged ? 'flagged' : 'clean' %>" style="display: flex; padding: 0.8rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); align-items: center; <%= flagged ? 'background: rgba(251, 191, 36, 0.05);' : '' %>">
+          <div style="flex-grow: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><%= e.name %></div>
+          <div style="width: 70px; text-align: right; color: var(--text-muted);"><%= e.year %></div>
+          <div style="width: 100px; text-align: right; color: var(--text-muted);"><%= e.total_awards.toLocaleString() %></div>
+          <div style="width: 100px; text-align: right; font-weight: 600; color: var(--gold-vivid, #fbbf24);"><%= (e.first_places || 0).toLocaleString() %></div>
+          <div style="width: 110px; text-align: right; font-weight: 600; color: <%= e.missing_firsts > 0 ? '#fbbf24' : 'var(--text-muted)' %>;"><%= e.missing_firsts || 0 %></div>
+          <div style="width: 100px; text-align: right; font-weight: 600; color: <%= e.odd_firsts > 0 ? '#ef4444' : 'var(--text-muted)' %>;"><%= e.odd_firsts || 0 %></div>
+          <div style="width: 110px; text-align: right;">
+            <a href="/admin/event/<%= e.id %>/categories" class="btn btn-outline btn-sm" style="text-decoration: none;">Audit</a>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+  </div>
+</div>
+
+<style>
+  .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.1); }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 4px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
+</style>
+
+<%- include('partials/footer') %>

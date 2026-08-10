@@ -743,6 +743,83 @@ router.post('/api/admin/org/:orgId/categories/toggle', express.json(), async (re
 });
 
 
+// ---- First-place audit (next.md #1) ----
+// The leaderboard "1st places" stat is awards.is_first_place, set by
+// scripts/mark_first_places.js from place strings + category exclusions,
+// then hand-corrected. These pages surface, per event, every distinct
+// place/type/category combo with two suspicion heuristics kept in sync
+// with the normalizer:
+//   missing — place looks like a competitive 1st (and category isn't a
+//             special award) but the combo isn't counted;
+//   odd     — counted as a 1st although the place string doesn't look
+//             like one (usually a manual toggle worth double-checking).
+const FIRSTISH_SQL = "LOWER(TRIM(a.place)) IN ('1', '1st', 'winner', '1st place', 'first place')";
+const NOT_EXCLUDED_SQL = [
+  'invite', 'invitation', 'scholar', 'photogenic', 'headshot', 'entertainment',
+  'choreography', 'costume', 'sportsmanship', 'spirit', 'class act', 'wild one',
+  'wild $', 'discovery spotlight', 'palooza', 'battle', 'voucher', 'kindness', 'nominations'
+].map(t => `LOWER(COALESCE(a.category, '')) NOT LIKE '%${t}%'`).join(' AND ');
+
+router.get('/admin/first-places', requireSuperadmin, async (req, res) => {
+  const db = await openDb();
+  const events = await db.all(`
+    SELECT e.id, e.name, e.year, o.name AS org_name, o.slug AS org_slug,
+      COUNT(*) AS total_awards,
+      SUM(a.is_first_place) AS first_places,
+      SUM(CASE WHEN ${FIRSTISH_SQL} AND ${NOT_EXCLUDED_SQL} AND a.is_first_place = 0 THEN 1 ELSE 0 END) AS missing_firsts,
+      SUM(CASE WHEN NOT (${FIRSTISH_SQL}) AND a.is_first_place = 1 THEN 1 ELSE 0 END) AS odd_firsts
+    FROM awards a
+    JOIN events e ON e.id = a.event_id
+    LEFT JOIN organizations o ON o.id = e.org_id
+    GROUP BY e.id
+    ORDER BY (o.name IS NULL), o.name, CAST(e.year AS INTEGER) DESC, e.name
+  `);
+  res.render('admin_first_places', { events, user: req.session.user });
+});
+
+router.get('/admin/event/:id/categories', requireSuperadmin, async (req, res) => {
+  const db = await openDb();
+  const event = await db.get(`
+    SELECT e.*, o.name AS org_name, o.slug AS org_slug
+    FROM events e LEFT JOIN organizations o ON o.id = e.org_id WHERE e.id = ?`, [req.params.id]);
+  if (!event) return res.status(404).send('Event not found');
+
+  const categories = await db.all(`
+    SELECT a.category, a.award_type, a.place,
+      MAX(a.is_first_place) AS is_first_place,
+      MIN(a.is_first_place) AS min_first_place,
+      COUNT(*) AS award_count,
+      CASE
+        WHEN ${FIRSTISH_SQL} AND ${NOT_EXCLUDED_SQL} AND MAX(a.is_first_place) = 0 THEN 'missing'
+        WHEN NOT (${FIRSTISH_SQL}) AND MAX(a.is_first_place) = 1 THEN 'odd'
+        ELSE ''
+      END AS flag
+    FROM awards a
+    WHERE a.event_id = ?
+    GROUP BY a.category, a.award_type, a.place
+    ORDER BY (flag = ''), a.place ASC, a.category ASC
+  `, [req.params.id]);
+
+  res.render('admin_event_categories', { event, categories, user: req.session.user });
+});
+
+// Toggle scoped to ONE event (the org-level twin above updates org-wide)
+router.post('/api/admin/event/:eventId/categories/toggle', requireSuperadmin, express.json(), async (req, res) => {
+  const { category, award_type, place, is_first_place } = req.body || {};
+  const db = await openDb();
+  try {
+    const result = await db.run(`
+      UPDATE awards SET is_first_place = ?
+      WHERE event_id = ? AND category IS ? AND award_type IS ? AND place IS ?
+    `, [is_first_place ? 1 : 0, req.params.eventId, category || null, award_type || null, place || null]);
+    res.json({ success: true, changes: result.changes });
+  } catch (err) {
+    console.error('Error toggling is_first_place (event):', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
 router.post('/admin/backfill-dancers/:event_id', requireAdmin, async (req, res) => {
   const db = await openDb();
   const eventId = req.params.event_id;
