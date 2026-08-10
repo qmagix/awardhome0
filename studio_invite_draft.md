@@ -1,30 +1,65 @@
 # Draft: Studio Owner Outreach Letter
 
-**Subject:** Claim your Studio's Digital Trophy Case on AwardHome!
+**Subject options** (no "!", no "free" — both hurt deliverability):
+- [Studio Name]'s trophy case is ready on AwardHome
+- [Studio Name]: [N] awards, all in one place
+- Your dancers' [Competition Name] results are live on AwardHome
+
+*(If we mail-merge, pulling each studio's real award count into the subject
+line is the strongest personalization we have — it proves we already know
+them.)*
+
+---
 
 Hi [Studio Owner Name],
 
-My name is [Your Name], and I am the founder of **AwardHome**, a centralized platform that builds interactive "Digital Trophy Cases" for competitive dance studios. We aggregate results from major competitions (like YAGP, Starpower, Believe, and more) into a single, beautiful dashboard.
+Congratulations on a great season. **[Studio Name]'s** competition results
+are already live on AwardHome — we aggregate results from 14 competitions
+(YAGP, KAR, Starpower, NYCDA, Showstopper, Rainbow, and more) into a single
+digital trophy case: over 900,000 awards from 17,000+ studios since 2022.
 
-We noticed that **[Studio Name]** has been incredibly successful this season! We have automatically generated a profile for your studio detailing your lifetime achievements, 1st place finishes, and top awards.
+Your studio's page, with lifetime achievements and 1st-place finishes, is
+here:
 
-You can view your studio's public dashboard here: [Link to their studio profile]
+**[Link to their studio profile]**
 
-**Why should you claim your studio account? (It's 100% Free!)**
-1. **Consolidate Your Rankings:** Because we aggregate data from so many different competitions nationwide, our system occasionally creates duplicate profiles if your studio name was entered differently at various events. By claiming your account, you unlock the ability to **merge split accounts**. This instantly consolidates all your awards into one profile, which can dramatically boost your position on our National Top 100 Leaderboards!
-2. **Gift Digital Trophy Cases to Your Dancers:** Once you claim your studio, you can invite your dance families to claim their individual dancer profiles. Parents and dancers love having a verified, digital record of their scholarships and top placements to share on social media or with talent scouts.
-3. **Add Missing Awards:** We scrape thousands of public competition results, but some events don't post data online. Claiming your account allows you to manually add and verify any missing awards to ensure your studio gets 100% of the credit it deserves.
-4. **Correct Typos:** Easily fix misspellings of your dancers' names or routine titles from the original competition data.
-5. **Embed Your Success:** Link your AwardHome profile directly from your studio's website to show prospective parents your verified, multi-competition track record.
-6. **Privacy Controls:** Choose exactly which statistics are visible to the public and which remain strictly private for your own analytics.
+Claiming it takes about two minutes and costs nothing. Here's what claiming
+unlocks:
 
-Claiming your studio takes less than two minutes. Just click the "Claim Studio" button on your profile link above, and we will verify your ownership.
+1. **Make it complete and correct.** Merge duplicate profiles (competitions
+   spell studio names differently — consolidating can significantly boost
+   your leaderboard position), fix dancer-name typos, and add awards from
+   events that never published results online.
+2. **Give every dancer their own trophy case.** Invite your dance families
+   to claim verified dancer profiles — a permanent, shareable record of
+   their scholarships and placements that parents love.
+3. **Put it on your own website.** Claimed studios get an embeddable awards
+   widget — your verified, multi-competition track record, live on your
+   site for prospective parents, in your colors. You control exactly which
+   stats are public.
 
-Congratulations again on a fantastic season, and we look forward to seeing your studio continue to climb the leaderboards!
+One more thing: our homepage **Featured Studios** section is selected
+automatically from claimed studios with complete profiles — no payment, no
+favoritism. Claim early and you're eligible from day one.
+
+Click **"Claim Studio"** on your profile page above. If your email address
+matches your studio's website domain, approval is instant.
+
+Congratulations again on the season — we built this so your dancers' wins
+never get lost in a PDF.
 
 Best regards,
 
-[Your Name]  
-Founder, AwardHome  
-[Link to your website]
-[Your Phone Number]
+[Your Name]
+Founder, AwardHome
+https://awardhome.com
+hello@awardhome.com
+
+---
+
+**Notes for sending:**
+- Send from hello@awardhome.com (DKIM verified). Plain formatting, at most
+  two links (their profile + site) — cold email with many links goes to spam.
+- Batch sends: Resend free tier is 100/day — schedule accordingly.
+- The profile link is the whole pitch. It must look great before we send:
+  spot-check each studio's page for garbled scraped names first.

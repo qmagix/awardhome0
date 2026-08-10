@@ -18,12 +18,12 @@ When a dancer views their "Digital Trophy Case," awards from Premium Organizers 
 * **Custom Brand Colors:** Hex codes injected into the CSS gradient backgrounds and borders of the cards.
 * **Custom Logo Upload:** Replaces the generic trophy icon with the competition's official logo.
 * **Custom Badge:** Replaces the generic blue checkmark with an "Official Partner" glowing badge.
-* **Sponsor Tagging:** Ability to add a `Sponsored By: [Brand]` text block and logo to specific award cards (e.g., "1st Place Solo Sponsored by Capezio").
+* **Sponsor Tagging:** Ability to add a `Sponsored By: [Brand]` text block and logo to specific award cards (e.g., "1st Place Solo Sponsored by Capezio"). Or in the back of the award card (flippable)? 
 
 ### Tier 3: Platinum / Interactive ($$$/year)
 * **Interactive 3D Assets:** Rotating WebGL/Three.js 3D trophies (e.g., a spinning diamond, gold ballet shoe).
 * **Rich Media Integration:** Ability for organizers to attach the official performance video (YouTube/Vimeo link) directly to the back of the card (flip animation).
-* **Automated PDF Certificates:** A "Download Certificate" button that dynamically renders the dancer's info over the organizer's uploaded PDF template.
+* **Automated PDF Certificates:** A "Download Certificate" button that dynamically renders the dancer's info over the organizer's uploaded PDF template. [We should first a few PDF certificate template examples first, does it have to be PDF or image tempalte works too? maybe we should make it a separate service with API support?]
 * **Dedicated Leaderboard Page:** A branded URL (e.g., `awardhome.com/yagp/2026/leaderboard`) showing top studios and dancers for their events.
 
 ---

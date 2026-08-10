@@ -1,33 +1,64 @@
 # Draft: Organization Data Integration Outreach Letter
 
-**Subject:** Featuring [Competition Name] on AwardHome - Free Digital Trophies for Your Dancers!
+**Subject options** (dropped "!" and "Free" for deliverability):
+- Featuring [Competition Name] on AwardHome
+- [Competition Name]'s results, hosted beautifully — zero work on your end
+- Digital trophies for [Competition Name] dancers
+
+---
 
 Hi [Name or "Competition Director"],
 
-My name is [Your Name], and I am the founder of **AwardHome**, a centralized platform designed to celebrate competitive dancers. We aggregate competition results from across the country into beautiful, shareable "Digital Trophy Cases" for dancers and studios.
+I'm [Your Name], founder of **AwardHome** — the digital trophy case for
+competitive dance. We aggregate results from events nationwide into
+beautiful, shareable award pages for dancers and studios: today that's
+over 900,000 awards from 2,700+ events across 14 competitions, including
+YAGP, Starpower, KAR, NYCDA, and Rainbow.
 
-We are currently featuring results from major events like YAGP, Starpower, and Rainbow, and we would absolutely love to feature **[Competition Name]** on the platform. 
+We'd love to feature **[Competition Name]** alongside them.
 
-We noticed that your event results are currently [not published online / published in PDF format]. We know how much time and effort goes into organizing these events, and we’d love to offer you a completely **free** way to modernize your results and increase engagement with your attendees.
+**The offer, plainly:** send us your results in whatever format you have —
+CSV, Excel, PDFs, database exports, anything — and we handle 100% of the
+processing. Zero technical work on your end, at no cost.
 
-**Here is what we are offering:**
-If you can provide us with your historical or current competition results in *any* raw data format you have on hand (CSV, Excel spreadsheets, SQL exports, etc.), our engineering team will handle 100% of the data processing and importation. **It requires zero technical work on your end.**
+**What [Competition Name] gets:**
 
-**The benefits for [Competition Name]:**
-1. **Digital Merchandising:** Your attendees will receive premium, shareable "Digital Trophies" for the awards they won at your events, keeping your brand visible long after the competition ends.
-2. **Increased Exposure:** Dancers and Studio Owners constantly check AwardHome. Having your events listed alongside other national competitions increases your visibility in the competitive dance community.
-3. **Time Saved:** You don't have to build expensive digital infrastructure or field questions from parents looking for old results. We host the interactive data for you.
-4. **Data Insights (Registered Accounts Only):** By establishing an organizer account, you unlock deep analytics about the studios that attend your events—including how many *other* events they attend annually, allowing you to identify loyal studios and understand market trends.
+1. **Your brand on every trophy.** Organizers get a free branding
+   dashboard: your logo and custom trophy icons appear on every award card
+   your dancers share — your brand stays visible on social media long
+   after the event ends, and it's the kind of placement sponsors notice.
+2. **Permanent, searchable results.** Dancers and parents constantly
+   search for old placements. We host them forever, interactively — no
+   more fielding "where can I find 2023 results?" emails, and your events
+   sit beside the biggest names in the industry for every studio browsing
+   the platform.
+3. **Attendance insights.** An organizer account unlocks analytics on the
+   studios attending your events — including how many other competitions
+   they attend each year — so you can spot loyal studios and understand
+   your market.
 
-We are incredibly impressed by the talent at [Competition Name] and want to make sure your dancers get the digital recognition they deserve. 
+If you have a recent results file handy, just reply with it attached and
+we'll build a live demo page for [Competition Name] — usually within a few
+days. Or if you'd rather talk first, I'm happy to do a quick 15-minute
+call.
 
-Would you be open to a quick 5-minute chat next week to discuss this? Alternatively, if you already have a CSV/Excel file of recent results, you can simply reply and attach it, and we will build a custom demo specifically for your competition!
-
-Thank you for your time, and thank you for everything you do for the dance community.
+Thank you for everything you do for the dance community.
 
 Best regards,
 
-[Your Name]  
-Founder, AwardHome  
-[Link to your website]
-[Your Phone Number]
+[Your Name]
+Founder, AwardHome
+https://awardhome.com
+hello@awardhome.com
+
+---
+
+**Notes for sending:**
+- The "reply with a file → we build you a demo" CTA is the strongest move:
+  it costs them nothing and commits us to something concrete. Lead with it.
+- For orgs we already have data for (from public results), consider the
+  variant: "your events are already live — here's the page; claim it to
+  add your branding." Seeing their real page beats any pitch.
+- Send individually (not bulk) — this list is short and high-value; a
+  personal line about their specific event ("we loved the [event] results
+  from Tampa") dramatically lifts response rates.

@@ -1,0 +1,2 @@
+Now some bugs to be fixed. 
+1. bugs resulting from dancers with the same names. For example: Angela Zhang, http://localhost:3000/dancer/b1e70c82-837b-4ea1-9b9a-f73c326fa298-angela-zhang, this one originally created for Jun Lu Performing Arts, later the scraper found other angela zhang from other studios, assumed the same dancers, so the record got mixed. To fix, please assume dancers with the same names from different studios are different dancers. And we could create facililties for dancers to merge or split the records in the admin side. 

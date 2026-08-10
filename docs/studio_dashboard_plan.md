@@ -7,7 +7,7 @@ Incentivize Studio Owners to claim their studio profile, self-report missing awa
 
 ### 1. The Ultimate Marketing "Trophy Room"
 - **Embeddable Studio Widgets:** Provide a snippet of code (iframe) that studios can paste into their own Wix/Wordpress websites to display their dynamic "Trophy Room" or "Alumni Hall of Fame" directly powered by our database. This saves them hours of web development.
-- **Public Prestige Page:** A premium, dark-mode public profile that acts as the studio's ultimate recruiting tool for prospective parents, highlighting national titles and lifetime achievement metrics.
+- **Public Prestige Page:** A premium, dark-mode public profile that acts as the studio's ultimate recruiting tool for prospective parents, highlighting national titles and lifetime achievement metrics. 
 
 ### 2. Choreography & Routine Analytics
 - **Win-Rate by Choreographer:** Allow studios to tag routines with specific choreographers and visualize which choreographers are yielding the highest ROI (Highest Adjudications, Most Overalls).
