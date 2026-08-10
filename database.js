@@ -248,6 +248,21 @@ async function initDb() {
       value TEXT
     );
 
+    -- Persistent org-level first-place decisions (superadmin curation on
+    -- /admin/org/:slug/categories). The org page toggle upserts here AND
+    -- updates existing awards; imports re-apply rules so new events inherit
+    -- the org decision. Event-level toggles remain direct award overrides.
+    -- NULL combo fields are stored as '' so the primary key stays unique.
+    CREATE TABLE IF NOT EXISTS org_first_place_rules (
+      org_id INTEGER NOT NULL REFERENCES organizations(id),
+      category TEXT NOT NULL DEFAULT '',
+      award_type TEXT NOT NULL DEFAULT '',
+      place TEXT NOT NULL DEFAULT '',
+      is_first_place INTEGER NOT NULL,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (org_id, category, award_type, place)
+    );
+
     INSERT OR IGNORE INTO system_settings (key, value) VALUES ('openai_model', 'gpt-4o-mini');
 
     -- Performance Indexes
@@ -295,6 +310,38 @@ async function initDb() {
   return db;
 }
 
+// Re-assert stored org_first_place_rules onto awards. Scope with eventId
+// right after importing an event so per-event overrides on OTHER events
+// survive; org-wide (no eventId) re-asserts the org decision everywhere,
+// overwriting conflicting event-level toggles.
+async function applyOrgFirstPlaceRules(db, { orgId = null, eventId = null } = {}) {
+  if (eventId && !orgId) {
+    const ev = await db.get('SELECT org_id FROM events WHERE id = ?', [eventId]);
+    if (!ev) throw new Error(`Event ${eventId} not found`);
+    orgId = ev.org_id;
+  }
+  const rules = await db.all(
+    `SELECT org_id, category, award_type, place, is_first_place
+     FROM org_first_place_rules${orgId ? ' WHERE org_id = ?' : ''}`,
+    orgId ? [orgId] : []);
+  let changed = 0;
+  for (const r of rules) {
+    const scopeSql = eventId ? 'event_id = ?' : 'event_id IN (SELECT id FROM events WHERE org_id = ?)';
+    const res = await db.run(`
+      UPDATE awards SET is_first_place = ?
+      WHERE ${scopeSql}
+        AND category IS ? AND award_type IS ? AND place IS ?
+        AND is_first_place != ?`,
+      [r.is_first_place, eventId || r.org_id,
+       r.category === '' ? null : r.category,
+       r.award_type === '' ? null : r.award_type,
+       r.place === '' ? null : r.place,
+       r.is_first_place]);
+    changed += res.changes;
+  }
+  return { rules: rules.length, changed };
+}
+
 if (require.main === module) {
   initDb().then(() => {
     console.log("Initialization complete.");
@@ -302,4 +349,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { openDb, initDb };
+module.exports = { openDb, initDb, applyOrgFirstPlaceRules };

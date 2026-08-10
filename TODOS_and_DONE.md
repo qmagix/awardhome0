@@ -6,6 +6,7 @@
 - [ ] Review the 553 flagged same-name-no-evidence studios (needs_investigation=1, still tab-named) — possibly distinct studios sharing a name; merge or clean case-by-case.
 - [ ] Clean-vs-clean duplicate studios: 892 same-normalized-name groups with no tab member (case/punctuation variants like "ELITE DANCE ACADEMY" vs "Elite Dance Academy") — needs the same evidence-based approach.
 - [ ] Studio+teacher concat records from the StarQuest import (e.g. "Lanzi Academy Of Dance Christina Lanzi" #16125) — detect and merge into the base studio.
+- [x] (DONE 2026-08-09 via scripts/backfill_showstopper_dancers.js, applied local+prod identically: 241 awards completed, 2,413 dancer links added — 2,227 matched existing rosters, 192 created; split names reconstructed, lone-word fragments never become dancers.) Showstopper dancer backfill: awards had fewer linked dancers than the re-extracted txt lists (overflow name lines were swallowed by the old extractor bug).
 - [ ] Dancer same-name mixing bug (see duplicate_name_bugs.md): scraper assumed same-name dancers are the same person; treat same name + different studio as different dancers, add admin merge/split tools.
 
 ### Security / launch
@@ -48,6 +49,7 @@
 - [x] Studio directory (/dance/studios) admin-gated to prevent bulk scraping; public discovery via search + leaderboards + featured; landing CTA repointed to hero search.
 - [x] Dancer award card scales like an image (2026-08-09): fixed-aspect card is a CSS container, all internal sizing in cqw — fonts/padding/radii/icons shrink proportionally with card width on mobile; rem fallback for old browsers.
 - [x] Mini-card overview for big trophy walls (2026-08-09): 4th display mode "Mini" — compact tier-icon+placement grid per year, tap opens the full card in a lightbox (which keeps tap-to-flip); auto-default on phones for dancers with 12+ awards.
+- [x] Persistent org-level first-place rules (2026-08-10): org_first_place_rules table; the /admin/org/:slug/categories toggle now upserts a rule AND updates awards; scripts/apply_first_place_rules.js re-applies rules after imports (--org / --event scoping; --seed-showstopper imported the 95 pre-rules Showstopper combos — applied locally, 0 drift). Run the seed + deploy on prod. Event-level toggles remain direct overrides.
 
 ### Earlier features (previously untracked)
 - [x] Global feedback system with admin replies + My Feedback dashboard.

@@ -741,6 +741,16 @@ router.post('/api/admin/org/:orgId/categories/toggle', express.json(), async (re
         AND place IS ?
     `, [newStatus, orgId, category || null, award_type || null, place || null]);
 
+    // Persist the decision as an org-level rule so imports can re-apply it
+    // to new events (applyOrgFirstPlaceRules). NULLs stored as '' to keep
+    // the primary key unique.
+    await db.run(`
+      INSERT INTO org_first_place_rules (org_id, category, award_type, place, is_first_place, updated_at)
+      VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+      ON CONFLICT(org_id, category, award_type, place)
+      DO UPDATE SET is_first_place = excluded.is_first_place, updated_at = CURRENT_TIMESTAMP
+    `, [orgId, category || '', award_type || '', place || '', newStatus]);
+
     res.json({ success: true, changes: result.changes });
   } catch (err) {
     console.error('Error toggling is_first_place:', err);
