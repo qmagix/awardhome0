@@ -690,12 +690,18 @@ router.get('/admin/org/:slug/categories', async (req, res) => {
 
   const sortBy = req.query.sort === 'award_type' ? 'a.award_type ASC, a.place ASC' : 'a.place ASC, a.category ASC';
 
+  // marked vs award_count drives the tri-state checkbox: a combo can be
+  // fully marked, unmarked, or PARTIAL (e.g. an import or category repair
+  // added rows after the combo was toggled, or an event-level toggle
+  // diverged). MAX alone hid partials and made a single marked award look
+  // like an org-wide setting.
   const categories = await db.all(`
-    SELECT 
-      a.category, 
-      a.award_type, 
-      a.place, 
-      MAX(a.is_first_place) as is_first_place, 
+    SELECT
+      a.category,
+      a.award_type,
+      a.place,
+      MAX(a.is_first_place) as is_first_place,
+      SUM(a.is_first_place) as marked,
       COUNT(*) as award_count
     FROM awards a
     JOIN events e ON a.event_id = e.id

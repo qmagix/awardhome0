@@ -35,7 +35,8 @@
               data-category="<%= c.category || '' %>"
               data-award-type="<%= c.award_type || '' %>"
               data-place="<%= c.place || '' %>"
-              <%= c.is_first_place ? 'checked' : '' %>
+              <%= mixed ? 'data-partial="1"' : '' %>
+              <%= c.is_first_place && !mixed ? 'checked' : '' %>
               style="width: 20px; height: 20px; cursor: pointer;">
           </div>
 
@@ -70,9 +71,11 @@
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     const eventId = '<%= event.id %>';
+    document.querySelectorAll('.is-first-place-toggle').forEach(t => { if (t.dataset.partial) t.indeterminate = true; });
     document.querySelectorAll('.is-first-place-toggle').forEach(toggle => {
       toggle.addEventListener('change', async (e) => {
         const isChecked = e.target.checked;
+        e.target.indeterminate = false;
         try {
           const response = await fetch(`/api/admin/event/${eventId}/categories/toggle`, {
             method: 'POST',

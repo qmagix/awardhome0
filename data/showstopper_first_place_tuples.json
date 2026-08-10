@@ -1,0 +1,477 @@
+[
+ {
+  "category": "Advanced - Adult (20 yrs. & Over) Duet/Trio",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Advanced - Adult (20 yrs. & Over) Large",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Advanced - Adult (20 yrs. & Over) Small",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Advanced - Adult (20 yrs. & Over) Solo",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Advanced - Adult (20 yrs. & Over) Super",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Advanced - Junior (9 - 11 yrs.) Duet/Trio",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Advanced - Junior (9 - 11 yrs.) Large",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Advanced - Junior (9 - 11 yrs.) Production",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Advanced - Junior (9 - 11 yrs.) Small",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Advanced - Junior (9 - 11 yrs.) Solo",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Advanced - Junior (9 - 11 yrs.) Super",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Advanced - Mini (8 yrs. & Under) Duet/Trio",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Advanced - Mini (8 yrs. & Under) Large",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Advanced - Mini (8 yrs. & Under) Small",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Advanced - Mini (8 yrs. & Under) Solo",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Advanced - Mini (8 yrs. & Under) Super",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Advanced - Senior (15 - 19 yrs.) Duet/Trio",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Advanced - Senior (15 - 19 yrs.) Large",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Advanced - Senior (15 - 19 yrs.) Small",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Advanced - Senior (15 - 19 yrs.) Solo",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Advanced - Teen (12 - 14 yrs.) Duet/Trio",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Advanced - Teen (12 - 14 yrs.) Large",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Advanced - Teen (12 - 14 yrs.) Production",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Advanced - Teen (12 - 14 yrs.) Small",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Advanced - Teen (12 - 14 yrs.) Solo",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Advanced - Teen (12 - 14 yrs.) Super",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Advanced - Teen (12 yrs.) Solo",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Advanced - Teen (13 - 14 yrs.) Solo",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Competitive - Adult (20 yrs. & Over) Duet/Trio",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Competitive - Adult (20 yrs. & Over) Large",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Competitive - Adult (20 yrs. & Over) Production",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Competitive - Adult (20 yrs. & Over) Small",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Competitive - Adult (20 yrs. & Over) Solo",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Competitive - Adult (20 yrs. & Over) Super",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Competitive - Junior (9 - 11 yrs.) Duet/Trio",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Competitive - Junior (9 - 11 yrs.) Large",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Competitive - Junior (9 - 11 yrs.) Production",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Competitive - Junior (9 - 11 yrs.) Small",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Competitive - Junior (9 - 11 yrs.) Solo",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Competitive - Junior (9 - 11 yrs.) Super",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Competitive - Mini (8 yrs. & Under) Duet/Trio",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Competitive - Mini (8 yrs. & Under) Large",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Competitive - Mini (8 yrs. & Under) Production",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Competitive - Mini (8 yrs. & Under) Small",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Competitive - Mini (8 yrs. & Under) Solo",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Competitive - Mini (8 yrs. & Under) Super",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Competitive - Senior (12 yrs. & Over) Teacher's Duet/Trio",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Competitive - Senior (12 yrs. & Over) Teacher's Group",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Competitive - Senior (12 yrs. & Over) Teacher's Solo",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Competitive - Senior (15 - 16 yrs.) Solo",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Competitive - Senior (15 - 19 yrs.) Duet/Trio",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Competitive - Senior (15 - 19 yrs.) Large",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Competitive - Senior (15 - 19 yrs.) Production",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Competitive - Senior (15 - 19 yrs.) Small",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Competitive - Senior (15 - 19 yrs.) Solo",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Competitive - Senior (15 - 19 yrs.) Super",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Competitive - Senior (17 - 19 yrs.) Solo",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Competitive - Teacher (12 yrs. & Over) Production",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Competitive - Teen (12 - 14 yrs.) Duet/Trio",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Competitive - Teen (12 - 14 yrs.) Large",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Competitive - Teen (12 - 14 yrs.) Production",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Competitive - Teen (12 - 14 yrs.) Small",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Competitive - Teen (12 - 14 yrs.) Solo",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Competitive - Teen (12 - 14 yrs.) Super",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Performance - Adult (20 yrs. & Over) Duet/Trio",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Performance - Adult (20 yrs. & Over) Large",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Performance - Adult (20 yrs. & Over) Production",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Performance - Adult (20 yrs. & Over) Small",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Performance - Adult (20 yrs. & Over) Solo",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Performance - Adult (20 yrs. & Over) Super",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Performance - Junior (9 - 11 yrs.) Duet/Trio",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Performance - Junior (9 - 11 yrs.) Large",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Performance - Junior (9 - 11 yrs.) Production",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Performance - Junior (9 - 11 yrs.) Small",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Performance - Junior (9 - 11 yrs.) Solo",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Performance - Junior (9 - 11 yrs.) Super",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Performance - Mini (8 yrs. & Under) Duet/Trio",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Performance - Mini (8 yrs. & Under) Large",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Performance - Mini (8 yrs. & Under) Production",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Performance - Mini (8 yrs. & Under) Small",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Performance - Mini (8 yrs. & Under) Solo",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Performance - Mini (8 yrs. & Under) Super",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Performance - Senior (15 - 19 yrs.) Duet/Trio",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Performance - Senior (15 - 19 yrs.) Large",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Performance - Senior (15 - 19 yrs.) Production",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Performance - Senior (15 - 19 yrs.) Small",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Performance - Senior (15 - 19 yrs.) Solo",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Performance - Senior (15 - 19 yrs.) Super",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Performance - Teen (12 - 14 yrs.) Duet/Trio",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Performance - Teen (12 - 14 yrs.) Large",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Performance - Teen (12 - 14 yrs.) Production",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Performance - Teen (12 - 14 yrs.) Small",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Performance - Teen (12 - 14 yrs.) Solo",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Performance - Teen (12 - 14 yrs.) Super",
+  "award_type": "High Score",
+  "place": "1"
+ },
+ {
+  "category": "Unknown Level - Mini (8 yrs. & Under) Solo",
+  "award_type": "High Score",
+  "place": "1"
+ }
+]

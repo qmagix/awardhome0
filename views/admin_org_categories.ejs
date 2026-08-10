@@ -32,13 +32,21 @@
       <% categories.forEach(function(c, idx) { %>
         <div style="display: flex; padding: 1rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); align-items: center; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
           
+          <% const isPartial = c.marked > 0 && c.marked < c.award_count; %>
           <div style="width: 80px; text-align: center;">
-            <input type="checkbox" class="is-first-place-toggle" 
-                   data-category="<%= c.category || '' %>" 
-                   data-award-type="<%= c.award_type || '' %>" 
-                   data-place="<%= c.place || '' %>" 
-                   <%= c.is_first_place ? 'checked' : '' %>
+            <input type="checkbox" class="is-first-place-toggle"
+                   data-category="<%= c.category || '' %>"
+                   data-award-type="<%= c.award_type || '' %>"
+                   data-place="<%= c.place || '' %>"
+                   <%= isPartial ? 'data-partial="1"' : '' %>
+                   <%= c.marked === c.award_count && c.award_count > 0 ? 'checked' : '' %>
                    style="width: 20px; height: 20px; cursor: pointer;">
+            <% if (isPartial) { %>
+              <div class="badge" style="display: block; margin-top: 0.3rem; background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); font-size: 0.65rem;"
+                   title="Only <%= c.marked %> of <%= c.award_count %> awards with this combination are counted (e.g. rows added after the last toggle, or per-event overrides). Click the checkbox to mark all of them.">
+                <%= c.marked %>/<%= c.award_count %>
+              </div>
+            <% } %>
           </div>
           
           <div style="width: 150px; font-weight: 600; color: <%= c.is_first_place ? '#d4af37' : 'var(--text-color)' %>;">
@@ -70,9 +78,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const orgId = '<%= org.id %>';
   const toggles = document.querySelectorAll('.is-first-place-toggle');
 
+  // Mixed combos render as indeterminate; clicking one checks it, which
+  // sends is_first_place=true and marks ALL awards in the combo.
+  toggles.forEach(t => { if (t.dataset.partial) t.indeterminate = true; });
+
   toggles.forEach(toggle => {
     toggle.addEventListener('change', async (e) => {
       const isChecked = e.target.checked;
+      e.target.indeterminate = false;
+      const partialBadge = e.target.parentElement.querySelector('.badge');
+      if (partialBadge) partialBadge.remove();
       const category = e.target.getAttribute('data-category');
       const awardType = e.target.getAttribute('data-award-type');
       const place = e.target.getAttribute('data-place');
