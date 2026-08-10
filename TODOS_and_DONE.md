@@ -7,7 +7,8 @@
 - [ ] Clean-vs-clean duplicate studios: 892 same-normalized-name groups with no tab member (case/punctuation variants like "ELITE DANCE ACADEMY" vs "Elite Dance Academy") — needs the same evidence-based approach.
 - [ ] Studio+teacher concat records from the StarQuest import (e.g. "Lanzi Academy Of Dance Christina Lanzi" #16125) — detect and merge into the base studio.
 - [x] (DONE 2026-08-09 via scripts/backfill_showstopper_dancers.js, applied local+prod identically: 241 awards completed, 2,413 dancer links added — 2,227 matched existing rosters, 192 created; split names reconstructed, lone-word fragments never become dancers.) Showstopper dancer backfill: awards had fewer linked dancers than the re-extracted txt lists (overflow name lines were swallowed by the old extractor bug).
-- [ ] Dancer same-name mixing bug (see duplicate_name_bugs.md): scraper assumed same-name dancers are the same person; treat same name + different studio as different dancers, add admin merge/split tools.
+- [x] (FIXED 2026-05-25, 4ba2911: all importers now match dancers by name+studio, creating separate records per studio; fix_duplicate_dancers.js split the pre-existing mixed unclaimed records — verified 2026-08-10: "Angela Zhang" is 10 clean per-studio records.) Dancer same-name mixing bug (duplicate_name_bugs.md is stale).
+- [ ] Admin dancer merge/split tools — the remaining half of the same-name work: merge records for a real dancer who trains at / moved between studios (split records are now the default), split any claimed profiles the 2026-05-25 cleanup skipped.
 
 ### Security / launch
 - [ ] Anti-scrape follow-up: rate-limit public /dance/studio/:id and /dancer/:unique_id per IP (sequential IDs make enumeration trivial even with the directory gated); consider Cloudflare bot-fight rules.
