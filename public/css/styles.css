@@ -577,6 +577,117 @@ a:hover {
   margin-top: 0.5rem;
 }
 
+/* ---- Mini mode: compact overview for trophy walls (esp. phones) ----
+   Same card DOM, restyled: only the tier icon, placement, and routine
+   name survive; a tap opens the full card in a lightbox (dancer.ejs)
+   instead of flipping. */
+.awards-grid.mini {
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 0.6rem;
+}
+
+.awards-grid.mini .flip-card {
+  aspect-ratio: 1 / 1.15;
+}
+
+.awards-grid.mini .flip-card .premium-trophy-card {
+  padding: 0.5rem;
+  border-radius: 10px;
+}
+
+.awards-grid.mini .flip-card .trophy-icon {
+  font-size: 1.6rem;
+  margin-bottom: 0.2rem;
+}
+
+.awards-grid.mini .flip-card .trophy-custom-icon {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.awards-grid.mini .flip-card .award-place {
+  margin-bottom: 0.15rem;
+}
+
+.awards-grid.mini .flip-card .award-place-large {
+  font-size: 1rem;
+}
+
+.awards-grid.mini .flip-card .award-place-medium {
+  font-size: 0.8rem;
+}
+
+.awards-grid.mini .flip-card .award-place-small {
+  font-size: 0.7rem;
+}
+
+.awards-grid.mini .flip-card h3,
+.awards-grid.mini .flip-card h3.long-text {
+  font-size: 0.62rem;
+  margin-bottom: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.awards-grid.mini .flip-card .category,
+.awards-grid.mini .flip-card .sub-category,
+.awards-grid.mini .flip-card .event-line,
+.awards-grid.mini .flip-card .age-division-row,
+.awards-grid.mini .flip-card .badge-self-reported,
+.awards-grid.mini .flip-card .card-org-logo,
+.awards-grid.mini .flip-card .verified-badge {
+  display: none;
+}
+
+/* Full-card lightbox opened from a mini card. The card keeps its normal
+   markup (and tap-to-flip) because it sits outside the .mini grid. */
+.card-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  padding: 1.25rem;
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  overflow-y: auto;
+}
+
+/* Width also capped by viewport height (card height ≈ 1.618 × width) so
+   the whole card fits on screen; margin:auto centers and keeps the top
+   reachable if a content-stuffed card still grows taller and scrolls.
+   (The explicit width matters: an auto width + auto margins would
+   collapse a size-contained card to zero.) */
+.card-lightbox .flip-card {
+  width: min(88vw, 52vh, 400px);
+  margin: auto;
+  flex-shrink: 0;
+}
+
+.card-lightbox-close {
+  position: absolute;
+  top: max(0.75rem, env(safe-area-inset-top));
+  right: 1rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.view-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  row-gap: 0.5rem;
+}
+
 /* ---- Image-like proportional scaling for the dancer award card ----
    The card is a fixed-aspect container; every internal size (fonts,
    padding, spacing, radii, icons) is in cqw, so the whole composition
@@ -924,6 +1035,43 @@ a:hover {
   .awards-grid.landscape .trophy-card-back .tcb-share svg {
     width: 2.8cqw;
     height: 2.8cqw;
+  }
+
+  /* -- Mini mode: same proportional treatment at its ~110px basis -- */
+  .awards-grid.mini .flip-card .premium-trophy-card {
+    padding: 7.3cqw;
+    border-radius: 9cqw;
+  }
+
+  .awards-grid.mini .flip-card .trophy-icon {
+    font-size: 23cqw;
+    margin-bottom: 2.9cqw;
+  }
+
+  .awards-grid.mini .flip-card .trophy-custom-icon {
+    width: 16cqw;
+    height: 16cqw;
+  }
+
+  .awards-grid.mini .flip-card .award-place {
+    margin-bottom: 2.2cqw;
+  }
+
+  .awards-grid.mini .flip-card .award-place-large {
+    font-size: 14.5cqw;
+  }
+
+  .awards-grid.mini .flip-card .award-place-medium {
+    font-size: 11.6cqw;
+  }
+
+  .awards-grid.mini .flip-card .award-place-small {
+    font-size: 10.2cqw;
+  }
+
+  .awards-grid.mini .flip-card h3,
+  .awards-grid.mini .flip-card h3.long-text {
+    font-size: 9cqw;
   }
 }
 

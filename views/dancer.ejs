@@ -153,7 +153,9 @@
 
     <div style="display: flex; justify-content: flex-end; align-items: center; margin-top: 2rem; margin-bottom: 1rem;">
       <div class="view-toggle">
-        <button id="btn-mode-portrait" class="btn btn-primary btn-sm" onclick="setDisplayMode('portrait')" title="Portrait card grid">Portrait</button>
+        <button id="btn-mode-mini" class="btn btn-outline btn-sm" onclick="setDisplayMode('mini')" title="Compact overview — tap a card to enlarge">Mini</button>
+        <button id="btn-mode-portrait" class="btn btn-primary btn-sm" onclick="setDisplayMode('portrait')"
+          style="margin-left: 0.5rem;" title="Portrait card grid">Portrait</button>
         <button id="btn-mode-landscape" class="btn btn-outline btn-sm" onclick="setDisplayMode('landscape')"
           style="margin-left: 0.5rem;" title="Landscape card grid">Landscape</button>
         <button id="btn-mode-table" class="btn btn-outline btn-sm" onclick="setDisplayMode('table')"
@@ -371,26 +373,81 @@
       <% } %>
   </div>
   <script>
-    // One flat choice: portrait grid (original design), landscape grid
-    // (A/B variant), or the sortable table. The card shape is persisted
-    // per visitor (awardCardShape) so future analytics can read it.
-    function setDisplayMode(mode) {
+    // One flat choice: mini grid (compact overview, tap to enlarge),
+    // portrait grid (original design), landscape grid (A/B variant), or
+    // the sortable table. The card shape is persisted per visitor
+    // (awardCardShape) so future analytics can read it.
+    function setDisplayMode(mode, persist = true) {
       const isTable = mode === 'table';
       document.querySelectorAll('.awards-view-grid').forEach(el => el.style.display = isTable ? 'none' : 'grid');
       document.querySelectorAll('.awards-view-table').forEach(el => el.style.display = isTable ? 'block' : 'none');
       if (!isTable) {
-        document.querySelectorAll('.awards-grid').forEach(g => g.classList.toggle('landscape', mode === 'landscape'));
-        try { localStorage.setItem('awardCardShape', mode); } catch (e) { }
+        document.querySelectorAll('.awards-grid').forEach(g => {
+          g.classList.toggle('landscape', mode === 'landscape');
+          g.classList.toggle('mini', mode === 'mini');
+        });
+        if (persist) try { localStorage.setItem('awardCardShape', mode); } catch (e) { }
       }
-      ['portrait', 'landscape', 'table'].forEach(m => {
+      ['mini', 'portrait', 'landscape', 'table'].forEach(m => {
         const btn = document.getElementById('btn-mode-' + m);
         btn.classList.toggle('btn-primary', m === mode);
         btn.classList.toggle('btn-outline', m !== mode);
       });
     }
     try {
-      if (localStorage.getItem('awardCardShape') === 'landscape') setDisplayMode('landscape');
+      const savedShape = localStorage.getItem('awardCardShape');
+      if (savedShape === 'landscape' || savedShape === 'mini') {
+        setDisplayMode(savedShape);
+      } else if (!savedShape && window.matchMedia('(max-width: 640px)').matches
+        && document.querySelectorAll('.awards-view-grid .flip-card').length >= 12) {
+        // Phones + trophy walls: default to the compact overview, but
+        // don't persist — an explicit tap on a toggle is what commits.
+        setDisplayMode('mini', false);
+      }
     } catch (e) { }
+
+    // Mini-mode lightbox: a tap on a mini card enlarges it instead of
+    // flipping (capture phase beats the card's inline flip handler).
+    // The enlarged clone lives outside the mini grid, so it renders as a
+    // normal full-size card — including the tap-to-flip certificate back.
+    document.addEventListener('click', function (e) {
+      const card = e.target.closest('.awards-grid.mini .flip-card');
+      if (!card) return;
+      e.stopPropagation();
+      e.preventDefault();
+      openCardLightbox(card);
+    }, true);
+
+    let activeLightbox = null;
+    function openCardLightbox(card) {
+      closeCardLightbox();
+      const overlay = document.createElement('div');
+      overlay.className = 'card-lightbox';
+      const clone = card.cloneNode(true);
+      clone.classList.remove('flipped');
+      clone.removeAttribute('style');
+      const closeBtn = document.createElement('button');
+      closeBtn.className = 'card-lightbox-close';
+      closeBtn.setAttribute('aria-label', 'Close');
+      closeBtn.innerHTML = '&times;';
+      overlay.appendChild(closeBtn);
+      overlay.appendChild(clone);
+      overlay.addEventListener('click', function (e) {
+        if (e.target === overlay || e.target === closeBtn) closeCardLightbox();
+      });
+      document.body.appendChild(overlay);
+      document.body.style.overflow = 'hidden';
+      activeLightbox = overlay;
+    }
+    function closeCardLightbox() {
+      if (!activeLightbox) return;
+      activeLightbox.remove();
+      activeLightbox = null;
+      document.body.style.overflow = '';
+    }
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeCardLightbox();
+    });
 
     // Store sort directions for both tables independently
     const sortDirs = {
