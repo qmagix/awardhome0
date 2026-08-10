@@ -697,7 +697,13 @@ a:hover {
    full-size rendering matches the rem-based fallback above, which
    browsers without container-query support keep using. */
 @supports (container-type: inline-size) {
-  .awards-grid .flip-card {
+
+  /* Any surface that renders a flip-card must be listed here: without a
+     container ancestor, cqw silently falls back to viewport width (the
+     lightbox-on-desktop overflow bug). Both have definite widths — the
+     grid track or the explicit lightbox width — so containment is safe. */
+  .awards-grid .flip-card,
+  .card-lightbox .flip-card {
     container-type: inline-size;
   }
 
