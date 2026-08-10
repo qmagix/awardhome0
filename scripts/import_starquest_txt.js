@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { openDb } = require('../database');
+const { normalizeName } = require('../utils/normalize_names');
 
 async function getOrCreateOrg(orgName = 'Starquest') {
   const db = await openDb();
@@ -88,6 +89,11 @@ async function runImport() {
         else if (p.startsWith('Studio:')) studioName = p.substring(7).trim();
         else if (p.startsWith('Notes:')) notes = p.substring(6).trim();
       }
+
+      // Repair extraction whitespace damage (older txt files predate the
+      // normalizeName call in categorize_starquest.js).
+      category = normalizeName(category);
+      awardType = normalizeName(awardType);
 
       if (routine === 'N/A') routine = null;
       if (dancer === 'N/A') dancer = null;

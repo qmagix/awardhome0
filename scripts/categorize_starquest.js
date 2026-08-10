@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const PDFParser = require("pdf2json");
+const { normalizeName } = require('../utils/normalize_names');
 
 const dir = path.join(__dirname, 'tobeprocessed', 'pdf', 'starquest');
 const txtDir = path.join(dir, 'txt');
@@ -40,9 +41,11 @@ function extractAwards(pdfData) {
 
       const firstColX = row.cols[0].x;
 
-      // Header row
+      // Header row. PDF text comes in fragments split mid-word; joining with
+      // ' ' scatters spaces ("Adult S ol o Award") — normalizeName repairs
+      // the spacing from content.
       if (firstColX < 3.0) {
-        currentCategory = row.cols.map(c => c.text).join(' ');
+        currentCategory = normalizeName(row.cols.map(c => c.text).join(' '));
         return;
       }
 
@@ -154,7 +157,7 @@ function extractAwards(pdfData) {
 
       // Format 4: Studio Superlatives (Award type is at X ~3.9, next row is Studio at X ~6.1)
       if (firstColX >= 3.0 && firstColX < 5.0 && row.cols.length === 1 && currentCategory.toLowerCase().includes('superlative')) {
-        const awardType = row.cols[0].text;
+        const awardType = normalizeName(row.cols[0].text);
         if (rowIndex + 1 < rows.length) {
           const nextRow = rows[rowIndex + 1];
           if (nextRow.cols.length > 0 && nextRow.cols[0].x > 5.0) {
