@@ -120,7 +120,7 @@ async function processFile(filePath, filename, folderYear, orgId) {
 }
 
 async function run() {
-  const baseTxtDir = path.join(__dirname, 'tobeprocessed', 'pdf', 'showstopper', 'txt');
+  const baseTxtDir = path.join(__dirname, '..', 'tobeprocessed', 'pdf', 'showstopper', 'txt');
   if (!fs.existsSync(baseTxtDir)) {
     console.error("Txt directory not found!");
     return;

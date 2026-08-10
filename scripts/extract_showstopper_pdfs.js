@@ -2,11 +2,23 @@ const fs = require('fs');
 const path = require('path');
 const PDFParser = require("pdf2json");
 
-const baseDir = path.join(__dirname, 'tobeprocessed', 'pdf', 'showstopper');
+const baseDir = path.join(__dirname, '..', 'tobeprocessed', 'pdf', 'showstopper');
 const txtDir = path.join(baseDir, 'txt');
 
 if (!fs.existsSync(txtDir)) {
   fs.mkdirSync(txtDir, { recursive: true });
+}
+
+// A routine-type-only header like "Solo", "Duet/Trio", "Small Group",
+// optionally prefixed by an age word ("Teen Solo"). Full-string match only —
+// a surname containing the word must not qualify.
+const TYPE_ONLY_HEADER = /^(?:(?:mini|petite|junior|pre-?teen|teen|senior|adult)\s+)?(?:solos?|duets?(?:\s*\/\s*trios?)?|trios?|small\s+groups?|large\s+groups?|super\s+groups?|groups?|lines?|extended\s+lines?|productions?|teacher\s*\/\s*student)$/i;
+
+function isCategoryHeader(text) {
+  const t = (text || '').trim();
+  if (!t || t.includes(',')) return false;
+  if (/\byrs\b/i.test(t) || /\(\s*\d/.test(t)) return true;
+  return TYPE_ONLY_HEADER.test(t);
 }
 
 function extractAwards(pdfData) {
@@ -71,9 +83,19 @@ function extractAwards(pdfData) {
           return;
         }
 
-        // Check if it's an Age Division (e.g. "Mini (8 yrs. & Under) Solo")
-        if (upperFirst.includes('YRS.') || upperFirst.includes('SOLO') || upperFirst.includes('DUET') || upperFirst.includes('SMALL') || upperFirst.includes('LARGE') || upperFirst.includes('SUPER') || upperFirst.includes('PRODUCTION')) {
-          currentAgeDivCat = firstText;
+        // Check if it's an Age Division header (e.g. "Mini (8 yrs. & Under) Solo").
+        // Shape-based on purpose: the old substring test (SOLO/SMALL/DUET…)
+        // matched dancer-name overflow lines — "Addison SOLOmon", "Sophia
+        // SMALL", "Ellie DUET-Champagne" — which then became the category for
+        // every following award. A header must contain an age range ("yrs" or
+        // "(8"), or be nothing but a routine-type phrase; name lists always
+        // fail both, and headers never contain commas.
+        if (isCategoryHeader(firstText)) {
+          // Headers occasionally split across text objects — join the row,
+          // but drop garbled objects (shift-encoded page headers carry
+          // control bytes) so they can't contaminate the category.
+          currentAgeDivCat = row.cols.map(c => c.text)
+            .filter(t => /^[\x20-\x7E]+$/.test(t)).join(' ').trim();
           // Clear lastAward when changing categories so continuation lines don't leak
           lastAward = null;
           return;
