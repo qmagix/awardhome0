@@ -47,6 +47,7 @@
 - [x] Data cleanup — tab-name dedup (scripts/dedup_tab_studios.js): 566 StarQuest tab-variant studios merged into proven twins (≥2 shared dancer names required — same-named studios in different places are NOT assumed identical), 1,544 renamed tabs→spaces, 553 unproven kept separate + flagged.
 - [x] Studio directory (/dance/studios) admin-gated to prevent bulk scraping; public discovery via search + leaderboards + featured; landing CTA repointed to hero search.
 - [x] Dancer award card scales like an image (2026-08-09): fixed-aspect card is a CSS container, all internal sizing in cqw — fonts/padding/radii/icons shrink proportionally with card width on mobile; rem fallback for old browsers.
+- [x] Mini-card overview for big trophy walls (2026-08-09): 4th display mode "Mini" — compact tier-icon+placement grid per year, tap opens the full card in a lightbox (which keeps tap-to-flip); auto-default on phones for dancers with 12+ awards.
 
 ### Earlier features (previously untracked)
 - [x] Global feedback system with admin replies + My Feedback dashboard.
