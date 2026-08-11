@@ -9,11 +9,13 @@ const path = require('path');
 // awards.dancer_id references that must be cleaned up before enforcement.
 let dbPromise = null;
 
+// DB_PATH overrides the database file — used by the weekly updater's staging
+// pass to run the whole import pipeline against a throwaway copy.
 function openDb() {
   if (!dbPromise) {
     dbPromise = (async () => {
       const db = await open({
-        filename: path.join(__dirname, 'database.sqlite'),
+        filename: process.env.DB_PATH || path.join(__dirname, 'database.sqlite'),
         driver: sqlite3.Database
       });
       await db.exec(`

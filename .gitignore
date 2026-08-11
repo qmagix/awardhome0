@@ -15,3 +15,5 @@ raw/
 tobeprocessed/
 backups/
 public/uploads/
+staging_import.sqlite*
+reports/

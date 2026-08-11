@@ -1,52 +1,55 @@
-// Weekly award-data updater. Re-scrapes the web-scraped orgs incrementally,
-// downloads new result PDFs for the PDF-pipeline orgs, and runs the scoped
-// post-import steps (dancer backfill, first-place marking, org rules).
-// Designed for an unattended weekly cron on the server; also serves as the
-// one-time catch-up when run with a wide --window.
+// Weekly award-data updater with a staging gate: nothing reaches the live DB
+// until the imported delta passes validation against the org's own history.
 //
-//   node scripts/weekly_update.js                     # default: this season, 60-day window
-//   node scripts/weekly_update.js --window 120        # catch-up: refetch events first seen <=120d ago
-//   node scripts/weekly_update.js --years 2026        # explicit season(s), comma-separated
-//   node scripts/weekly_update.js --orgs kar,rainbow  # subset (web: kar rainbow yagp starpower
-//                                                     #   revolution believe imagine dreammaker;
-//                                                     #   pdf: showstopper starquest nycda spotlight)
-//   node scripts/weekly_update.js --skip-pdf | --pdf-only
-//   node scripts/weekly_update.js --replay            # no cache invalidation: deterministic
-//                                                     # re-import from a synced raw/ cache
+// Default (cron) flow:
+//   1. Snapshot live DB -> staging_import.sqlite (sqlite .backup, WAL-safe)
+//   2. Run the full pipeline (cache refresh, scrapers, PDF downloads, scoped
+//      post-steps) against the STAGING copy via DB_PATH
+//   3. validate_import.js scores every new/changed event green/amber/red
+//   4. All green  -> auto-promote: replay the same importers against live
+//      (cache hits only — deterministic) + post-steps.   AUTO_PROMOTE=never
+//      holds even green runs for manual approval.
+//      Any amber/red -> HOLD: live DB untouched, report written to reports/,
+//      email sent (REVIEW_EMAIL or SUPERADMIN_EMAIL), exit 5.
+//
+//   node scripts/weekly_update.js                # staged flow (what cron runs)
+//   node scripts/weekly_update.js --promote      # approve a held run: replay to live
+//   node scripts/weekly_update.js --direct       # legacy: import straight to live
+//   flags: --years 2026,2027  --window <days>  --orgs kar,rainbow,...
+//          --skip-pdf | --pdf-only  --replay (no cache invalidation)
 //
 // Freshness model (two tiers):
-//   discovery pages (event_list.html / sitemap.html)  -> deleted every run, always refetched
-//   result pages                                      -> refetched while "unsettled": first
-//     seen within --window days (tracked in scrape_log, seeded from file mtimes); settled
-//     pages serve from cache forever. Content hashes detect late edits for the report.
+//   discovery pages (event_list.html / sitemap.html)  -> refetched every run
+//   result pages -> refetched while first seen < --window days (scrape_log),
+//   then frozen; content hashes flag late edits in the summary.
 //
-// Import scripts are insert-only + idempotent, so refetching a grown page adds
-// only the new rows. Corrections on already-imported rows do NOT propagate —
-// the "changed pages" section of the report flags those for manual review.
+// Optional LLM second opinion on held runs: LLM_REVIEW=true (needs `claude`
+// CLI on PATH; advisory only, appended to the report).
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { spawnSync } = require('child_process');
-const { openDb, initDb, applyOrgFirstPlaceRules } = require('../database');
-const { markFirstPlacesForEvents, FIRSTISH_SQL, NOT_EXCLUDED_SQL } = require('../utils/first_place');
 const { YEARS_MAP } = require('./dancebug_years');
 
 const ROOT = path.join(__dirname, '..');
+const LIVE_DB = path.join(ROOT, 'database.sqlite');
+const STAGING_DB = path.join(ROOT, 'staging_import.sqlite');
+const REPORTS_DIR = path.join(ROOT, 'reports');
 const RAW = path.join(ROOT, 'raw');
 const PDF_ROOT = path.join(ROOT, 'tobeprocessed', 'pdf');
 const DISCOVERY_FILES = new Set(['event_list.html', 'sitemap.html']);
 
-// NOTE: batch_import.js resolves DanceBug year ids from its YEARS_MAP —
-// extend that map when a new season (2027+) starts.
+// NOTE: batch_import.js resolves DanceBug year ids from dancebug_years.js —
+// extend that map when a new season (2028+) starts.
 const WEB_ORGS = [
-  { key: 'kar',        script: 'scrape_kar_year.js',    args: (y) => [y] },
+  { key: 'kar',        script: 'scrape_kar_year.js',     args: (y) => [y] },
   { key: 'rainbow',    script: 'scrape_rainbow_year.js', args: (y) => [y] },
-  { key: 'yagp',       script: 'scrape_all_yagp.js',    args: (y) => [y] },
-  { key: 'starpower',  script: 'batch_import.js',       args: (y) => ['starpower', y] },
-  { key: 'revolution', script: 'batch_import.js',       args: (y) => ['revolution', y] },
-  { key: 'believe',    script: 'batch_import.js',       args: (y) => ['believe', y] },
-  { key: 'imagine',    script: 'batch_import.js',       args: (y) => ['imagine', y] },
-  { key: 'dreammaker', script: 'batch_import.js',       args: (y) => ['dreammaker', y] },
+  { key: 'yagp',       script: 'scrape_all_yagp.js',     args: (y) => [y] },
+  { key: 'starpower',  script: 'batch_import.js',        args: (y) => ['starpower', y] },
+  { key: 'revolution', script: 'batch_import.js',        args: (y) => ['revolution', y] },
+  { key: 'believe',    script: 'batch_import.js',        args: (y) => ['believe', y] },
+  { key: 'imagine',    script: 'batch_import.js',        args: (y) => ['imagine', y] },
+  { key: 'dreammaker', script: 'batch_import.js',        args: (y) => ['dreammaker', y] },
 ];
 // Download-only: extraction + import stay manual (the GOOD- QA step needs eyes).
 const PDF_ORGS = [
@@ -64,7 +67,7 @@ function argValue(flag, dflt) {
 function defaultYears() {
   const now = new Date();
   const years = [now.getFullYear()];
-  if (now.getMonth() >= 10) years.push(now.getFullYear() + 1); // Nov/Dec: next season starts posting
+  if (now.getMonth() >= 10) years.push(now.getFullYear() + 1);
   return years;
 }
 
@@ -72,9 +75,8 @@ function md5File(p) {
   return crypto.createHash('md5').update(fs.readFileSync(p)).digest('hex');
 }
 
-// All cached page files for the target years, as paths relative to raw/.
-// DanceBug list pages live under the internal d_year id (raw/starpower/2054/
-// for season 2026), so both year spaces are swept.
+// All cached page files for the target years, relative to raw/. DanceBug list
+// pages live under the internal d_year id (raw/starpower/2054/ for 2026).
 function listRawFiles(years) {
   const sweepYears = [...years, ...years.map(y => YEARS_MAP[y]).filter(Boolean)];
   const out = [];
@@ -115,13 +117,13 @@ async function orgCounts(db) {
   return Object.fromEntries(rows.map(r => [r.slug, { events: r.events, awards: r.awards }]));
 }
 
-async function main() {
-  const REPLAY = process.argv.includes('--replay');
-  const SKIP_PDF = process.argv.includes('--skip-pdf');
-  const PDF_ONLY = process.argv.includes('--pdf-only');
-  const WINDOW_DAYS = parseInt(argValue('--window', '60'), 10);
-  const years = argValue('--years', '') ? argValue('--years', '').split(',').map(Number) : defaultYears();
-  const orgFilter = argValue('--orgs', '') ? new Set(argValue('--orgs', '').split(',')) : null;
+// ---------------------------------------------------------------- pipeline
+// Runs scrape + import + scoped post-steps against whatever DB openDb resolves
+// (DB_PATH env decides: staging pass sets it, promote/direct passes don't).
+async function runPipeline(opts) {
+  const { years, windowDays, orgFilter, replay, skipPdf, pdfOnly } = opts;
+  const { openDb, initDb, applyOrgFirstPlaceRules } = require('../database');
+  const { markFirstPlacesForEvents, FIRSTISH_SQL, NOT_EXCLUDED_SQL } = require('../utils/first_place');
   const pick = (list) => list.filter(o => !orgFilter || orgFilter.has(o.key));
 
   const db = await initDb();
@@ -130,13 +132,12 @@ async function main() {
   const changedPages = [];
   let refetched = 0, discoveryDeleted = 0;
 
-  // ---- Cache maintenance (skip in --replay: imported cache replays as-is) ----
-  if (!REPLAY && !PDF_ONLY) {
-    const cutoff = new Date(Date.now() - WINDOW_DAYS * 86400 * 1000).toISOString();
+  // ---- Cache maintenance (skip in replay: imported cache replays as-is) ----
+  if (!replay && !pdfOnly) {
+    const cutoff = new Date(Date.now() - windowDays * 86400 * 1000).toISOString();
     for (const rel of listRawFiles(years)) {
       const abs = path.join(RAW, rel);
-      const base = path.basename(rel);
-      if (DISCOVERY_FILES.has(base)) {
+      if (DISCOVERY_FILES.has(path.basename(rel))) {
         fs.unlinkSync(abs);
         await db.run('DELETE FROM scrape_log WHERE file_path = ?', [rel]);
         discoveryDeleted++;
@@ -144,8 +145,6 @@ async function main() {
       }
       let row = await db.get('SELECT * FROM scrape_log WHERE file_path = ?', [rel]);
       if (!row) {
-        // First sight of a pre-existing cache file: seed from its mtime so
-        // pages fetched before scrape_log existed settle on their real age.
         const mtime = fs.statSync(abs).mtime.toISOString();
         await db.run(`
           INSERT INTO scrape_log (file_path, org_dir, year, first_fetched_at, last_fetched_at, content_hash)
@@ -154,15 +153,15 @@ async function main() {
         row = { first_fetched_at: mtime };
       }
       if (row.first_fetched_at > cutoff) {
-        fs.unlinkSync(abs); // unsettled: force refetch, scrape_log row stays
+        fs.unlinkSync(abs);
         refetched++;
       }
     }
-    console.log(`[cache] ${discoveryDeleted} discovery pages invalidated, ${refetched} unsettled pages queued for refetch (window ${WINDOW_DAYS}d)`);
+    console.log(`[cache] ${discoveryDeleted} discovery pages invalidated, ${refetched} unsettled pages queued for refetch (window ${windowDays}d)`);
   }
 
   // ---- Web org scrapers ----
-  if (!PDF_ONLY) {
+  if (!pdfOnly) {
     for (const org of pick(WEB_ORGS)) {
       for (const year of years) {
         const args = [org.script, ...org.args(year).map(String)];
@@ -179,7 +178,7 @@ async function main() {
 
   // ---- PDF downloads (report-only; extraction/import stay manual) ----
   const pdfNew = {};
-  if (!SKIP_PDF) {
+  if (!skipPdf) {
     for (const org of pick(PDF_ORGS)) {
       const beforeN = countPdfs(org.dir);
       console.log(`\n[pdf] node ${org.script}`);
@@ -191,7 +190,7 @@ async function main() {
   }
 
   // ---- Post-run scrape_log sweep: record new pages, detect changed ones ----
-  if (!PDF_ONLY) {
+  if (!pdfOnly) {
     const now = new Date().toISOString();
     for (const rel of listRawFiles(years)) {
       if (DISCOVERY_FILES.has(path.basename(rel))) continue;
@@ -241,7 +240,7 @@ async function main() {
   // ---- Summary ----
   const after = await orgCounts(db);
   console.log('\n================ WEEKLY UPDATE SUMMARY ================');
-  console.log(`Years: ${years.join(', ')}  Window: ${WINDOW_DAYS}d${REPLAY ? '  (replay)' : ''}`);
+  console.log(`Years: ${years.join(', ')}  Window: ${windowDays}d${replay ? '  (replay)' : ''}  DB: ${process.env.DB_PATH || 'live'}`);
   let anyDelta = false;
   for (const slug of Object.keys(after).sort()) {
     const b = before[slug] || { events: 0, awards: 0 };
@@ -260,7 +259,7 @@ async function main() {
       SELECT SUM(CASE WHEN ${FIRSTISH_SQL} AND ${NOT_EXCLUDED_SQL} AND a.is_first_place = 0 THEN 1 ELSE 0 END) missing,
              SUM(CASE WHEN NOT (${FIRSTISH_SQL}) AND a.is_first_place = 1 THEN 1 ELSE 0 END) odd
       FROM awards a WHERE a.event_id IN (${newIds.map(() => '?').join(',')})`, newIds);
-    console.log(`First-place suspicion on new events: ${suspicious.missing || 0} missing, ${suspicious.odd || 0} odd — review /admin/first-places`);
+    console.log(`First-place suspicion on new events: ${suspicious.missing || 0} missing, ${suspicious.odd || 0} odd`);
   }
   if (changedPages.length) {
     console.log(`Changed result pages (already-imported rows are NOT auto-corrected — spot-check):`);
@@ -269,14 +268,122 @@ async function main() {
   }
   if (Object.keys(pdfNew).length) {
     console.log(`New PDFs awaiting extraction/QA: ${Object.entries(pdfNew).map(([k, v]) => `${k}: ${v}`).join(', ')}`);
-    console.log('  (run the org\'s categorize/extract script, review GOOD- markings, then its import script)');
   }
   if (failures.length) {
     console.log(`FAILURES (${failures.length}):`);
     for (const f of failures) console.log(`  ${f}`);
   }
   console.log('=======================================================');
-  process.exit(failures.length ? 1 : 0);
+  return { failures, anyDelta, newEventCount: newEvents.length };
+}
+
+// ------------------------------------------------------------ staged flow
+async function stagedFlow(opts, forwardArgs) {
+  // 1. Snapshot live -> staging (WAL-safe)
+  for (const suffix of ['', '-wal', '-shm']) {
+    if (fs.existsSync(STAGING_DB + suffix)) fs.unlinkSync(STAGING_DB + suffix);
+  }
+  console.log(`[staging] snapshotting live DB -> ${path.basename(STAGING_DB)}`);
+  const bk = spawnSync('sqlite3', [LIVE_DB, `.backup ${STAGING_DB}`], { encoding: 'utf8' });
+  if (bk.status !== 0) { console.error(`Staging snapshot failed: ${bk.stderr}`); process.exit(1); }
+
+  // 2. Full pipeline against staging
+  process.env.DB_PATH = STAGING_DB;
+  const result = await runPipeline(opts);
+  delete process.env.DB_PATH;
+  if (result.failures.length) {
+    console.error('\nPipeline failures during staging run — holding (live DB untouched).');
+    process.exit(1);
+  }
+  if (!result.anyDelta) {
+    console.log('\nNo delta this run — nothing to promote.');
+    process.exit(0);
+  }
+
+  // 3. Validate the staged delta
+  fs.mkdirSync(REPORTS_DIR, { recursive: true });
+  const reportPath = path.join(REPORTS_DIR, `import_review_${new Date().toISOString().slice(0, 10)}.md`);
+  const val = spawnSync('node', [path.join(__dirname, 'validate_import.js'),
+    '--staging', STAGING_DB, '--live', LIVE_DB, '--report', reportPath],
+    { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
+  process.stdout.write(val.stdout || '');
+  const verdict = val.status === 0 ? 'green' : val.status === 3 ? 'amber' : 'red';
+
+  // Optional LLM second opinion on anything not green (advisory)
+  if (verdict !== 'green' && process.env.LLM_REVIEW === 'true') {
+    try {
+      const report = fs.readFileSync(reportPath, 'utf8');
+      const llm = spawnSync('claude', ['-p',
+        `You are reviewing scraped dance-competition award data before it goes live. Below is a validation report with per-event metrics and sample rows. For each non-green event say in 1-2 sentences whether the rows look like plausible competition results or like mis-parsed garbage (wrong columns, schedules, non-result documents), and end with VERDICT: publish|hold per event.\n\n${report}`,
+        '--output-format', 'text'], { encoding: 'utf8', timeout: 300000, maxBuffer: 4 * 1024 * 1024 });
+      if (llm.status === 0 && llm.stdout) {
+        fs.appendFileSync(reportPath, `\n\n## LLM second opinion (advisory)\n\n${llm.stdout.trim()}\n`);
+        console.log('[llm] second opinion appended to report');
+      }
+    } catch (e) { console.log(`[llm] skipped (${e.message})`); }
+  }
+
+  // 4. Promote or hold
+  const autoPromote = (process.env.AUTO_PROMOTE || 'green').toLowerCase();
+  if (verdict === 'green' && autoPromote !== 'never') {
+    console.log('\n[promote] validation green — replaying import against live DB');
+    const env = { ...process.env };
+    delete env.DB_PATH;
+    const pr = spawnSync('node', [__filename, '--promote', ...forwardArgs],
+      { encoding: 'utf8', env, maxBuffer: 64 * 1024 * 1024, cwd: ROOT });
+    process.stdout.write(pr.stdout || '');
+    if (pr.status !== 0) { console.error(pr.stderr || 'promote failed'); process.exit(1); }
+    process.exit(0);
+  }
+
+  // Held: notify and leave everything for review
+  console.log(`\n[HELD] verdict=${verdict}, AUTO_PROMOTE=${autoPromote} — live DB untouched.`);
+  console.log(`Review: ${reportPath}`);
+  console.log(`Approve with: node scripts/weekly_update.js --promote${forwardArgs.length ? ' ' + forwardArgs.join(' ') : ''}`);
+  const to = process.env.REVIEW_EMAIL || process.env.SUPERADMIN_EMAIL;
+  if (to) {
+    try {
+      const { sendEmail } = require('../utils/mailer');
+      const report = fs.readFileSync(reportPath, 'utf8');
+      await sendEmail({
+        to,
+        subject: `[AwardHome] Weekly import held for review (${verdict.toUpperCase()})`,
+        html: `<p>The weekly award import was held — verdict <b>${verdict.toUpperCase()}</b>. Live data is untouched.</p>` +
+              `<p>Approve on the server with:<br><code>cd /opt/awardhome && sudo -u awardhome node scripts/weekly_update.js --promote</code></p>` +
+              `<pre style="font-size:12px">${report.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</pre>`
+      });
+      console.log(`[notify] review email sent to ${to}`);
+    } catch (e) { console.log(`[notify] email failed: ${e.message}`); }
+  }
+  process.exit(5);
+}
+
+// ---------------------------------------------------------------- entry
+async function main() {
+  const opts = {
+    replay: process.argv.includes('--replay'),
+    skipPdf: process.argv.includes('--skip-pdf'),
+    pdfOnly: process.argv.includes('--pdf-only'),
+    windowDays: parseInt(argValue('--window', '60'), 10),
+    years: argValue('--years', '') ? argValue('--years', '').split(',').map(Number) : defaultYears(),
+    orgFilter: argValue('--orgs', '') ? new Set(argValue('--orgs', '').split(',')) : null,
+  };
+  // Args worth forwarding from the staged parent to the promote child
+  const forwardArgs = [];
+  for (const f of ['--years', '--orgs']) if (argValue(f, '')) forwardArgs.push(f, argValue(f, ''));
+  if (opts.skipPdf) forwardArgs.push('--skip-pdf');
+
+  if (process.argv.includes('--promote')) {
+    // Replay against live: cache untouched (all hits — deterministic with the
+    // staging pass), downloads skipped (already done in staging pass).
+    const { failures } = await runPipeline({ ...opts, replay: true, skipPdf: true, pdfOnly: false });
+    process.exit(failures.length ? 1 : 0);
+  }
+  if (process.argv.includes('--direct') || opts.pdfOnly) {
+    const { failures } = await runPipeline(opts);
+    process.exit(failures.length ? 1 : 0);
+  }
+  await stagedFlow(opts, forwardArgs);
 }
 
 main().catch(e => { console.error(e); process.exit(1); });
