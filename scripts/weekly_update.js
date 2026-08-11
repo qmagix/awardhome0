@@ -336,9 +336,13 @@ async function stagedFlow(opts, forwardArgs) {
     process.exit(0);
   }
 
-  // Held: notify and leave everything for review
+  // Held: persist pending state (drives the /admin/import-review banner +
+  // page; deleted on successful --promote or admin dismiss), then notify.
+  fs.writeFileSync(path.join(REPORTS_DIR, 'PENDING_REVIEW.json'), JSON.stringify({
+    verdict, reportPath, heldAt: new Date().toISOString(), promoteArgs: forwardArgs, status: 'held'
+  }, null, 1));
   console.log(`\n[HELD] verdict=${verdict}, AUTO_PROMOTE=${autoPromote} — live DB untouched.`);
-  console.log(`Review: ${reportPath}`);
+  console.log(`Review: ${reportPath} (or /admin/import-review)`);
   console.log(`Approve with: node scripts/weekly_update.js --promote${forwardArgs.length ? ' ' + forwardArgs.join(' ') : ''}`);
   const to = process.env.REVIEW_EMAIL || process.env.SUPERADMIN_EMAIL;
   if (to) {
@@ -349,7 +353,8 @@ async function stagedFlow(opts, forwardArgs) {
         to,
         subject: `[AwardHome] Weekly import held for review (${verdict.toUpperCase()})`,
         html: `<p>The weekly award import was held — verdict <b>${verdict.toUpperCase()}</b>. Live data is untouched.</p>` +
-              `<p>Approve on the server with:<br><code>cd /opt/awardhome && sudo -u awardhome node scripts/weekly_update.js --promote</code></p>` +
+              `<p><a href="${(process.env.BASE_URL || 'https://awardhome.com')}/admin/import-review">Review and approve in the admin dashboard</a>, ` +
+              `or on the server: <code>cd /opt/awardhome && sudo -u awardhome node scripts/weekly_update.js --promote</code></p>` +
               `<pre style="font-size:12px">${report.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</pre>`
       });
       console.log(`[notify] review email sent to ${to}`);
@@ -377,6 +382,10 @@ async function main() {
     // Replay against live: cache untouched (all hits — deterministic with the
     // staging pass), downloads skipped (already done in staging pass).
     const { failures } = await runPipeline({ ...opts, replay: true, skipPdf: true, pdfOnly: false });
+    if (!failures.length) {
+      const pending = path.join(REPORTS_DIR, 'PENDING_REVIEW.json');
+      if (fs.existsSync(pending)) fs.unlinkSync(pending);
+    }
     process.exit(failures.length ? 1 : 0);
   }
   if (process.argv.includes('--direct') || opts.pdfOnly) {

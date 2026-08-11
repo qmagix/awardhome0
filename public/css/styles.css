@@ -1835,7 +1835,14 @@ footer {
 }
 /* Leaderboard Styles */
 .leaderboard-rank-badge {
-  padding: 0.3rem 0.6rem;
+  /* Fixed-width pill: rank digits 1 vs 10 vs 100 (and the larger top-3
+     fonts) otherwise produce ragged left edges down the list on mobile. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 3rem;
+  box-sizing: border-box;
+  padding: 0.3rem 0.4rem;
   border-radius: 8px;
   background: rgba(255,255,255,0.1);
   color: white;

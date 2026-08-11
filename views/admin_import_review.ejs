@@ -1,0 +1,61 @@
+<%- include('partials/header') %>
+
+<div class="container" style="max-width: 1000px; margin-top: 2rem;">
+  <a href="/admin" style="color: var(--primary); text-decoration: none; font-weight: 600;">&larr; Back to Admin Dashboard</a>
+  <h1 style="margin-top: 1rem;">Weekly Import Review</h1>
+
+  <% if (!pending) { %>
+    <div class="card glass-card" style="padding: 1.5rem; margin-top: 1rem; border: 1px solid rgba(16, 185, 129, 0.35);">
+      <strong style="color: #10b981;">✓ No import is waiting for review.</strong>
+      <p style="color: var(--text-muted); margin: 0.5rem 0 0;">
+        Green weekly runs publish automatically. A run that trips validation is held here — the live site is never touched until it's approved.
+      </p>
+    </div>
+  <% } else { %>
+    <div class="card glass-card" style="padding: 1.5rem; margin-top: 1rem; border: 1px solid <%= pending.verdict === 'red' ? 'rgba(239, 68, 68, 0.5)' : 'rgba(251, 191, 36, 0.5)' %>;">
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+        <div>
+          <strong style="font-size: 1.1rem; color: <%= pending.verdict === 'red' ? '#ef4444' : '#fbbf24' %>;">
+            <%= pending.verdict === 'red' ? '🔴' : '🟡' %> Import held — verdict <%= pending.verdict.toUpperCase() %>
+          </strong>
+          <p style="color: var(--text-muted); margin: 0.3rem 0 0; font-size: 0.9rem;">
+            Held <%= new Date(pending.heldAt).toLocaleString() %>. Live data is untouched.
+            <% if (pending.status === 'promoting') { %>
+              <br><strong style="color: #3b82f6;">Promotion started <%= new Date(pending.promoteStartedAt).toLocaleString() %> — this page clears when it finishes (takes a few minutes).</strong>
+            <% } %>
+          </p>
+        </div>
+        <% if (pending.status !== 'promoting') { %>
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <form action="/admin/import-review/promote" method="POST" onsubmit="return confirm('Publish this import to the live database?');">
+              <button type="submit" class="btn" style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.5); color: #10b981;">Approve &amp; Publish</button>
+            </form>
+            <form action="/admin/import-review/dismiss" method="POST" onsubmit="return confirm('Discard this staged import? Nothing was published; next week re-imports from scratch.');">
+              <button type="submit" class="btn" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #ef4444;">Discard</button>
+            </form>
+          </div>
+        <% } %>
+      </div>
+    </div>
+
+    <% if (report) { %>
+      <div class="card glass-card" style="padding: 1.5rem; margin-top: 1.5rem; overflow-x: auto;">
+        <h2 style="margin-top: 0; font-size: 1.1rem;">Validation report</h2>
+        <pre style="white-space: pre-wrap; font-size: 0.85rem; line-height: 1.5; color: var(--text-color); margin: 0;"><%= report %></pre>
+      </div>
+    <% } %>
+  <% } %>
+
+  <% if (pastReports.length) { %>
+    <div class="card glass-card" style="padding: 1.5rem; margin-top: 1.5rem; margin-bottom: 3rem;">
+      <h2 style="margin-top: 0; font-size: 1.1rem;">Past reports</h2>
+      <ul style="margin: 0; padding-left: 1.2rem;">
+        <% pastReports.forEach(f => { %>
+          <li><a href="/admin/import-review/report/<%= f %>" style="color: var(--secondary);"><%= f %></a></li>
+        <% }); %>
+      </ul>
+    </div>
+  <% } %>
+</div>
+
+<%- include('partials/footer') %>

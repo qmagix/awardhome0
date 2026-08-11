@@ -8,6 +8,18 @@ const { invalidate } = require('../utils/cache');
 const { requireAdmin, requireSuperadmin } = require('../middleware/auth');
 const bcrypt = require('bcrypt');
 const { runBackfillForEvent } = require('../backfill_utils');
+const fs = require('fs');
+const path = require('path');
+const { spawn } = require('child_process');
+
+// ---- Weekly-import review state (written by scripts/weekly_update.js when a
+// staged run is held; cleared on successful --promote or admin dismiss). ----
+const REPORTS_DIR = path.join(__dirname, '..', 'reports');
+const PENDING_REVIEW_PATH = path.join(REPORTS_DIR, 'PENDING_REVIEW.json');
+function readPendingReview() {
+  try { return JSON.parse(fs.readFileSync(PENDING_REVIEW_PATH, 'utf8')); }
+  catch (e) { return null; }
+}
 
 
 router.post('/api/studios/:id/investigate', requireAdmin, express.json(), async (req, res) => {
@@ -142,7 +154,59 @@ router.get('/admin', requireAdmin, async (req, res) => {
   const flaggedDancers = await db.all(`SELECT id, name, unique_id FROM dancers WHERE needs_investigation = 1 ORDER BY name`);
   const allStudios = await db.all(`SELECT id, name FROM studios ORDER BY name`);
 
-  res.render('admin', { flaggedStudios, flaggedDancers, allStudios, stats });
+  const pendingImportReview = req.session.user.role === 'superadmin' ? readPendingReview() : null;
+  res.render('admin', { flaggedStudios, flaggedDancers, allStudios, stats, pendingImportReview });
+});
+
+// ---- Weekly import review (superadmin) ----
+router.get('/admin/import-review', requireSuperadmin, (req, res) => {
+  const pending = readPendingReview();
+  let report = null;
+  if (pending && pending.reportPath && fs.existsSync(pending.reportPath)) {
+    report = fs.readFileSync(pending.reportPath, 'utf8');
+  }
+  let pastReports = [];
+  if (fs.existsSync(REPORTS_DIR)) {
+    pastReports = fs.readdirSync(REPORTS_DIR)
+      .filter(f => f.startsWith('import_review_') && f.endsWith('.md'))
+      .sort().reverse().slice(0, 10);
+  }
+  res.render('admin_import_review', { pending, report, pastReports, user: req.session.user });
+});
+
+router.get('/admin/import-review/report/:file', requireSuperadmin, (req, res) => {
+  const file = path.basename(req.params.file); // no traversal
+  const p = path.join(REPORTS_DIR, file);
+  if (!file.startsWith('import_review_') || !file.endsWith('.md') || !fs.existsSync(p)) {
+    return res.status(404).send('Not found');
+  }
+  res.type('text/plain').send(fs.readFileSync(p, 'utf8'));
+});
+
+router.post('/admin/import-review/promote', requireSuperadmin, (req, res) => {
+  const pending = readPendingReview();
+  if (!pending) return res.redirect('/admin/import-review');
+  if (pending.status === 'promoting') return res.redirect('/admin/import-review');
+  // Promotion replays cached pages against live and can take minutes — run
+  // detached; weekly_update.js deletes PENDING_REVIEW.json on success.
+  pending.status = 'promoting';
+  pending.promoteStartedAt = new Date().toISOString();
+  fs.writeFileSync(PENDING_REVIEW_PATH, JSON.stringify(pending, null, 1));
+  const logPath = path.join(REPORTS_DIR, 'promote.log');
+  const out = fs.openSync(logPath, 'a');
+  const child = spawn('node', [path.join(__dirname, '..', 'scripts', 'weekly_update.js'), '--promote', ...(pending.promoteArgs || [])],
+    { cwd: path.join(__dirname, '..'), detached: true, stdio: ['ignore', out, out] });
+  child.unref();
+  res.redirect('/admin/import-review');
+});
+
+router.post('/admin/import-review/dismiss', requireSuperadmin, (req, res) => {
+  // Discard the staged import: live was never touched; next weekly run
+  // re-stages from scratch. The report file is kept for the archive.
+  if (fs.existsSync(PENDING_REVIEW_PATH)) fs.unlinkSync(PENDING_REVIEW_PATH);
+  const staging = path.join(__dirname, '..', 'staging_import.sqlite');
+  for (const s of ['', '-wal', '-shm']) if (fs.existsSync(staging + s)) fs.unlinkSync(staging + s);
+  res.redirect('/admin/import-review');
 });
 
 
