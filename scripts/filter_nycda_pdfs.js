@@ -23,7 +23,10 @@ const nonResultKeywords = [
 let renameCount = 0;
 
 for (const file of files) {
-  if (file.startsWith('NOT-')) continue;
+  // Only classify fresh downloads. Already-triaged files must be skipped:
+  // keyword substrings hit the prefixes themselves ('od' matches "GOOD-").
+  if (file.startsWith('NOT-') || file.startsWith('GOOD-') || file.startsWith('IGNORE-') || file.startsWith('TBD-')) continue;
+  if (!file.endsWith('.pdf')) continue;
   
   const lowerFile = file.toLowerCase();
   

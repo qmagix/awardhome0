@@ -23,7 +23,13 @@ async function fetchHtml(url) {
 
 async function downloadPdf(url, filename) {
   const filePath = path.join(OUTPUT_DIR, filename);
-  if (fs.existsSync(filePath)) {
+  // QA renames processed PDFs (GOOD-/NOT-/IGNORE-/TBD- prefixes), and
+  // extraction leaves a txt twin — treat any of those as "already have it",
+  // otherwise every weekly run re-downloads the whole archive.
+  const alreadyHave =
+    ['', 'GOOD-', 'NOT-', 'IGNORE-', 'TBD-'].some(p => fs.existsSync(path.join(OUTPUT_DIR, p + filename))) ||
+    fs.existsSync(path.join(OUTPUT_DIR, 'txt', `${filename}.txt`));
+  if (alreadyHave) {
     console.log(`Skipping (already exists): ${filename}`);
     return;
   }

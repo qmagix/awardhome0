@@ -26,10 +26,20 @@ async function getOrCreateEvent(orgId, eventName, year) {
 
 async function getOrCreateStudio(studioName) {
   const db = await openDb();
-  let studio = await db.get('SELECT id FROM studios WHERE name = ?', [studioName]);
+  // PDF extraction leaves tabs inside studio names. The 2026-08-09 dedup pass
+  // renamed most studios tabs->spaces, kept 553 unproven ones tab-named, and
+  // merged 566 into twins (source rows keep their tab name + status='merged').
+  // So: try the raw name, then the collapsed form, and follow merges — else
+  // every tab-named studio gets recreated as a duplicate on re-import.
+  const collapsed = studioName.replace(/\s+/g, ' ').trim();
+  let studio = await db.get('SELECT id, status, merged_into_id FROM studios WHERE name = ?', [studioName]);
+  if (!studio && collapsed !== studioName) {
+    studio = await db.get('SELECT id, status, merged_into_id FROM studios WHERE name = ?', [collapsed]);
+  }
+  if (studio && studio.status === 'merged' && studio.merged_into_id) return studio.merged_into_id;
   if (!studio) {
     const uniqueId = 'STD-' + require('crypto').randomUUID();
-    const res = await db.run('INSERT INTO studios (unique_id, name) VALUES (?, ?)', [uniqueId, studioName]);
+    const res = await db.run('INSERT INTO studios (unique_id, name) VALUES (?, ?)', [uniqueId, collapsed]);
     return res.lastID;
   }
   return studio.id;

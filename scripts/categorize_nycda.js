@@ -9,7 +9,9 @@ if (!fs.existsSync(txtDir)) {
   fs.mkdirSync(txtDir);
 }
 
-const files = fs.readdirSync(dir).filter(f => f.endsWith('.pdf') && !f.startsWith('NOT-') && !f.startsWith('IGNORE-'));
+// GOOD- files are already extracted — skip them so weekly re-runs only
+// touch new PDFs (reprocessing would double-prefix and rewrite their txts).
+const files = fs.readdirSync(dir).filter(f => f.endsWith('.pdf') && !f.startsWith('NOT-') && !f.startsWith('IGNORE-') && !f.startsWith('GOOD-'));
 
 function isPre2022(filename) {
   const lower = filename.toLowerCase();
