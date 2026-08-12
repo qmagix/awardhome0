@@ -1868,11 +1868,25 @@ footer {
   font-size: 0.9rem;
   font-weight: bold;
 }
+/* Fixed leaderboard columns — flex-shrink: 0 keeps every row's rank pill,
+   avatar, and count at identical x positions regardless of name wrapping. */
+.lb-col-rank  { flex: 0 0 60px;  text-align: center; }
+.lb-col-avatar{ flex: 0 0 50px;  text-align: center; }
+.lb-col-count { flex: 0 0 100px; text-align: right; }
 .leaderboard-name {
   flex-grow: 1;
   font-weight: 600;
   font-size: 1.1rem;
   color: var(--text-color);
+  min-width: 0;
+}
+@media (max-width: 540px) {
+  /* Slim the fixed columns so names keep room on phones */
+  .lb-col-rank  { flex-basis: 46px; }
+  .lb-col-avatar{ flex-basis: 42px; }
+  .lb-col-count { flex-basis: 70px; }
+  .leaderboard-rank-badge { min-width: 2.4rem; padding: 0.25rem 0.3rem; }
+  .leaderboard-name { font-size: 1rem; }
 }
 .leaderboard-name.top-3 {
   color: white;

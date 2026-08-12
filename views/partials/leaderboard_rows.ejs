@@ -1,10 +1,12 @@
 <% rows.forEach(function(r, i) { const rank = offset + i + 1; %>
   <a href="<%= type === 'studio' ? '/dance/studio/' + r.id : '/dancer/' + r.unique_id %>" style="display: flex; padding: 1rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); text-decoration: none; color: inherit; align-items: center; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
-    <div style="width: 60px; text-align: center;">
+    <%# fixed-flex columns (lb-col-*): without flex-shrink:0, rows with long
+        wrapped names squeeze the rank column and the pills zigzag on mobile %>
+    <div class="lb-col-rank">
       <span class="badge badge-common rank-<%= rank %> leaderboard-rank-badge"><%= rank %></span>
     </div>
     <% if (type === 'dancer') { %>
-      <div style="width: 50px; text-align: center;">
+      <div class="lb-col-avatar">
         <% if (r.headshot_url) { %>
           <img src="<%= r.headshot_url %>" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover;">
         <% } else { %>
@@ -18,7 +20,7 @@
         <svg viewBox="0 0 24 24" fill="#3b82f6" width="16" height="16" title="Verified Dancer"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
       <% } %>
     </div>
-    <div style="width: 100px; text-align: right;">
+    <div class="lb-col-count">
       <span class="badge badge-count"><%= r.total_awards %></span>
     </div>
   </a>
