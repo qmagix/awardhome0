@@ -228,6 +228,22 @@ function copyToClipboard() {
 <script>
 let inviteOrgId = null;
 
+// A non-JSON response here means an HTML page came back — a login redirect
+// (expired session) or a 404 (server running older code). Say so instead of
+// surfacing a JSON parse error.
+async function fetchJson(url, opts) {
+  const res = await fetch(url, opts);
+  const ct = res.headers.get('content-type') || '';
+  if (!ct.includes('application/json')) {
+    throw new Error(res.status === 404
+      ? 'Endpoint not found (' + res.status + ') — if the app was just updated, restart the server.'
+      : 'Unexpected response (' + res.status + ') — your session may have expired; refresh the page and log in again.');
+  }
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Request failed (' + res.status + ')');
+  return data;
+}
+
 async function showInviteModal(btn) {
   inviteOrgId = btn.dataset.orgId;
   document.getElementById('inviteOrgName').textContent = btn.dataset.orgName;
@@ -238,9 +254,7 @@ async function showInviteModal(btn) {
   document.getElementById('inviteResendWarning').style.display = 'none';
 
   try {
-    const res = await fetch('/admin/orgs/' + inviteOrgId + '/invite-template');
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Failed to load template');
+    const data = await fetchJson('/admin/orgs/' + inviteOrgId + '/invite-template');
 
     document.getElementById('inviteEmail').value = (data.lastInvite && data.lastInvite.email) || '';
     document.getElementById('inviteSubject').value = data.subject;
@@ -271,7 +285,7 @@ async function sendInvite(event) {
   errEl.style.display = 'none';
 
   try {
-    const res = await fetch('/admin/orgs/' + inviteOrgId + '/invite', {
+    const data = await fetchJson('/admin/orgs/' + inviteOrgId + '/invite', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -280,8 +294,7 @@ async function sendInvite(event) {
         body: document.getElementById('inviteBody').value
       })
     });
-    const data = await res.json();
-    if (!res.ok || !data.success) throw new Error(data.error || 'Send failed');
+    if (!data.success) throw new Error(data.error || 'Send failed');
     alert('Invitation sent to ' + data.to);
     window.location.reload();
   } catch (e) {
