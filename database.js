@@ -250,6 +250,18 @@ async function initDb() {
       value TEXT
     );
 
+    -- Who receives review notifications (weekly-import holds, organizer
+    -- results uploads). Managed by superadmins at /admin/reviewers; while
+    -- empty, utils/reviewers.js falls back to REVIEW_EMAIL then
+    -- SUPERADMIN_EMAIL from the environment.
+    CREATE TABLE IF NOT EXISTS reviewers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      email TEXT NOT NULL UNIQUE,
+      name TEXT,
+      added_by INTEGER REFERENCES users(id),
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
     -- Persistent org-level first-place decisions (superadmin curation on
     -- /admin/org/:slug/categories). The org page toggle upserts here AND
     -- updates existing awards; imports re-apply rules so new events inherit

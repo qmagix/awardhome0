@@ -2,7 +2,12 @@ const express = require('express');
 const router = express.Router();
 const { openDb } = require('../../database');
 const { requireAuth, requireOrgOwner } = require('../../middleware/auth');
+const { sendEmail } = require('../../utils/mailer');
+const { getReviewerEmails } = require('../../utils/reviewers');
 const multer = require('multer');
+
+const escapeHtml = (s) => String(s || '').replace(/[&<>"']/g, c =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 
 // Studio Management Routes
@@ -75,13 +80,17 @@ router.get('/manage/org/:id', requireAuth, requireOrgOwner(), async (req, res) =
 
 
 // Configure multer for org uploads. Rejections surface as 400s via the
-// central error handler (err.status = 400).
+// central error handler (err.status = 400). Nothing in the app ever
+// executes or parses these files — they are processed manually by the
+// team — so the format list can be generous (database dumps included).
+// SQL dumps must only ever be restored into a throwaway local database,
+// never against live (see docs/db_operations.md).
 const orgUpload = multer({
   dest: 'tobeprocessed/org_uploads/',
-  limits: { fileSize: 20 * 1024 * 1024, files: 1 },
+  limits: { fileSize: 50 * 1024 * 1024, files: 1 },
   fileFilter: (req, file, cb) => {
-    if (/\.(csv|xlsx|xls)$/i.test(file.originalname || '')) return cb(null, true);
-    const err = new Error('Only .csv, .xlsx, or .xls result files are accepted.');
+    if (/\.(csv|xlsx|xls|pdf|sql|sqlite|sqlite3|db|mdb|accdb|zip)$/i.test(file.originalname || '')) return cb(null, true);
+    const err = new Error('Accepted result formats: .csv, .xlsx, .xls, .pdf, .sql, .sqlite, .db, .mdb, .accdb, or a .zip of these.');
     err.status = 400;
     cb(err);
   },
@@ -120,6 +129,21 @@ router.post('/manage/org/:id/upload', requireAuth, requireOrgOwner(), orgUpload.
     INSERT INTO org_uploads (org_id, event_name, event_date, event_location, file_path)
     VALUES (?, ?, ?, ?, ?)
   `, [org.id, event_name, event_date, event_location, filePath]);
+
+  // Nothing processes org_uploads automatically — ping the reviewers
+  // (managed at /admin/reviewers, env fallback) so the file doesn't sit
+  // unnoticed. Fire-and-forget; sendEmail never throws.
+  getReviewerEmails().then(recipients => {
+    if (!recipients.length) return;
+    return sendEmail({
+      to: recipients.join(', '),
+      subject: `New organizer results upload: ${org.name} — ${event_name}`,
+      html: `<p><strong>${escapeHtml(org.name)}</strong> uploaded results for ` +
+        `<strong>${escapeHtml(event_name)}</strong> (${escapeHtml(event_date)}, ${escapeHtml(event_location)}).</p>` +
+        `<p>File: <code>${escapeHtml(filePath)}</code><br>` +
+        `Original name: ${escapeHtml(req.file.originalname)} (${Math.round(req.file.size / 1024)} KB)</p>`,
+    });
+  }).catch(err => console.error('[OrgUpload] notification failed:', err));
 
   res.redirect('/manage/org/' + org.id);
 });

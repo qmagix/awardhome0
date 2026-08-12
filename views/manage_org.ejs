@@ -108,9 +108,27 @@
             <section id="upload-section" class="card glass-card dashboard-tab" style="display: none; margin-top: 2rem;">
                 <div class="card-header">
                     <h2>Upload Event Results</h2>
-                    <p class="text-muted">Upload your CSV or Excel results. Our AI will process them and update dancer portfolios automatically.</p>
+                    <p class="text-muted">Send results in whatever format your scoring system produces. Our team will parse, verify, and publish them to dancer and studio portfolios.</p>
                 </div>
                 <div class="card-body">
+                    <div style="background: rgba(234, 179, 8, 0.1); border: 1px solid rgba(234, 179, 8, 0.3); padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 2rem;">
+                        <h4 style="margin: 0 0 0.5rem 0; color: #eab308;">What to include — results go live fastest in this shape</h4>
+                        <p style="margin: 0 0 0.5rem 0; font-size: 0.9rem; color: var(--text-muted);">
+                            One row per routine per award, with these columns:
+                        </p>
+                        <p style="margin: 0 0 0.5rem 0; font-size: 0.9rem;">
+                            <strong>Required:</strong> Event Name, Event Date, Routine Name, Placement / Award, Category or Style, Age Division, Dancer Name(s), Studio
+                        </p>
+                        <p style="margin: 0 0 1rem 0; font-size: 0.9rem; color: var(--text-muted);">
+                            <strong>Great to have:</strong> Award Type (Overall / Adjudicated / Special / Title), Entry Number, Scores.
+                            Full dancer names (not initials) and consistent studio spellings help us match records correctly the first time.
+                        </p>
+                        <!-- Data-URI template so we don't need a static file -->
+                        <a href="data:text/csv;charset=utf-8,Event Name,Event Date,Routine Name,Placement,Award Type,Category/Style,Age Division,Dancers,Studio,Entry Number%0ABaltimore Nationals,May 10-12 2026,Jazz Hands,1st Overall,Overall,Jazz,Junior,%22John Doe, Jane Smith%22,Starlight Dance Academy,112" download="template_org_results.csv" class="btn" style="background: transparent; border: 1px solid #eab308; color: #eab308; padding: 0.5rem 1rem; text-decoration: none; font-size: 0.9rem;">Download CSV Template</a>
+                        <p style="margin: 1rem 0 0 0; font-size: 0.85rem; color: var(--text-muted);">
+                            This is the ideal, not a requirement — if all you have is PDFs or a database export (SQL dump, SQLite, Access), upload that and we'll take it from there.
+                        </p>
+                    </div>
                     <form action="/manage/org/<%= org.id %>/upload" method="POST" enctype="multipart/form-data" class="upload-form">
                         <div class="form-group">
                             <label>Event Name (e.g. Baltimore Nationals)</label>
@@ -127,8 +145,9 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label>Results File (CSV, Excel)</label>
-                            <input type="file" name="results_file" accept=".csv,.xlsx,.xls" required>
+                            <label>Results File (CSV, Excel, PDF, SQL dump, SQLite/Access database, or ZIP — up to 50 MB)</label>
+                            <input type="file" name="results_file" accept=".csv,.xlsx,.xls,.pdf,.sql,.sqlite,.sqlite3,.db,.mdb,.accdb,.zip" required>
+                            <small style="color: var(--text-muted);">Larger than 50 MB? Zip it, or contact us for a transfer link.</small>
                         </div>
                         <button type="submit" class="btn btn-primary" style="width: 100%;">Upload & Process</button>
                     </form>

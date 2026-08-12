@@ -50,6 +50,29 @@ sqlite3 /tmp/restored.sqlite "PRAGMA integrity_check; SELECT COUNT(*) FROM award
 
 Run this once after setting up replication, and occasionally thereafter.
 
+## Organizer-submitted database files
+
+The organizer upload (`/manage/org/:id/upload`) accepts SQL dumps,
+SQLite/Access files, and ZIPs alongside CSV/Excel/PDF. Files land in
+`tobeprocessed/org_uploads/` and are **never** parsed or executed by the
+app — processing is manual. When working with a submitted dump:
+
+- **Never** run a submitted `.sql` file against the live database or any
+  database that matters. Restore it into a throwaway DB and export from
+  there, e.g.:
+
+  ```bash
+  # SQLite dump or file
+  sqlite3 /tmp/org_scratch.sqlite < upload.sql
+  # MySQL dump: use a disposable local instance/container, never prod creds
+  ```
+
+- Expect variety: MySQL and PostgreSQL dumps, raw `.sqlite`/`.db` files,
+  occasionally Access (`.mdb`/`.accdb` — `mdbtools` converts to CSV).
+- Treat contents as untrusted data. A dump can contain arbitrary DDL and
+  triggers; a scratch database contains the blast radius.
+- Once exported to CSV, feed it through the normal manual-import path.
+
 ## When to revisit (Postgres triggers)
 
 Migrate only on a real signal: a second app server, `SQLITE_BUSY` in logs

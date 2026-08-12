@@ -344,22 +344,27 @@ async function stagedFlow(opts, forwardArgs) {
   console.log(`\n[HELD] verdict=${verdict}, AUTO_PROMOTE=${autoPromote} — live DB untouched.`);
   console.log(`Review: ${reportPath} (or /admin/import-review)`);
   console.log(`Approve with: node scripts/weekly_update.js --promote${forwardArgs.length ? ' ' + forwardArgs.join(' ') : ''}`);
-  const to = process.env.REVIEW_EMAIL || process.env.SUPERADMIN_EMAIL;
-  if (to) {
-    try {
+  // Recipients come from the reviewers table (superadmin-managed at
+  // /admin/reviewers; env fallback inside the helper). We're reading the
+  // staging DB here (DB_PATH points at it), but it's a snapshot of live,
+  // so the reviewer list is identical.
+  try {
+    const { getReviewerEmails } = require('../utils/reviewers');
+    const recipients = await getReviewerEmails();
+    if (recipients.length) {
       const { sendEmail } = require('../utils/mailer');
       const report = fs.readFileSync(reportPath, 'utf8');
       await sendEmail({
-        to,
+        to: recipients.join(', '),
         subject: `[AwardHome] Weekly import held for review (${verdict.toUpperCase()})`,
         html: `<p>The weekly award import was held — verdict <b>${verdict.toUpperCase()}</b>. Live data is untouched.</p>` +
               `<p><a href="${(process.env.BASE_URL || 'https://awardhome.com')}/admin/import-review">Review and approve in the admin dashboard</a>, ` +
               `or on the server: <code>cd /opt/awardhome && sudo -u awardhome node scripts/weekly_update.js --promote</code></p>` +
               `<pre style="font-size:12px">${report.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</pre>`
       });
-      console.log(`[notify] review email sent to ${to}`);
-    } catch (e) { console.log(`[notify] email failed: ${e.message}`); }
-  }
+      console.log(`[notify] review email sent to ${recipients.join(', ')}`);
+    }
+  } catch (e) { console.log(`[notify] email failed: ${e.message}`); }
   process.exit(5);
 }
 

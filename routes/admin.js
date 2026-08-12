@@ -515,6 +515,51 @@ router.post('/admin/studio-drafts/:id/reject', requireAdmin, async (req, res) =>
 });
 
 
+// ---- Reviewer management (superadmin) ----
+// Who receives review notification emails: weekly-import holds
+// (scripts/weekly_update.js) and organizer results uploads
+// (routes/dance/orgs.js). While the list is empty, utils/reviewers.js
+// falls back to REVIEW_EMAIL then SUPERADMIN_EMAIL from the environment.
+router.get('/admin/reviewers', requireSuperadmin, async (req, res) => {
+  const db = await openDb();
+  // Same defensive pattern as /admin/settings, in case initDb wasn't re-run
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS reviewers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      email TEXT NOT NULL UNIQUE,
+      name TEXT,
+      added_by INTEGER REFERENCES users(id),
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  const reviewers = await db.all(`
+    SELECT r.*, u.email AS added_by_email
+    FROM reviewers r LEFT JOIN users u ON r.added_by = u.id
+    ORDER BY r.created_at, r.id
+  `);
+  const envFallback = process.env.REVIEW_EMAIL || process.env.SUPERADMIN_EMAIL || null;
+  res.render('admin_reviewers', { reviewers, envFallback, user: req.session.user });
+});
+
+router.post('/admin/reviewers/add', requireSuperadmin, async (req, res) => {
+  const email = (req.body.email || '').trim().toLowerCase();
+  const name = (req.body.name || '').trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).send('Invalid email format');
+  }
+  const db = await openDb();
+  await db.run('INSERT OR IGNORE INTO reviewers (email, name, added_by) VALUES (?, ?, ?)',
+    [email, name || null, req.session.user.id]);
+  res.redirect('/admin/reviewers');
+});
+
+router.post('/admin/reviewers/:id/delete', requireSuperadmin, async (req, res) => {
+  const db = await openDb();
+  await db.run('DELETE FROM reviewers WHERE id = ?', [req.params.id]);
+  res.redirect('/admin/reviewers');
+});
+
+
 // Superadmin User Management
 router.get('/admin/users', requireSuperadmin, async (req, res) => {
   const db = await openDb();
