@@ -211,6 +211,20 @@ router.post('/manage/org/:id/branding/logo-settings', requireAuth, requireOrgOwn
   customIcons.logo_opacity = parseFloat(req.body.logo_opacity);
   if (isNaN(customIcons.logo_opacity)) customIcons.logo_opacity = 0.6;
 
+  // Position/rotation are deliberately superadmin-only fine-tuning (design
+  // consistency: owners get size/opacity, we adjust the rest per logo as
+  // needed). Owner submissions simply don't carry these fields, and even a
+  // crafted POST is ignored here.
+  if (req.session.user.role === 'superadmin') {
+    const clampInt = (v, lo, hi) => {
+      v = parseInt(v);
+      return isNaN(v) ? 0 : Math.max(lo, Math.min(hi, v));
+    };
+    customIcons.logo_offset_x = clampInt(req.body.logo_offset_x, -24, 24);
+    customIcons.logo_offset_y = clampInt(req.body.logo_offset_y, -24, 24);
+    customIcons.logo_rotation = clampInt(req.body.logo_rotation, -180, 180);
+  }
+
   await db.run('UPDATE organizations SET custom_icons = ? WHERE id = ?', [JSON.stringify(customIcons), org.id]);
 
   res.redirect('/manage/org/' + org.id + '/branding');

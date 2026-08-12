@@ -107,10 +107,14 @@
                   🏆
                 <% } %>
               </div>
+              <% const lgx = (customIcons && customIcons.logo_offset_x) || 0;
+                 const lgy = (customIcons && customIcons.logo_offset_y) || 0;
+                 const lgr = (customIcons && customIcons.logo_rotation) || 0;
+                 const lgTransform = `transform: translate(${lgx}px, ${lgy}px) rotate(${lgr}deg);`; %>
               <% if (org.logo_url && !(customIcons && customIcons.hide_logo)) { %>
-                <img src="<%= org.logo_url %>" class="live-preview-logo" style="position: absolute; top: 0.5rem; left: 0.5rem; width: <%= (customIcons && customIcons.logo_size) || 24 %>px; height: <%= (customIcons && customIcons.logo_size) || 24 %>px; object-fit: contain; opacity: <%= (customIcons && customIcons.logo_opacity !== undefined) ? customIcons.logo_opacity : 0.6 %>; border-radius: 4px;" title="Logo">
+                <img src="<%= org.logo_url %>" class="live-preview-logo" style="position: absolute; top: 0.5rem; left: 0.5rem; width: <%= (customIcons && customIcons.logo_size) || 24 %>px; height: <%= (customIcons && customIcons.logo_size) || 24 %>px; object-fit: contain; opacity: <%= (customIcons && customIcons.logo_opacity !== undefined) ? customIcons.logo_opacity : 0.6 %>; <%= lgTransform %> border-radius: 4px;" title="Logo">
               <% } else if (org.logo_url) { %>
-                <img src="<%= org.logo_url %>" class="live-preview-logo" style="display: none; position: absolute; top: 0.5rem; left: 0.5rem; width: <%= (customIcons && customIcons.logo_size) || 24 %>px; height: <%= (customIcons && customIcons.logo_size) || 24 %>px; object-fit: contain; opacity: <%= (customIcons && customIcons.logo_opacity !== undefined) ? customIcons.logo_opacity : 0.6 %>; border-radius: 4px;" title="Logo">
+                <img src="<%= org.logo_url %>" class="live-preview-logo" style="display: none; position: absolute; top: 0.5rem; left: 0.5rem; width: <%= (customIcons && customIcons.logo_size) || 24 %>px; height: <%= (customIcons && customIcons.logo_size) || 24 %>px; object-fit: contain; opacity: <%= (customIcons && customIcons.logo_opacity !== undefined) ? customIcons.logo_opacity : 0.6 %>; <%= lgTransform %> border-radius: 4px;" title="Logo">
               <% } %>
               <div class="award-place award-place-large">
                 1st Place
@@ -144,6 +148,36 @@
               <input type="range" name="logo_opacity" min="0.1" max="1.0" step="0.1" value="<%= (customIcons && customIcons.logo_opacity !== undefined) ? customIcons.logo_opacity : 0.6 %>" style="width: 100%; cursor: pointer;" oninput="updateLivePreview()">
             </div>
 
+            <% if (user && user.role === 'superadmin') { %>
+              <div style="border-top: 1px dashed rgba(212, 175, 55, 0.35); padding-top: 1rem; margin-bottom: 1.5rem;">
+                <p style="font-size: 0.75rem; color: var(--accent-gold); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em;">Admin fine-tuning — not shown to org owners</p>
+
+                <div style="margin-bottom: 1rem;">
+                  <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">
+                    <span>Position X</span>
+                    <span id="posx-val"><%= lgx %>px</span>
+                  </div>
+                  <input type="range" name="logo_offset_x" min="-24" max="24" step="1" value="<%= lgx %>" style="width: 100%; cursor: pointer;" oninput="updateLivePreview()">
+                </div>
+
+                <div style="margin-bottom: 1rem;">
+                  <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">
+                    <span>Position Y</span>
+                    <span id="posy-val"><%= lgy %>px</span>
+                  </div>
+                  <input type="range" name="logo_offset_y" min="-24" max="24" step="1" value="<%= lgy %>" style="width: 100%; cursor: pointer;" oninput="updateLivePreview()">
+                </div>
+
+                <div style="margin-bottom: 1rem;">
+                  <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">
+                    <span>Rotation</span>
+                    <span id="rot-val"><%= lgr %>&deg;</span>
+                  </div>
+                  <input type="range" name="logo_rotation" min="-180" max="180" step="1" value="<%= lgr %>" style="width: 100%; cursor: pointer;" oninput="updateLivePreview()">
+                </div>
+              </div>
+            <% } %>
+
             <button type="submit" class="btn btn-sm btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: var(--text-muted);">Save Display Settings</button>
           </form>
 
@@ -153,16 +187,27 @@
               const showLogo = form.show_logo.checked;
               const size = form.logo_size.value;
               const opacity = form.logo_opacity.value;
-              
+
               document.getElementById('size-val').innerText = size + 'px';
               document.getElementById('opacity-val').innerText = Math.round(opacity * 100) + '%';
-              
+
+              // Superadmin-only fields — absent from the owner's form
+              const x = form.logo_offset_x ? parseInt(form.logo_offset_x.value) : null;
+              const y = form.logo_offset_y ? parseInt(form.logo_offset_y.value) : null;
+              const r = form.logo_rotation ? parseInt(form.logo_rotation.value) : null;
+              if (x !== null) document.getElementById('posx-val').innerText = x + 'px';
+              if (y !== null) document.getElementById('posy-val').innerText = y + 'px';
+              if (r !== null) document.getElementById('rot-val').innerText = r + '°';
+
               const mockLogos = document.querySelectorAll('.live-preview-logo');
               mockLogos.forEach(logo => {
                 logo.style.display = showLogo ? 'block' : 'none';
                 logo.style.width = size + 'px';
                 logo.style.height = size + 'px';
                 logo.style.opacity = opacity;
+                if (x !== null) {
+                  logo.style.transform = 'translate(' + x + 'px, ' + y + 'px) rotate(' + r + 'deg)';
+                }
               });
             }
           </script>
@@ -255,6 +300,7 @@
         <%
           const tooltipLogoSize = (customIcons && customIcons.logo_size) ? customIcons.logo_size : 24;
           const tooltipLogoOpacity = (customIcons && customIcons.logo_opacity !== undefined) ? customIcons.logo_opacity : 0.6;
+          const tooltipLogoTransform = `transform: translate(${(customIcons && customIcons.logo_offset_x) || 0}px, ${(customIcons && customIcons.logo_offset_y) || 0}px) rotate(${(customIcons && customIcons.logo_rotation) || 0}deg);`;
           function renderTooltip(iconUrl, fallbackEmoji, placeStr, categoryStr) {
             return `
               <div class="trophy-tooltip">
@@ -263,7 +309,7 @@
                     <div class="trophy-icon">
                       ${iconUrl ? '<img src="' + iconUrl + '" style="width: 1.5rem; height: 1.5rem; object-fit: contain;">' : fallbackEmoji}
                     </div>
-                    ${(org.logo_url && !(customIcons && customIcons.hide_logo)) ? '<img src="' + org.logo_url + '" class="live-preview-logo" style="position: absolute; top: 0.5rem; left: 0.5rem; width: ' + tooltipLogoSize + 'px; height: ' + tooltipLogoSize + 'px; object-fit: contain; opacity: ' + tooltipLogoOpacity + '; border-radius: 4px;">' : (org.logo_url ? '<img src="' + org.logo_url + '" class="live-preview-logo" style="display: none; position: absolute; top: 0.5rem; left: 0.5rem; width: ' + tooltipLogoSize + 'px; height: ' + tooltipLogoSize + 'px; object-fit: contain; opacity: ' + tooltipLogoOpacity + '; border-radius: 4px;">' : '')}
+                    ${(org.logo_url && !(customIcons && customIcons.hide_logo)) ? '<img src="' + org.logo_url + '" class="live-preview-logo" style="position: absolute; top: 0.5rem; left: 0.5rem; width: ' + tooltipLogoSize + 'px; height: ' + tooltipLogoSize + 'px; object-fit: contain; opacity: ' + tooltipLogoOpacity + '; ' + tooltipLogoTransform + ' border-radius: 4px;">' : (org.logo_url ? '<img src="' + org.logo_url + '" class="live-preview-logo" style="display: none; position: absolute; top: 0.5rem; left: 0.5rem; width: ' + tooltipLogoSize + 'px; height: ' + tooltipLogoSize + 'px; object-fit: contain; opacity: ' + tooltipLogoOpacity + '; ' + tooltipLogoTransform + ' border-radius: 4px;">' : '')}
                     <div class="award-place award-place-large" style="font-size: 1.2rem;">${placeStr}</div>
                     <p class="category">${categoryStr}</p>
                     <h3 style="font-size: 1.1rem; margin-top: 0.25rem;">${org.name}</h3>
