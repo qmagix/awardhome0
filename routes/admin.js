@@ -294,27 +294,14 @@ router.get('/admin/marketing/studios/:id/invite-preview', requireAdmin, async (r
 });
 
 
-// Ensure org_invites exists even if `node database.js` hasn't been re-run
-// (same defensive pattern as /admin/settings).
-async function ensureOrgInvitesTable(db) {
-  await db.exec(`
-    CREATE TABLE IF NOT EXISTS org_invites (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      org_id INTEGER NOT NULL REFERENCES organizations(id),
-      email TEXT NOT NULL,
-      subject TEXT NOT NULL,
-      body TEXT NOT NULL,
-      message_id TEXT,
-      sent_by INTEGER REFERENCES users(id),
-      sent_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-}
+// Ensure org_invites/org_claim_tokens exist even if `node database.js`
+// hasn't been re-run (same defensive pattern as /admin/settings).
+const { ensureOrgInviteTables } = require('../utils/invites');
 
 // Admin: Manage Orgs
 router.get('/admin/orgs', requireAdmin, async (req, res) => {
   const db = await openDb();
-  await ensureOrgInvitesTable(db);
+  await ensureOrgInviteTables(db);
   const orgs = await db.all(`
     SELECT o.*, COUNT(e.id) as event_count,
       (SELECT u.email FROM users u WHERE u.id = o.owner_id) AS owner_email,
@@ -351,7 +338,7 @@ router.post('/admin/orgs/:id/invite', requireSuperadmin, express.json(), async (
   try {
     const { email, subject, body } = req.body || {};
     const db = await openDb();
-    await ensureOrgInvitesTable(db);
+    await ensureOrgInviteTables(db);
     const result = await sendOrgInvite(parseInt(req.params.id), {
       email, subject, body, sentBy: req.session.user.id
     });
@@ -365,12 +352,14 @@ router.post('/admin/orgs/:id/invite', requireSuperadmin, express.json(), async (
 // Archive of every letter sent, exactly as it went out.
 router.get('/admin/org-invites', requireSuperadmin, async (req, res) => {
   const db = await openDb();
-  await ensureOrgInvitesTable(db);
+  await ensureOrgInviteTables(db);
   const invites = await db.all(`
-    SELECT oi.*, o.name AS org_name, o.owner_id AS org_owner_id, u.email AS sent_by_email
+    SELECT oi.*, o.name AS org_name, o.owner_id AS org_owner_id, u.email AS sent_by_email,
+      t.used_at AS claim_used_at, t.expires_at AS claim_expires_at
     FROM org_invites oi
     JOIN organizations o ON oi.org_id = o.id
     LEFT JOIN users u ON oi.sent_by = u.id
+    LEFT JOIN org_claim_tokens t ON t.invite_id = oi.id
     ORDER BY oi.sent_at DESC, oi.id DESC
   `);
   res.render('admin_org_invites', { invites, user: req.session.user });

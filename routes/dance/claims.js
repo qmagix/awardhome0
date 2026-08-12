@@ -207,4 +207,79 @@ router.post('/claim/dancer/:id/apply', applyLimiter, async (req, res) => {
   });
 });
 
+// ---- Organizer claim via invitation token ----
+// Deliberately NO public claim button on org pages: an "unclaimed" state
+// would advertise which orgs aren't partnered yet. The only way in is the
+// single-use link mailed in an invitation letter (utils/invites.js), so
+// possession of the token is the whole authorization — no admin review.
+
+const { ensureOrgInviteTables } = require('../../utils/invites');
+
+async function loadOrgClaimToken(db, token) {
+  await ensureOrgInviteTables(db);
+  const row = await db.get(`
+    SELECT t.*, o.name AS org_name, o.owner_id AS org_owner_id
+    FROM org_claim_tokens t JOIN organizations o ON t.org_id = o.id
+    WHERE t.token = ?`, [String(token || '')]);
+  if (!row) return { error: 'This claim link is not valid. Check that the full link from your invitation email was copied, or reply to the email and we\'ll send a fresh one.' };
+  if (row.org_owner_id) return { error: 'This organization has already been claimed. If that wasn\'t you, reply to your invitation email and we\'ll sort it out.', row };
+  if (row.used_at) return { error: 'This claim link has already been used. Log in with the account you created, or reply to your invitation email for help.', row };
+  if (new Date(row.expires_at) < new Date()) return { error: 'This claim link has expired. Reply to your invitation email and we\'ll send a fresh one.', row };
+  return { row };
+}
+
+router.get('/claim/org/:token', async (req, res) => {
+  const db = await openDb();
+  const { row, error } = await loadOrgClaimToken(db, req.params.token);
+  if (error) return res.status(410).render('claim_org', { error, orgName: row ? row.org_name : null, token: null, prefillEmail: null, user: req.session.user || null });
+  res.render('claim_org', {
+    error: null, orgName: row.org_name, token: req.params.token,
+    prefillEmail: row.email, user: req.session.user || null
+  });
+});
+
+router.post('/claim/org/:token', applyLimiter, async (req, res) => {
+  const db = await openDb();
+  const { row, error } = await loadOrgClaimToken(db, req.params.token);
+  if (error) return res.status(410).render('claim_org', { error, orgName: row ? row.org_name : null, token: null, prefillEmail: null, user: req.session.user || null });
+  const fail = (msg) => res.status(400).render('claim_org', {
+    error: msg, orgName: row.org_name, token: req.params.token,
+    prefillEmail: row.email, user: req.session.user || null
+  });
+
+  let user = req.session.user;
+  if (!user) {
+    const { email, password, password_confirm } = req.body || {};
+    const cleanEmail = String(email || '').trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) return fail('Please enter a valid email address.');
+    if (!password || password.length < 8) return fail('Password must be at least 8 characters.');
+    if (password !== password_confirm) return fail('Passwords do not match.');
+
+    const existing = await db.get('SELECT id FROM users WHERE email = ?', [cleanEmail]);
+    if (existing) {
+      return res.status(400).render('claim_org', {
+        error: null, orgName: row.org_name, token: req.params.token,
+        prefillEmail: cleanEmail, user: null,
+        existingAccount: `An account with ${cleanEmail} already exists. Log in and you'll come straight back here to finish claiming.`
+      });
+    }
+
+    // The token arrived at an inbox the superadmin chose — that is the
+    // verification, so the account starts verified.
+    const hash = await bcrypt.hash(password, 10);
+    await db.run('INSERT INTO users (email, password_hash, role, is_verified) VALUES (?, ?, ?, 1)',
+      [cleanEmail, hash, 'org_owner']);
+    const newUser = await db.get('SELECT id, email, role FROM users WHERE email = ?', [cleanEmail]);
+    req.session.user = { id: newUser.id, email: newUser.email, role: newUser.role };
+    user = req.session.user;
+  }
+
+  await db.run('UPDATE organizations SET owner_id = ? WHERE id = ? AND owner_id IS NULL', [user.id, row.org_id]);
+  const claimed = await db.get('SELECT owner_id FROM organizations WHERE id = ?', [row.org_id]);
+  if (claimed.owner_id !== user.id) return fail('This organization was claimed by someone else just now. Reply to your invitation email and we\'ll sort it out.');
+  await db.run('UPDATE org_claim_tokens SET used_at = CURRENT_TIMESTAMP, used_by = ? WHERE id = ?', [user.id, row.id]);
+
+  res.redirect('/manage/org/' + row.org_id);
+});
+
 module.exports = router;

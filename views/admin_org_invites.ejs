@@ -16,13 +16,14 @@
           <th>Organization</th>
           <th>To</th>
           <th>Subject</th>
+          <th>Claim Link</th>
           <th>Sent By</th>
           <th>Letter</th>
         </tr>
       </thead>
       <tbody>
         <% if (invites.length === 0) { %>
-          <tr><td colspan="6" style="text-align: center;">No invitations sent yet. Use the "Send Invitation" button on the Organizations page.</td></tr>
+          <tr><td colspan="7" style="text-align: center;">No invitations sent yet. Use the "Send Invitation" button on the Organizations page.</td></tr>
         <% } else { %>
           <% invites.forEach(function(inv) { %>
             <tr>
@@ -35,6 +36,17 @@
               </td>
               <td><%= inv.email %></td>
               <td><%= inv.subject %></td>
+              <td style="white-space: nowrap;">
+                <% if (inv.claim_used_at) { %>
+                  <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981;" title="Used <%= inv.claim_used_at %>">Used</span>
+                <% } else if (inv.claim_expires_at && new Date(inv.claim_expires_at) < new Date()) { %>
+                  <span class="badge" style="background: rgba(239, 68, 68, 0.2); color: #ef4444;">Expired</span>
+                <% } else if (inv.claim_expires_at) { %>
+                  <span class="badge" style="background: rgba(234, 179, 8, 0.2); color: #eab308;" title="Expires <%= inv.claim_expires_at %>">Active</span>
+                <% } else { %>
+                  <span style="color: var(--text-muted); font-size: 0.85rem;">None</span>
+                <% } %>
+              </td>
               <td><%= inv.sent_by_email || '—' %></td>
               <td>
                 <details>

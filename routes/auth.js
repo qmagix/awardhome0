@@ -136,10 +136,13 @@ router.post('/login', authLimiter, async (req, res) => {
 
   const ownedStudio = await db.get('SELECT id FROM studios WHERE owner_id = ? LIMIT 1', [user.id]);
   if (ownedStudio) {
-    res.redirect(`/dance/studio/${ownedStudio.id}`);
-  } else {
-    res.redirect('/');
+    return res.redirect(`/dance/studio/${ownedStudio.id}`);
   }
+  const ownedOrg = await db.get('SELECT id FROM organizations WHERE owner_id = ? LIMIT 1', [user.id]);
+  if (ownedOrg) {
+    return res.redirect(`/manage/org/${ownedOrg.id}`);
+  }
+  res.redirect('/');
 });
 
 

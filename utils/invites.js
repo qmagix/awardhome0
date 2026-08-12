@@ -168,7 +168,11 @@ What ${n} gets:
 
 3. Attendance insights. An organizer account unlocks analytics on the studios attending your events — including how many other competitions they attend each year — so you can spot loyal studios and understand your market.
 
-If you have a recent results file handy, just reply with it attached and we'll build a live demo page for ${n} — usually within a few days. Or if you'd rather talk first, I'm happy to do a quick 15-minute call.
+Ready to get started? Claiming your free organizer account takes about two minutes with your private access link:
+
+{CLAIM_LINK}
+
+Or if you have a recent results file handy, just reply with it attached and we'll build a live demo page for ${n} — usually within a few days. And if you'd rather talk first, I'm happy to do a quick 15-minute call.
 
 Thank you for everything you do for the dance community.
 
@@ -198,10 +202,45 @@ function orgInviteHtml(body, email) {
   </div>`;
 }
 
+// How long a mailed claim link stays valid.
+const ORG_CLAIM_TOKEN_DAYS = 30;
+
+// Defensive twin of the initDb DDL (same pattern as /admin/settings): lets
+// the invite + claim routes work even before `node database.js` re-runs.
+async function ensureOrgInviteTables(db) {
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS org_invites (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      org_id INTEGER NOT NULL REFERENCES organizations(id),
+      email TEXT NOT NULL,
+      subject TEXT NOT NULL,
+      body TEXT NOT NULL,
+      message_id TEXT,
+      sent_by INTEGER REFERENCES users(id),
+      sent_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE TABLE IF NOT EXISTS org_claim_tokens (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      org_id INTEGER NOT NULL REFERENCES organizations(id),
+      invite_id INTEGER REFERENCES org_invites(id),
+      token TEXT NOT NULL UNIQUE,
+      email TEXT NOT NULL,
+      expires_at DATETIME NOT NULL,
+      used_at DATETIME,
+      used_by INTEGER REFERENCES users(id),
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+}
+
 // Validate + send + record. Resends are allowed (letters are hand-composed
 // and relationships are 1:1 high-value); the compose UI warns instead.
+// If the body contains {CLAIM_LINK}, a single-use claim token is minted and
+// substituted before sending — the recorded body is the letter as sent,
+// actual link included. Deleting the placeholder sends a link-free letter.
 async function sendOrgInvite(orgId, { email, subject, body, sentBy = null }) {
   const db = await openDb();
+  await ensureOrgInviteTables(db);
   const org = await db.get('SELECT * FROM organizations WHERE id = ?', [orgId]);
   if (!org) return { success: false, error: 'Organization not found' };
   if (org.owner_id) return { success: false, error: 'Organization already claimed' };
@@ -214,22 +253,39 @@ async function sendOrgInvite(orgId, { email, subject, body, sentBy = null }) {
   const suppressed = await db.get('SELECT 1 FROM email_suppressions WHERE email = ?', [email.toLowerCase()]);
   if (suppressed) return { success: false, error: 'Recipient unsubscribed' };
 
+  let finalBody = body;
+  let tokenRowId = null;
+  if (body.includes('{CLAIM_LINK}')) {
+    const token = crypto.randomBytes(24).toString('hex');
+    const expires = new Date(Date.now() + ORG_CLAIM_TOKEN_DAYS * 24 * 60 * 60 * 1000).toISOString();
+    const ins = await db.run(
+      'INSERT INTO org_claim_tokens (org_id, token, email, expires_at) VALUES (?, ?, ?, ?)',
+      [orgId, token, email, expires]
+    );
+    tokenRowId = ins.lastID;
+    finalBody = body.split('{CLAIM_LINK}').join(`${BASE_URL}/claim/org/${token}`);
+  }
+
   const result = await sendEmail({
     to: email,
     subject: subject.trim(),
-    html: orgInviteHtml(body, email),
+    html: orgInviteHtml(finalBody, email),
     headers: {
       'List-Unsubscribe': `<${unsubscribeLink(email)}>`,
       'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
     }
   });
-  if (!result.success) return { success: false, error: 'Send failed: ' + JSON.stringify(result.error).slice(0, 200) };
+  if (!result.success) {
+    if (tokenRowId) await db.run('DELETE FROM org_claim_tokens WHERE id = ?', [tokenRowId]);
+    return { success: false, error: 'Send failed: ' + JSON.stringify(result.error).slice(0, 200) };
+  }
 
-  await db.run(
+  const inv = await db.run(
     'INSERT INTO org_invites (org_id, email, subject, body, message_id, sent_by) VALUES (?, ?, ?, ?, ?, ?)',
-    [orgId, email, subject.trim(), body, result.data && result.data.id, sentBy]
+    [orgId, email, subject.trim(), finalBody, result.data && result.data.id, sentBy]
   );
+  if (tokenRowId) await db.run('UPDATE org_claim_tokens SET invite_id = ? WHERE id = ?', [inv.lastID, tokenRowId]);
   return { success: true, to: email, messageId: result.data && result.data.id };
 }
 
-module.exports = { buildStudioInvite, sendStudioInvite, buildOrgInviteTemplate, sendOrgInvite, unsubscribeToken, unsubscribeLink };
+module.exports = { buildStudioInvite, sendStudioInvite, buildOrgInviteTemplate, sendOrgInvite, ensureOrgInviteTables, unsubscribeToken, unsubscribeLink };

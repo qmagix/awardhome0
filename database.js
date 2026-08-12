@@ -266,6 +266,23 @@ async function initDb() {
     );
     CREATE INDEX IF NOT EXISTS idx_org_invites_org ON org_invites(org_id);
 
+    -- Private claim links embedded in organizer invitation letters. Deliberate
+    -- design: there is NO public claim button on org pages (an "unclaimed"
+    -- state would advertise which orgs aren't partnered yet), so possession
+    -- of a mailed token is the whole authorization — claiming is instant,
+    -- no admin review round-trip.
+    CREATE TABLE IF NOT EXISTS org_claim_tokens (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      org_id INTEGER NOT NULL REFERENCES organizations(id),
+      invite_id INTEGER REFERENCES org_invites(id),
+      token TEXT NOT NULL UNIQUE,
+      email TEXT NOT NULL,
+      expires_at DATETIME NOT NULL,
+      used_at DATETIME,
+      used_by INTEGER REFERENCES users(id),
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
     -- Who receives review notifications (weekly-import holds, organizer
     -- results uploads). Managed by superadmins at /admin/reviewers; while
     -- empty, utils/reviewers.js falls back to REVIEW_EMAIL then
