@@ -1,0 +1,57 @@
+<%- include('partials/header') %>
+<div class="container" style="margin-top: 4rem;">
+  <div class="header-section" style="display: flex; justify-content: space-between; align-items: flex-end;">
+    <div>
+      <h1>Sent Organizer Invitations</h1>
+      <p class="subtitle">Every letter, exactly as it went out. <%= invites.length %> sent so far.</p>
+    </div>
+    <a href="/admin/orgs" class="btn btn-outline" style="text-decoration: none;">← Back to Organizations</a>
+  </div>
+
+  <div class="card glass-card" style="margin-top: 2rem; overflow-x: auto;">
+    <table class="premium-table">
+      <thead>
+        <tr>
+          <th>Sent</th>
+          <th>Organization</th>
+          <th>To</th>
+          <th>Subject</th>
+          <th>Sent By</th>
+          <th>Letter</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (invites.length === 0) { %>
+          <tr><td colspan="6" style="text-align: center;">No invitations sent yet. Use the "Send Invitation" button on the Organizations page.</td></tr>
+        <% } else { %>
+          <% invites.forEach(function(inv) { %>
+            <tr>
+              <td style="white-space: nowrap;"><%= new Date(inv.sent_at + 'Z').toLocaleDateString() %></td>
+              <td>
+                <strong><%= inv.org_name %></strong>
+                <% if (inv.org_owner_id) { %>
+                  <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981; margin-left: 0.4rem;" title="This organization has since been claimed">Converted</span>
+                <% } %>
+              </td>
+              <td><%= inv.email %></td>
+              <td><%= inv.subject %></td>
+              <td><%= inv.sent_by_email || '—' %></td>
+              <td>
+                <details>
+                  <summary style="cursor: pointer; color: var(--accent-gold);">View</summary>
+                  <pre style="white-space: pre-wrap; font-family: inherit; font-size: 0.88rem; line-height: 1.5; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1rem; margin-top: 0.5rem; max-width: 560px;"><%= inv.body %></pre>
+                </details>
+              </td>
+            </tr>
+          <% }); %>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+
+  <p style="margin-top: 1.5rem; color: var(--text-muted); font-size: 0.9rem;">
+    A <span style="color: #10b981;">Converted</span> badge means the organization has been claimed since the letter went out.
+    Recipients who unsubscribe land on the suppression list and cannot be emailed again.
+  </p>
+</div>
+<%- include('partials/footer') %>

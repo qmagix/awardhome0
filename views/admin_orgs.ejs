@@ -9,7 +9,12 @@
     <div class="card glass-card" style="grid-column: 1 / -1;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
         <h3 style="color: var(--primary);">Organizations</h3>
-        <button class="btn btn-primary" onclick="showAddOrgModal()">Add Organization</button>
+        <div style="display: flex; gap: 0.5rem;">
+          <% if (user && user.role === 'superadmin') { %>
+            <a href="/admin/org-invites" class="btn btn-outline" style="border-color: var(--accent-gold); color: var(--accent-gold); text-decoration: none;">Sent Invitations</a>
+          <% } %>
+          <button class="btn btn-primary" onclick="showAddOrgModal()">Add Organization</button>
+        </div>
       </div>
 
       <table style="width: 100%; text-align: left; border-collapse: collapse; margin-top: 1rem;">
@@ -20,6 +25,7 @@
             <th style="padding: 0.5rem 0; color: var(--text-muted);">Slug</th>
             <th style="padding: 0.5rem 0; color: var(--text-muted);">Website</th>
             <th style="padding: 0.5rem 0; color: var(--text-muted);">Events</th>
+            <th style="padding: 0.5rem 0; color: var(--text-muted);">Status</th>
             <th style="padding: 0.5rem 0; color: var(--text-muted); text-align: right;">Actions</th>
           </tr>
         </thead>
@@ -37,7 +43,21 @@
                 <% } %>
               </td>
               <td style="padding: 0.5rem 0;"><%= org.event_count || 0 %></td>
+              <td style="padding: 0.5rem 0;">
+                <% if (org.owner_id) { %>
+                  <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981;" title="<%= org.owner_email || '' %>">Claimed</span>
+                <% } else if (org.last_invited_at) { %>
+                  <span class="badge" style="background: rgba(234, 179, 8, 0.2); color: #eab308;" title="Last invited <%= org.last_invited_at %>">Invited <%= new Date(org.last_invited_at + 'Z').toLocaleDateString() %></span>
+                <% } else { %>
+                  <span style="color: var(--text-muted); font-size: 0.85rem;">Unclaimed</span>
+                <% } %>
+              </td>
               <td style="padding: 0.5rem 0; text-align: right; display: flex; justify-content: flex-end; align-items: center; gap: 0.5rem;">
+                <% if (user && user.role === 'superadmin' && !org.owner_id) { %>
+                  <button class="btn" style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--accent-gold); color: var(--accent-gold);"
+                          data-org-id="<%= org.id %>" data-org-name="<%= org.name %>"
+                          onclick="showInviteModal(this)">Send Invitation</button>
+                <% } %>
                 <a href="/admin/org/<%= org.slug %>/categories" class="btn btn-warning" style="text-decoration: none;">Categories</a>
                 <a href="/manage/org/<%= org.id %>" target="_blank" class="btn btn-outline" style="border-color: var(--accent-gold); color: var(--accent-gold); text-decoration: none;">View Dashboard</a>
                 <button class="btn btn-secondary" onclick="showEditOrgModal('<%= org.id %>', '<%= org.name.replace(/'/g, "\\'") %>', '<%= org.slug %>', '<%= (org.website || '').replace(/'/g, "\\'") %>')">Edit</button>
@@ -48,7 +68,7 @@
             </tr>
           <% }); %>
           <% if (orgs.length === 0) { %>
-            <tr><td colspan="6" style="text-align: center; padding: 1rem;">No organizations found.</td></tr>
+            <tr><td colspan="7" style="text-align: center; padding: 1rem;">No organizations found.</td></tr>
           <% } %>
         </tbody>
       </table>
@@ -165,5 +185,114 @@ function copyToClipboard() {
     <p style="margin-top: 1rem; font-size: 0.8rem; color: #10b981;">Tip: Paste this link into a new <strong>Incognito Window</strong> so you don't lose your Superadmin session!</p>
   </div>
 </div>
+
+<% if (user && user.role === 'superadmin') { %>
+<!-- Invitation letter composition modal -->
+<div id="inviteModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; overflow-y: auto;">
+  <div class="card glass-card" style="width: 100%; max-width: 720px; margin: 3rem auto; position: relative;">
+    <button onclick="hideInviteModal()" style="position: absolute; right: 1rem; top: 1rem; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.5rem;">&times;</button>
+    <h2 style="margin-top: 0;">✉️ Invitation Letter — <span id="inviteOrgName"></span></h2>
+    <p class="text-muted" style="margin-bottom: 1rem; font-size: 0.9rem;">
+      Review and personalize before sending — a line about their specific events dramatically lifts response rates.
+      An unsubscribe footer is appended automatically.
+    </p>
+
+    <div id="inviteResendWarning" style="display: none; background: rgba(234, 179, 8, 0.1); border: 1px solid rgba(234, 179, 8, 0.3); color: #eab308; padding: 0.6rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: 0.9rem;"></div>
+
+    <div id="inviteLoading" style="text-align: center; padding: 2rem; color: var(--text-muted);">Loading template…</div>
+
+    <form id="inviteForm" style="display: none; flex-direction: column; gap: 1rem;" onsubmit="return sendInvite(event)">
+      <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 220px;">
+          <label style="display: block; margin-bottom: 0.4rem; color: var(--text-muted); font-size: 0.9rem;">To (email)</label>
+          <input type="email" id="inviteEmail" class="premium-input" required style="width: 100%;" placeholder="director@competition.com">
+        </div>
+      </div>
+      <div>
+        <label style="display: block; margin-bottom: 0.4rem; color: var(--text-muted); font-size: 0.9rem;">Subject</label>
+        <input type="text" id="inviteSubject" class="premium-input" required style="width: 100%;">
+      </div>
+      <div>
+        <label style="display: block; margin-bottom: 0.4rem; color: var(--text-muted); font-size: 0.9rem;">Letter (plain text — line breaks and links are preserved)</label>
+        <textarea id="inviteBody" rows="18" required style="width: 100%; padding: 0.75rem 1rem; border-radius: 8px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); color: white; font-family: inherit; font-size: 0.92rem; line-height: 1.5; resize: vertical;"></textarea>
+      </div>
+      <div id="inviteError" style="display: none; color: #ef4444; font-size: 0.9rem;"></div>
+      <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+        <button type="button" class="btn btn-secondary" onclick="hideInviteModal()">Cancel</button>
+        <button type="submit" id="inviteSendBtn" class="btn btn-primary">Send Invitation</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+let inviteOrgId = null;
+
+async function showInviteModal(btn) {
+  inviteOrgId = btn.dataset.orgId;
+  document.getElementById('inviteOrgName').textContent = btn.dataset.orgName;
+  document.getElementById('inviteModal').style.display = 'block';
+  document.getElementById('inviteForm').style.display = 'none';
+  document.getElementById('inviteLoading').style.display = 'block';
+  document.getElementById('inviteError').style.display = 'none';
+  document.getElementById('inviteResendWarning').style.display = 'none';
+
+  try {
+    const res = await fetch('/admin/orgs/' + inviteOrgId + '/invite-template');
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to load template');
+
+    document.getElementById('inviteEmail').value = (data.lastInvite && data.lastInvite.email) || '';
+    document.getElementById('inviteSubject').value = data.subject;
+    document.getElementById('inviteBody').value = data.body;
+    if (data.lastInvite) {
+      const w = document.getElementById('inviteResendWarning');
+      w.textContent = 'Heads up: an invitation was already sent to ' + data.lastInvite.email +
+        ' on ' + new Date(data.lastInvite.sent_at + 'Z').toLocaleDateString() + '. Sending again is allowed but make it a follow-up, not a repeat.';
+      w.style.display = 'block';
+    }
+    document.getElementById('inviteLoading').style.display = 'none';
+    document.getElementById('inviteForm').style.display = 'flex';
+  } catch (e) {
+    document.getElementById('inviteLoading').textContent = 'Error: ' + e.message;
+  }
+}
+
+function hideInviteModal() {
+  document.getElementById('inviteModal').style.display = 'none';
+}
+
+async function sendInvite(event) {
+  event.preventDefault();
+  const btn = document.getElementById('inviteSendBtn');
+  const errEl = document.getElementById('inviteError');
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+  errEl.style.display = 'none';
+
+  try {
+    const res = await fetch('/admin/orgs/' + inviteOrgId + '/invite', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: document.getElementById('inviteEmail').value,
+        subject: document.getElementById('inviteSubject').value,
+        body: document.getElementById('inviteBody').value
+      })
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.error || 'Send failed');
+    alert('Invitation sent to ' + data.to);
+    window.location.reload();
+  } catch (e) {
+    errEl.textContent = e.message;
+    errEl.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Send Invitation';
+  }
+  return false;
+}
+</script>
+<% } %>
 
 <%- include('partials/footer') %>

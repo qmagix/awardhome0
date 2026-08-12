@@ -250,6 +250,22 @@ async function initDb() {
       value TEXT
     );
 
+    -- Hand-composed organizer invitation letters (superadmin, /admin/orgs).
+    -- Unlike studio_invites, the full letter body is stored: the admin edits
+    -- the template before sending, so the record is the source of truth for
+    -- what was actually said.
+    CREATE TABLE IF NOT EXISTS org_invites (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      org_id INTEGER NOT NULL REFERENCES organizations(id),
+      email TEXT NOT NULL,
+      subject TEXT NOT NULL,
+      body TEXT NOT NULL,
+      message_id TEXT,
+      sent_by INTEGER REFERENCES users(id),
+      sent_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE INDEX IF NOT EXISTS idx_org_invites_org ON org_invites(org_id);
+
     -- Who receives review notifications (weekly-import holds, organizer
     -- results uploads). Managed by superadmins at /admin/reviewers; while
     -- empty, utils/reviewers.js falls back to REVIEW_EMAIL then

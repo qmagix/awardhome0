@@ -136,4 +136,100 @@ async function sendStudioInvite(studioId, { sentBy = null, overrideEmail = null 
   return { success: true, subject, to: overrideEmail || email, messageId: result.data && result.data.id };
 }
 
-module.exports = { buildStudioInvite, sendStudioInvite, unsubscribeToken, unsubscribeLink };
+// ---- Organizer invites ----
+// Unlike studio invites (fully templated, one click), organizer letters are
+// composed by a superadmin on /admin/orgs: the template below is only the
+// starting point, the edited plain text is what gets sent, and the exact
+// letter is recorded in org_invites for future review. Content follows
+// org_invite_draft.md.
+
+function buildOrgInviteTemplate({ org, eventCount = 0, awardCount = 0 }) {
+  const n = org.name;
+  const orgPageUrl = `${BASE_URL}/dance/org/${org.slug}` +
+    (BETA_MODE && BETA_KEY ? `?beta=${BETA_KEY}` : '');
+  const alreadyLive = eventCount > 0
+    ? `In fact, ${n} is already there: ${eventCount.toLocaleString()} of your events, with ${awardCount.toLocaleString()} awards, are live on AwardHome today — see ${orgPageUrl}\nClaiming your organizer profile puts your branding on every one of those award cards.\n\n`
+    : '';
+
+  const subject = `Featuring ${n} on AwardHome`;
+  const body = `Hi Competition Director,
+
+I'm Q, founder of AwardHome — the digital trophy case for competitive dance. We aggregate results from events nationwide into beautiful, shareable award pages for dancers and studios: today that's over 900,000 awards from 2,700+ events across 14 competitions, including YAGP, Starpower, KAR, NYCDA, and Rainbow.
+
+We'd love to feature ${n} alongside them.
+
+${alreadyLive}The offer, plainly: send us your results in whatever format you have — CSV, Excel, PDFs, database exports, anything — and we handle 100% of the processing. Zero technical work on your end, at no cost.
+
+What ${n} gets:
+
+1. Your brand on every trophy. Organizers get a free branding dashboard: your logo and custom trophy icons appear on every award card your dancers share — your brand stays visible on social media long after the event ends, and it's the kind of placement sponsors notice.
+
+2. Permanent, searchable results. Dancers and parents constantly search for old placements. We host them forever, interactively — no more fielding "where can I find 2023 results?" emails, and your events sit beside the biggest names in the industry for every studio browsing the platform.
+
+3. Attendance insights. An organizer account unlocks analytics on the studios attending your events — including how many other competitions they attend each year — so you can spot loyal studios and understand your market.
+
+If you have a recent results file handy, just reply with it attached and we'll build a live demo page for ${n} — usually within a few days. Or if you'd rather talk first, I'm happy to do a quick 15-minute call.
+
+Thank you for everything you do for the dance community.
+
+Best regards,
+
+Q
+Founder, AwardHome
+https://awardhome.com
+hello@awardhome.com`;
+
+  return { subject, body };
+}
+
+// Plain text → simple HTML email: escape, linkify bare URLs, preserve line
+// breaks, and append the unsubscribe footer (never left to the composer).
+function orgInviteHtml(body, email) {
+  const linked = escapeHtml(body)
+    .replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" style="color: #aa8529;">$1</a>')
+    .replace(/\n/g, '<br>\n');
+  return `
+  <div style="font-family: Arial, Helvetica, sans-serif; color: #222; max-width: 560px; margin: 0 auto; line-height: 1.55;">
+    <p>${linked}</p>
+    <p style="font-size: 12px; color: #888; border-top: 1px solid #ddd; padding-top: 12px; margin-top: 28px;">
+      You're receiving this one-time note because your competition's public results appear on AwardHome.
+      <a href="${unsubscribeLink(email)}" style="color: #888;">Unsubscribe</a> and we won't email you again.
+    </p>
+  </div>`;
+}
+
+// Validate + send + record. Resends are allowed (letters are hand-composed
+// and relationships are 1:1 high-value); the compose UI warns instead.
+async function sendOrgInvite(orgId, { email, subject, body, sentBy = null }) {
+  const db = await openDb();
+  const org = await db.get('SELECT * FROM organizations WHERE id = ?', [orgId]);
+  if (!org) return { success: false, error: 'Organization not found' };
+  if (org.owner_id) return { success: false, error: 'Organization already claimed' };
+
+  email = String(email || '').trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { success: false, error: 'Invalid email address' };
+  if (!String(subject || '').trim()) return { success: false, error: 'Subject is required' };
+  if (!String(body || '').trim()) return { success: false, error: 'Letter body is required' };
+
+  const suppressed = await db.get('SELECT 1 FROM email_suppressions WHERE email = ?', [email.toLowerCase()]);
+  if (suppressed) return { success: false, error: 'Recipient unsubscribed' };
+
+  const result = await sendEmail({
+    to: email,
+    subject: subject.trim(),
+    html: orgInviteHtml(body, email),
+    headers: {
+      'List-Unsubscribe': `<${unsubscribeLink(email)}>`,
+      'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
+    }
+  });
+  if (!result.success) return { success: false, error: 'Send failed: ' + JSON.stringify(result.error).slice(0, 200) };
+
+  await db.run(
+    'INSERT INTO org_invites (org_id, email, subject, body, message_id, sent_by) VALUES (?, ?, ?, ?, ?, ?)',
+    [orgId, email, subject.trim(), body, result.data && result.data.id, sentBy]
+  );
+  return { success: true, to: email, messageId: result.data && result.data.id };
+}
+
+module.exports = { buildStudioInvite, sendStudioInvite, buildOrgInviteTemplate, sendOrgInvite, unsubscribeToken, unsubscribeLink };
