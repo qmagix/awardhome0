@@ -252,12 +252,21 @@ async function loadHomepageData() {
   return { featuredStudios, topStudios, topStudiosThisYear, topStudiosFirstPlaceThisYear, topDancers, topDancersThisYear, topDancersFirstPlaceThisYear, orgs };
 }
 
+const HOME_TTL = 5 * 60 * 1000;
+
+// Warm the cache at boot — without this the first visitor after every
+// restart pays the full compute. After that, expired hits serve the stale
+// value while cached() refreshes in the background, so no request ever
+// waits on these queries again.
+cached('dance-home', HOME_TTL, loadHomepageData).catch(err =>
+  console.error('[dance-home] startup cache warm failed:', err.message));
+
 // Leaderboards render only the top rows inline; the rest load on demand
 // (see /dance/leaderboard/:board). Cuts the homepage payload ~85%.
 const LEADERBOARD_PREVIEW = 25;
 
 router.get('/dance', async (req, res) => {
-  const data = await cached('dance-home', 5 * 60 * 1000, loadHomepageData);
+  const data = await cached('dance-home', HOME_TTL, loadHomepageData);
   const isAdmin = req.session && req.session.user && (req.session.user.role === 'admin' || req.session.user.role === 'superadmin');
   res.render(isAdmin ? 'index_admin' : 'index', { ...data, previewCount: LEADERBOARD_PREVIEW });
 });
@@ -277,7 +286,7 @@ const BOARDS = {
 router.get('/dance/leaderboard/:board', async (req, res) => {
   const spec = BOARDS[req.params.board];
   if (!spec) return res.status(404).send('Unknown leaderboard');
-  const data = await cached('dance-home', 5 * 60 * 1000, loadHomepageData);
+  const data = await cached('dance-home', HOME_TTL, loadHomepageData);
   const rows = data[spec[0]].slice(LEADERBOARD_PREVIEW);
   res.render('partials/leaderboard_rows', { rows, type: spec[1], offset: LEADERBOARD_PREVIEW });
 });
