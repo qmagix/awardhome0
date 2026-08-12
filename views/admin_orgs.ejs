@@ -1,12 +1,12 @@
 <%- include('partials/header') %>
-<div class="container">
+<div class="container" style="max-width: 1400px;">
   <div class="header-section">
     <h1>Manage Organizations</h1>
     <p class="subtitle">View, Add, and Edit Competition Organizations</p>
   </div>
 
   <div class="grid">
-    <div class="card glass-card" style="grid-column: 1 / -1;">
+    <div class="card glass-card" style="grid-column: 1 / -1; overflow-x: auto;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
         <h3 style="color: var(--primary);">Organizations</h3>
         <div style="display: flex; gap: 0.5rem;">
@@ -20,46 +20,46 @@
       <table style="width: 100%; text-align: left; border-collapse: collapse; margin-top: 1rem;">
         <thead>
           <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
-            <th style="padding: 0.5rem 0; color: var(--text-muted);">ID</th>
-            <th style="padding: 0.5rem 0; color: var(--text-muted);">Name</th>
-            <th style="padding: 0.5rem 0; color: var(--text-muted);">Slug</th>
-            <th style="padding: 0.5rem 0; color: var(--text-muted);">Website</th>
-            <th style="padding: 0.5rem 0; color: var(--text-muted);">Events</th>
-            <th style="padding: 0.5rem 0; color: var(--text-muted);">Status</th>
+            <th style="padding: 0.5rem 0.75rem 0.5rem 0; color: var(--text-muted);">ID</th>
+            <th style="padding: 0.5rem 0.75rem 0.5rem 0; color: var(--text-muted);">Name</th>
+            <th style="padding: 0.5rem 0.75rem 0.5rem 0; color: var(--text-muted);">Slug</th>
+            <th style="padding: 0.5rem 0.75rem 0.5rem 0; color: var(--text-muted);">Website</th>
+            <th style="padding: 0.5rem 0.75rem 0.5rem 0; color: var(--text-muted);">Events</th>
+            <th style="padding: 0.5rem 0.75rem 0.5rem 0; color: var(--text-muted);">Status</th>
             <th style="padding: 0.5rem 0; color: var(--text-muted); text-align: right;">Actions</th>
           </tr>
         </thead>
         <tbody>
           <% orgs.forEach(org => { %>
             <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-              <td style="padding: 0.5rem 0;"><%= org.id %></td>
-              <td style="padding: 0.5rem 0;"><strong><%= org.name %></strong></td>
-              <td style="padding: 0.5rem 0;"><code><%= org.slug %></code></td>
-              <td style="padding: 0.5rem 0;">
+              <td style="padding: 0.5rem 0.75rem 0.5rem 0;"><%= org.id %></td>
+              <td style="padding: 0.5rem 0.75rem 0.5rem 0;"><strong><%= org.name %></strong></td>
+              <td style="padding: 0.5rem 0.75rem 0.5rem 0;"><code><%= org.slug %></code></td>
+              <td style="padding: 0.5rem 0.75rem 0.5rem 0;">
                 <% if (org.website) { %>
                   <a href="<%= org.website %>" target="_blank" style="color: var(--secondary);"><%= org.website %></a>
                 <% } else { %>
                   -
                 <% } %>
               </td>
-              <td style="padding: 0.5rem 0;"><%= org.event_count || 0 %></td>
-              <td style="padding: 0.5rem 0;">
+              <td style="padding: 0.5rem 0.75rem 0.5rem 0;"><%= org.event_count || 0 %></td>
+              <td style="padding: 0.5rem 0.75rem 0.5rem 0;">
                 <% if (org.owner_id) { %>
                   <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981;" title="<%= org.owner_email || '' %>">Claimed</span>
                 <% } else if (org.last_invited_at) { %>
-                  <span class="badge" style="background: rgba(234, 179, 8, 0.2); color: #eab308;" title="Last invited <%= org.last_invited_at %>">Invited <%= new Date(org.last_invited_at + 'Z').toLocaleDateString() %></span>
+                  <span class="badge" style="background: rgba(234, 179, 8, 0.2); color: #eab308; white-space: nowrap;" title="Last invited <%= org.last_invited_at %>">Invited <%= new Date(org.last_invited_at + 'Z').toLocaleDateString() %></span>
                 <% } else { %>
                   <span style="color: var(--text-muted); font-size: 0.85rem;">Unclaimed</span>
                 <% } %>
               </td>
-              <td style="padding: 0.5rem 0; text-align: right; display: flex; justify-content: flex-end; align-items: center; gap: 0.5rem;">
+              <td class="org-actions" style="padding: 0.5rem 0 0.5rem 0.75rem; text-align: right; display: flex; justify-content: flex-end; align-items: center; gap: 0.4rem;">
                 <% if (user && user.role === 'superadmin' && !org.owner_id) { %>
                   <button class="btn" style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--accent-gold); color: var(--accent-gold);"
                           data-org-id="<%= org.id %>" data-org-name="<%= org.name %>"
-                          onclick="showInviteModal(this)">Send Invitation</button>
+                          onclick="showInviteModal(this)">Invite</button>
                 <% } %>
                 <a href="/admin/org/<%= org.slug %>/categories" class="btn btn-warning" style="text-decoration: none;">Categories</a>
-                <a href="/manage/org/<%= org.id %>" target="_blank" class="btn btn-outline" style="border-color: var(--accent-gold); color: var(--accent-gold); text-decoration: none;">View Dashboard</a>
+                <a href="/manage/org/<%= org.id %>" target="_blank" class="btn btn-outline" style="border-color: var(--accent-gold); color: var(--accent-gold); text-decoration: none;">Dashboard</a>
                 <button class="btn btn-secondary" onclick="showEditOrgModal('<%= org.id %>', '<%= org.name.replace(/'/g, "\\'") %>', '<%= org.slug %>', '<%= (org.website || '').replace(/'/g, "\\'") %>')">Edit</button>
                 <form action="/admin/orgs/<%= org.id %>/delete" method="POST" onsubmit="return confirm('Are you sure you want to delete this organization? This cannot be undone.');">
                   <button type="submit" class="btn" style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #ef4444;">Delete</button>
@@ -105,6 +105,10 @@
     </form>
   </div>
 </div>
+
+<style>
+.org-actions .btn { padding: 0.35rem 0.7rem; font-size: 0.8rem; white-space: nowrap; }
+</style>
 
 <script>
 function showAddOrgModal() {

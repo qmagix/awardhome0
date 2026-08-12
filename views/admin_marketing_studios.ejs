@@ -1,5 +1,8 @@
 <%- include('partials/header') %>
-<div class="container">
+<!-- Wider than the default container: six columns with unbreakable emails
+     otherwise exceed the card and clip the Send button (no visible
+     scrollbar on macOS to hint at the overflow). -->
+<div class="container" style="max-width: 1400px;">
   <div class="header-section">
     <a href="/admin" class="btn btn-outline" style="margin-bottom: 1rem; display: inline-block;">&larr; Back to Dashboard</a>
     <h1>Invite Studios</h1>
@@ -17,24 +20,24 @@
     <table class="data-table" id="marketingTable" style="width: 100%; text-align: left; border-collapse: collapse;">
       <thead>
         <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
-          <th style="padding: 1rem; cursor: pointer;" onclick="sortTable(0, 'number')">Rank &#x21D5;</th>
-          <th style="padding: 1rem; cursor: pointer;" onclick="sortTable(1, 'string')">Studio Name &#x21D5;</th>
-          <th style="padding: 1rem; cursor: pointer;" onclick="sortTable(2, 'string')">Email &#x21D5;</th>
-          <th style="padding: 1rem; cursor: pointer;" onclick="sortTable(3, 'string')">Phone &#x21D5;</th>
-          <th style="padding: 1rem; cursor: pointer;" onclick="sortTable(4, 'number')">Awards &#x21D5;</th>
-          <th style="padding: 1rem;">Invite</th>
+          <th style="padding: 0.6rem 0.75rem; cursor: pointer;" onclick="sortTable(0, 'number')">Rank &#x21D5;</th>
+          <th style="padding: 0.6rem 0.75rem; cursor: pointer;" onclick="sortTable(1, 'string')">Studio Name &#x21D5;</th>
+          <th style="padding: 0.6rem 0.75rem; cursor: pointer;" onclick="sortTable(2, 'string')">Email &#x21D5;</th>
+          <th style="padding: 0.6rem 0.75rem; cursor: pointer;" onclick="sortTable(3, 'string')">Phone &#x21D5;</th>
+          <th style="padding: 0.6rem 0.75rem; cursor: pointer;" onclick="sortTable(4, 'number')">Awards &#x21D5;</th>
+          <th style="padding: 0.6rem 0.75rem;">Invite</th>
         </tr>
       </thead>
       <tbody>
         <% studios.forEach(s => { %>
           <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);" id="row-<%= s.id %>">
-            <td style="padding: 1rem;">
+            <td style="padding: 0.6rem 0.75rem;">
               <% if (s.rank && s.rank <= 100) { %><span class="badge badge-count">#<%= s.rank %></span>
               <% } else if (s.rank && s.rank <= 300) { %><span class="badge" style="background: rgba(212,175,55,0.08); color: var(--gold-light);">#<%= s.rank %></span>
               <% } else { %><span style="color: var(--text-muted);">#<%= s.rank || '—' %></span><% } %>
             </td>
-            <td style="padding: 1rem; font-weight: 600;"><a href="/dance/studio/<%= s.id %>" target="_blank" style="color: inherit;"><%= s.name %></a></td>
-            <td style="padding: 1rem;">
+            <td style="padding: 0.6rem 0.75rem; font-weight: 600;"><a href="/dance/studio/<%= s.id %>" target="_blank" style="color: inherit;"><%= s.name %></a></td>
+            <td style="padding: 0.6rem 0.75rem;">
               <span id="email-view-<%= s.id %>" style="color: #10b981; cursor: pointer;" title="Click to edit"
                 onclick="editField('email', <%= s.id %>)"><%= s.email %> <span style="opacity: 0.45;">✎</span></span>
               <span id="email-edit-<%= s.id %>" style="display: none; white-space: nowrap;">
@@ -45,7 +48,7 @@
                 <button class="btn" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;" onclick="cancelField('email', <%= s.id %>)">Cancel</button>
               </span>
             </td>
-            <td style="padding: 1rem;">
+            <td style="padding: 0.6rem 0.75rem;">
               <span id="phone-view-<%= s.id %>" style="color: var(--text-muted); cursor: pointer;" title="Click to edit"
                 onclick="editField('phone', <%= s.id %>)"><%= s.phone || '—' %> <span style="opacity: 0.45;">✎</span></span>
               <span id="phone-edit-<%= s.id %>" style="display: none; white-space: nowrap;">
@@ -56,8 +59,8 @@
                 <button class="btn" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;" onclick="cancelField('phone', <%= s.id %>)">Cancel</button>
               </span>
             </td>
-            <td style="padding: 1rem;"><span class="badge"><%= s.award_count %></span></td>
-            <td style="padding: 1rem; white-space: nowrap;">
+            <td style="padding: 0.6rem 0.75rem;"><span class="badge"><%= s.award_count %></span></td>
+            <td style="padding: 0.6rem 0.75rem; min-width: 88px;">
               <% if (s.suppressed) { %>
                 <span class="badge" style="background: rgba(220,38,38,0.15); color: #f87171;">Unsubscribed</span>
               <% } else if (s.invited_at) { %>
