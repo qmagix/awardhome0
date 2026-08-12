@@ -17,3 +17,5 @@ backups/
 public/uploads/
 staging_import.sqlite*
 reports/
+dance_awards.sqlite
+mdfilesbk/
