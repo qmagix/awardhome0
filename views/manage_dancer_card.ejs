@@ -1,5 +1,36 @@
 <%- include('partials/header') %>
 
+<style>
+  /* Per-award progress colors: neutral = nothing yet, amber = one of
+     photo/note present, green = both (rejected content counts as missing) */
+  .extras-block {
+    border-radius: 8px;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-left: 3px solid rgba(255, 255, 255, 0.25);
+  }
+  .extras-block.extras-partial {
+    background: rgba(245, 158, 11, 0.07);
+    border-left-color: #aa8529;
+  }
+  .extras-block.extras-done {
+    background: rgba(16, 185, 129, 0.07);
+    border-left-color: #10b981;
+  }
+  .extras-chip {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .extras-chip.chip-waiting { background: rgba(255, 255, 255, 0.08); color: var(--text-muted); border: 1px solid rgba(255, 255, 255, 0.2); }
+  .extras-chip.chip-partial { background: rgba(245, 158, 11, 0.15); color: #d9a941; border: 1px solid rgba(245, 158, 11, 0.35); }
+  .extras-chip.chip-done { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.35); }
+</style>
+
 <div class="container" style="max-width: 900px; margin-top: 3rem; margin-bottom: 4rem;">
   <div class="header-section" style="margin-bottom: 2rem;">
     <h1>Award Card Extras</h1>
@@ -91,15 +122,37 @@
     <% if (awards.length === 0) { %>
       <p style="color: var(--text-muted); text-align: center; padding: 2rem;">No linked awards yet.</p>
     <% } else { %>
+      <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 1rem;">
+        Block colors show each award's progress:
+        <span class="extras-chip chip-waiting">Waiting for input</span>
+        <span class="extras-chip chip-partial">Partial</span>
+        <span class="extras-chip chip-done">Done</span>
+      </p>
       <div style="display: flex; flex-direction: column; gap: 1rem;">
-        <% awards.forEach(award => { const ack = ackMap[award.id]; const photo = photoMap[award.id]; %>
-          <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1rem;">
+        <% awards.forEach(award => {
+          const ack = ackMap[award.id]; const photo = photoMap[award.id];
+          // Rejected content still needs the family's attention, so it
+          // counts as missing for the progress color.
+          const hasPhoto = photo && photo.status !== 'rejected';
+          const hasAck = ack && ack.status !== 'rejected';
+          const state = (hasPhoto && hasAck) ? 'done' : ((hasPhoto || hasAck) ? 'partial' : 'waiting');
+        %>
+          <div class="extras-block extras-<%= state %>">
             <div style="display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.75rem;">
               <div>
                 <strong style="color: var(--primary);"><%= award.performance_name || award.award_type || 'Award' %></strong>
                 <span style="color: var(--text-muted); font-size: 0.85rem;"> &mdash; <%= formatPlacement(award) %>, <%= award.event_name %> (<%= award.year %>)</span>
                 <% if (award.dancer_count > 1) { %>
                   <span class="badge" style="background: rgba(139, 92, 246, 0.2); color: #c4b5fd; font-size: 0.7rem; margin-left: 0.4rem;">Group &middot; <%= award.dancer_count %> dancers</span>
+                <% } %>
+              </div>
+              <div>
+                <% if (state === 'done') { %>
+                  <span class="extras-chip chip-done">✓ Done</span>
+                <% } else if (state === 'partial') { %>
+                  <span class="extras-chip chip-partial"><%= hasPhoto ? 'Note missing' : 'Photo missing' %></span>
+                <% } else { %>
+                  <span class="extras-chip chip-waiting">Waiting for input</span>
                 <% } %>
               </div>
             </div>
