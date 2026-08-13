@@ -311,6 +311,13 @@ router.get('/admin/orgs', requireAdmin, async (req, res) => {
     GROUP BY o.id
     ORDER BY o.name ASC
   `);
+  // Logo pipeline state per org: uploaded logos are hidden from public cards
+  // until a superadmin fits + approves them on /manage/org/:id/branding.
+  for (const o of orgs) {
+    let ci = {};
+    try { ci = JSON.parse(o.custom_icons || '{}'); } catch (e) { }
+    o.logo_state = !o.logo_url ? 'none' : (ci.logo_approved ? 'live' : 'pending');
+  }
   res.render('admin_orgs', { orgs, user: req.session.user });
 });
 

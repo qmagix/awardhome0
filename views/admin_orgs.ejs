@@ -51,6 +51,11 @@
                 <% } else { %>
                   <span style="color: var(--text-muted); font-size: 0.85rem;">Unclaimed</span>
                 <% } %>
+                <% if (user && user.role === 'superadmin' && org.logo_state === 'pending') { %>
+                  <a href="/manage/org/<%= org.id %>/branding" class="badge" style="display: inline-block; margin-top: 0.25rem; background: rgba(239, 68, 68, 0.15); color: #f87171; white-space: nowrap; text-decoration: none; cursor: pointer;" title="Logo uploaded but not yet fitted/approved — click to open the branding page">Logo: fit &amp; approve</a>
+                <% } else if (user && user.role === 'superadmin' && org.logo_state === 'live') { %>
+                  <a href="/manage/org/<%= org.id %>/branding" class="badge" style="display: inline-block; margin-top: 0.25rem; background: rgba(16, 185, 129, 0.12); color: #10b981; white-space: nowrap; text-decoration: none; cursor: pointer;" title="Logo approved and live on cards — click to adjust">Logo live</a>
+                <% } %>
               </td>
               <td class="org-actions" style="padding: 0.5rem 0 0.5rem 0.75rem; text-align: right; display: flex; justify-content: flex-end; align-items: center; gap: 0.4rem;">
                 <% if (user && user.role === 'superadmin' && !org.owner_id) { %>
