@@ -3,7 +3,7 @@ const router = express.Router();
 const { openDb } = require('../../database');
 const { logStudioActivity } = require('../../utils/activity');
 const { requireAuth } = require('../../middleware/auth');
-const { domainsMatch, approveStudioClaim } = require('../../utils/claims');
+const { domainsMatch, approveStudioClaim, matchDancerClaimCode, notifyStudioOfProfileClaim } = require('../../utils/claims');
 const { sendEmail } = require('../../utils/mailer');
 const { BASE_URL } = require('../../config');
 const rateLimit = require('express-rate-limit');
@@ -130,7 +130,7 @@ router.get('/claim/dancer/:id', async (req, res) => {
 
 
 router.post('/claim/dancer/:id', requireAuth, async (req, res) => {
-  const { relationship, proof } = req.body || {};
+  const { relationship, proof, studio_code } = req.body || {};
   const db = await openDb();
 
   const dancer = await db.get('SELECT * FROM dancers WHERE id = ?', [req.params.id]);
@@ -140,17 +140,36 @@ router.post('/claim/dancer/:id', requireAuth, async (req, res) => {
     return res.render('claim_dancer', { dancer, pageTitle: `Claim ${dancer.name}`, error: 'This dancer profile is already claimed.' });
   }
 
-  const proof_text = `Relationship: ${relationship || ''}\nDetails: ${proof || ''}`;
+  // Optional studio claim code: a match routes the claim to that studio's
+  // director for confirmation; a mismatch is recorded as signal for the
+  // admin reviewer (never silently dropped).
+  const codeMatch = await matchDancerClaimCode(db, dancer.id, studio_code);
+  let proof_text = `Relationship: ${relationship || ''}\nDetails: ${proof || ''}`;
+  if (codeMatch.provided) {
+    proof_text += codeMatch.valid
+      ? `\nStudio code: valid for ${codeMatch.studio.name}`
+      : `\nStudio code: provided but did not match any of this dancer's studios`;
+  }
   const user = req.session.user;
 
-  await db.run('INSERT INTO dancer_claims (user_id, dancer_id, proof_text, status) VALUES (?, ?, ?, ?)', [user.id, dancer.id, proof_text, 'pending']);
-  return res.send(`<script>alert("Claim submitted successfully! Our admins will review your request shortly."); window.location.href="/dancer/${dancer.unique_id}";</script>`);
+  await db.run(
+    'INSERT INTO dancer_claims (user_id, dancer_id, proof_text, status, studio_id, code_valid) VALUES (?, ?, ?, ?, ?, ?)',
+    [user.id, dancer.id, proof_text, 'pending', codeMatch.valid ? codeMatch.studio.id : null, codeMatch.valid ? 1 : 0]);
+
+  if (codeMatch.valid) {
+    notifyStudioOfProfileClaim(db, {
+      studio: codeMatch.studio, dancer,
+      claimantEmail: user.email, relationship,
+    });
+    return res.send(`<script>alert("Claim submitted! Since you used ${JSON.stringify(codeMatch.studio.name).slice(1, -1)}'s claim code, your studio director can confirm it directly — you'll get an email when it's approved."); window.location.href="/dancer/${dancer.unique_id}";</script>`);
+  }
+  return res.send(`<script>alert("Claim submitted successfully! Our admins will review your request shortly — you'll get an email with the decision."); window.location.href="/dancer/${dancer.unique_id}";</script>`);
 });
 
 
 // One-page apply: creates the account AND files the dancer claim together.
 router.post('/claim/dancer/:id/apply', applyLimiter, async (req, res) => {
-  const { contact_name, email, password, relationship, proof } = req.body || {};
+  const { contact_name, email, password, relationship, proof, studio_code } = req.body || {};
   const db = await openDb();
 
   const dancer = await db.get('SELECT id, name, unique_id, is_claimed FROM dancers WHERE id = ?', [req.params.id]);
@@ -182,9 +201,22 @@ router.post('/claim/dancer/:id/apply', applyLimiter, async (req, res) => {
   );
   const newUser = await db.get('SELECT id FROM users WHERE email = ?', [cleanEmail]);
 
-  const proof_text = `Contact: ${contact_name.trim()}\nRelationship: ${relationship}\nDetails: ${proof || ''}`;
-  await db.run('INSERT INTO dancer_claims (user_id, dancer_id, proof_text, status) VALUES (?, ?, ?, ?)',
-    [newUser.id, dancer.id, proof_text, 'pending']);
+  const codeMatch = await matchDancerClaimCode(db, dancer.id, studio_code);
+  let proof_text = `Contact: ${contact_name.trim()}\nRelationship: ${relationship}\nDetails: ${proof || ''}`;
+  if (codeMatch.provided) {
+    proof_text += codeMatch.valid
+      ? `\nStudio code: valid for ${codeMatch.studio.name}`
+      : `\nStudio code: provided but did not match any of this dancer's studios`;
+  }
+  await db.run('INSERT INTO dancer_claims (user_id, dancer_id, proof_text, status, studio_id, code_valid) VALUES (?, ?, ?, ?, ?, ?)',
+    [newUser.id, dancer.id, proof_text, 'pending', codeMatch.valid ? codeMatch.studio.id : null, codeMatch.valid ? 1 : 0]);
+
+  if (codeMatch.valid) {
+    notifyStudioOfProfileClaim(db, {
+      studio: codeMatch.studio, dancer,
+      claimantEmail: cleanEmail, relationship,
+    });
+  }
 
   const verifyLink = `${BASE_URL}/verify-email?token=${token}`;
   if (process.env.EMAIL_PROVIDER) {
@@ -203,7 +235,9 @@ router.post('/claim/dancer/:id/apply', applyLimiter, async (req, res) => {
 
   res.render('claim_dancer', {
     dancer, pageTitle: `Claim ${dancer.name}`,
-    success: `Almost there! We sent a verification link to ${cleanEmail}. Click it to activate your account — our team then reviews your claim to keep dancer profiles secure.`
+    success: codeMatch.valid
+      ? `Almost there! We sent a verification link to ${cleanEmail}. Click it to activate your account — and since you used ${codeMatch.studio.name}'s claim code, your studio director can confirm your claim directly. You'll get an email when it's approved.`
+      : `Almost there! We sent a verification link to ${cleanEmail}. Click it to activate your account — our team then reviews your claim to keep dancer profiles secure. You'll get an email with the decision.`
   });
 });
 

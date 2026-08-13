@@ -171,6 +171,53 @@
         </div>
       </div>
     <% } %>
+
+    <% if (typeof pendingProfileClaims !== 'undefined' && pendingProfileClaims.length > 0) { %>
+      <div class="card glass-card" style="padding: 0; margin-bottom: 2rem;">
+        <div style="padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+          <h3 style="margin: 0;">Profile Claims to Confirm</h3>
+          <p style="margin: 0.2rem 0 0 0; font-size: 0.85rem; color: var(--text-muted);">
+            These people used your <strong>studio claim code</strong> to claim a dancer's profile.
+            The code proves they're part of your studio community — please confirm they actually
+            belong to this dancer's family. Your approval gives them full control of the profile.
+          </p>
+        </div>
+        <div style="overflow-x: auto;">
+          <table class="table" style="margin: 0;">
+            <thead>
+              <tr>
+                <th>Dancer</th>
+                <th>Claimed By</th>
+                <th>Details</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% pendingProfileClaims.forEach(function(claim) { %>
+                <tr>
+                  <td>
+                    <a href="/dancer/<%= claim.unique_id %>" target="_blank" style="color: white; text-decoration: none;"><strong><%= claim.dancer_name %></strong></a>
+                    <br><small style="color: var(--text-muted);">ID: <%= claim.unique_id %></small>
+                  </td>
+                  <td style="color: var(--text-muted);"><%= claim.user_email %></td>
+                  <td style="white-space: pre-wrap; font-size: 0.85rem; color: var(--text-muted); max-width: 320px;"><%= claim.proof_text %></td>
+                  <td>
+                    <div style="display: flex; gap: 0.5rem;">
+                      <form action="/manage/studio/<%= studio.id %>/verifications/profile/<%= claim.id %>/approve" method="POST" style="margin: 0;">
+                        <button type="submit" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 0.4rem 0.75rem; border-radius: 4px; cursor: pointer; font-weight: 600;">Confirm</button>
+                      </form>
+                      <form action="/manage/studio/<%= studio.id %>/verifications/profile/<%= claim.id %>/deny" method="POST" style="margin: 0;">
+                        <button type="submit" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.4rem 0.75rem; border-radius: 4px; cursor: pointer; font-weight: 600;">Deny</button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    <% } %>
   </div>
 </div>
 

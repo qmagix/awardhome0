@@ -16,7 +16,9 @@
 
 ### Features
 - [ ] Show dancer vanity chip (#Tag) on homepage leaderboard rows and share cards (field: dancers.vanity_tag, chip style: .vanity-chip; add vanity_tag to the three dancer leaderboard queries in routes/dance/public.js and render in views/partials/leaderboard_rows.ejs). The #Tag itself shipped on dancer profiles 2026-08-08.
-- [ ] Email notifications for studio admins when new pending claims/verifications arrive (claims currently email only the claimant for verification; nothing notifies the studio owner of pending roster/award requests).
+- [ ] Email notifications for studio admins when new pending roster/award verification requests arrive (profile claims routed by studio code DO email the director as of 2026-08-13; award claims and roster joins still don't).
+- [x] (DONE 2026-08-13) Dancer profile claim studio-code routing: optional Studio Claim Code on the claim form; valid code → claim routed to the studio director's Verifications queue (email ping, director approval finalizes — no admin step); no/bad code → admin queue with ✓/✗ code badges. Decision emails to claimants from both paths (approval deep-links to card extras); approving auto-rejects competing pending claims. Also fixed pre-existing 500 on /manage/studio/:id/verifications (missing dancer_studios.created_at column).
+- [ ] Director-initiated profile claims (inverse flow): director enters a parent's email on a roster dancer → pre-authorized claim link, zero review (pattern: org claim tokens).
 - [ ] Testimonials for organizations, studios, and dancers (makes them stand out; FAQ pages and org marketing profiles are done — this is the missing piece).
 - [ ] File storage to AWS S3 for uploads (org results, branding images currently on local disk; ties into the org result submission pipeline below).
 - [ ] Organization competition result submission end-to-end: upload works (org_uploads table + local disk) but the S3 storage + admin review/batch-ingestion pipeline is not built.

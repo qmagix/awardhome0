@@ -3,6 +3,7 @@ const router = express.Router();
 const { openDb } = require('../../database');
 const { requireAuth, requireStudioOwner } = require('../../middleware/auth');
 const { logStudioActivity } = require('../../utils/activity');
+const { approveDancerClaim, rejectDancerClaim } = require('../../utils/claims');
 const multer = require('multer');
 // CSV imports only (roster + awards). Rejections surface as 400s via the
 // central error handler (err.status = 400).
@@ -776,7 +777,51 @@ router.get('/manage/studio/:id/verifications', requireAuth, requireStudioOwner, 
     WHERE ds.status = 'pending' AND ds.studio_id = ?
   `, [studio.id]);
 
-  res.render('manage_studio_verifications', { studio, pendingAwards, pendingRoster });
+  // Profile claims routed here by a valid studio claim code: the claimant
+  // proved community membership with the code; the director confirms the
+  // family identity. Approval finalizes the claim — no system-admin step.
+  let pendingProfileClaims = [];
+  try {
+    pendingProfileClaims = await db.all(`
+      SELECT dc.id, dc.proof_text, dc.created_at, u.email as user_email,
+             d.name as dancer_name, d.unique_id
+      FROM dancer_claims dc
+      JOIN users u ON dc.user_id = u.id
+      JOIN dancers d ON dc.dancer_id = d.id
+      WHERE dc.status = 'pending' AND dc.code_valid = 1 AND dc.studio_id = ?
+      ORDER BY dc.created_at ASC
+    `, [studio.id]);
+  } catch (e) { /* columns missing until `node database.js` runs */ }
+
+  res.render('manage_studio_verifications', { studio, pendingAwards, pendingRoster, pendingProfileClaims });
+});
+
+
+router.post('/manage/studio/:id/verifications/profile/:claim_id/approve', requireAuth, requireStudioOwner, async (req, res) => {
+  const db = await openDb();
+  const studio = req.studio;
+
+  // Only claims code-routed to THIS studio are the director's to decide
+  const claim = await db.get(
+    "SELECT * FROM dancer_claims WHERE id = ? AND status = 'pending' AND code_valid = 1 AND studio_id = ?",
+    [req.params.claim_id, studio.id]);
+  if (claim) {
+    await approveDancerClaim(db, claim);
+    logStudioActivity(studio.id, 'verification_action', { dedupMinutes: 60 });
+  }
+  res.redirect(`/manage/studio/${studio.id}/verifications`);
+});
+
+
+router.post('/manage/studio/:id/verifications/profile/:claim_id/deny', requireAuth, requireStudioOwner, async (req, res) => {
+  const db = await openDb();
+  const studio = req.studio;
+
+  const claim = await db.get(
+    "SELECT id FROM dancer_claims WHERE id = ? AND status = 'pending' AND code_valid = 1 AND studio_id = ?",
+    [req.params.claim_id, studio.id]);
+  if (claim) await rejectDancerClaim(db, claim.id);
+  res.redirect(`/manage/studio/${studio.id}/verifications`);
 });
 
 

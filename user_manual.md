@@ -184,3 +184,19 @@ logo is approved for public display (the usual concierge fitting flow).
 - `/admin/card-content` — review queue. Approve/reject pending photos and thank-you lines; every
   new submission or edit lands here as `pending` and is invisible publicly until approved.
 - `/admin/settings` — flip the site-wide card design (instant, no restart).
+
+## 11. Dancer Profile Claims: Studio-Code Routing & Notifications
+The dancer profile claim form (public "Claim this Dancer" button) accepts an optional **Studio
+Claim Code** — the same `join_code` directors already hand out for award claiming.
+
+- **Valid code** (matches a studio the dancer is affiliated with): the claim routes to that studio
+  director's **Verifications → Profile Claims to Confirm** queue, and the director gets an email.
+  Their approval finalizes the claim — ownership assigned, role upgraded, no admin step. The code
+  proves community membership only, so directors are asked to confirm the person belongs to that
+  dancer's family before approving.
+- **No code / wrong code**: the claim goes to the system-admin queue at `/admin/claims` as before.
+  Wrong codes are flagged ("✗ Bad code"); valid-code claims also appear there as a backstop with a
+  "✓ Code: <studio>" badge for confident one-click approval.
+- **Notifications**: the claimant is emailed on approval (deep-linking to the card-extras page and
+  their dashboard) and on rejection — from either review path. Approving a claim auto-rejects any
+  competing pending claims for the same dancer (those claimants are emailed too).

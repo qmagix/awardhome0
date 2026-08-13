@@ -122,6 +122,7 @@ async function initDb() {
       headshot_url TEXT,
       graduation_year INTEGER,
       notes TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (dancer_id) REFERENCES dancers(id),
       FOREIGN KEY (studio_id) REFERENCES studios(id),
       UNIQUE(dancer_id, studio_id)
@@ -397,6 +398,18 @@ async function initDb() {
   // guardian consent, public only once card_photo_status = 'approved'
   // (superadmin review at /admin/card-content; statuses: none/pending/
   // approved/rejected). Distinct from headshot_url (a free URL field).
+  // Studio-code routing for dancer profile claims: when the claimant
+  // provides a valid studio claim code (studios.join_code) for a studio
+  // the dancer is affiliated with, studio_id + code_valid route the claim
+  // into that studio's Verifications queue (director confirms identity);
+  // system admin remains the backstop reviewer either way.
+  // The verifications dashboard reads ds.created_at, but the column was
+  // never in the schema — the page 500'd on any freshly-migrated DB.
+  // (ALTER can't add a CURRENT_TIMESTAMP default; existing rows stay NULL,
+  // which the view already tolerates.)
+  try { await db.exec("ALTER TABLE dancer_studios ADD COLUMN created_at DATETIME"); } catch(e) {}
+  try { await db.exec("ALTER TABLE dancer_claims ADD COLUMN studio_id INTEGER REFERENCES studios(id)"); } catch(e) {}
+  try { await db.exec("ALTER TABLE dancer_claims ADD COLUMN code_valid INTEGER DEFAULT 0"); } catch(e) {}
   try { await db.exec("ALTER TABLE dancers ADD COLUMN card_photo_url TEXT"); } catch(e) {}
   try { await db.exec("ALTER TABLE dancers ADD COLUMN card_photo_status TEXT DEFAULT 'none'"); } catch(e) {}
   try { await db.exec("ALTER TABLE dancers ADD COLUMN card_photo_uploaded_by INTEGER REFERENCES users(id)"); } catch(e) {}

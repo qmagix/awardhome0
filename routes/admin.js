@@ -6,6 +6,7 @@ const { computeFeaturedStudios } = require('../utils/featured');
 const { sendStudioInvite, buildStudioInvite, buildOrgInviteTemplate, sendOrgInvite } = require('../utils/invites');
 const { refresh } = require('../utils/cache');
 const { requireAdmin, requireSuperadmin } = require('../middleware/auth');
+const { approveDancerClaim, rejectDancerClaim } = require('../utils/claims');
 const bcrypt = require('bcrypt');
 const { runBackfillForEvent } = require('../backfill_utils');
 const fs = require('fs');
@@ -546,12 +547,14 @@ router.get('/admin/claims', requireAdmin, async (req, res) => {
   `);
 
   const dancerClaims = await db.all(`
-    SELECT dc.*, u.email as user_email, d.name as dancer_name, d.unique_id as dancer_unique_id 
+    SELECT dc.*, u.email as user_email, d.name as dancer_name, d.unique_id as dancer_unique_id,
+           s.name as code_studio_name
     FROM dancer_claims dc
     JOIN users u ON dc.user_id = u.id
     JOIN dancers d ON dc.dancer_id = d.id
+    LEFT JOIN studios s ON dc.studio_id = s.id
     WHERE dc.status = 'pending'
-    ORDER BY dc.created_at DESC
+    ORDER BY dc.code_valid DESC, dc.created_at DESC
   `);
 
   res.render('admin_claims', { claims, dancerClaims });
@@ -590,27 +593,23 @@ router.post('/admin/claims/:id/reject', requireAdmin, async (req, res) => {
 });
 
 
-// Dancer Claims logic
+// Dancer Claims logic — shared with the studio-director route
+// (utils/claims.js): approval also settles competing pending claims, and
+// both decisions email the claimant.
 router.post('/admin/claims/dancer/:id/approve', requireAdmin, async (req, res) => {
   const db = await openDb();
-  const claim = await db.get('SELECT * FROM dancer_claims WHERE id = ?', [req.params.id]);
+  const claim = await db.get("SELECT * FROM dancer_claims WHERE id = ? AND status = 'pending'", [req.params.id]);
   if (!claim) return res.status(404).send('Claim not found');
 
-  await db.run('UPDATE dancers SET is_claimed = 1, claimed_by_user_id = ? WHERE id = ?', [claim.user_id, claim.dancer_id]);
-  await db.run('UPDATE dancer_claims SET status = "approved" WHERE id = ?', [claim.id]);
-
-  const user = await db.get('SELECT role FROM users WHERE id = ?', [claim.user_id]);
-  if (user && user.role === 'user') {
-    await db.run('UPDATE users SET role = "dancer_owner" WHERE id = ?', [claim.user_id]);
-  }
-
+  await approveDancerClaim(db, claim);
   res.redirect('/admin/claims');
 });
 
 
 router.post('/admin/claims/dancer/:id/reject', requireAdmin, async (req, res) => {
   const db = await openDb();
-  await db.run('UPDATE dancer_claims SET status = "rejected" WHERE id = ?', [req.params.id]);
+  const claim = await db.get("SELECT id FROM dancer_claims WHERE id = ? AND status = 'pending'", [req.params.id]);
+  if (claim) await rejectDancerClaim(db, claim.id);
   res.redirect('/admin/claims');
 });
 

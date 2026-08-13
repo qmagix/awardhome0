@@ -22,6 +22,15 @@ This document outlines the core features of the Dance Awards Platform.
 - **Unique IDs:** Dancers are issued a Unique ID to rapidly claim future awards without needing the Studio Code.
 - **Smart Auto-Backfill:** Whether claiming via the public directory or the Missing Awards search tool, claiming one award automatically queries and claims all other awards for the exact same routine at the same event.
 - **Privacy:** Roster lists are hidden from the public; dancers only appear on the awards they claim.
+- **Profile claims with studio-code routing:** the dancer profile claim form takes an optional
+  Studio Claim Code (`studios.join_code`). A code matching one of the dancer's affiliated studios
+  routes the claim to that studio director's Verifications dashboard ("Profile Claims to Confirm",
+  with an email ping) — the director confirms family identity and approval finalizes with no
+  system-admin step. The code proves community membership, never identity, so it routes rather
+  than auto-approves. Claims without a code (or with a wrong one, flagged "✗ Bad code") go to the
+  system-admin queue at `/admin/claims`, where valid-code claims also appear as backstop with a
+  "✓ Code" badge. Approval auto-rejects competing pending claims for the same dancer, and every
+  decision (either path) emails the claimant — approvals deep-link to the card-extras page.
 
 ## 3b. Award Card Designs (A/B)
 Two selectable card designs render on public dancer pages. The site-wide default is a superadmin

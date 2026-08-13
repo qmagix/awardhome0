@@ -38,6 +38,8 @@ const CHECKS = [
   ['POST', '/manage/dancer/1/card/award-photo', [403], 'anonymous award photo upload blocked (CSRF)'],
   ['POST', '/api/admin/card-award-photo/1', [403], 'anonymous award-photo moderation blocked'],
   ['GET', '/admin/card-content', [403], 'anonymous card-content review blocked'],
+  ['POST', '/manage/studio/1/verifications/profile/1/approve', [403], 'anonymous profile-claim approve blocked (CSRF)'],
+  ['POST', '/admin/claims/dancer/1/approve', [403], 'anonymous dancer-claim approve blocked'],
   ['POST', '/api/admin/card-photo/1', [403], 'anonymous card-photo moderation blocked'],
   ['POST', '/api/admin/card-ack/1', [403], 'anonymous card-ack moderation blocked'],
   ['POST', '/resend-verification', [403], 'tokenless resend-verification blocked (CSRF)'],
