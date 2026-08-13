@@ -97,8 +97,9 @@
           <h3 style="color: var(--accent-gold); margin-bottom: 1rem;">Live Trophy Preview</h3>
           <p class="text-muted" style="margin-bottom: 1rem; text-align: center; font-size: 0.9rem;">This is exactly how your awards will look on a dancer's digital portfolio.</p>
           
-          <!-- Mock Trophy Card -->
-          <div class="premium-trophy-card experimental-texture" style="width: 100%; max-width: 300px; margin: 0 auto 1.5rem auto;">
+          <!-- Mock Trophy Card — sticky so it stays in view (below the fixed
+               header) while the settings below are scrolled and adjusted -->
+          <div class="premium-trophy-card experimental-texture" style="width: 100%; max-width: 300px; margin: 0 auto 1.5rem auto; position: sticky; top: 96px; z-index: 5;">
             <div class="content-wrapper tier-gold" style="position: relative;">
               <div class="trophy-icon">
                 <% if (customIcons && customIcons.overall && customIcons.overall['1']) { %>
@@ -138,20 +139,21 @@
               <input type="checkbox" name="show_logo" <%= !(customIcons && customIcons.hide_logo) ? 'checked' : '' %> onchange="updateLivePreview()" style="cursor: pointer;">
             </div>
             
-            <div style="margin-bottom: 1rem;">
-              <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">
-                <span>Size</span>
-                <span id="size-val"><%= (customIcons && customIcons.logo_size) || 24 %>px</span>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">
+                  <span>Size</span>
+                  <span id="size-val"><%= (customIcons && customIcons.logo_size) || 24 %>px</span>
+                </div>
+                <input type="range" name="logo_size" min="24" max="48" value="<%= (customIcons && customIcons.logo_size) || 24 %>" style="width: 100%; cursor: pointer;" oninput="updateLivePreview()">
               </div>
-              <input type="range" name="logo_size" min="24" max="48" value="<%= (customIcons && customIcons.logo_size) || 24 %>" style="width: 100%; cursor: pointer;" oninput="updateLivePreview()">
-            </div>
-
-            <div style="margin-bottom: 1.5rem;">
-              <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">
-                <span>Opacity</span>
-                <span id="opacity-val"><%= Math.round(((customIcons && customIcons.logo_opacity !== undefined) ? customIcons.logo_opacity : 0.6) * 100) %>%</span>
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">
+                  <span>Opacity</span>
+                  <span id="opacity-val"><%= Math.round(((customIcons && customIcons.logo_opacity !== undefined) ? customIcons.logo_opacity : 0.6) * 100) %>%</span>
+                </div>
+                <input type="range" name="logo_opacity" min="0.1" max="1.0" step="0.1" value="<%= (customIcons && customIcons.logo_opacity !== undefined) ? customIcons.logo_opacity : 0.6 %>" style="width: 100%; cursor: pointer;" oninput="updateLivePreview()">
               </div>
-              <input type="range" name="logo_opacity" min="0.1" max="1.0" step="0.1" value="<%= (customIcons && customIcons.logo_opacity !== undefined) ? customIcons.logo_opacity : 0.6 %>" style="width: 100%; cursor: pointer;" oninput="updateLivePreview()">
             </div>
 
             <% if (user && user.role !== 'superadmin' && org.logo_url && !(customIcons && customIcons.logo_approved)) { %>
@@ -165,34 +167,42 @@
               <div style="border-top: 1px dashed rgba(212, 175, 55, 0.35); padding-top: 1rem; margin-bottom: 1.5rem;">
                 <p style="font-size: 0.75rem; color: var(--accent-gold); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em;">Admin fine-tuning — not shown to org owners</p>
 
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                  <span style="font-size: 0.85rem; color: var(--text-muted);">Approved for public display</span>
-                  <input type="checkbox" name="logo_approved" <%= (customIcons && customIcons.logo_approved) ? 'checked' : '' %> style="cursor: pointer;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
+                  <div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">
+                      <span>Position X</span>
+                      <span id="posx-val"><%= lgx %>px</span>
+                    </div>
+                    <input type="range" name="logo_offset_x" min="-24" max="24" step="1" value="<%= lgx %>" style="width: 100%; cursor: pointer;" oninput="updateLivePreview()">
+                  </div>
+                  <div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">
+                      <span>Position Y</span>
+                      <span id="posy-val"><%= lgy %>px</span>
+                    </div>
+                    <input type="range" name="logo_offset_y" min="-24" max="24" step="1" value="<%= lgy %>" style="width: 100%; cursor: pointer;" oninput="updateLivePreview()">
+                  </div>
                 </div>
 
-                <div style="margin-bottom: 1rem;">
-                  <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">
-                    <span>Position X</span>
-                    <span id="posx-val"><%= lgx %>px</span>
+                <div style="display: grid; grid-template-columns: 1fr auto; gap: 0.75rem; align-items: end; margin-bottom: 1.25rem;">
+                  <div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">
+                      <span>Rotation</span>
+                      <span id="rot-val"><%= lgr %>&deg;</span>
+                    </div>
+                    <input type="range" name="logo_rotation" min="-180" max="180" step="1" value="<%= lgr %>" style="width: 100%; cursor: pointer;" oninput="updateLivePreview()">
                   </div>
-                  <input type="range" name="logo_offset_x" min="-24" max="24" step="1" value="<%= lgx %>" style="width: 100%; cursor: pointer;" oninput="updateLivePreview()">
+                  <button type="button" onclick="resetFit()" class="btn" style="padding: 0.3rem 0.7rem; font-size: 0.75rem; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: var(--text-muted);">Reset fit</button>
                 </div>
 
-                <div style="margin-bottom: 1rem;">
-                  <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">
-                    <span>Position Y</span>
-                    <span id="posy-val"><%= lgy %>px</span>
-                  </div>
-                  <input type="range" name="logo_offset_y" min="-24" max="24" step="1" value="<%= lgy %>" style="width: 100%; cursor: pointer;" oninput="updateLivePreview()">
-                </div>
-
-                <div style="margin-bottom: 1rem;">
-                  <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">
-                    <span>Rotation</span>
-                    <span id="rot-val"><%= lgr %>&deg;</span>
-                  </div>
-                  <input type="range" name="logo_rotation" min="-180" max="180" step="1" value="<%= lgr %>" style="width: 100%; cursor: pointer;" oninput="updateLivePreview()">
-                </div>
+                <label style="display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; background: rgba(212, 175, 55, 0.12); border: 1px solid var(--accent-gold); border-radius: 8px; padding: 0.75rem 1rem; cursor: pointer;">
+                  <span style="color: var(--accent-gold); font-weight: 600; font-size: 0.9rem;">Approved for public display</span>
+                  <input type="checkbox" name="logo_approved" <%= (customIcons && customIcons.logo_approved) ? 'checked' : '' %> style="cursor: pointer; width: 18px; height: 18px; accent-color: var(--accent-gold);">
+                </label>
+                <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0.5rem 0 0 0;">
+                  Until approved (and saved), the logo appears nowhere public — the org owner sees a
+                  "being fitted by our design team" note instead.
+                </p>
               </div>
             <% } %>
 
@@ -200,6 +210,14 @@
           </form>
 
           <script>
+            function resetFit() {
+              const form = document.getElementById('logo-settings-form');
+              if (form.logo_offset_x) form.logo_offset_x.value = 0;
+              if (form.logo_offset_y) form.logo_offset_y.value = 0;
+              if (form.logo_rotation) form.logo_rotation.value = 0;
+              updateLivePreview();
+            }
+
             function updateLivePreview() {
               const form = document.getElementById('logo-settings-form');
               const showLogo = form.show_logo.checked;
