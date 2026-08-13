@@ -14,7 +14,20 @@
 2. The selected data is sent to an OpenAI backend endpoint.
 3. A strict system prompt commands the AI to synthesize the raw awards into an inspiring narrative, highlighting major podium placements and ensemble victories.
 
-## 2. Superadmin Dynamic AI Model Switcher
+## 2. Multi-Page "Flip-Book" Award Card (brainstormed 2026-08-12)
+**Concept:** Extend the two-face flip card (trophy front / certificate back) into a paged mini-book on the back: certificate → dancer photo → acknowledgements → organizer colophon. Tap flips the card; swiping (or dot/edge-tap) pages through the back-stack. Pages with no content simply don't exist — the guaranteed faces (front + certificate) never depend on user uploads.
+
+**Key elements:**
+- **Photo page:** upload by studio owner or dancer owner; approval/consent-gated (minors) and default-off, mirroring the logo-coin concierge pattern. When present, also inset a small portrait medallion on the certificate page.
+- **Acknowledgements page:** "With thanks to…" (teachers, teammates, parents). This is the viral page — a dancer thanking Mom and a named teacher is exactly what parents and studios re-share. For **group routines each dancer gets their own ack line** (stored per `award_dancers` row), rendered like a signed yearbook page with the viewing dancer's line pinned first. Owner-moderated before public display.
+- **Organizer colophon (last page):** big logo, event name, optional organizer message/sponsor credit — the natural home for trophy_plan.md's premium sponsor tagging, sold as part of the organizer tier.
+- Each page independently shareable as an image (share button per page).
+
+**Monetization ties:** photo + ack pages drive dancer/parent engagement and claims; colophon page is an organizer-tier upsell; sponsor line fits Tier 2/3 of the Digital Trophy plan.
+
+Patent-candidate details tracked in `maybe_patentable.md` (A3, A4).
+
+## 3. Superadmin Dynamic AI Model Switcher
 **Concept:** A centralized "System Settings" dashboard for Superadmins that allows dynamic, zero-downtime switching of the underlying LLM model (e.g., from `gpt-4o-mini` to `gpt-4o` or `gpt-3.5-turbo`) used across the platform.
 
 **Value Proposition:** AI costs and capabilities fluctuate rapidly. By exposing the model selection to the Superadmin interface instead of hardcoding it in the codebase or requiring a `.env` server restart, the platform operator can instantly optimize for cost during high-traffic periods, or switch to a higher-intelligence model for premium users or special use cases without any technical friction.
