@@ -81,7 +81,29 @@ async function ensureCardTables(db) {
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       UNIQUE(award_id, dancer_id)
     );
+    CREATE TABLE IF NOT EXISTS card_photo_consents (
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      dancer_id INTEGER NOT NULL REFERENCES dancers(id),
+      consented_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (user_id, dancer_id)
+    );
   `);
+}
+
+// One-time consent: the first upload for a dancer must carry the checkbox
+// and records the affirmation; every later upload by the same account for
+// the same dancer skips it. Returns null when OK to proceed, or an error
+// string when the (first-time) checkbox is missing.
+async function ensurePhotoConsent(db, userId, dancerId, body) {
+  const existing = await db.get(
+    'SELECT 1 FROM card_photo_consents WHERE user_id = ? AND dancer_id = ?', [userId, dancerId]);
+  if (existing) return null;
+  if (body.consent !== 'on') {
+    return 'Photo not saved: the one-time photo permission box must be checked.';
+  }
+  await db.run(
+    'INSERT OR IGNORE INTO card_photo_consents (user_id, dancer_id) VALUES (?, ?)', [userId, dancerId]);
+  return null;
 }
 
 router.get('/manage/dancer/:id/card', requireAuth, async (req, res) => {
@@ -111,7 +133,11 @@ router.get('/manage/dancer/:id/card', requireAuth, async (req, res) => {
   const photoMap = {};
   photoRows.forEach(r => { photoMap[r.award_id] = r; });
 
-  res.render('manage_dancer_card', { dancer, awards, ackMap, photoMap });
+  const consentRow = await db.get(
+    'SELECT consented_at FROM card_photo_consents WHERE user_id = ? AND dancer_id = ?',
+    [req.session.user.id, dancer.id]);
+
+  res.render('manage_dancer_card', { dancer, awards, ackMap, photoMap, consent: consentRow || null });
 });
 
 
@@ -127,11 +153,11 @@ router.post('/manage/dancer/:id/card/award-photo', requireAuth, cardPhotoUpload.
   if (!req.file) {
     return res.send(`<script>alert("Please choose an image file."); window.location.href=${JSON.stringify(back)};</script>`);
   }
-  // Same consent gate as the default card photo: performance shots of a
-  // group routine can show other minors, and the photo goes on a
-  // publicly shareable card once approved.
-  if (req.body.consent !== 'on') {
-    return res.send(`<script>alert("Photo not saved: the consent box must be checked."); window.location.href=${JSON.stringify(back)};</script>`);
+  // Same one-time consent gate as the default card photo (the affirmation
+  // wording covers everyone pictured, so it spans both upload kinds).
+  const consentErr = await ensurePhotoConsent(db, req.session.user.id, dancer.id, req.body);
+  if (consentErr) {
+    return res.send(`<script>alert(${JSON.stringify(consentErr)}); window.location.href=${JSON.stringify(back)};</script>`);
   }
 
   const linked = await db.get(
@@ -179,15 +205,17 @@ router.post('/manage/dancer/:id/card/photo', requireAuth, cardPhotoUpload.single
   const db = await openDb();
   const dancer = await getDancerIfCardManager(db, req.session.user, req.params.id);
   if (!dancer) return res.status(403).send('Forbidden');
+  await ensureCardTables(db);
   const back = `/manage/dancer/${req.params.id}/card`;
 
   if (!req.file) {
     return res.send(`<script>alert("Please choose an image file."); window.location.href=${JSON.stringify(back)};</script>`);
   }
-  // Guardian consent is a hard gate: most dancers are minors, and the
-  // photo will render on publicly shareable cards once approved.
-  if (req.body.consent !== 'on') {
-    return res.send(`<script>alert("Photo not saved: the consent box must be checked."); window.location.href=${JSON.stringify(back)};</script>`);
+  // Consent is a hard gate (most dancers are minors, photos render on
+  // publicly shareable cards) but asked once per uploader per dancer.
+  const consentErr = await ensurePhotoConsent(db, req.session.user.id, dancer.id, req.body);
+  if (consentErr) {
+    return res.send(`<script>alert(${JSON.stringify(consentErr)}); window.location.href=${JSON.stringify(back)};</script>`);
   }
 
   await db.run(

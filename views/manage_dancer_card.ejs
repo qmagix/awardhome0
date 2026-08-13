@@ -14,6 +14,10 @@
     Photos and thank-you notes appear as extra pages on the flip side of award cards
     <strong>after the AwardHome team reviews and approves them</strong> — this keeps every
     public card family-friendly. Edits go back into review.
+    <% if (consent) { %>
+      <div style="margin-top: 0.5rem; color: #10b981;">✓ Photo permission on file for this dancer
+        (confirmed <%= new Date(consent.consented_at).toLocaleDateString() %>) — no more checkboxes needed.</div>
+    <% } %>
   </div>
 
   <!-- Default Card Photo -->
@@ -49,11 +53,15 @@
         <form action="/manage/dancer/<%= dancer.id %>/card/photo" method="POST" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 1rem;">
           <input type="file" name="photo" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" required
             style="padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
-          <label style="display: flex; gap: 0.6rem; align-items: flex-start; font-size: 0.85rem; color: var(--text-muted); cursor: pointer;">
-            <input type="checkbox" name="consent" required style="margin-top: 0.2rem; width: 16px; height: 16px; accent-color: var(--primary);">
-            <span>I am this dancer's parent/guardian, or the dancer is an adult, or I have the family's
-              permission to display this photo publicly on AwardHome award cards.</span>
-          </label>
+          <% if (!consent) { %>
+            <label style="display: flex; gap: 0.6rem; align-items: flex-start; font-size: 0.85rem; color: var(--text-muted); cursor: pointer;">
+              <input type="checkbox" name="consent" required style="margin-top: 0.2rem; width: 16px; height: 16px; accent-color: var(--primary);">
+              <span>I am this dancer's parent/guardian (or the dancer is an adult, or I have the
+                family's permission), and for any photo I upload I have permission from everyone
+                pictured to display it publicly on AwardHome award cards. <em>Asked once — future
+                uploads for this dancer won't show this box.</em></span>
+            </label>
+          <% } %>
           <button type="submit" class="btn btn-primary" style="align-self: flex-start;">Upload Photo</button>
         </form>
         <% if (dancer.card_photo_url) { %>
@@ -119,10 +127,12 @@
                 <input type="hidden" name="award_id" value="<%= award.id %>">
                 <input type="file" name="photo" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" required
                   style="padding: 0.4rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px; font-size: 0.8rem; flex: 1; min-width: 180px;">
-                <label style="display: flex; gap: 0.4rem; align-items: center; font-size: 0.75rem; color: var(--text-muted); cursor: pointer;" title="I have permission from everyone pictured (or their parents/guardians) to display this photo publicly on AwardHome award cards.">
-                  <input type="checkbox" name="consent" required style="width: 14px; height: 14px; accent-color: var(--primary);">
-                  <span>Consent&nbsp;&#9432;</span>
-                </label>
+                <% if (!consent) { %>
+                  <label style="display: flex; gap: 0.4rem; align-items: center; font-size: 0.75rem; color: var(--text-muted); cursor: pointer;" title="One-time confirmation: I have permission from everyone pictured (or their parents/guardians) to display photos I upload publicly on AwardHome award cards. Future uploads won't ask again.">
+                    <input type="checkbox" name="consent" required style="width: 14px; height: 14px; accent-color: var(--primary);">
+                    <span>Consent&nbsp;&#9432;</span>
+                  </label>
+                <% } %>
                 <button type="submit" class="btn btn-outline" style="font-size: 0.8rem;"><%= photo ? 'Replace Photo' : 'Add Photo' %></button>
               </form>
             </div>

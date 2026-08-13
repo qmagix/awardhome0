@@ -367,6 +367,18 @@ async function initDb() {
     CREATE INDEX IF NOT EXISTS idx_award_card_photos_dancer ON award_card_photos(dancer_id);
     CREATE INDEX IF NOT EXISTS idx_award_card_photos_status ON award_card_photos(status);
 
+    -- One-time photo-upload consent, per uploader per dancer: the first
+    -- upload records the affirmation (parent/guardian or permission from
+    -- everyone pictured) and later uploads skip the checkbox. Kept as its
+    -- own table (not a dancers column) because studio owners and parents
+    -- each affirm for their own uploads.
+    CREATE TABLE IF NOT EXISTS card_photo_consents (
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      dancer_id INTEGER NOT NULL REFERENCES dancers(id),
+      consented_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (user_id, dancer_id)
+    );
+
     INSERT OR IGNORE INTO system_settings (key, value) VALUES ('openai_model', 'gpt-4o-mini');
     -- Which award-card design public pages render: 'classic' (two-face
     -- flip) or 'flipbook' (paged back). Superadmin toggle at /admin/settings;

@@ -220,3 +220,12 @@ neither see an empty state explaining how to find and claim a dancer.
   (fine in Safari) because the entry-fade animation on back-face pages never ticked while the
   card was unflipped, freezing pages at opacity 0. The fade now applies only during actual page
   turns (`tcb-entering` class), never on the resting state.
+
+## 14. One-Time Photo Consent
+Photo uploads no longer show a consent checkbox on every form. The first upload an account makes
+for a given dancer asks for a single combined affirmation (parent/guardian status or family
+permission, plus permission from everyone pictured in uploaded photos); it's recorded in
+`card_photo_consents` (per uploader × dancer, with timestamp) and all later uploads for that
+dancer skip the checkbox. The card-extras page shows "Photo permission on file (date)" once
+recorded. Parents and studio owners each give their own affirmation, since each is vouching for
+their own uploads.
