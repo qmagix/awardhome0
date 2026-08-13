@@ -56,20 +56,24 @@
                               <%= icon %>
                                 <% } %>
                       </div>
-                      <% if (award.logo_url && !(award.customIconsObj && award.customIconsObj.hide_logo)) {
-                        // Org display settings → CSS vars (styles.css defaults cover the rest).
-                        // Values are numbers sanitized at save time (routes/dance/orgs.js).
-                        const lci = award.customIconsObj || {};
+                      <% // Logo shows only once a superadmin has fitted it into the coin
+                         // and flipped logo_approved (concierge default-off; the coin
+                         // keeps mixed-org grids to one silhouette regardless of logo shape).
+                         const lci = award.customIconsObj || {};
+                         if (award.logo_url && lci.logo_approved && !lci.hide_logo) {
+                        // Fit settings → CSS vars (styles.css has the defaults). Values
+                        // are numbers sanitized at save time (routes/dance/orgs.js).
                         const logoVars = [];
-                        if (lci.logo_size) logoVars.push('--org-logo-scale: ' + (lci.logo_size / 24));
                         if (lci.logo_opacity !== undefined) logoVars.push('--org-logo-opacity: ' + lci.logo_opacity);
                         const logoTf = [];
                         if (lci.logo_offset_x || lci.logo_offset_y) logoTf.push('translate(' + (lci.logo_offset_x || 0) + 'px, ' + (lci.logo_offset_y || 0) + 'px)');
                         if (lci.logo_rotation) logoTf.push('rotate(' + lci.logo_rotation + 'deg)');
+                        if (lci.logo_size && lci.logo_size !== 24) logoTf.push('scale(' + (lci.logo_size / 24) + ')');
                         if (logoTf.length) logoVars.push('--org-logo-transform: ' + logoTf.join(' '));
                       %>
-                        <img src="<%= award.logo_url %>" class="card-org-logo"<%- logoVars.length ? ' style="' + logoVars.join('; ') + '"' : '' %>
-                          title="<%= award.org_name %> Logo">
+                        <span class="card-org-coin"<%- logoVars.length ? ' style="' + logoVars.join('; ') + '"' : '' %>>
+                          <img src="<%= award.logo_url %>" title="<%= award.org_name %> Logo">
+                        </span>
                         <% } %>
                       <div class="card-body">
                           <div class="<%= placeClass %>">

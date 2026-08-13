@@ -17,14 +17,14 @@ for the optional per-org branded capture (see Production Notes).
 **Audience:** competition directors/owners, cold or warm.
 **Goal:** one action — click the claim link in the invitation email.
 **Key points, in order:** (1) your dancers already share their awards — put
-your brand on them; (2) zero work, zero cost, any file format; (3) permanent
+your brand on every card they share; (2) zero work, zero cost, any file format; (3) permanent
 searchable results end the "where are the 2023 results?" emails; (4) CTA:
 claim link in the email.
 
 | Time | Visual | Voiceover |
 |---|---|---|
 | 0:00–0:08 | Phone screen: a dancer's trophy-case page scrolling; a gold award card gets shared to Instagram. | "Right now, dancers from your competition are sharing their awards online. The question is — is your brand on them?" |
-| 0:08–0:22 | AwardHome homepage leaderboards; zoom into award cards carrying org logos. | "AwardHome is the digital trophy case for competitive dance — over 900,000 awards from 2,700 events, across 14 competitions. Every award your event gives out becomes a permanent, shareable trophy card. With your logo on it." |
+| 0:08–0:22 | AwardHome homepage leaderboards; zoom into award cards carrying org logos. | "AwardHome is the digital trophy case for competitive dance — over 900,000 awards from 2,700 events, across 14 competitions. Every award your event gives out becomes a permanent, shareable trophy card. With your brand on it." |
 | 0:22–0:38 | Split screen: a director wading through "where can I find the 2023 results?" emails vs. a clean AwardHome event page. | "No more digging up old results for parents. Your events live forever, searchable, beautiful — right beside the biggest names in the industry." |
 | 0:38–0:50 | A results file dragged onto the upload form; checkmark; trophy cards populate. | "And it costs you nothing — not money, not time. Send us your results in whatever format you have. CSV, PDF, even a database export. We handle everything." |
 | 0:50–0:60 | Invitation email on screen; cursor clicks the claim button; account appears. Logo + awardhome.com. | "Your invitation email has your private access link — claiming your account takes about two minutes. Or just reply with a results file, and we'll build your page first." |
@@ -79,8 +79,9 @@ Uploads as "AI Processing Soon".*
 watch the trophy-card preview update; then map a custom icon: crown for
 Title, diamond for Platinum.*
 
-> "Now the fun part. Upload your logo and tune how it sits on every trophy
-> card with these sliders — our team double-checks it too. Below, you can map
+> "Now the fun part. Upload your logo and set its size and visibility with
+> these sliders — our design team then hand-fits it into the card's logo
+> coin before it goes live, usually within a day. Below, you can map
 > custom icons to your own award levels. Want a crown for Title winners and a
 > diamond for Platinum? Every award becomes a little ad for your competition,
 > long after the event ends."

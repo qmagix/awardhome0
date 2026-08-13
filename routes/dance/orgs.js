@@ -223,6 +223,9 @@ router.post('/manage/org/:id/branding/logo-settings', requireAuth, requireOrgOwn
     customIcons.logo_offset_x = clampInt(req.body.logo_offset_x, -24, 24);
     customIcons.logo_offset_y = clampInt(req.body.logo_offset_y, -24, 24);
     customIcons.logo_rotation = clampInt(req.body.logo_rotation, -180, 180);
+    // Public cards show the logo only after this approval (concierge
+    // default-off: we fit every logo into the coin before it goes live).
+    customIcons.logo_approved = req.body.logo_approved === 'on';
   }
 
   await db.run('UPDATE organizations SET custom_icons = ? WHERE id = ?', [JSON.stringify(customIcons), org.id]);

@@ -541,19 +541,31 @@ a:hover {
   object-fit: contain;
 }
 
-.flip-card .card-org-logo {
+/* Org logo "coin": every org's mark sits in the same fixed circular chip,
+   so mixed-org grids keep one silhouette no matter the logo's shape. The
+   logo is fitted INSIDE the coin (scale/offset/rotation arrive as CSS vars
+   from dancer_award_card.ejs, tuned by superadmins on the branding page). */
+.flip-card .card-org-coin {
   position: absolute;
   top: 0.5rem;
   left: 0.5rem;
-  /* Org branding settings arrive as CSS vars on the element (see
-     dancer_award_card.ejs) so the container-query variants below keep
-     scaling proportionally. */
-  width: calc(24px * var(--org-logo-scale, 1));
-  height: calc(24px * var(--org-logo-scale, 1));
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flip-card .card-org-coin img {
+  width: 100%;
+  height: 100%;
   object-fit: contain;
-  opacity: var(--org-logo-opacity, 0.6);
+  opacity: var(--org-logo-opacity, 0.85);
   transform: var(--org-logo-transform, none);
-  border-radius: 4px;
 }
 
 .flip-card .badge-self-reported {
@@ -640,7 +652,7 @@ a:hover {
 .awards-grid.mini .flip-card .event-line,
 .awards-grid.mini .flip-card .age-division-row,
 .awards-grid.mini .flip-card .badge-self-reported,
-.awards-grid.mini .flip-card .card-org-logo,
+.awards-grid.mini .flip-card .card-org-coin,
 .awards-grid.mini .flip-card .verified-badge {
   display: none;
 }
@@ -727,12 +739,11 @@ a:hover {
     height: 8cqw;
   }
 
-  .flip-card .card-org-logo {
+  .flip-card .card-org-coin {
     top: 2.7cqw;
     left: 2.7cqw;
-    width: calc(8cqw * var(--org-logo-scale, 1));
-    height: calc(8cqw * var(--org-logo-scale, 1));
-    border-radius: 1.3cqw;
+    width: 9.3cqw;
+    height: 9.3cqw;
   }
 
   .flip-card .premium-trophy-card .verified-badge {
@@ -900,12 +911,11 @@ a:hover {
     height: 5.2cqw;
   }
 
-  .awards-grid.landscape .flip-card .card-org-logo {
+  .awards-grid.landscape .flip-card .card-org-coin {
     top: 1.7cqw;
     left: 1.7cqw;
-    width: calc(5.2cqw * var(--org-logo-scale, 1));
-    height: calc(5.2cqw * var(--org-logo-scale, 1));
-    border-radius: 0.9cqw;
+    width: 6.1cqw;
+    height: 6.1cqw;
   }
 
   .awards-grid.landscape .flip-card .premium-trophy-card .verified-badge {

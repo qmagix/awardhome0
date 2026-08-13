@@ -162,7 +162,7 @@ ${alreadyLive}The offer, plainly: send us your results in whatever format you ha
 
 What ${n} gets:
 
-1. Your brand on every trophy. Organizers get a free branding dashboard: your logo and custom trophy icons appear on every award card your dancers share — your brand stays visible on social media long after the event ends, and it's the kind of placement sponsors notice.
+1. Your brand on every card dancers share. Organizers get a free branding dashboard — your logo and custom trophy icons, hand-fitted onto the award cards by our design team — so your brand stays visible on social media long after the event ends. It's the kind of placement sponsors notice.
 
 2. Permanent, searchable results. Dancers and parents constantly search for old placements. We host them forever, interactively — no more fielding "where can I find 2023 results?" emails, and your events sit beside the biggest names in the industry for every studio browsing the platform.
 
