@@ -633,12 +633,27 @@ a:hover {
   object-fit: cover;
 }
 
+/* Per-award performance shots get a rectangular frame — action photos
+   crop badly inside the circular medallion (kept for the default photo) */
+.tcb-book .tcb-photo-frame-rect {
+  width: 82%;
+  aspect-ratio: 4 / 3;
+  border-radius: 8px;
+}
+
 .tcb-book .tcb-photo-name {
   margin-top: 0.8rem;
   font-family: 'Outfit', sans-serif;
   font-weight: 800;
   font-size: 1.1rem;
   color: #2a2110;
+}
+
+.tcb-book .tcb-photo-caption {
+  margin-top: 0.2rem;
+  font-style: italic;
+  font-size: 0.8rem;
+  color: #6d5626;
 }
 
 /* Acknowledgements page ("yearbook back": one line per teammate,
@@ -1120,9 +1135,18 @@ a:hover {
     border-width: 1cqw;
   }
 
+  .flip-card .tcb-book .tcb-photo-frame-rect {
+    border-radius: 2.7cqw;
+  }
+
   .flip-card .tcb-book .tcb-photo-name {
     margin-top: 4.3cqw;
     font-size: 5.9cqw;
+  }
+
+  .flip-card .tcb-book .tcb-photo-caption {
+    margin-top: 1.1cqw;
+    font-size: 4.3cqw;
   }
 
   .flip-card .tcb-book .tcb-ack-lines {
@@ -1177,6 +1201,10 @@ a:hover {
   .awards-grid.landscape .flip-card .tcb-book .tcb-photo-name {
     margin-top: 2.8cqw;
     font-size: 3.8cqw;
+  }
+
+  .awards-grid.landscape .flip-card .tcb-book .tcb-photo-caption {
+    font-size: 2.8cqw;
   }
 
   .awards-grid.landscape .flip-card .tcb-book .tcb-ack-line {

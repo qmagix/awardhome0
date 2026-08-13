@@ -7,7 +7,8 @@
   </div>
 
   <div class="card glass-card" style="margin-bottom: 2rem;">
-    <h2 style="color: var(--primary); margin-bottom: 1rem;">📸 Pending Photos (<%= pendingPhotos.length %>)</h2>
+    <h2 style="color: var(--primary); margin-bottom: 1rem;">📸 Pending Default Card Photos (<%= pendingPhotos.length %>)</h2>
+    <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">One per dancer — the fallback shown on cards without their own award photo.</p>
     <% if (pendingPhotos.length === 0) { %>
       <p style="color: var(--text-muted);">Nothing waiting. 🎉</p>
     <% } else { %>
@@ -25,6 +26,36 @@
             <div style="display: flex; gap: 0.5rem;">
               <button class="btn btn-primary" style="font-size: 0.85rem;" onclick="moderate('photo', <%= p.id %>, 'approve', 'photo-row-<%= p.id %>')">Approve</button>
               <button class="btn btn-outline" style="font-size: 0.85rem; border-color: #ef4444; color: #ef4444;" onclick="moderate('photo', <%= p.id %>, 'reject', 'photo-row-<%= p.id %>')">Reject</button>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    <% } %>
+  </div>
+
+  <div class="card glass-card" style="margin-bottom: 2rem;">
+    <h2 style="color: var(--primary); margin-bottom: 1rem;">🏆 Pending Award Photos (<%= pendingAwardPhotos.length %>)</h2>
+    <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Per-award performance shots — these replace the dancer's default photo on that specific card.</p>
+    <% if (pendingAwardPhotos.length === 0) { %>
+      <p style="color: var(--text-muted);">Nothing waiting. 🎉</p>
+    <% } else { %>
+      <div style="display: flex; flex-direction: column; gap: 1rem;">
+        <% pendingAwardPhotos.forEach(p => { %>
+          <div id="awphoto-row-<%= p.id %>" style="display: flex; gap: 1.25rem; align-items: center; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1rem; flex-wrap: wrap;">
+            <div style="width: 120px; height: 90px; border-radius: 6px; overflow: hidden; border: 2px solid #c9a961; flex-shrink: 0;">
+              <img src="<%= p.photo_url %>" alt="Award photo" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+            <div style="flex: 1; min-width: 200px;">
+              <a href="/dancer/<%= p.unique_id %>" target="_blank" style="color: white; font-weight: 600; text-decoration: none;"><%= p.dancer_name %></a>
+              <div style="color: var(--text-muted); font-size: 0.85rem;">
+                on <strong><%= p.performance_name || p.award_type || 'award' %></strong>
+                (<%= p.event_name || 'event' %><%= p.year ? ', ' + p.year : '' %>)
+              </div>
+              <div style="color: var(--text-muted); font-size: 0.8rem;">Uploaded by <%= p.uploader_email || 'unknown' %> &middot; <a href="<%= p.photo_url %>" target="_blank" style="color: var(--primary);">View full size</a></div>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="btn btn-primary" style="font-size: 0.85rem;" onclick="moderate('award-photo', <%= p.id %>, 'approve', 'awphoto-row-<%= p.id %>')">Approve</button>
+              <button class="btn btn-outline" style="font-size: 0.85rem; border-color: #ef4444; color: #ef4444;" onclick="moderate('award-photo', <%= p.id %>, 'reject', 'awphoto-row-<%= p.id %>')">Reject</button>
             </div>
           </div>
         <% }); %>
@@ -63,7 +94,9 @@
 
 <script>
   async function moderate(kind, id, action, rowId) {
-    const url = kind === 'photo' ? '/api/admin/card-photo/' + id : '/api/admin/card-ack/' + id;
+    const url = kind === 'photo' ? '/api/admin/card-photo/' + id
+      : kind === 'award-photo' ? '/api/admin/card-award-photo/' + id
+      : '/api/admin/card-ack/' + id;
     try {
       const res = await fetch(url, {
         method: 'POST',

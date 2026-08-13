@@ -148,7 +148,32 @@ router.get('/admin/card-content', requireSuperadmin, async (req, res) => {
     `);
   } catch (e) { /* table missing until `node database.js` runs */ }
 
-  res.render('admin_card_content', { user: req.session.user, pendingPhotos, pendingAcks });
+  let pendingAwardPhotos = [];
+  try {
+    pendingAwardPhotos = await db.all(`
+      SELECT ap.id, ap.photo_url, ap.created_at, d.name as dancer_name, d.unique_id,
+             a.performance_name, a.award_type, a.place, e.name as event_name, e.year,
+             u.email as uploader_email
+      FROM award_card_photos ap
+      JOIN dancers d ON ap.dancer_id = d.id
+      JOIN awards a ON ap.award_id = a.id
+      LEFT JOIN events e ON a.event_id = e.id
+      LEFT JOIN users u ON ap.uploaded_by = u.id
+      WHERE ap.status = 'pending'
+      ORDER BY ap.created_at ASC
+    `);
+  } catch (e) { /* table missing until `node database.js` runs */ }
+
+  res.render('admin_card_content', { user: req.session.user, pendingPhotos, pendingAcks, pendingAwardPhotos });
+});
+
+
+router.post('/api/admin/card-award-photo/:id', requireSuperadmin, express.json(), async (req, res) => {
+  const db = await openDb();
+  const status = req.body.action === 'approve' ? 'approved' : 'rejected';
+  await db.run("UPDATE award_card_photos SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND status = 'pending'",
+    [status, req.params.id]);
+  res.json({ success: true });
 });
 
 

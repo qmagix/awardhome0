@@ -843,6 +843,19 @@ router.get('/dancer/:unique_id', async (req, res) => {
           .sort((x, y) => (y.dancer_id === dancer.id) - (x.dancer_id === dancer.id));
       });
     } catch (e) { /* table missing before first migrate — cards render without acks */ }
+
+    // Approved per-award photos (usually the routine's performance shot).
+    // The photo page prefers these over the dancer-level default card photo.
+    try {
+      const ids = awards.map(a => a.id);
+      const photos = await db.all(`
+        SELECT award_id, photo_url FROM award_card_photos
+        WHERE dancer_id = ? AND status = 'approved' AND award_id IN (${ids.map(() => '?').join(',')})
+      `, [dancer.id, ...ids]);
+      const photoMap = {};
+      photos.forEach(p => { photoMap[p.award_id] = p.photo_url; });
+      awards.forEach(a => { a.award_photo_url = photoMap[a.id] || null; });
+    } catch (e) { /* table missing before first migrate — fallback photo still shows */ }
   }
 
   const totalAwardCount = soloAwards.length + groupAwards.length + conventionAwards.length;

@@ -35,6 +35,8 @@ const CHECKS = [
   ['GET', '/manage/dancer/1/card', [302], 'anonymous dancer card-extras redirected to login'],
   ['POST', '/manage/dancer/1/card/ack', [403], 'anonymous card ack blocked (CSRF)'],
   ['POST', '/manage/dancer/1/card/photo', [403], 'anonymous card photo upload blocked (CSRF)'],
+  ['POST', '/manage/dancer/1/card/award-photo', [403], 'anonymous award photo upload blocked (CSRF)'],
+  ['POST', '/api/admin/card-award-photo/1', [403], 'anonymous award-photo moderation blocked'],
   ['GET', '/admin/card-content', [403], 'anonymous card-content review blocked'],
   ['POST', '/api/admin/card-photo/1', [403], 'anonymous card-photo moderation blocked'],
   ['POST', '/api/admin/card-ack/1', [403], 'anonymous card-ack moderation blocked'],

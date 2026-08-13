@@ -345,6 +345,27 @@ async function initDb() {
     CREATE INDEX IF NOT EXISTS idx_award_acks_award ON award_acknowledgements(award_id);
     CREATE INDEX IF NOT EXISTS idx_award_acks_status ON award_acknowledgements(status);
 
+    -- Per-award photo for the flip-book card's photo page (usually the
+    -- routine's performance shot). Scoped per (award, dancer) like the
+    -- acknowledgements: on a group routine each family controls the photo
+    -- shown on their own dancer's card, so owners never fight over one
+    -- slot. The dancer-level default (dancers.card_photo_*) is the
+    -- fallback when an award has no photo of its own. Same superadmin
+    -- moderation gate (/admin/card-content).
+    CREATE TABLE IF NOT EXISTS award_card_photos (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      award_id INTEGER NOT NULL REFERENCES awards(id),
+      dancer_id INTEGER NOT NULL REFERENCES dancers(id),
+      photo_url TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      uploaded_by INTEGER REFERENCES users(id),
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(award_id, dancer_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_award_card_photos_dancer ON award_card_photos(dancer_id);
+    CREATE INDEX IF NOT EXISTS idx_award_card_photos_status ON award_card_photos(status);
+
     INSERT OR IGNORE INTO system_settings (key, value) VALUES ('openai_model', 'gpt-4o-mini');
     -- Which award-card design public pages render: 'classic' (two-face
     -- flip) or 'flipbook' (paged back). Superadmin toggle at /admin/settings;

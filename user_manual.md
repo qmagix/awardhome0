@@ -161,8 +161,13 @@ Award cards on public dancer pages can render in two designs (A/B): **Classic** 
 (or `classic`; `default` clears the override) on a dancer page.
 
 ### For dancers / parents (Dancer Dashboard → 🎴 Card Photo & Thanks)
-- **Card photo:** upload one photo (PNG/JPG/WebP/GIF/AVIF, ≤5 MB). The guardian-consent checkbox is
-  mandatory. The photo shows in a circular frame as its own card page once approved.
+- **Per-award photo:** each award can carry its own photo — usually that routine's performance
+  shot — shown in a rectangular frame with the routine name as caption. On group routines the
+  photo is per dancer, so each family controls what appears on their own dancer's card.
+- **Default card photo:** one fallback photo (circular frame) used on any card without its own
+  award photo. A clear headshot or stage portrait works best.
+- Uploads are PNG/JPG/WebP/GIF/AVIF, ≤5 MB, and the consent checkbox is mandatory (for award
+  photos it covers everyone pictured).
 - **Thank-you notes:** one short line (≤280 chars) per award. Leave the field blank and Save to
   remove a line. On group routines, each dancer writes their own line and the card shows them all.
 

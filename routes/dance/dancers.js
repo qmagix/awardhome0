@@ -42,9 +42,9 @@ async function getDancerIfCardManager(db, user, dancerId) {
   return viaStudio ? dancer : null;
 }
 
-// New table: created defensively so the routes work before `node database.js`
+// New tables: created defensively so the routes work before `node database.js`
 // has been re-run (same pattern as some admin routes).
-async function ensureAckTable(db) {
+async function ensureCardTables(db) {
   await db.exec(`
     CREATE TABLE IF NOT EXISTS award_acknowledgements (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -56,7 +56,18 @@ async function ensureAckTable(db) {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       UNIQUE(award_id, dancer_id)
-    )
+    );
+    CREATE TABLE IF NOT EXISTS award_card_photos (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      award_id INTEGER NOT NULL REFERENCES awards(id),
+      dancer_id INTEGER NOT NULL REFERENCES dancers(id),
+      photo_url TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      uploaded_by INTEGER REFERENCES users(id),
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(award_id, dancer_id)
+    );
   `);
 }
 
@@ -64,7 +75,7 @@ router.get('/manage/dancer/:id/card', requireAuth, async (req, res) => {
   const db = await openDb();
   const dancer = await getDancerIfCardManager(db, req.session.user, req.params.id);
   if (!dancer) return res.status(403).send('Forbidden: Not the owner');
-  await ensureAckTable(db);
+  await ensureCardTables(db);
 
   const awards = await db.all(`
     SELECT a.*, e.name as event_name, e.year, o.name as org_name,
@@ -82,7 +93,63 @@ router.get('/manage/dancer/:id/card', requireAuth, async (req, res) => {
   const ackMap = {};
   ackRows.forEach(r => { ackMap[r.award_id] = r; });
 
-  res.render('manage_dancer_card', { dancer, awards, ackMap });
+  const photoRows = await db.all(
+    'SELECT award_id, photo_url, status FROM award_card_photos WHERE dancer_id = ?', [dancer.id]);
+  const photoMap = {};
+  photoRows.forEach(r => { photoMap[r.award_id] = r; });
+
+  res.render('manage_dancer_card', { dancer, awards, ackMap, photoMap });
+});
+
+
+router.post('/manage/dancer/:id/card/award-photo', requireAuth, cardPhotoUpload.single('photo'), async (req, res) => {
+  const db = await openDb();
+  const dancer = await getDancerIfCardManager(db, req.session.user, req.params.id);
+  if (!dancer) return res.status(403).send('Forbidden');
+  await ensureCardTables(db);
+  const back = `/manage/dancer/${req.params.id}/card`;
+
+  const awardId = parseInt(req.body.award_id);
+  if (!awardId) return res.status(400).send('Missing award');
+  if (!req.file) {
+    return res.send(`<script>alert("Please choose an image file."); window.location.href=${JSON.stringify(back)};</script>`);
+  }
+  // Same consent gate as the default card photo: performance shots of a
+  // group routine can show other minors, and the photo goes on a
+  // publicly shareable card once approved.
+  if (req.body.consent !== 'on') {
+    return res.send(`<script>alert("Photo not saved: the consent box must be checked."); window.location.href=${JSON.stringify(back)};</script>`);
+  }
+
+  const linked = await db.get(
+    'SELECT 1 FROM award_dancers WHERE award_id = ? AND dancer_id = ?', [awardId, dancer.id]);
+  if (!linked) {
+    return res.send(`<script>alert("That award is not linked to this dancer."); window.location.href=${JSON.stringify(back)};</script>`);
+  }
+
+  // Any replacement goes back to pending — every public photo was reviewed
+  await db.run(`
+    INSERT INTO award_card_photos (award_id, dancer_id, photo_url, status, uploaded_by)
+    VALUES (?, ?, ?, 'pending', ?)
+    ON CONFLICT(award_id, dancer_id) DO UPDATE SET
+      photo_url = excluded.photo_url, status = 'pending',
+      uploaded_by = excluded.uploaded_by, updated_at = CURRENT_TIMESTAMP
+  `, [awardId, dancer.id, '/uploads/dancer_photos/' + req.file.filename, req.session.user.id]);
+  res.redirect(back);
+});
+
+
+router.post('/manage/dancer/:id/card/award-photo/remove', requireAuth, async (req, res) => {
+  const db = await openDb();
+  const dancer = await getDancerIfCardManager(db, req.session.user, req.params.id);
+  if (!dancer) return res.status(403).send('Forbidden');
+  await ensureCardTables(db);
+
+  const awardId = parseInt(req.body.award_id);
+  if (awardId) {
+    await db.run('DELETE FROM award_card_photos WHERE award_id = ? AND dancer_id = ?', [awardId, dancer.id]);
+  }
+  res.redirect(`/manage/dancer/${req.params.id}/card`);
 });
 
 
@@ -124,7 +191,7 @@ router.post('/manage/dancer/:id/card/ack', requireAuth, async (req, res) => {
   const db = await openDb();
   const dancer = await getDancerIfCardManager(db, req.session.user, req.params.id);
   if (!dancer) return res.status(403).send('Forbidden');
-  await ensureAckTable(db);
+  await ensureCardTables(db);
   const back = `/manage/dancer/${req.params.id}/card`;
 
   const awardId = parseInt(req.body.award_id);

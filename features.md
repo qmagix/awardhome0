@@ -34,9 +34,12 @@ The registry lives in `utils/cardDesign.js` — future designs are added there a
 - **Flip-book (new):** the back becomes a swipeable mini-book. Pages materialize only when their
   approval-gated content exists, so the first flip always lands on a complete certificate:
   1. **Certificate** — "Presented to …" (always present; share button lives on the back across pages).
-  2. **Photo** — the dancer's photo in a circular medallion. Uploaded by the dancer owner or a
-     studio owner of an actively affiliated studio (`/manage/dancer/:id/card`), guardian-consent
-     checkbox required, public only after superadmin approval.
+  2. **Photo** — per-award photo first (usually that routine's performance shot, stored per
+     award+dancer in `award_card_photos` so each family controls their own dancer's card on group
+     routines; rectangular frame + routine-name caption), falling back to the dancer's default
+     card photo (circular medallion, `dancers.card_photo_*`). Both uploaded at
+     `/manage/dancer/:id/card` by the dancer owner or a studio owner of an actively affiliated
+     studio, consent checkbox required, public only after superadmin approval.
   3. **Acknowledgements** — per-award thank-you lines (280 chars). Group routines get one line per
      teammate ("yearbook back") stored in `award_acknowledgements`; the viewing dancer's line is
      pinned first. Every line/edit is superadmin-moderated before display.

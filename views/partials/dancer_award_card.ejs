@@ -55,7 +55,14 @@
 
   // Flipbook back-stack: pages materialize only when their content exists,
   // so the first flip always lands on a complete certificate.
-  const hasPhotoPage = design === 'flipbook' && dancer.card_photo_url && dancer.card_photo_status === 'approved';
+  // Photo page: the per-award photo (usually the routine's performance
+  // shot, approved in award_card_photos) wins; the dancer-level default
+  // card photo is the fallback. Award photos get a rectangular frame
+  // (action shots crop badly in a circle), the default keeps the medallion.
+  const awardPhoto = design === 'flipbook' ? (award.award_photo_url || null) : null;
+  const defaultPhoto = (dancer.card_photo_url && dancer.card_photo_status === 'approved') ? dancer.card_photo_url : null;
+  const cardPhoto = awardPhoto || defaultPhoto;
+  const hasPhotoPage = design === 'flipbook' && !!cardPhoto;
   const cardAcks = (design === 'flipbook' && award.acks) ? award.acks : [];
   const hasAckPage = cardAcks.length > 0;
   const hasColophonPage = design === 'flipbook' && showOrgLogo;
@@ -160,10 +167,13 @@
 
       <% if (hasPhotoPage) { %>
         <div class="tcb-page tcb-page-photo">
-          <div class="tcb-photo-frame">
-            <img src="<%= dancer.card_photo_url %>" alt="<%= dancer.name %>" loading="lazy">
+          <div class="tcb-photo-frame <%= awardPhoto ? 'tcb-photo-frame-rect' : '' %>">
+            <img src="<%= cardPhoto %>" alt="<%= dancer.name %>" loading="lazy">
           </div>
           <div class="tcb-photo-name"><%= dancer.name %></div>
+          <% if (awardPhoto && award.performance_name) { %>
+            <div class="tcb-photo-caption">&ldquo;<%= award.performance_name %>&rdquo;</div>
+          <% } %>
         </div>
       <% } %>
 
