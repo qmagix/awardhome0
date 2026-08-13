@@ -142,6 +142,17 @@ router.post('/login', authLimiter, async (req, res) => {
   if (ownedOrg) {
     return res.redirect(`/manage/org/${ownedOrg.id}`);
   }
+  // Parents/dancers: anyone with a claimed dancer OR a claim in flight
+  // lands on the My Dancers dashboard (shows claim status too — a parent
+  // with only a pending claim previously landed on the generic homepage
+  // with no sign their claim existed).
+  const dancerTie = await db.get(`
+    SELECT 1 FROM dancers WHERE claimed_by_user_id = ?
+    UNION SELECT 1 FROM dancer_claims WHERE user_id = ? LIMIT 1
+  `, [user.id, user.id]);
+  if (dancerTie) {
+    return res.redirect('/my-dancers');
+  }
   res.redirect('/');
 });
 

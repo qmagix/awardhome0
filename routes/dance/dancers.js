@@ -220,14 +220,40 @@ router.post('/manage/dancer/:id/card/ack', requireAuth, async (req, res) => {
   res.redirect(back);
 });
 
-router.get('/my-dancer', requireAuth, async (req, res) => {
+// Legacy single-dancer entry point → the dashboard
+router.get('/my-dancer', requireAuth, (req, res) => res.redirect('/my-dancers'));
+
+
+// Parent/dancer dashboard: every dancer this account owns (a parent may
+// manage several kids) plus the status of claims still in flight — the
+// answer to "I logged in, where's my dancer?".
+router.get('/my-dancers', requireAuth, async (req, res) => {
   const db = await openDb();
-  const ownedDancer = await db.get('SELECT id FROM dancers WHERE claimed_by_user_id = ? LIMIT 1', [req.session.user.id]);
-  if (ownedDancer) {
-    res.redirect(`/manage/dancer/${ownedDancer.id}`);
-  } else {
-    res.send(`<script>alert("You haven't claimed a dancer profile yet!"); window.location.href="/";</script>`);
-  }
+  const userId = req.session.user.id;
+
+  const dancers = await db.all(`
+    SELECT d.*, (SELECT COUNT(*) FROM award_dancers ad WHERE ad.dancer_id = d.id) as award_count
+    FROM dancers d
+    WHERE d.claimed_by_user_id = ?
+    ORDER BY d.name
+  `, [userId]);
+
+  // Claims not yet reflected above: pending review or rejected. Approved
+  // claims become owned dancers, so they'd be duplicates here.
+  let claims = [];
+  try {
+    claims = await db.all(`
+      SELECT dc.id, dc.status, dc.code_valid, dc.created_at,
+             d.name as dancer_name, d.unique_id, s.name as studio_name
+      FROM dancer_claims dc
+      JOIN dancers d ON dc.dancer_id = d.id
+      LEFT JOIN studios s ON dc.studio_id = s.id
+      WHERE dc.user_id = ? AND dc.status != 'approved'
+      ORDER BY dc.created_at DESC
+    `, [userId]);
+  } catch (e) { /* studio_id/code_valid columns missing until migrate */ }
+
+  res.render('my_dancers', { dancers, claims });
 });
 
 

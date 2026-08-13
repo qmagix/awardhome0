@@ -33,6 +33,7 @@ const CHECKS = [
   ['POST', '/manage/studio/1/onboarding/dismiss', [403], 'anonymous onboarding dismiss blocked (CSRF)'],
   ['GET', '/manage/org/1', [302], 'anonymous org manage redirected to login'],
   ['GET', '/manage/dancer/1/card', [302], 'anonymous dancer card-extras redirected to login'],
+  ['GET', '/my-dancers', [302], 'anonymous my-dancers redirected to login'],
   ['POST', '/manage/dancer/1/card/ack', [403], 'anonymous card ack blocked (CSRF)'],
   ['POST', '/manage/dancer/1/card/photo', [403], 'anonymous card photo upload blocked (CSRF)'],
   ['POST', '/manage/dancer/1/card/award-photo', [403], 'anonymous award photo upload blocked (CSRF)'],

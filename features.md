@@ -22,6 +22,13 @@ This document outlines the core features of the Dance Awards Platform.
 - **Unique IDs:** Dancers are issued a Unique ID to rapidly claim future awards without needing the Studio Code.
 - **Smart Auto-Backfill:** Whether claiming via the public directory or the Missing Awards search tool, claiming one award automatically queries and claims all other awards for the exact same routine at the same event.
 - **Privacy:** Roster lists are hidden from the public; dancers only appear on the awards they claim.
+- **My Dancers dashboard (`/my-dancers`):** the home surface for parent/dancer accounts — every
+  dancer the account owns (a parent may manage several kids) with links to the trophy case,
+  profile management, and card extras, plus the live status of claims still in review ("awaiting
+  your studio director (X)" vs "awaiting AwardHome review" vs "not approved"). Linked as
+  "My Dancers" in the nav for `user`/`dancer_owner` roles, and the post-login landing for any
+  account with a claimed dancer or a claim in flight (previously such accounts landed on the
+  generic homepage with no sign their claim existed). Legacy `/my-dancer` redirects here.
 - **Profile claims with studio-code routing:** the dancer profile claim form takes an optional
   Studio Claim Code (`studios.join_code`). A code matching one of the dancer's affiliated studios
   routes the claim to that studio director's Verifications dashboard ("Profile Claims to Confirm",

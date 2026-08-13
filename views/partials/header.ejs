@@ -30,8 +30,8 @@
           <% if (user.role === 'studio_owner') { %>
             <a href="/my-studio" style="color: white; text-decoration: none; font-weight: 600;">My Studio</a>
           <% } %>
-          <% if (user.role === 'dancer_owner') { %>
-            <a href="/my-dancer" style="color: white; text-decoration: none; font-weight: 600;">My Dancer Profile</a>
+          <% if (user.role === 'dancer_owner' || user.role === 'user') { %>
+            <a href="/my-dancers" style="color: white; text-decoration: none; font-weight: 600;">My Dancers</a>
           <% } %>
           <a href="/my-feedback" style="color: white; text-decoration: none; font-weight: 600;">My Feedback</a>
           <a href="#" onclick="openFeedbackModal(event)" style="color: #fbbf24; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 0.3rem;">

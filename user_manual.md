@@ -200,3 +200,12 @@ Claim Code** — the same `join_code` directors already hand out for award claim
 - **Notifications**: the claimant is emailed on approval (deep-linking to the card-extras page and
   their dashboard) and on rejection — from either review path. Approving a claim auto-rejects any
   competing pending claims for the same dancer (those claimants are emailed too).
+
+## 12. My Dancers Dashboard (Parent/Dancer Accounts)
+`/my-dancers` is the home surface for parent and dancer accounts ("My Dancers" in the nav for
+`user`/`dancer_owner` roles; legacy `/my-dancer` redirects here). It lists every dancer the
+account owns — parents can claim multiple kids — with buttons for the public trophy case,
+profile management, and card photo/thank-you extras, plus a "Claims in Review" section showing
+each pending claim's routing ("awaiting your studio director" vs "awaiting AwardHome review").
+Login redirects here for any account with a claimed dancer or a claim in flight; accounts with
+neither see an empty state explaining how to find and claim a dancer.

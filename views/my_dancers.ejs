@@ -1,0 +1,81 @@
+<%- include('partials/header') %>
+
+<div class="container" style="max-width: 980px; margin-top: 3rem; margin-bottom: 4rem;">
+  <div class="header-section" style="margin-bottom: 2rem;">
+    <h1>My Dancers</h1>
+    <p class="subtitle">Your family's dancer profiles, and any claims still in review.</p>
+  </div>
+
+  <% if (dancers.length === 0 && claims.length === 0) { %>
+    <div class="card glass-card" style="text-align: center; padding: 4rem 2rem;">
+      <div style="font-size: 3rem; margin-bottom: 1rem;">💃</div>
+      <h3 style="margin: 0 0 0.5rem 0; color: white;">No dancers linked yet</h3>
+      <p style="color: var(--text-muted); max-width: 480px; margin: 0 auto 1.5rem auto;">
+        Find your dancer by searching for their studio on the homepage, then click
+        <strong>"Claim this Dancer"</strong> on their profile. Tip: entering your studio's
+        claim code with the claim gets it confirmed by your studio director, usually faster.
+      </p>
+      <a href="/dance" class="btn btn-primary" style="text-decoration: none;">Search for your Dancer</a>
+    </div>
+  <% } %>
+
+  <% if (dancers.length > 0) { %>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(420px, 100%), 1fr)); gap: 1.25rem; margin-bottom: 2.5rem;">
+      <% dancers.forEach(d => { const photo = (d.card_photo_status === 'approved' && d.card_photo_url) ? d.card_photo_url : d.headshot_url; %>
+        <div class="card glass-card" style="display: flex; gap: 1.25rem; align-items: flex-start;">
+          <% if (photo) { %>
+            <div style="width: 76px; height: 76px; border-radius: 50%; overflow: hidden; border: 2px solid rgba(212, 175, 55, 0.5); flex-shrink: 0;">
+              <img src="<%= photo %>" alt="<%= d.name %>" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+          <% } else { %>
+            <div style="width: 76px; height: 76px; border-radius: 50%; background: rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; font-size: 2rem; flex-shrink: 0;">💃</div>
+          <% } %>
+          <div style="flex: 1; min-width: 0;">
+            <h3 style="margin: 0 0 0.15rem 0; color: white;">
+              <%= d.name %>
+              <% if (d.vanity_tag) { %><span class="vanity-chip" style="font-size: 0.7rem; vertical-align: middle;">#<%= d.vanity_tag %></span><% } %>
+            </h3>
+            <p style="margin: 0 0 0.75rem 0; color: var(--text-muted); font-size: 0.85rem;">
+              🏆 <%= d.award_count %> award<%= d.award_count === 1 ? '' : 's' %> &middot; ID: <code style="font-size: 0.8rem;"><%= d.unique_id %></code>
+            </p>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <a href="/dancer/<%= d.unique_id %>" class="btn btn-primary" style="padding: 0.4rem 0.9rem; font-size: 0.85rem; text-decoration: none;">Trophy Case</a>
+              <a href="/manage/dancer/<%= d.id %>" class="btn btn-outline" style="padding: 0.4rem 0.9rem; font-size: 0.85rem; text-decoration: none;">Manage Profile</a>
+              <a href="/manage/dancer/<%= d.id %>/card" class="btn btn-outline" style="padding: 0.4rem 0.9rem; font-size: 0.85rem; text-decoration: none;">🎴 Card Photo &amp; Thanks</a>
+            </div>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+  <% } %>
+
+  <% if (claims.length > 0) { %>
+    <div class="card glass-card">
+      <h3 style="margin-top: 0;">Claims in Review</h3>
+      <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <% claims.forEach(c => { %>
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 0.85rem 1rem;">
+            <div>
+              <a href="/dancer/<%= c.unique_id %>" style="color: white; font-weight: 600; text-decoration: none;"><%= c.dancer_name %></a>
+              <span style="color: var(--text-muted); font-size: 0.85rem;"> &middot; submitted <%= new Date(c.created_at).toLocaleDateString() %></span>
+            </div>
+            <div>
+              <% if (c.status === 'pending' && c.code_valid) { %>
+                <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #aa8529;">Awaiting your studio director (<%= c.studio_name %>)</span>
+              <% } else if (c.status === 'pending') { %>
+                <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #aa8529;">Awaiting AwardHome review</span>
+              <% } else { %>
+                <span class="badge" style="background: rgba(239, 68, 68, 0.2); color: #ef4444;">Not approved</span>
+              <% } %>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin: 1rem 0 0 0;">
+        You'll get an email as soon as a decision is made. Approved dancers appear above automatically.
+      </p>
+    </div>
+  <% } %>
+</div>
+
+<%- include('partials/footer') %>
