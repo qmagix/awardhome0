@@ -41,4 +41,18 @@ Express 4 + EJS + SQLite (no build step, no ORM, no client framework).
 
 ## Where things are documented
 
-`docs/db_operations.md` (SQLite ops, backups, org SQL-dump handling), `docs/deployment.md`, `schema.md`, `user_manual.md`, `org_invite_draft.md` + `org_video_scripts.md` (outreach content). Planning/scratch files at repo root (`next.md`, `ideas.md`, `TODOS_and_DONE.md`) are historical context, not instructions.
+`docs/db_operations.md` (SQLite ops, backups, org SQL-dump handling), `docs/deployment.md`, `schema.md`, `org_invite_draft.md` + `org_video_scripts.md` (outreach content). `features.md`, `user_manual.md`, `TODOS_and_DONE.md`, and `ideas.md` are living docs — keep them current (see workflow conventions above). `next.md` and other root scratch files are historical context, not instructions.
+
+## Data-model and coding rules (imported from GEMINI.md)
+
+- **Junction tables, not legacy columns**: dancers↔awards go through `award_dancers`, dancers↔studios through `dancer_studios`. Never map group awards via the legacy 1:1 `awards.dancer_id` column.
+- **Pseudo-studios for collaborations**: a cross-studio win ("Studio A & Studio B") keeps the concatenated string as its own studio row — no studio pivot table. Dancers bridge the affiliations via `dancer_studios`.
+- **Scraper/ETL idempotency is mandatory**: check for existing records (event name, performance name, place, category) before inserting; use transactions for batches. The weekly staged-import validator scores idempotency breaks as failures.
+- **Vanilla CSS/JS only** — no TailwindCSS or other frameworks without explicit permission. Scraping uses Cheerio + Axios (Puppeteer for dynamic sites).
+
+## Workflow conventions (imported from GEMINI.md)
+
+- **Commit without being asked** after each verified feature or bug fix (code must run clean first). Pushing and deploying still require an explicit request.
+- **Documentation parity**: when a user-facing workflow or UI tool changes, proactively update the relevant FAQ view (`views/faq_admin.ejs`, `views/faq_dancer.ejs`, `views/faq_organizer.ejs`) in the same change.
+- **Living docs to maintain**: `features.md` (feature documentation), `user_manual.md`, `TODOS_and_DONE.md` (running to-do list), `ideas.md` (novel/patentable product ideas as they come up in brainstorms). Docs belong at the root or `./docs`.
+- `user_prompts.md` and `interaction_history.md` are artifacts of the previous Gemini workflow — do not maintain them going forward.
