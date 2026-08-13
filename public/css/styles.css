@@ -549,8 +549,8 @@ a:hover {
   position: absolute;
   top: 0.5rem;
   left: 0.5rem;
-  width: 28px;
-  height: 28px;
+  width: 55px;
+  height: 55px;
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.18);
@@ -742,8 +742,8 @@ a:hover {
   .flip-card .card-org-coin {
     top: 2.7cqw;
     left: 2.7cqw;
-    width: 9.3cqw;
-    height: 9.3cqw;
+    width: 18.3cqw;
+    height: 18.3cqw;
   }
 
   .flip-card .premium-trophy-card .verified-badge {
@@ -914,8 +914,8 @@ a:hover {
   .awards-grid.landscape .flip-card .card-org-coin {
     top: 1.7cqw;
     left: 1.7cqw;
-    width: 6.1cqw;
-    height: 6.1cqw;
+    width: 12cqw;
+    height: 12cqw;
   }
 
   .awards-grid.landscape .flip-card .premium-trophy-card .verified-badge {
