@@ -106,6 +106,15 @@
     </div>
     <% } %>
 
+    <!-- Card Content Review -->
+    <% if (user && user.role === 'superadmin') { %>
+    <div class="card glass-card">
+      <h3 style="color: #c4b5fd; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">🎴 Card Content Review</h3>
+      <p class="sub-text" style="margin-bottom: 1.5rem;">Approve dancer photos and thank-you notes before they appear on public flip-book award cards.</p>
+      <a href="/admin/card-content" class="btn btn-outline" style="display: block; text-align: center; border-color: #c4b5fd; color: #c4b5fd;">Open Review Queue</a>
+    </div>
+    <% } %>
+
     <!-- Accounts & Impersonation -->
     <div class="card glass-card">
       <h3 style="color: var(--accent-gold); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">🔑 Account Impersonation</h3>

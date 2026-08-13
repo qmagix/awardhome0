@@ -533,6 +533,209 @@ a:hover {
   border-color: #6d5626;
 }
 
+/* ---- Flipbook design variant (.flip-card.flipbook) ----
+   The certificate back becomes page 1 of a paged back-stack: photo,
+   acknowledgements, and organizer colophon pages are materialized
+   server-side only when their approval-gated content exists, so the first
+   flip always lands on a complete certificate. Tap flips; arrows/dots/
+   swipe page. Selected per session via ?card_design= or site-wide at
+   /admin/settings. */
+.tcb-book .tcb-page {
+  position: absolute;
+  inset: 0;
+  padding: 1.25rem;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border-radius: inherit;
+}
+
+.tcb-book .tcb-page.active {
+  display: flex;
+  animation: tcbPageIn 0.28s ease;
+}
+
+@keyframes tcbPageIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.tcb-book .tcb-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid #b08d45;
+  background: rgba(255, 255, 255, 0.5);
+  color: #6d5626;
+  font-size: 1rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+  transition: background 0.2s, color 0.2s;
+}
+
+.tcb-book .tcb-arrow:hover {
+  background: #6d5626;
+  color: #f9f0d8;
+  border-color: #6d5626;
+}
+
+.tcb-book .tcb-arrow-prev { left: 0.4rem; }
+.tcb-book .tcb-arrow-next { right: 0.4rem; }
+
+.tcb-book .tcb-dots {
+  position: absolute;
+  bottom: 0.65rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.35rem;
+  z-index: 2;
+}
+
+.tcb-book .tcb-dot {
+  width: 7px;
+  height: 7px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid #b08d45;
+  background: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+}
+
+.tcb-book .tcb-dot.active {
+  background: #8a6d35;
+}
+
+/* Photo page: circular medallion, matching the coin/certificate scheme */
+.tcb-book .tcb-photo-frame {
+  width: 62%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid #c9a961;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.6), 0 6px 18px rgba(0, 0, 0, 0.25);
+  flex-shrink: 0;
+}
+
+.tcb-book .tcb-photo-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tcb-book .tcb-photo-name {
+  margin-top: 0.8rem;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: #2a2110;
+}
+
+/* Acknowledgements page ("yearbook back": one line per teammate,
+   the viewing dancer's line pinned first by the server) */
+.tcb-book .tcb-ack-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: 100%;
+  max-height: 64%;
+  overflow-y: auto;
+  margin-top: 0.5rem;
+}
+
+.tcb-book .tcb-ack-line {
+  font-size: 0.8rem;
+  color: #3a2f18;
+  line-height: 1.35;
+}
+
+.tcb-book .tcb-ack-line .tcb-ack-msg {
+  font-style: italic;
+}
+
+.tcb-book .tcb-ack-mine .tcb-ack-msg {
+  font-weight: 600;
+}
+
+.tcb-book .tcb-ack-line .tcb-ack-author {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #8a6d35;
+}
+
+/* Organizer colophon page (last page — the "credits"): approved coin
+   logo shown large, reusing the same fit vars as the front coin */
+.tcb-book .tcb-colo-coin {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid #b08d45;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0.6rem 0;
+  flex-shrink: 0;
+}
+
+.tcb-book .tcb-colo-coin img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: var(--org-logo-opacity, 0.9);
+  transform: var(--org-logo-transform, none);
+}
+
+.tcb-book .tcb-colo-org {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: #2a2110;
+}
+
+.tcb-book .tcb-colo-msg {
+  font-style: italic;
+  font-size: 0.8rem;
+  color: #6d5626;
+  margin-top: 0.5rem;
+}
+
+/* Landscape grid: the certificate page reflows to the two-column row
+   (the existing landscape .tcb-col/.tcb-rule descendant rules still
+   apply inside the page); other pages stay centered columns. */
+.awards-grid.landscape .tcb-book .tcb-page {
+  padding: 1rem 2.25rem;
+}
+
+.awards-grid.landscape .tcb-book .tcb-page-cert {
+  flex-direction: row;
+  gap: 1.25rem;
+}
+
+.awards-grid.landscape .tcb-book .tcb-photo-frame {
+  width: auto;
+  height: 68%;
+}
+
+.awards-grid.landscape .tcb-book .tcb-colo-coin {
+  width: 72px;
+  height: 72px;
+  margin: 0.4rem 0;
+}
+
 /* Formerly inline styles in dancer_award_card.ejs, extracted so the
    container-query sizing below can reach them. */
 .flip-card .trophy-custom-icon {
@@ -887,6 +1090,115 @@ a:hover {
   .flip-card .trophy-card-back .tcb-share svg {
     width: 4.3cqw;
     height: 4.3cqw;
+  }
+
+  /* -- Flipbook back-stack, portrait (same 300px basis) -- */
+  .flip-card .tcb-book .tcb-page {
+    padding: 6.7cqw;
+  }
+
+  .flip-card .tcb-book .tcb-arrow {
+    width: 8cqw;
+    height: 8cqw;
+    font-size: 5.3cqw;
+  }
+
+  .flip-card .tcb-book .tcb-arrow-prev { left: 2.1cqw; }
+  .flip-card .tcb-book .tcb-arrow-next { right: 2.1cqw; }
+
+  .flip-card .tcb-book .tcb-dots {
+    bottom: 3.5cqw;
+    gap: 1.9cqw;
+  }
+
+  .flip-card .tcb-book .tcb-dot {
+    width: 2.3cqw;
+    height: 2.3cqw;
+  }
+
+  .flip-card .tcb-book .tcb-photo-frame {
+    border-width: 1cqw;
+  }
+
+  .flip-card .tcb-book .tcb-photo-name {
+    margin-top: 4.3cqw;
+    font-size: 5.9cqw;
+  }
+
+  .flip-card .tcb-book .tcb-ack-lines {
+    gap: 3.2cqw;
+    margin-top: 2.7cqw;
+  }
+
+  .flip-card .tcb-book .tcb-ack-line {
+    font-size: 4.3cqw;
+  }
+
+  .flip-card .tcb-book .tcb-ack-line .tcb-ack-author {
+    margin-top: 0.8cqw;
+    font-size: 3.7cqw;
+  }
+
+  .flip-card .tcb-book .tcb-colo-coin {
+    width: 28cqw;
+    height: 28cqw;
+    margin: 3.2cqw 0;
+  }
+
+  .flip-card .tcb-book .tcb-colo-org {
+    font-size: 5.6cqw;
+  }
+
+  .flip-card .tcb-book .tcb-colo-msg {
+    font-size: 4.3cqw;
+    margin-top: 2.7cqw;
+  }
+
+  /* -- Flipbook, landscape (460px basis: portrait px / 4.6) -- */
+  .awards-grid.landscape .flip-card .tcb-book .tcb-page {
+    padding: 3.5cqw 7.8cqw;
+  }
+
+  .awards-grid.landscape .flip-card .tcb-book .tcb-arrow {
+    width: 5.2cqw;
+    height: 5.2cqw;
+    font-size: 3.5cqw;
+  }
+
+  .awards-grid.landscape .flip-card .tcb-book .tcb-dots {
+    bottom: 2.2cqw;
+  }
+
+  .awards-grid.landscape .flip-card .tcb-book .tcb-dot {
+    width: 1.5cqw;
+    height: 1.5cqw;
+  }
+
+  .awards-grid.landscape .flip-card .tcb-book .tcb-photo-name {
+    margin-top: 2.8cqw;
+    font-size: 3.8cqw;
+  }
+
+  .awards-grid.landscape .flip-card .tcb-book .tcb-ack-line {
+    font-size: 2.8cqw;
+  }
+
+  .awards-grid.landscape .flip-card .tcb-book .tcb-ack-line .tcb-ack-author {
+    font-size: 2.4cqw;
+  }
+
+  .awards-grid.landscape .flip-card .tcb-book .tcb-colo-coin {
+    width: 15.7cqw;
+    height: 15.7cqw;
+    margin: 1.7cqw 0;
+  }
+
+  .awards-grid.landscape .flip-card .tcb-book .tcb-colo-org {
+    font-size: 3.7cqw;
+  }
+
+  .awards-grid.landscape .flip-card .tcb-book .tcb-colo-msg {
+    font-size: 2.8cqw;
   }
 
   /* -- Landscape variant: same physical design at its wider 460px basis,

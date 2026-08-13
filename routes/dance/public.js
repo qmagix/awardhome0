@@ -5,6 +5,7 @@ const { logStudioActivity } = require('../../utils/activity');
 const { cached } = require('../../utils/cache');
 const { formatEventTitle } = require('../../utils/format');
 const { unsubscribeToken } = require('../../utils/invites');
+const { resolveCardDesign } = require('../../utils/cardDesign');
 const rateLimit = require('express-rate-limit');
 const { BASE_URL } = require('../../config');
 const { requireAdmin } = require('../../middleware/auth');
@@ -820,9 +821,33 @@ router.get('/dancer/:unique_id', async (req, res) => {
   conventionAwards.forEach(a => yearsMap.get(yearOf(a)).convention.push(a));
   const yearSections = [...yearsMap.values()];
 
+  const cardDesign = await resolveCardDesign(req, db);
+  if (cardDesign === 'flipbook' && awards.length > 0) {
+    // Approved thank-you lines for the flipbook's acknowledgements page.
+    // Group cards show every teammate's line, the viewing dancer's first.
+    try {
+      const ids = awards.map(a => a.id);
+      const acks = await db.all(`
+        SELECT aa.award_id, aa.dancer_id, aa.message, d.name as dancer_name
+        FROM award_acknowledgements aa
+        JOIN dancers d ON aa.dancer_id = d.id
+        WHERE aa.status = 'approved' AND aa.award_id IN (${ids.map(() => '?').join(',')})
+        ORDER BY d.name
+      `, ids);
+      const ackMap = {};
+      for (const row of acks) {
+        (ackMap[row.award_id] = ackMap[row.award_id] || []).push(row);
+      }
+      awards.forEach(a => {
+        a.acks = (ackMap[a.id] || []).slice()
+          .sort((x, y) => (y.dancer_id === dancer.id) - (x.dancer_id === dancer.id));
+      });
+    } catch (e) { /* table missing before first migrate — cards render without acks */ }
+  }
+
   const totalAwardCount = soloAwards.length + groupAwards.length + conventionAwards.length;
   res.render('dancer', {
-    dancer, soloAwards, groupAwards, conventionAwards, yearSections,
+    dancer, soloAwards, groupAwards, conventionAwards, yearSections, cardDesign,
     pageTitle: dancer.name,
     pageDesc: `${dancer.name}'s digital trophy case on AwardHome: ${totalAwardCount} dance awards.`
   });

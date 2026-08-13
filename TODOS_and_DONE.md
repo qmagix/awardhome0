@@ -21,7 +21,8 @@
 - [ ] File storage to AWS S3 for uploads (org results, branding images currently on local disk; ties into the org result submission pipeline below).
 - [ ] Organization competition result submission end-to-end: upload works (org_uploads table + local disk) but the S3 storage + admin review/batch-ingestion pipeline is not built.
 - [ ] Mobile app as a PWA (MVP). The responsive web pass is done; PWA manifest/service worker/install flow is not.
-- [ ] Multi-page flip-book award card (photo / acknowledgements / organizer colophon pages, per-dancer ack lines on group cards) — design brainstormed 2026-08-12, see ideas.md §2.
+- [x] (DONE 2026-08-12) Multi-page flip-book award card: paged back-stack (certificate → photo → acknowledgements → organizer colophon), per-dancer ack lines on group cards, all owner content superadmin-moderated at /admin/card-content, A/B design switch (classic/flipbook) at /admin/settings + ?card_design= session preview. See features.md §3b.
+- [ ] Flip-book follow-ups: per-page share-image rendering (canvas/off-screen render — groundwork for auto-generated social video shorts, see ideas.md §3); email superadmin when new card content lands in the review queue; certificate-page photo medallion inset.
 
 ### IP / legal
 - [ ] Patent triage: have an attorney review maybe_patentable.md (Tier A first); if we commit to the flip-book card (A3/A4), consider a provisional filing BEFORE deploying it publicly.

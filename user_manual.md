@@ -153,3 +153,29 @@ The Studio Admin dashboard features a powerful, two-step AI Marketing Summary Ge
    - **Raw Text:** Click "Generate Raw Text Summary" to produce a standard, grouped text list of the selected awards.
    - **AI Marketing Copy:** Select a tone from the dropdown ("Enthusiastic" for social media, or "Professional" for press releases) and click **✨ Generate AI Summary**.
 5. **Auto-Save:** Once the text is generated, you can edit it directly in the text box. The system will silently autosave your edits to the database to help improve future AI models!
+
+## 10. Flip-Book Award Cards: Photos, Thank-You Notes & Colophon
+Award cards on public dancer pages can render in two designs (A/B): **Classic** (two-face flip) and
+**Flip-book** (the back becomes a swipeable mini-book). A superadmin picks the site-wide default at
+`/admin/settings` → "Award Card Design"; anyone can preview per session with `?card_design=flipbook`
+(or `classic`; `default` clears the override) on a dancer page.
+
+### For dancers / parents (Dancer Dashboard → 🎴 Card Photo & Thanks)
+- **Card photo:** upload one photo (PNG/JPG/WebP/GIF/AVIF, ≤5 MB). The guardian-consent checkbox is
+  mandatory. The photo shows in a circular frame as its own card page once approved.
+- **Thank-you notes:** one short line (≤280 chars) per award. Leave the field blank and Save to
+  remove a line. On group routines, each dancer writes their own line and the card shows them all.
+
+### For studio directors
+Open **Roster** and click **Card** on any active dancer's row — same page, same abilities. Useful
+for adding photos/notes on behalf of families.
+
+### For organizers
+The flip-book's last page is your "Presented by" colophon: your fitted coin logo shown large plus an
+optional tagline (Branding page → "Card 'Presented by' Tagline", ≤140 chars). It appears once your
+logo is approved for public display (the usual concierge fitting flow).
+
+### For superadmins
+- `/admin/card-content` — review queue. Approve/reject pending photos and thank-you lines; every
+  new submission or edit lands here as `pending` and is invisible publicly until approved.
+- `/admin/settings` — flip the site-wide card design (instant, no restart).

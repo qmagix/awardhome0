@@ -106,13 +106,67 @@ router.post('/api/admin/settings', requireSuperadmin, async (req, res) => {
     const db = await openDb();
     const { key, value } = req.body;
     if (!key || !value) return res.status(400).json({ error: 'Missing key or value' });
-    
+
     await db.run('INSERT INTO system_settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value', [key, value]);
     res.json({ success: true });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
   }
+});
+
+
+// ---- Flip-book card content moderation (photos + thank-you lines) ----
+// Concierge gate, same philosophy as logo-coin approval: nothing owner-
+// submitted reaches a public card until a superadmin has seen it (authors
+// are often minors; group acks surface on teammates' pages too).
+router.get('/admin/card-content', requireSuperadmin, async (req, res) => {
+  const db = await openDb();
+
+  let pendingPhotos = [];
+  try {
+    pendingPhotos = await db.all(`
+      SELECT d.id, d.name, d.unique_id, d.card_photo_url, u.email as uploader_email
+      FROM dancers d
+      LEFT JOIN users u ON d.card_photo_uploaded_by = u.id
+      WHERE d.card_photo_status = 'pending'
+      ORDER BY d.name
+    `);
+  } catch (e) { /* columns missing until `node database.js` runs */ }
+
+  let pendingAcks = [];
+  try {
+    pendingAcks = await db.all(`
+      SELECT aa.id, aa.message, aa.created_at, d.name as dancer_name, d.unique_id,
+             a.performance_name, a.award_type, a.place, e.name as event_name, e.year
+      FROM award_acknowledgements aa
+      JOIN dancers d ON aa.dancer_id = d.id
+      JOIN awards a ON aa.award_id = a.id
+      LEFT JOIN events e ON a.event_id = e.id
+      WHERE aa.status = 'pending'
+      ORDER BY aa.created_at ASC
+    `);
+  } catch (e) { /* table missing until `node database.js` runs */ }
+
+  res.render('admin_card_content', { user: req.session.user, pendingPhotos, pendingAcks });
+});
+
+
+router.post('/api/admin/card-photo/:dancerId', requireSuperadmin, express.json(), async (req, res) => {
+  const db = await openDb();
+  const status = req.body.action === 'approve' ? 'approved' : 'rejected';
+  await db.run("UPDATE dancers SET card_photo_status = ? WHERE id = ? AND card_photo_status = 'pending'",
+    [status, req.params.dancerId]);
+  res.json({ success: true });
+});
+
+
+router.post('/api/admin/card-ack/:id', requireSuperadmin, express.json(), async (req, res) => {
+  const db = await openDb();
+  const status = req.body.action === 'approve' ? 'approved' : 'rejected';
+  await db.run("UPDATE award_acknowledgements SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND status = 'pending'",
+    [status, req.params.id]);
+  res.json({ success: true });
 });
 
 

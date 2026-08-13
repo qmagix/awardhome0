@@ -156,6 +156,21 @@
               </div>
             </div>
 
+            <div style="margin-bottom: 1.5rem;">
+              <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">
+                <span>Card "Presented by" Tagline</span>
+                <span style="font-size: 0.7rem;">max 140</span>
+              </div>
+              <input type="text" name="colophon_message" maxlength="140"
+                value="<%= (customIcons && customIcons.colophon_message) || '' %>"
+                placeholder="e.g. Celebrating young dancers since 1998"
+                style="width: 100%; padding: 0.6rem 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px; font-size: 0.85rem;">
+              <p style="font-size: 0.72rem; color: var(--text-muted); margin: 0.35rem 0 0 0;">
+                Shown under your logo on the flip-book card's closing "Presented by" page
+                (appears once your logo is approved for public display).
+              </p>
+            </div>
+
             <% if (user && user.role !== 'superadmin' && org.logo_url && !(customIcons && customIcons.logo_approved)) { %>
               <div style="background: rgba(234, 179, 8, 0.1); border: 1px solid rgba(234, 179, 8, 0.3); color: #eab308; padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1.5rem; font-size: 0.85rem;">
                 Your logo is with our design team — we hand-fit every logo onto the trophy cards before it

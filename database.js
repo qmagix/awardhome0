@@ -324,7 +324,32 @@ async function initDb() {
       last_changed_at DATETIME
     );
 
+    -- Per-dancer thank-you lines shown on the flip-book award card's
+    -- acknowledgements page. One row per (award, dancer): a group routine
+    -- gets one line per teammate ("yearbook back"). Lines are written by
+    -- dancer/studio owners but display only after superadmin approval
+    -- (concierge moderation, same philosophy as the org logo coin) —
+    -- authors are often minors, and a group card surfaces teammates'
+    -- lines on every member's public page.
+    CREATE TABLE IF NOT EXISTS award_acknowledgements (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      award_id INTEGER NOT NULL REFERENCES awards(id),
+      dancer_id INTEGER NOT NULL REFERENCES dancers(id),
+      message TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      created_by INTEGER REFERENCES users(id),
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(award_id, dancer_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_award_acks_award ON award_acknowledgements(award_id);
+    CREATE INDEX IF NOT EXISTS idx_award_acks_status ON award_acknowledgements(status);
+
     INSERT OR IGNORE INTO system_settings (key, value) VALUES ('openai_model', 'gpt-4o-mini');
+    -- Which award-card design public pages render: 'classic' (two-face
+    -- flip) or 'flipbook' (paged back). Superadmin toggle at /admin/settings;
+    -- per-session preview override via ?card_design= on dancer pages.
+    INSERT OR IGNORE INTO system_settings (key, value) VALUES ('card_design', 'classic');
 
     -- Performance Indexes
     CREATE INDEX IF NOT EXISTS idx_awards_event ON awards(event_id);
@@ -347,6 +372,13 @@ async function initDb() {
   try { await db.exec("ALTER TABLE dancers ADD COLUMN graduation_year INTEGER"); } catch(e) {}
   try { await db.exec("ALTER TABLE dancers ADD COLUMN instagram_handle TEXT"); } catch(e) {}
   try { await db.exec("ALTER TABLE dancers ADD COLUMN tiktok_handle TEXT"); } catch(e) {}
+  // Flip-book card photo page: uploaded by the dancer or studio owner with
+  // guardian consent, public only once card_photo_status = 'approved'
+  // (superadmin review at /admin/card-content; statuses: none/pending/
+  // approved/rejected). Distinct from headshot_url (a free URL field).
+  try { await db.exec("ALTER TABLE dancers ADD COLUMN card_photo_url TEXT"); } catch(e) {}
+  try { await db.exec("ALTER TABLE dancers ADD COLUMN card_photo_status TEXT DEFAULT 'none'"); } catch(e) {}
+  try { await db.exec("ALTER TABLE dancers ADD COLUMN card_photo_uploaded_by INTEGER REFERENCES users(id)"); } catch(e) {}
   
   try { await db.exec("ALTER TABLE organizations ADD COLUMN owner_id INTEGER REFERENCES users(id)"); } catch(e) {}
   try { await db.exec("ALTER TABLE organizations ADD COLUMN logo_url TEXT"); } catch(e) {}

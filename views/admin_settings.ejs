@@ -77,7 +77,69 @@
     <button id="btnSaveAi" class="btn btn-primary" onclick="saveAiModel()">💾 Save Configuration</button>
     <span id="saveAiStatus" style="margin-left: 1rem; color: #10b981; display: none;">✅ Saved successfully!</span>
   </div>
+
+  <div class="card glass-card" style="margin-bottom: 2rem;">
+    <h2 style="color: var(--primary); margin-bottom: 1rem;">Award Card Design</h2>
+    <p style="color: var(--text-muted); margin-bottom: 1.5rem; line-height: 1.6;">
+      Which card design public dancer pages render (A/B probe — visitors can preview either
+      variant with <code>?card_design=classic</code> / <code>?card_design=flipbook</code> on a dancer page;
+      <code>?card_design=default</code> clears their session override). Takes effect instantly.
+    </p>
+
+    <% const cardDesign = settings['card_design'] || 'classic'; %>
+    <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem;">
+      <label style="display: flex; align-items: flex-start; gap: 1rem; padding: 1rem; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; cursor: pointer;">
+        <input type="radio" name="card_design" value="classic" <%= cardDesign === 'classic' ? 'checked' : '' %> style="margin-top: 0.3rem;">
+        <div>
+          <div style="font-weight: bold; color: white; margin-bottom: 0.25rem;">Classic <span style="background: rgba(255,255,255,0.08); color: #e0e0e0; font-size: 0.7rem; padding: 0.1rem 0.4rem; border-radius: 4px; margin-left: 0.5rem;">Original</span></div>
+          <div style="font-size: 0.85rem; color: var(--text-muted);">
+            Two faces: trophy front, certificate back with the share button.
+          </div>
+        </div>
+      </label>
+
+      <label style="display: flex; align-items: flex-start; gap: 1rem; padding: 1rem; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; cursor: pointer;">
+        <input type="radio" name="card_design" value="flipbook" <%= cardDesign === 'flipbook' ? 'checked' : '' %> style="margin-top: 0.3rem;">
+        <div>
+          <div style="font-weight: bold; color: white; margin-bottom: 0.25rem;">Flip-book <span style="background: rgba(139, 92, 246, 0.2); color: #c4b5fd; font-size: 0.7rem; padding: 0.1rem 0.4rem; border-radius: 4px; margin-left: 0.5rem;">New</span></div>
+          <div style="font-size: 0.85rem; color: var(--text-muted);">
+            The back becomes a paged mini-book: certificate &rarr; photo &rarr; thank-you notes &rarr; organizer colophon.
+            Pages appear only when their approval-gated content exists (see <a href="/admin/card-content" style="color: var(--primary);">Card Content Review</a>).
+          </div>
+        </div>
+      </label>
+    </div>
+
+    <button id="btnSaveCard" class="btn btn-primary" onclick="saveCardDesign()">💾 Save Card Design</button>
+    <span id="saveCardStatus" style="margin-left: 1rem; color: #10b981; display: none;">✅ Saved successfully!</span>
+  </div>
 </div>
+
+<script>
+async function saveCardDesign() {
+  const selected = document.querySelector('input[name="card_design"]:checked').value;
+  const btn = document.getElementById('btnSaveCard');
+  const status = document.getElementById('saveCardStatus');
+  btn.disabled = true;
+  try {
+    const res = await fetch('/api/admin/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: 'card_design', value: selected })
+    });
+    if (res.ok) {
+      status.style.display = 'inline';
+      setTimeout(() => status.style.display = 'none', 3000);
+    } else {
+      alert('Failed to save settings');
+    }
+  } catch (err) {
+    alert('Network error while saving settings');
+  } finally {
+    btn.disabled = false;
+  }
+}
+</script>
 
 <script>
 async function saveAiModel() {

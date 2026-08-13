@@ -33,10 +33,37 @@
   else if (pLower.includes('2nd runner')) { tier = 'tier-bronze'; icon = '🥉'; }
 
   const isGroup = typeof isGroupAward !== 'undefined' && isGroupAward;
+  const design = (typeof cardDesign !== 'undefined' && cardDesign) ? cardDesign : 'classic';
+
+  // Logo shows only once a superadmin has fitted it into the coin and
+  // flipped logo_approved (concierge default-off; the coin keeps mixed-org
+  // grids to one silhouette regardless of logo shape). Fit settings → CSS
+  // vars (styles.css has the defaults). Values are numbers sanitized at
+  // save time (routes/dance/orgs.js). Shared by the front coin and the
+  // flipbook colophon page.
+  const lci = award.customIconsObj || {};
+  const showOrgLogo = !!(award.logo_url && lci.logo_approved && !lci.hide_logo);
+  const logoVars = [];
+  if (showOrgLogo) {
+    if (lci.logo_opacity !== undefined) logoVars.push('--org-logo-opacity: ' + lci.logo_opacity);
+    const logoTf = [];
+    if (lci.logo_offset_x || lci.logo_offset_y) logoTf.push('translate(' + (lci.logo_offset_x || 0) + 'px, ' + (lci.logo_offset_y || 0) + 'px)');
+    if (lci.logo_rotation) logoTf.push('rotate(' + lci.logo_rotation + 'deg)');
+    if (lci.logo_size && lci.logo_size !== 24) logoTf.push('scale(' + (lci.logo_size / 24) + ')');
+    if (logoTf.length) logoVars.push('--org-logo-transform: ' + logoTf.join(' '));
+  }
+
+  // Flipbook back-stack: pages materialize only when their content exists,
+  // so the first flip always lands on a complete certificate.
+  const hasPhotoPage = design === 'flipbook' && dancer.card_photo_url && dancer.card_photo_status === 'approved';
+  const cardAcks = (design === 'flipbook' && award.acks) ? award.acks : [];
+  const hasAckPage = cardAcks.length > 0;
+  const hasColophonPage = design === 'flipbook' && showOrgLogo;
+  const pageCount = 1 + (hasPhotoPage ? 1 : 0) + (hasAckPage ? 1 : 0) + (hasColophonPage ? 1 : 0);
 %>
-<div class="flip-card" role="button" tabindex="0" aria-label="Flip award card"
-  onclick="this.classList.toggle('flipped')"
-  onkeydown="if(event.target===this&&(event.key==='Enter'||event.key===' ')){event.preventDefault();this.classList.toggle('flipped');}">
+<div class="flip-card <%= design === 'flipbook' ? 'flipbook' : '' %>" role="button" tabindex="0" aria-label="Flip award card"
+  onclick="if(this.dataset.swiped){delete this.dataset.swiped;return;}this.classList.toggle('flipped')"
+  onkeydown="if(event.target===this&&(event.key==='Enter'||event.key===' ')){event.preventDefault();this.classList.toggle('flipped');}else if(event.target===this&&this.classList.contains('flipped')&&(event.key==='ArrowRight'||event.key==='ArrowLeft')&&window.tcbNavKey){event.preventDefault();tcbNavKey(this,event.key==='ArrowRight'?1:-1);}">
   <div class="flip-card-inner">
             <div class="premium-trophy-card flip-front <%= isPremiumAward(award) ? 'premium-award-border' : '' %>">
               <% if (!award.is_self_added) { %>
@@ -56,21 +83,7 @@
                               <%= icon %>
                                 <% } %>
                       </div>
-                      <% // Logo shows only once a superadmin has fitted it into the coin
-                         // and flipped logo_approved (concierge default-off; the coin
-                         // keeps mixed-org grids to one silhouette regardless of logo shape).
-                         const lci = award.customIconsObj || {};
-                         if (award.logo_url && lci.logo_approved && !lci.hide_logo) {
-                        // Fit settings → CSS vars (styles.css has the defaults). Values
-                        // are numbers sanitized at save time (routes/dance/orgs.js).
-                        const logoVars = [];
-                        if (lci.logo_opacity !== undefined) logoVars.push('--org-logo-opacity: ' + lci.logo_opacity);
-                        const logoTf = [];
-                        if (lci.logo_offset_x || lci.logo_offset_y) logoTf.push('translate(' + (lci.logo_offset_x || 0) + 'px, ' + (lci.logo_offset_y || 0) + 'px)');
-                        if (lci.logo_rotation) logoTf.push('rotate(' + lci.logo_rotation + 'deg)');
-                        if (lci.logo_size && lci.logo_size !== 24) logoTf.push('scale(' + (lci.logo_size / 24) + ')');
-                        if (logoTf.length) logoVars.push('--org-logo-transform: ' + logoTf.join(' '));
-                      %>
+                      <% if (showOrgLogo) { %>
                         <span class="card-org-coin"<%- logoVars.length ? ' style="' + logoVars.join('; ') + '"' : '' %>>
                           <img src="<%= award.logo_url %>" title="<%= award.org_name %> Logo">
                         </span>
@@ -112,8 +125,13 @@
                     </div>
             </div>
 
-    <!-- Back face: champagne certificate with the dancer's name (easter egg) -->
-    <div class="trophy-card-back">
+    <!-- Back face: champagne certificate with the dancer's name. In the
+         flipbook design it is page 1 of a swipeable back-stack (photo,
+         acknowledgements, organizer colophon pages appear only when their
+         gated content exists). -->
+    <div class="trophy-card-back <%= design === 'flipbook' ? 'tcb-book' : '' %>">
+      <% const certOpen = design === 'flipbook' ? '<div class="tcb-page tcb-page-cert active">' : ''; %>
+      <%- certOpen %>
       <div class="tcb-col tcb-who">
         <div class="tcb-icon"><%= icon %></div>
         <div class="tcb-eyebrow">Presented to</div>
@@ -138,6 +156,59 @@
         <% } %>
         <div class="tcb-event"><%= formatEventTitle(award.event_name, award.org_name, award.event_year) %></div>
       </div>
+      <%- design === 'flipbook' ? '</div>' : '' %>
+
+      <% if (hasPhotoPage) { %>
+        <div class="tcb-page tcb-page-photo">
+          <div class="tcb-photo-frame">
+            <img src="<%= dancer.card_photo_url %>" alt="<%= dancer.name %>" loading="lazy">
+          </div>
+          <div class="tcb-photo-name"><%= dancer.name %></div>
+        </div>
+      <% } %>
+
+      <% if (hasAckPage) { %>
+        <div class="tcb-page tcb-page-ack">
+          <div class="tcb-icon">💛</div>
+          <div class="tcb-eyebrow">With thanks</div>
+          <div class="tcb-ack-lines">
+            <% cardAcks.forEach(function(ack) { %>
+              <div class="tcb-ack-line <%= ack.dancer_id === dancer.id ? 'tcb-ack-mine' : '' %>">
+                <span class="tcb-ack-msg">&ldquo;<%= ack.message %>&rdquo;</span>
+                <span class="tcb-ack-author">&mdash; <%= ack.dancer_name %></span>
+              </div>
+            <% }); %>
+          </div>
+        </div>
+      <% } %>
+
+      <% if (hasColophonPage) { %>
+        <div class="tcb-page tcb-page-colophon">
+          <div class="tcb-eyebrow">Presented by</div>
+          <span class="tcb-colo-coin"<%- logoVars.length ? ' style="' + logoVars.join('; ') + '"' : '' %>>
+            <img src="<%= award.logo_url %>" alt="<%= award.org_name %> logo">
+          </span>
+          <div class="tcb-colo-org"><%= award.org_name %></div>
+          <% if (lci.colophon_message) { %>
+            <div class="tcb-colo-msg">&ldquo;<%= lci.colophon_message %>&rdquo;</div>
+          <% } %>
+          <div class="tcb-event"><%= formatEventTitle(award.event_name, award.org_name, award.event_year) %></div>
+        </div>
+      <% } %>
+
+      <% if (design === 'flipbook' && pageCount > 1) { %>
+        <button class="tcb-arrow tcb-arrow-prev" type="button" aria-label="Previous page" title="Previous page"
+          onclick="event.stopPropagation(); tcbNav(this, -1);">&lsaquo;</button>
+        <button class="tcb-arrow tcb-arrow-next" type="button" aria-label="Next page" title="Next page"
+          onclick="event.stopPropagation(); tcbNav(this, 1);">&rsaquo;</button>
+        <div class="tcb-dots" aria-hidden="true">
+          <% for (let i = 0; i < pageCount; i++) { %>
+            <button class="tcb-dot <%= i === 0 ? 'active' : '' %>" type="button" tabindex="-1"
+              onclick="event.stopPropagation(); tcbGo(this, <%= i %>);"></button>
+          <% } %>
+        </div>
+      <% } %>
+
       <%
         // "won 4th" but "was named Winner" / "were named Miss Mini Dance"
         const shareVerb = /^\d/.test(placeText) ? 'won' : (isGroup ? 'were named' : 'was named');

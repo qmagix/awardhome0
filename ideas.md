@@ -27,7 +27,22 @@
 
 Patent-candidate details tracked in `maybe_patentable.md` (A3, A4).
 
-## 3. Superadmin Dynamic AI Model Switcher
+**Status:** SHIPPED 2026-08-12 as the "flipbook" design behind the A/B card-design switch (see features.md §3b).
+
+## 3. Auto-Generated Social Video Shorts from Card Faces (brainstormed 2026-08-12)
+**Concept:** Automatically generate a short vertical video (Instagram Reels / TikTok / YouTube Shorts format) from a flip-book award card: the card flips face to face — award front → certificate → dancer photo → thank-you notes → organizer colophon — with flip/page-turn animations and appropriate audio (whoosh/chime per flip, optional music bed, possibly TTS reading the placement or the thank-you line).
+
+**Why the flip-book structure matters:** each card face is already a complete, approval-gated composition. The video generator is then just a deterministic sequencer over existing faces — no per-video design work, and everything shown has already passed moderation.
+
+**Value Proposition:** dancers/parents get a share-ready highlight clip in one tap ("Share as video"); studios get recap reels ("Our weekend at Nationals" — a montage across dancers' cards); organizers get branded reach (their colophon closes every clip — extends "your brand on every card" to "your brand closing every video").
+
+**Monetization:** free watermark-light clips for dancers (growth loop); studio-level montages and organizer-branded end-cards as premium; per-event recap videos as an organizer-tier deliverable.
+
+**Technical sketch:** server-side render of card faces to frames (headless Chromium screenshotting the existing EJS/CSS at fixed size), ffmpeg to compose flips/transitions + audio; or client-side via canvas/WebCodecs for instant no-server sharing. Prerequisite: per-page share-image rendering (see TODOS).
+
+Patent-candidate details tracked in `maybe_patentable.md` (A6).
+
+## 4. Superadmin Dynamic AI Model Switcher
 **Concept:** A centralized "System Settings" dashboard for Superadmins that allows dynamic, zero-downtime switching of the underlying LLM model (e.g., from `gpt-4o-mini` to `gpt-4o` or `gpt-3.5-turbo`) used across the platform.
 
 **Value Proposition:** AI costs and capabilities fluctuate rapidly. By exposing the model selection to the Superadmin interface instead of hardcoding it in the codebase or requiring a `.env` server restart, the platform operator can instantly optimize for cost during high-traffic periods, or switch to a higher-intelligence model for premium users or special use cases without any technical friction.

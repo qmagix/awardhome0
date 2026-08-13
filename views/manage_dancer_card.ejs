@@ -1,0 +1,114 @@
+<%- include('partials/header') %>
+
+<div class="container" style="max-width: 900px; margin-top: 3rem; margin-bottom: 4rem;">
+  <div class="header-section" style="margin-bottom: 2rem;">
+    <h1>Award Card Extras</h1>
+    <p class="subtitle">Add a photo and thank-you notes to <strong style="color: white;"><%= dancer.name %></strong>'s award cards.</p>
+    <div style="display: flex; gap: 1.5rem; margin-top: 0.75rem;">
+      <a href="/manage/dancer/<%= dancer.id %>" style="color: var(--primary); text-decoration: none; font-size: 0.9rem;">&larr; Manage Profile</a>
+      <a href="/dancer/<%= dancer.unique_id %>" style="color: var(--primary); text-decoration: none; font-size: 0.9rem;">View Public Trophy Case &rarr;</a>
+    </div>
+  </div>
+
+  <div style="margin-bottom: 2rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-left: 4px solid #3b82f6; border-radius: 4px; font-size: 0.9rem; color: var(--text-color);">
+    Photos and thank-you notes appear as extra pages on the flip side of award cards
+    <strong>after the AwardHome team reviews and approves them</strong> — this keeps every
+    public card family-friendly. Edits go back into review.
+  </div>
+
+  <!-- Card Photo -->
+  <div class="card glass-card" style="margin-bottom: 2rem;">
+    <h3 style="margin-top: 0;">📸 Card Photo</h3>
+    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
+      One photo per dancer, shown in a circular frame as its own page on every award card.
+      A clear headshot or stage portrait works best.
+    </p>
+
+    <div style="display: flex; gap: 2rem; align-items: flex-start; flex-wrap: wrap;">
+      <div style="text-align: center;">
+        <% if (dancer.card_photo_url) { %>
+          <div style="width: 120px; height: 120px; border-radius: 50%; overflow: hidden; border: 3px solid #c9a961; margin-bottom: 0.75rem;">
+            <img src="<%= dancer.card_photo_url %>" alt="Card photo" style="width: 100%; height: 100%; object-fit: cover;">
+          </div>
+        <% } else { %>
+          <div style="width: 120px; height: 120px; border-radius: 50%; background: rgba(255,255,255,0.08); border: 2px dashed rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin-bottom: 0.75rem;">📷</div>
+        <% } %>
+        <% if (dancer.card_photo_status === 'approved') { %>
+          <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">Approved &amp; live</span>
+        <% } else if (dancer.card_photo_status === 'pending') { %>
+          <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #aa8529;">Pending review</span>
+        <% } else if (dancer.card_photo_status === 'rejected') { %>
+          <span class="badge" style="background: rgba(239, 68, 68, 0.2); color: #ef4444;">Not approved &mdash; try another photo</span>
+        <% } else { %>
+          <span class="badge" style="background: rgba(255,255,255,0.08); color: var(--text-muted);">No photo yet</span>
+        <% } %>
+      </div>
+
+      <div style="flex: 1; min-width: 260px;">
+        <form action="/manage/dancer/<%= dancer.id %>/card/photo" method="POST" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 1rem;">
+          <input type="file" name="photo" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" required
+            style="padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+          <label style="display: flex; gap: 0.6rem; align-items: flex-start; font-size: 0.85rem; color: var(--text-muted); cursor: pointer;">
+            <input type="checkbox" name="consent" required style="margin-top: 0.2rem; width: 16px; height: 16px; accent-color: var(--primary);">
+            <span>I am this dancer's parent/guardian, or the dancer is an adult, or I have the family's
+              permission to display this photo publicly on AwardHome award cards.</span>
+          </label>
+          <button type="submit" class="btn btn-primary" style="align-self: flex-start;">Upload Photo</button>
+        </form>
+        <% if (dancer.card_photo_url) { %>
+          <form action="/manage/dancer/<%= dancer.id %>/card/photo/remove" method="POST" style="margin-top: 0.75rem;">
+            <button type="submit" class="btn btn-outline" style="border-color: #ef4444; color: #ef4444; font-size: 0.85rem;">Remove Photo</button>
+          </form>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Thank-you notes -->
+  <div class="card glass-card">
+    <h3 style="margin-top: 0;">💛 Thank-You Notes</h3>
+    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
+      A short note of thanks (teachers, teammates, family&hellip;) shown on that award's card.
+      On group routines, every dancer can add their own line &mdash; the card shows them all,
+      like the back of a yearbook. Max 280 characters; leave a note blank and save to remove it.
+    </p>
+
+    <% if (awards.length === 0) { %>
+      <p style="color: var(--text-muted); text-align: center; padding: 2rem;">No linked awards yet.</p>
+    <% } else { %>
+      <div style="display: flex; flex-direction: column; gap: 1rem;">
+        <% awards.forEach(award => { const ack = ackMap[award.id]; %>
+          <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1rem;">
+            <div style="display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.6rem;">
+              <div>
+                <strong style="color: var(--primary);"><%= award.performance_name || award.award_type || 'Award' %></strong>
+                <span style="color: var(--text-muted); font-size: 0.85rem;"> &mdash; <%= formatPlacement(award) %>, <%= award.event_name %> (<%= award.year %>)</span>
+                <% if (award.dancer_count > 1) { %>
+                  <span class="badge" style="background: rgba(139, 92, 246, 0.2); color: #c4b5fd; font-size: 0.7rem; margin-left: 0.4rem;">Group &middot; <%= award.dancer_count %> dancers</span>
+                <% } %>
+              </div>
+              <div>
+                <% if (ack && ack.status === 'approved') { %>
+                  <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981; font-size: 0.75rem;">Live</span>
+                <% } else if (ack && ack.status === 'pending') { %>
+                  <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #aa8529; font-size: 0.75rem;">Pending review</span>
+                <% } else if (ack && ack.status === 'rejected') { %>
+                  <span class="badge" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; font-size: 0.75rem;">Not approved</span>
+                <% } %>
+              </div>
+            </div>
+            <form action="/manage/dancer/<%= dancer.id %>/card/ack" method="POST" style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+              <input type="hidden" name="award_id" value="<%= award.id %>">
+              <input type="text" name="message" maxlength="280" value="<%= ack ? ack.message : '' %>"
+                placeholder="e.g. Thank you Miss Amy, my teammates, and Mom &amp; Dad!"
+                style="flex: 1; min-width: 240px; padding: 0.6rem 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+              <button type="submit" class="btn btn-outline" style="font-size: 0.85rem;">Save</button>
+            </form>
+          </div>
+        <% }); %>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

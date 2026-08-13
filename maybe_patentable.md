@@ -42,14 +42,15 @@ where pages are **conditionally materialized** (absent content = page doesn't ex
 and each page is independently shareable as an image. Combination claim: flip-then-page
 interaction + role-gated page content (owner-uploaded photo, per-dancer acks,
 organizer-purchased colophon) + per-page share rendering. *Captured 2026-08-12.
-NOT public — file provisional before shipping if we're serious.*
+Implemented 2026-08-12 (local commit, NOT yet deployed publicly) — file provisional
+before deploying if we're serious.*
 
 ### A4. Per-dancer acknowledgement lines on a shared group award ("yearbook back")
 One physical group award, N dancers via `award_dancers`; each junction row carries that
 dancer's own acknowledgement line. The card's ack page renders all teammates' lines
 with the viewing dancer's pinned first — same award, different page per viewer context.
-Moderation-gated (owner approval) because authors are often minors. *Captured
-2026-08-12. NOT public.*
+Moderation-gated (superadmin approval) because authors are often minors. *Captured
+2026-08-12. Implemented 2026-08-12 (local commit, NOT yet deployed publicly).*
 
 ### A5. Concierge-gated organizer logo "coin" on user-generated share media
 Third-party brand marks appear on shareable award cards only after a platform operator
@@ -57,6 +58,17 @@ hand-fits the mark into a fixed circular silhouette (position/rotation superadmi
 size/opacity owner-adjustable) and flips an approval bit; default OFF. Keeps mixed-org
 grids to one silhouette and makes brand presence a sold concierge service.
 *Captured 2026-08-12. **Public since ~2026-08** (live) — US clock likely running.*
+
+### A6. Auto-generated social video shorts from moderated card faces (NEW — not built)
+Deterministic generation of a vertical short-form video by sequencing a card's existing
+faces (award → certificate → photo → acknowledgements → organizer colophon) with flip
+animations and audio cues. The claimable combination: every video frame source is a
+**pre-moderated composition** (each face independently approval-gated), so an automated
+pipeline can render publish-safe video without human review of the video itself;
+organizer branding (colophon) as the enforced end-card; per-dancer personalization of
+the same group award's video via the viewer-pinned ack page. Pairs with A3/A4 as a
+system claim. *Captured 2026-08-12. NOT built — strongest position if filed before
+shipping.*
 
 ## Tier B — plausible but weaker (business method or heavy prior art risk)
 

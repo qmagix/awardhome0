@@ -210,6 +210,10 @@ router.post('/manage/org/:id/branding/logo-settings', requireAuth, requireOrgOwn
   customIcons.logo_size = parseInt(req.body.logo_size) || 24;
   customIcons.logo_opacity = parseFloat(req.body.logo_opacity);
   if (isNaN(customIcons.logo_opacity)) customIcons.logo_opacity = 0.6;
+  // Short tagline on the flip-book card's "Presented by" colophon page.
+  // Rides the same logo_approved gate as the coin, so owner edits still
+  // pass through the concierge review implicitly.
+  customIcons.colophon_message = String(req.body.colophon_message || '').trim().slice(0, 140);
 
   // Position/rotation are deliberately superadmin-only fine-tuning (design
   // consistency: owners get size/opacity, we adjust the rest per logo as

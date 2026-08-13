@@ -186,6 +186,8 @@
                     data-status="<%= dancer.status || 'active' %>"
                     data-birthday="<%= dancer.birthday || '' %>"
                     onclick="openEditModal(this)">Edit</button>
+                  <a class="btn" style="padding: 0.3rem 0.6rem; font-size: 0.85rem; text-decoration: none;"
+                    href="/manage/dancer/<%= dancer.id %>/card" title="Award card photo & thank-you notes">Card</a>
                 </td>
               </tr>
             <% }) %>

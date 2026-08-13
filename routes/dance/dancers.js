@@ -4,8 +4,154 @@ const { openDb } = require('../../database');
 const { logStudioActivity } = require('../../utils/activity');
 const { requireAuth } = require('../../middleware/auth');
 const rateLimit = require('express-rate-limit');
+const multer = require('multer');
 const { generateDancerId } = require('../../utils.js');
 const { validateVanityTag } = require('../../utils/vanity');
+
+// ---- Flip-book card extras (photo + thank-you lines) ----
+
+// Same raster-only rules as org branding uploads: multer's random
+// extension-less filenames can't be served as HTML/JS, SVG excluded.
+const CARD_PHOTO_MIMES = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/avif']);
+const cardPhotoUpload = multer({
+  dest: 'public/uploads/dancer_photos/',
+  limits: { fileSize: 5 * 1024 * 1024, files: 1 },
+  fileFilter: (req, file, cb) => {
+    if (CARD_PHOTO_MIMES.has(file.mimetype) && /\.(png|jpe?g|webp|gif|avif)$/i.test(file.originalname || '')) {
+      return cb(null, true);
+    }
+    const err = new Error('Only PNG, JPG, WebP, GIF, or AVIF images are accepted.');
+    err.status = 400;
+    cb(err);
+  },
+});
+
+// Card extras may be managed by the dancer owner, an owner of a studio the
+// dancer is actively affiliated with, or an admin. Returns the dancer row
+// or null when not permitted.
+async function getDancerIfCardManager(db, user, dancerId) {
+  const dancer = await db.get('SELECT * FROM dancers WHERE id = ?', [dancerId]);
+  if (!dancer) return null;
+  if (user.role === 'admin' || user.role === 'superadmin') return dancer;
+  if (dancer.claimed_by_user_id === user.id) return dancer;
+  const viaStudio = await db.get(`
+    SELECT 1 FROM dancer_studios ds
+    JOIN studios s ON ds.studio_id = s.id
+    WHERE ds.dancer_id = ? AND ds.status = 'active' AND s.owner_id = ?
+  `, [dancerId, user.id]);
+  return viaStudio ? dancer : null;
+}
+
+// New table: created defensively so the routes work before `node database.js`
+// has been re-run (same pattern as some admin routes).
+async function ensureAckTable(db) {
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS award_acknowledgements (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      award_id INTEGER NOT NULL REFERENCES awards(id),
+      dancer_id INTEGER NOT NULL REFERENCES dancers(id),
+      message TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      created_by INTEGER REFERENCES users(id),
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(award_id, dancer_id)
+    )
+  `);
+}
+
+router.get('/manage/dancer/:id/card', requireAuth, async (req, res) => {
+  const db = await openDb();
+  const dancer = await getDancerIfCardManager(db, req.session.user, req.params.id);
+  if (!dancer) return res.status(403).send('Forbidden: Not the owner');
+  await ensureAckTable(db);
+
+  const awards = await db.all(`
+    SELECT a.*, e.name as event_name, e.year, o.name as org_name,
+      (SELECT COUNT(*) FROM award_dancers ad2 WHERE ad2.award_id = a.id) as dancer_count
+    FROM awards a
+    JOIN award_dancers ad ON a.id = ad.award_id
+    JOIN events e ON a.event_id = e.id
+    LEFT JOIN organizations o ON e.org_id = o.id
+    WHERE ad.dancer_id = ?
+    ORDER BY e.year DESC
+  `, [dancer.id]);
+
+  const ackRows = await db.all(
+    'SELECT award_id, message, status FROM award_acknowledgements WHERE dancer_id = ?', [dancer.id]);
+  const ackMap = {};
+  ackRows.forEach(r => { ackMap[r.award_id] = r; });
+
+  res.render('manage_dancer_card', { dancer, awards, ackMap });
+});
+
+
+router.post('/manage/dancer/:id/card/photo', requireAuth, cardPhotoUpload.single('photo'), async (req, res) => {
+  const db = await openDb();
+  const dancer = await getDancerIfCardManager(db, req.session.user, req.params.id);
+  if (!dancer) return res.status(403).send('Forbidden');
+  const back = `/manage/dancer/${req.params.id}/card`;
+
+  if (!req.file) {
+    return res.send(`<script>alert("Please choose an image file."); window.location.href=${JSON.stringify(back)};</script>`);
+  }
+  // Guardian consent is a hard gate: most dancers are minors, and the
+  // photo will render on publicly shareable cards once approved.
+  if (req.body.consent !== 'on') {
+    return res.send(`<script>alert("Photo not saved: the consent box must be checked."); window.location.href=${JSON.stringify(back)};</script>`);
+  }
+
+  await db.run(
+    "UPDATE dancers SET card_photo_url = ?, card_photo_status = 'pending', card_photo_uploaded_by = ? WHERE id = ?",
+    ['/uploads/dancer_photos/' + req.file.filename, req.session.user.id, dancer.id]);
+  res.redirect(back);
+});
+
+
+router.post('/manage/dancer/:id/card/photo/remove', requireAuth, async (req, res) => {
+  const db = await openDb();
+  const dancer = await getDancerIfCardManager(db, req.session.user, req.params.id);
+  if (!dancer) return res.status(403).send('Forbidden');
+
+  await db.run(
+    "UPDATE dancers SET card_photo_url = NULL, card_photo_status = 'none', card_photo_uploaded_by = NULL WHERE id = ?",
+    [dancer.id]);
+  res.redirect(`/manage/dancer/${req.params.id}/card`);
+});
+
+
+router.post('/manage/dancer/:id/card/ack', requireAuth, async (req, res) => {
+  const db = await openDb();
+  const dancer = await getDancerIfCardManager(db, req.session.user, req.params.id);
+  if (!dancer) return res.status(403).send('Forbidden');
+  await ensureAckTable(db);
+  const back = `/manage/dancer/${req.params.id}/card`;
+
+  const awardId = parseInt(req.body.award_id);
+  const message = String(req.body.message || '').trim().slice(0, 280);
+  if (!awardId) return res.status(400).send('Missing award');
+
+  // The line must belong to an award this dancer is actually linked to
+  const linked = await db.get(
+    'SELECT 1 FROM award_dancers WHERE award_id = ? AND dancer_id = ?', [awardId, dancer.id]);
+  if (!linked) {
+    return res.send(`<script>alert("That award is not linked to this dancer."); window.location.href=${JSON.stringify(back)};</script>`);
+  }
+
+  if (!message) {
+    await db.run('DELETE FROM award_acknowledgements WHERE award_id = ? AND dancer_id = ?', [awardId, dancer.id]);
+  } else {
+    // Any edit goes back to pending — every public line has been reviewed
+    await db.run(`
+      INSERT INTO award_acknowledgements (award_id, dancer_id, message, status, created_by)
+      VALUES (?, ?, ?, 'pending', ?)
+      ON CONFLICT(award_id, dancer_id) DO UPDATE SET
+        message = excluded.message, status = 'pending',
+        created_by = excluded.created_by, updated_at = CURRENT_TIMESTAMP
+    `, [awardId, dancer.id, message, req.session.user.id]);
+  }
+  res.redirect(back);
+});
 
 router.get('/my-dancer', requireAuth, async (req, res) => {
   const db = await openDb();
