@@ -490,7 +490,15 @@
     function tcbShow(book, idx) {
       const pages = book.querySelectorAll('.tcb-page');
       idx = ((idx % pages.length) + pages.length) % pages.length;
-      pages.forEach((p, i) => p.classList.toggle('active', i === idx));
+      pages.forEach((p, i) => {
+        const on = i === idx;
+        p.classList.toggle('active', on);
+        // Entry fade only on a real page turn (card is flipped & visible
+        // here, so the animation actually ticks — see styles.css note);
+        // remove + reflow restarts it when revisiting a page.
+        p.classList.remove('tcb-entering');
+        if (on) { void p.offsetWidth; p.classList.add('tcb-entering'); }
+      });
       book.querySelectorAll('.tcb-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
     }
     function tcbCurrent(book) {

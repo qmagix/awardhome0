@@ -42,6 +42,19 @@ async function getDancerIfCardManager(db, user, dancerId) {
   return viaStudio ? dancer : null;
 }
 
+// Other awards won by the same routine at the same event that this dancer
+// is also linked to (the Smart Auto-Backfill matching rule). Used to
+// propagate a freshly saved note/photo across the set.
+async function sameRoutineAwards(db, awardId, dancerId) {
+  const target = await db.get('SELECT event_id, performance_name FROM awards WHERE id = ?', [awardId]);
+  if (!target || !target.event_id || !target.performance_name || !target.performance_name.trim()) return [];
+  return db.all(`
+    SELECT a.id FROM awards a
+    JOIN award_dancers ad ON ad.award_id = a.id
+    WHERE ad.dancer_id = ? AND a.event_id = ? AND a.performance_name = ? AND a.id != ?
+  `, [dancerId, target.event_id, target.performance_name, awardId]);
+}
+
 // New tables: created defensively so the routes work before `node database.js`
 // has been re-run (same pattern as some admin routes).
 async function ensureCardTables(db) {
@@ -128,13 +141,22 @@ router.post('/manage/dancer/:id/card/award-photo', requireAuth, cardPhotoUpload.
   }
 
   // Any replacement goes back to pending — every public photo was reviewed
+  const photoUrl = '/uploads/dancer_photos/' + req.file.filename;
   await db.run(`
     INSERT INTO award_card_photos (award_id, dancer_id, photo_url, status, uploaded_by)
     VALUES (?, ?, ?, 'pending', ?)
     ON CONFLICT(award_id, dancer_id) DO UPDATE SET
       photo_url = excluded.photo_url, status = 'pending',
       uploaded_by = excluded.uploaded_by, updated_at = CURRENT_TIMESTAMP
-  `, [awardId, dancer.id, '/uploads/dancer_photos/' + req.file.filename, req.session.user.id]);
+  `, [awardId, dancer.id, photoUrl, req.session.user.id]);
+  // Same routine, same event → same performance shot: fill the sibling
+  // awards too (INSERT OR IGNORE — awards with their own photo keep it).
+  for (const s of await sameRoutineAwards(db, awardId, dancer.id)) {
+    await db.run(`
+      INSERT OR IGNORE INTO award_card_photos (award_id, dancer_id, photo_url, status, uploaded_by)
+      VALUES (?, ?, ?, 'pending', ?)
+    `, [s.id, dancer.id, photoUrl, req.session.user.id]);
+  }
   res.redirect(back);
 });
 
@@ -206,6 +228,7 @@ router.post('/manage/dancer/:id/card/ack', requireAuth, async (req, res) => {
   }
 
   if (!message) {
+    // Clearing removes only THIS award's line — siblings keep theirs
     await db.run('DELETE FROM award_acknowledgements WHERE award_id = ? AND dancer_id = ?', [awardId, dancer.id]);
   } else {
     // Any edit goes back to pending — every public line has been reviewed
@@ -216,6 +239,15 @@ router.post('/manage/dancer/:id/card/ack', requireAuth, async (req, res) => {
         message = excluded.message, status = 'pending',
         created_by = excluded.created_by, updated_at = CURRENT_TIMESTAMP
     `, [awardId, dancer.id, message, req.session.user.id]);
+    // One routine often wins several awards at the same event; fill the
+    // siblings too so families type the note once. INSERT OR IGNORE:
+    // awards that already have a line keep it — later edits stay per-award.
+    for (const s of await sameRoutineAwards(db, awardId, dancer.id)) {
+      await db.run(`
+        INSERT OR IGNORE INTO award_acknowledgements (award_id, dancer_id, message, status, created_by)
+        VALUES (?, ?, ?, 'pending', ?)
+      `, [s.id, dancer.id, message, req.session.user.id]);
+    }
   }
   res.redirect(back);
 });

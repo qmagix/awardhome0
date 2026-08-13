@@ -554,6 +554,15 @@ a:hover {
 
 .tcb-book .tcb-page.active {
   display: flex;
+}
+
+/* Entry fade is applied by tcbShow() only when actually paging, never on
+   the resting .active state: Chrome/Firefox freeze animations of elements
+   on a hidden backface at their first frame (currentTime stays 0), so an
+   animation on .active left the server-rendered certificate page stuck at
+   the from{opacity:0} keyframe — invisible content. Safari ticked the
+   animation anyway, which is why only it looked right. */
+.tcb-book .tcb-page.tcb-entering {
   animation: tcbPageIn 0.28s ease;
 }
 

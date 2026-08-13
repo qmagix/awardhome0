@@ -64,6 +64,11 @@ The registry lives in `utils/cardDesign.js` — future designs are added there a
      logo-approval gate.
   - Navigation: tap flips, arrows/dots/swipe page through the back-stack, arrow keys when focused;
     wrap-around. All sizes are cqw-based so pages zoom with the card (portrait + landscape).
+  - **Same-routine propagation:** one routine often wins several awards at one event; saving a
+    note or award photo auto-fills the matching awards (Smart Auto-Backfill rule: same
+    `event_id` + `performance_name`, INSERT OR IGNORE — awards already filled keep their content,
+    and later edits change only that award; clearing clears only that award). Moderation matches:
+    one approve/reject settles every pending copy with identical content from the same dancer.
   - Moderation queue: `/admin/card-content` (superadmin) approves/rejects pending photos and lines.
   - Design intent: the multi-face structure is also groundwork for auto-generated social video
     shorts (flip through faces with audio) — see ideas.md.

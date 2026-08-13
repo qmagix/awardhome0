@@ -209,3 +209,14 @@ profile management, and card photo/thank-you extras, plus a "Claims in Review" s
 each pending claim's routing ("awaiting your studio director" vs "awaiting AwardHome review").
 Login redirects here for any account with a claimed dancer or a claim in flight; accounts with
 neither see an empty state explaining how to find and claim a dancer.
+
+## 13. Card Extras: Same-Routine Propagation & Cross-Browser Note
+- **Type it once:** when one routine wins several awards at the same competition, saving a
+  thank-you note or award photo auto-fills the matching awards (same event + routine name, the
+  Smart Auto-Backfill rule). Already-filled awards are never overwritten; later edits or removals
+  affect only the award being edited. On the moderation side, one approve/reject settles every
+  pending copy with identical content from the same dancer — the reviewer judges the content once.
+- **Browser note (fixed 2026-08-13):** flip-book page content was invisible in Chrome/Firefox
+  (fine in Safari) because the entry-fade animation on back-face pages never ticked while the
+  card was unflipped, freezing pages at opacity 0. The fade now applies only during actual page
+  turns (`tcb-entering` class), never on the resting state.

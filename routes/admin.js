@@ -169,11 +169,19 @@ router.get('/admin/card-content', requireSuperadmin, async (req, res) => {
 });
 
 
+// Owner saves propagate identical copies across a routine's sibling
+// awards, so one decision settles every pending copy with the same
+// content from the same dancer — the reviewer judges the content once.
 router.post('/api/admin/card-award-photo/:id', requireSuperadmin, express.json(), async (req, res) => {
   const db = await openDb();
   const status = req.body.action === 'approve' ? 'approved' : 'rejected';
-  await db.run("UPDATE award_card_photos SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND status = 'pending'",
-    [status, req.params.id]);
+  const row = await db.get("SELECT dancer_id, photo_url FROM award_card_photos WHERE id = ? AND status = 'pending'", [req.params.id]);
+  if (row) {
+    await db.run(`
+      UPDATE award_card_photos SET status = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE dancer_id = ? AND photo_url = ? AND status = 'pending'
+    `, [status, row.dancer_id, row.photo_url]);
+  }
   res.json({ success: true });
 });
 
@@ -190,8 +198,15 @@ router.post('/api/admin/card-photo/:dancerId', requireSuperadmin, express.json()
 router.post('/api/admin/card-ack/:id', requireSuperadmin, express.json(), async (req, res) => {
   const db = await openDb();
   const status = req.body.action === 'approve' ? 'approved' : 'rejected';
-  await db.run("UPDATE award_acknowledgements SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND status = 'pending'",
-    [status, req.params.id]);
+  // Same-content propagation as card-award-photo: one decision settles
+  // every pending copy of this exact line by this dancer.
+  const row = await db.get("SELECT dancer_id, message FROM award_acknowledgements WHERE id = ? AND status = 'pending'", [req.params.id]);
+  if (row) {
+    await db.run(`
+      UPDATE award_acknowledgements SET status = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE dancer_id = ? AND message = ? AND status = 'pending'
+    `, [status, row.dancer_id, row.message]);
+  }
   res.json({ success: true });
 });
 
