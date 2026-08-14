@@ -41,9 +41,13 @@ certificate ("Presented to…") → dancer photo → acknowledgements → organi
 where pages are **conditionally materialized** (absent content = page doesn't exist)
 and each page is independently shareable as an image. Combination claim: flip-then-page
 interaction + role-gated page content (owner-uploaded photo, per-dancer acks,
-organizer-purchased colophon) + per-page share rendering. *Captured 2026-08-12.
-Implemented 2026-08-12 (local commit, NOT yet deployed publicly) — file provisional
-before deploying if we're serious.*
+organizer-purchased colophon) + per-page share rendering. Additional wrinkle
+(2026-08-13): **in-artifact WYSIWYG editing** — the owner's editor renders the same
+card object with the gated pages materialized as inline-editable placeholders,
+edit-mode-only (public render never materializes empty pages); one editing surface
+= the display artifact. *Captured 2026-08-12. Implemented 2026-08-12/13 (local
+commits, NOT yet deployed publicly) — file provisional before deploying if we're
+serious.*
 
 ### A4. Per-dancer acknowledgement lines on a shared group award ("yearbook back")
 One physical group award, N dancers via `award_dancers`; each junction row carries that

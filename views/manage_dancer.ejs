@@ -45,7 +45,7 @@
         </li>
         <li>
           <a href="/manage/dancer/<%= dancer.id %>/card" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: var(--text-muted); transition: background 0.2s;">
-            🎴 Card Photo &amp; Thanks
+            🎴 Edit Award Cards
           </a>
         </li>
       </ul>
@@ -102,6 +102,60 @@
           </div>
           <button type="submit" class="btn btn-primary" style="align-self: flex-start;">Save Changes</button>
         </form>
+      </div>
+
+      <!-- Default card photo (fallback for award cards without their own photo) -->
+      <div class="card glass-card" style="margin-top: 2rem;">
+        <h3 style="margin-top: 0;">📸 Default Card Photo</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
+          Shown in a circular frame on any award card without its own routine photo
+          (add per-award photos in <a href="/manage/dancer/<%= dancer.id %>/card" style="color: var(--primary);">Card Photo &amp; Thanks</a>).
+          Goes live after the AwardHome team approves it.
+        </p>
+        <div style="display: flex; gap: 2rem; align-items: flex-start; flex-wrap: wrap;">
+          <div style="text-align: center;">
+            <% if (dancer.card_photo_url) { %>
+              <div style="width: 100px; height: 100px; border-radius: 50%; overflow: hidden; border: 3px solid #c9a961; margin-bottom: 0.75rem;">
+                <img src="<%= dancer.card_photo_url %>" alt="Card photo" style="width: 100%; height: 100%; object-fit: cover;">
+              </div>
+            <% } else { %>
+              <div style="width: 100px; height: 100px; border-radius: 50%; background: rgba(255,255,255,0.08); border: 2px dashed rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 2rem; margin-bottom: 0.75rem;">📷</div>
+            <% } %>
+            <% if (dancer.card_photo_status === 'approved') { %>
+              <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">Approved &amp; live</span>
+            <% } else if (dancer.card_photo_status === 'pending') { %>
+              <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #aa8529;">Pending review</span>
+            <% } else if (dancer.card_photo_status === 'rejected') { %>
+              <span class="badge" style="background: rgba(239, 68, 68, 0.2); color: #ef4444;">Not approved &mdash; try another</span>
+            <% } else { %>
+              <span class="badge" style="background: rgba(255,255,255,0.08); color: var(--text-muted);">No photo yet</span>
+            <% } %>
+          </div>
+          <div style="flex: 1; min-width: 260px;">
+            <form action="/manage/dancer/<%= dancer.id %>/card/photo" method="POST" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 1rem;">
+              <input type="file" name="photo" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" required
+                style="padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+              <% if (typeof consent !== 'undefined' && consent) { %>
+                <p style="margin: 0; font-size: 0.85rem; color: #10b981;">✓ Photo permission on file
+                  (confirmed <%= new Date(consent.consented_at).toLocaleDateString() %>).</p>
+              <% } else { %>
+                <label style="display: flex; gap: 0.6rem; align-items: flex-start; font-size: 0.85rem; color: var(--text-muted); cursor: pointer;">
+                  <input type="checkbox" name="consent" required style="margin-top: 0.2rem; width: 16px; height: 16px; accent-color: var(--primary);">
+                  <span>One-time confirmation: I am this dancer's parent/guardian (or the dancer is an
+                    adult, or I have the family's permission), and for any photo I upload I have
+                    permission from everyone pictured to display it publicly on AwardHome award cards.
+                    You won't be asked again.</span>
+                </label>
+              <% } %>
+              <button type="submit" class="btn btn-primary" style="align-self: flex-start;">Upload Photo</button>
+            </form>
+            <% if (dancer.card_photo_url) { %>
+              <form action="/manage/dancer/<%= dancer.id %>/card/photo/remove" method="POST" style="margin-top: 0.75rem;">
+                <button type="submit" class="btn btn-outline" style="border-color: #ef4444; color: #ef4444; font-size: 0.85rem;">Remove Photo</button>
+              </form>
+            <% } %>
+          </div>
+        </div>
       </div>
     </section>
 

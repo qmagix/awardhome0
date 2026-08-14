@@ -229,3 +229,14 @@ permission, plus permission from everyone pictured in uploaded photos); it's rec
 dancer skip the checkbox. The card-extras page shows "Photo permission on file (date)" once
 recorded. Parents and studio owners each give their own affirmation, since each is vouching for
 their own uploads.
+
+## 15. WYSIWYG Card Editor
+`/manage/dancer/:id/card` ("🎴 Edit Award Cards") now shows the dancer's actual flipbook cards
+instead of a form list. Flip a card, page to the photo or thank-you page, and edit in place —
+empty pages appear as placeholders ("Upload this routine's photo" / "Write your thank-you note
+here") in the editor only, never on public pages. Front faces carry a progress chip (2 to add /
+1 to add / ✓ Done); filter chips (All / Needs input / Partial / Done) plus incomplete-first
+sorting keep big trophy cases manageable. Saves happen inline (fetch + `?json=1` on the card
+endpoints) with a toast noting same-routine propagation. The one-time photo consent appears as a
+checkbox bar above the grid until given. The default card photo (circular fallback) and its
+consent moment moved to the Manage Profile page.

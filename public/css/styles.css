@@ -737,6 +737,126 @@ a:hover {
   margin-top: 0.5rem;
 }
 
+/* ---- WYSIWYG edit mode (manage card page): placeholder pages and
+   inline controls rendered inside the champagne back-stack ---- */
+.card-edit-chip {
+  position: absolute;
+  bottom: 0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  white-space: nowrap;
+  z-index: 2;
+}
+
+.card-edit-chip.chip-waiting { background: rgba(255, 255, 255, 0.12); color: #e0e0e0; border: 1px solid rgba(255, 255, 255, 0.3); }
+.card-edit-chip.chip-partial { background: rgba(245, 158, 11, 0.25); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.5); }
+.card-edit-chip.chip-done { background: rgba(16, 185, 129, 0.25); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.5); }
+
+.tcb-book .tcb-photo-placeholder {
+  width: 82%;
+  aspect-ratio: 4 / 3;
+  border: 2px dashed #b08d45;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.25);
+  color: #8a6d35;
+  font-weight: 600;
+  font-size: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.tcb-book .tcb-photo-placeholder:hover {
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.tcb-book .tcb-photo-placeholder .tcb-ph-icon {
+  font-size: 1.6rem;
+}
+
+.tcb-book .tcb-ack-input {
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid #b08d45;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.55);
+  color: #3a2f18;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-style: italic;
+  line-height: 1.35;
+  resize: none;
+}
+
+.tcb-book .tcb-ack-input::placeholder {
+  color: #a3854a;
+}
+
+.tcb-book .tcb-edit-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.tcb-book .tcb-edit-btn {
+  padding: 0.25rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid #b08d45;
+  background: rgba(255, 255, 255, 0.5);
+  color: #6d5626;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.tcb-book .tcb-edit-btn:hover {
+  background: #6d5626;
+  color: #f9f0d8;
+  border-color: #6d5626;
+}
+
+.tcb-book .tcb-edit-btn.tcb-edit-danger {
+  border-color: #b45050;
+  color: #a03d3d;
+}
+
+.tcb-book .tcb-edit-status {
+  font-size: 0.72rem;
+  font-weight: 700;
+  margin-top: 0.35rem;
+}
+
+.tcb-book .tcb-edit-status.status-pending { color: #9a7422; }
+.tcb-book .tcb-edit-status.status-approved { color: #2c7a4b; }
+.tcb-book .tcb-edit-status.status-rejected { color: #a03d3d; }
+
+.tcb-book .tcb-edit-hint {
+  font-size: 0.7rem;
+  font-style: italic;
+  color: #8a6d35;
+  margin-top: 0.35rem;
+}
+
+.tcb-book .tcb-ack-mates {
+  margin-top: 0.6rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed #c9a961;
+  max-height: 26%;
+}
+
 /* Landscape grid: the certificate page reflows to the two-column row
    (the existing landscape .tcb-col/.tcb-rule descendant rules still
    apply inside the page); other pages stay centered columns. */
@@ -1185,6 +1305,51 @@ a:hover {
   .flip-card .tcb-book .tcb-colo-msg {
     font-size: 4.3cqw;
     margin-top: 2.7cqw;
+  }
+
+  /* -- WYSIWYG edit mode, portrait (300px basis) -- */
+  .flip-card .card-edit-chip {
+    bottom: 2.7cqw;
+    padding: 0.8cqw 3.2cqw;
+    font-size: 3.6cqw;
+  }
+
+  .flip-card .tcb-book .tcb-photo-placeholder {
+    border-width: 0.67cqw;
+    border-radius: 2.7cqw;
+    font-size: 4.5cqw;
+    gap: 2.1cqw;
+  }
+
+  .flip-card .tcb-book .tcb-photo-placeholder .tcb-ph-icon {
+    font-size: 8.5cqw;
+  }
+
+  .flip-card .tcb-book .tcb-ack-input {
+    margin-top: 2.7cqw;
+    padding: 2.7cqw 3.2cqw;
+    border-radius: 2cqw;
+    font-size: 4.3cqw;
+  }
+
+  .flip-card .tcb-book .tcb-edit-actions {
+    gap: 2.7cqw;
+    margin-top: 2.7cqw;
+  }
+
+  .flip-card .tcb-book .tcb-edit-btn {
+    padding: 1.3cqw 4.3cqw;
+    font-size: 4cqw;
+  }
+
+  .flip-card .tcb-book .tcb-edit-status {
+    font-size: 3.8cqw;
+    margin-top: 1.9cqw;
+  }
+
+  .flip-card .tcb-book .tcb-edit-hint {
+    font-size: 3.7cqw;
+    margin-top: 1.9cqw;
   }
 
   /* -- Flipbook, landscape (460px basis: portrait px / 4.6) -- */

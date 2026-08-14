@@ -69,6 +69,14 @@ The registry lives in `utils/cardDesign.js` — future designs are added there a
     `event_id` + `performance_name`, INSERT OR IGNORE — awards already filled keep their content,
     and later edits change only that award; clearing clears only that award). Moderation matches:
     one approve/reject settles every pending copy with identical content from the same dancer.
+  - **WYSIWYG editor** (`/manage/dancer/:id/card`): owners edit cards as cards, not forms — the
+    page renders the dancer's actual flipbook cards (`cardEditMode` flag on the partial); pages
+    that would only materialize with content materialize as editable placeholders ("Upload this
+    routine's photo" / "Write your thank-you note here"), never on public pages. Inline saves via
+    fetch (`?json=1` on the card endpoints) with propagation toasts; front faces carry a
+    waiting/partial/done chip; filter chips + incomplete-first sort; one-time consent as a
+    checkbox bar above the grid. The dancer's default card photo + consent also live on the
+    Manage Profile page.
   - Moderation queue: `/admin/card-content` (superadmin) approves/rejects pending photos and lines.
   - Design intent: the multi-face structure is also groundwork for auto-generated social video
     shorts (flip through faces with audio) — see ideas.md.

@@ -1,215 +1,263 @@
 <%- include('partials/header') %>
 
 <style>
-  /* Per-award progress colors: neutral = nothing yet, amber = one of
-     photo/note present, green = both (rejected content counts as missing) */
-  .extras-block {
-    border-radius: 8px;
-    padding: 1rem;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-left: 3px solid rgba(255, 255, 255, 0.25);
-  }
-  .extras-block.extras-partial {
-    background: rgba(245, 158, 11, 0.07);
-    border-left-color: #aa8529;
-  }
-  .extras-block.extras-done {
-    background: rgba(16, 185, 129, 0.07);
-    border-left-color: #10b981;
-  }
-  .extras-chip {
-    display: inline-block;
-    padding: 0.2rem 0.6rem;
+  .edit-filter-chip {
+    padding: 0.35rem 0.9rem;
     border-radius: 999px;
-    font-size: 0.72rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-muted);
+    font-size: 0.85rem;
     font-weight: 600;
-    white-space: nowrap;
+    cursor: pointer;
   }
-  .extras-chip.chip-waiting { background: rgba(255, 255, 255, 0.08); color: var(--text-muted); border: 1px solid rgba(255, 255, 255, 0.2); }
-  .extras-chip.chip-partial { background: rgba(245, 158, 11, 0.15); color: #d9a941; border: 1px solid rgba(245, 158, 11, 0.35); }
-  .extras-chip.chip-done { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.35); }
+  .edit-filter-chip.active {
+    border-color: var(--primary);
+    color: #f3e5ab;
+    background: rgba(212, 175, 55, 0.12);
+  }
+  #edit-toast {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(16, 185, 129, 0.95);
+    color: #04140d;
+    font-weight: 600;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+    display: none;
+  }
 </style>
 
-<div class="container" style="max-width: 900px; margin-top: 3rem; margin-bottom: 4rem;">
-  <div class="header-section" style="margin-bottom: 2rem;">
-    <h1>Award Card Extras</h1>
-    <p class="subtitle">Add a photo and thank-you notes to <strong style="color: white;"><%= dancer.name %></strong>'s award cards.</p>
-    <div style="display: flex; gap: 1.5rem; margin-top: 0.75rem;">
-      <a href="/manage/dancer/<%= dancer.id %>" style="color: var(--primary); text-decoration: none; font-size: 0.9rem;">&larr; Manage Profile</a>
+<div class="container" style="max-width: 1100px; margin-top: 3rem; margin-bottom: 4rem;">
+  <div class="header-section" style="margin-bottom: 1.5rem;">
+    <h1>Edit <%= dancer.name %>'s Award Cards</h1>
+    <p class="subtitle">Flip any card over and fill its pages right where they'll appear — photo and thank-you note.</p>
+    <div style="display: flex; gap: 1.5rem; margin-top: 0.75rem; flex-wrap: wrap;">
+      <a href="/manage/dancer/<%= dancer.id %>" style="color: var(--primary); text-decoration: none; font-size: 0.9rem;">&larr; Manage Profile (default photo lives there)</a>
       <a href="/dancer/<%= dancer.unique_id %>" style="color: var(--primary); text-decoration: none; font-size: 0.9rem;">View Public Trophy Case &rarr;</a>
     </div>
   </div>
 
-  <div style="margin-bottom: 2rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-left: 4px solid #3b82f6; border-radius: 4px; font-size: 0.9rem; color: var(--text-color);">
-    Photos and thank-you notes appear as extra pages on the flip side of award cards
-    <strong>after the AwardHome team reviews and approves them</strong> — this keeps every
-    public card family-friendly. Edits go back into review.
+  <div style="margin-bottom: 1.5rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-left: 4px solid #3b82f6; border-radius: 4px; font-size: 0.9rem; color: var(--text-color);">
+    Tap a card to flip it, then use the arrows/dots to reach the photo and thank-you pages.
+    New photos and notes go live <strong>after the AwardHome team approves them</strong>, and when the
+    same routine won several awards at one competition, one save fills the matching cards automatically.
     <% if (consent) { %>
-      <div style="margin-top: 0.5rem; color: #10b981;">✓ Photo permission on file for this dancer
-        (confirmed <%= new Date(consent.consented_at).toLocaleDateString() %>) — no more checkboxes needed.</div>
+      <div style="margin-top: 0.5rem; color: #10b981;">✓ Photo permission on file
+        (confirmed <%= new Date(consent.consented_at).toLocaleDateString() %>).</div>
     <% } %>
   </div>
 
-  <!-- Default Card Photo -->
-  <div class="card glass-card" style="margin-bottom: 2rem;">
-    <h3 style="margin-top: 0;">📸 Default Card Photo</h3>
-    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
-      Shown in a circular frame on any award card that doesn't have its own photo
-      (add per-award performance photos in the awards list below). A clear headshot
-      or stage portrait works best.
-    </p>
+  <% if (!consent) { %>
+    <label style="display: flex; gap: 0.6rem; align-items: flex-start; margin-bottom: 1.5rem; padding: 1rem; background: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 8px; font-size: 0.85rem; color: var(--text-muted); cursor: pointer;">
+      <input type="checkbox" id="consent-inline" style="margin-top: 0.2rem; width: 16px; height: 16px; accent-color: var(--primary);">
+      <span><strong style="color: #f3e5ab;">One-time photo permission:</strong> I am this dancer's
+        parent/guardian (or the dancer is an adult, or I have the family's permission), and for any
+        photo I upload I have permission from everyone pictured to display it publicly on AwardHome
+        award cards. Check once before your first upload — you won't be asked again.</span>
+    </label>
+  <% } %>
 
-    <div style="display: flex; gap: 2rem; align-items: flex-start; flex-wrap: wrap;">
-      <div style="text-align: center;">
-        <% if (dancer.card_photo_url) { %>
-          <div style="width: 120px; height: 120px; border-radius: 50%; overflow: hidden; border: 3px solid #c9a961; margin-bottom: 0.75rem;">
-            <img src="<%= dancer.card_photo_url %>" alt="Card photo" style="width: 100%; height: 100%; object-fit: cover;">
-          </div>
-        <% } else { %>
-          <div style="width: 120px; height: 120px; border-radius: 50%; background: rgba(255,255,255,0.08); border: 2px dashed rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin-bottom: 0.75rem;">📷</div>
-        <% } %>
-        <% if (dancer.card_photo_status === 'approved') { %>
-          <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">Approved &amp; live</span>
-        <% } else if (dancer.card_photo_status === 'pending') { %>
-          <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #aa8529;">Pending review</span>
-        <% } else if (dancer.card_photo_status === 'rejected') { %>
-          <span class="badge" style="background: rgba(239, 68, 68, 0.2); color: #ef4444;">Not approved &mdash; try another photo</span>
-        <% } else { %>
-          <span class="badge" style="background: rgba(255,255,255,0.08); color: var(--text-muted);">No photo yet</span>
-        <% } %>
-      </div>
+  <% const counts = { waiting: 0, partial: 0, done: 0 };
+     awards.forEach(a => counts[a.editState]++); %>
+  <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap;" id="edit-filters">
+    <button type="button" class="edit-filter-chip active" data-filter="all" onclick="editFilter(this)">All (<%= awards.length %>)</button>
+    <button type="button" class="edit-filter-chip" data-filter="waiting" onclick="editFilter(this)">Needs input (<span data-count="waiting"><%= counts.waiting %></span>)</button>
+    <button type="button" class="edit-filter-chip" data-filter="partial" onclick="editFilter(this)">Partial (<span data-count="partial"><%= counts.partial %></span>)</button>
+    <button type="button" class="edit-filter-chip" data-filter="done" onclick="editFilter(this)">Done (<span data-count="done"><%= counts.done %></span>)</button>
+  </div>
 
-      <div style="flex: 1; min-width: 260px;">
-        <form action="/manage/dancer/<%= dancer.id %>/card/photo" method="POST" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 1rem;">
-          <input type="file" name="photo" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" required
-            style="padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
-          <% if (!consent) { %>
-            <label style="display: flex; gap: 0.6rem; align-items: flex-start; font-size: 0.85rem; color: var(--text-muted); cursor: pointer;">
-              <input type="checkbox" name="consent" required style="margin-top: 0.2rem; width: 16px; height: 16px; accent-color: var(--primary);">
-              <span>I am this dancer's parent/guardian (or the dancer is an adult, or I have the
-                family's permission), and for any photo I upload I have permission from everyone
-                pictured to display it publicly on AwardHome award cards. <em>Asked once — future
-                uploads for this dancer won't show this box.</em></span>
-            </label>
-          <% } %>
-          <button type="submit" class="btn btn-primary" style="align-self: flex-start;">Upload Photo</button>
-        </form>
-        <% if (dancer.card_photo_url) { %>
-          <form action="/manage/dancer/<%= dancer.id %>/card/photo/remove" method="POST" style="margin-top: 0.75rem;">
-            <button type="submit" class="btn btn-outline" style="border-color: #ef4444; color: #ef4444; font-size: 0.85rem;">Remove Photo</button>
-          </form>
-        <% } %>
-      </div>
+  <% if (awards.length === 0) { %>
+    <div class="card glass-card" style="text-align: center; padding: 3rem;">
+      <p style="color: var(--text-muted); margin: 0;">No linked awards yet.</p>
     </div>
-  </div>
-
-  <!-- Per-award photos & thank-you notes -->
-  <div class="card glass-card">
-    <h3 style="margin-top: 0;">🏆 Per-Award Photos &amp; Thank-You Notes</h3>
-    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
-      Each award can carry its own <strong>photo</strong> (usually that routine's performance shot
-      &mdash; it replaces the default card photo on that card) and a short <strong>thank-you note</strong>
-      (teachers, teammates, family&hellip;). On group routines, every dancer adds their own note &mdash;
-      the card shows them all, like the back of a yearbook. Notes are max 280 characters; leave a
-      note blank and save to remove it.
-      <br><br>
-      <strong>Type it once:</strong> when the same routine won several awards at one competition,
-      saving a photo or note fills the matching awards automatically &mdash; any award you've already
-      filled in keeps what it has, and later edits change only that one award.
-    </p>
-
-    <% if (awards.length === 0) { %>
-      <p style="color: var(--text-muted); text-align: center; padding: 2rem;">No linked awards yet.</p>
-    <% } else { %>
-      <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 1rem;">
-        Block colors show each award's progress:
-        <span class="extras-chip chip-waiting">Waiting for input</span>
-        <span class="extras-chip chip-partial">Partial</span>
-        <span class="extras-chip chip-done">Done</span>
-      </p>
-      <div style="display: flex; flex-direction: column; gap: 1rem;">
-        <% awards.forEach(award => {
-          const ack = ackMap[award.id]; const photo = photoMap[award.id];
-          // Rejected content still needs the family's attention, so it
-          // counts as missing for the progress color.
-          const hasPhoto = photo && photo.status !== 'rejected';
-          const hasAck = ack && ack.status !== 'rejected';
-          const state = (hasPhoto && hasAck) ? 'done' : ((hasPhoto || hasAck) ? 'partial' : 'waiting');
-        %>
-          <div class="extras-block extras-<%= state %>">
-            <div style="display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.75rem;">
-              <div>
-                <strong style="color: var(--primary);"><%= award.performance_name || award.award_type || 'Award' %></strong>
-                <span style="color: var(--text-muted); font-size: 0.85rem;"> &mdash; <%= formatPlacement(award) %>, <%= award.event_name %> (<%= award.year %>)</span>
-                <% if (award.dancer_count > 1) { %>
-                  <span class="badge" style="background: rgba(139, 92, 246, 0.2); color: #c4b5fd; font-size: 0.7rem; margin-left: 0.4rem;">Group &middot; <%= award.dancer_count %> dancers</span>
-                <% } %>
-              </div>
-              <div>
-                <% if (state === 'done') { %>
-                  <span class="extras-chip chip-done">✓ Done</span>
-                <% } else if (state === 'partial') { %>
-                  <span class="extras-chip chip-partial"><%= hasPhoto ? 'Note missing' : 'Photo missing' %></span>
-                <% } else { %>
-                  <span class="extras-chip chip-waiting">Waiting for input</span>
-                <% } %>
-              </div>
-            </div>
-
-            <!-- Award photo -->
-            <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; padding-bottom: 0.85rem; margin-bottom: 0.85rem; border-bottom: 1px dashed rgba(255,255,255,0.1);">
-              <% if (photo) { %>
-                <div style="width: 72px; height: 54px; border-radius: 6px; overflow: hidden; border: 2px solid #c9a961; flex-shrink: 0;">
-                  <img src="<%= photo.photo_url %>" alt="Award photo" style="width: 100%; height: 100%; object-fit: cover;">
-                </div>
-                <% if (photo.status === 'approved') { %>
-                  <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981; font-size: 0.75rem;">Photo live</span>
-                <% } else if (photo.status === 'pending') { %>
-                  <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #aa8529; font-size: 0.75rem;">Photo pending review</span>
-                <% } else { %>
-                  <span class="badge" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; font-size: 0.75rem;">Photo not approved</span>
-                <% } %>
-                <form action="/manage/dancer/<%= dancer.id %>/card/award-photo/remove" method="POST" style="margin: 0;">
-                  <input type="hidden" name="award_id" value="<%= award.id %>">
-                  <button type="submit" class="btn btn-outline" style="font-size: 0.75rem; padding: 0.3rem 0.6rem; border-color: #ef4444; color: #ef4444;">Remove</button>
-                </form>
-              <% } %>
-              <form action="/manage/dancer/<%= dancer.id %>/card/award-photo" method="POST" enctype="multipart/form-data"
-                style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; margin: 0; flex: 1; min-width: 260px;">
-                <input type="hidden" name="award_id" value="<%= award.id %>">
-                <input type="file" name="photo" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" required
-                  style="padding: 0.4rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px; font-size: 0.8rem; flex: 1; min-width: 180px;">
-                <% if (!consent) { %>
-                  <label style="display: flex; gap: 0.4rem; align-items: center; font-size: 0.75rem; color: var(--text-muted); cursor: pointer;" title="One-time confirmation: I have permission from everyone pictured (or their parents/guardians) to display photos I upload publicly on AwardHome award cards. Future uploads won't ask again.">
-                    <input type="checkbox" name="consent" required style="width: 14px; height: 14px; accent-color: var(--primary);">
-                    <span>Consent&nbsp;&#9432;</span>
-                  </label>
-                <% } %>
-                <button type="submit" class="btn btn-outline" style="font-size: 0.8rem;"><%= photo ? 'Replace Photo' : 'Add Photo' %></button>
-              </form>
-            </div>
-
-            <!-- Thank-you note -->
-            <form action="/manage/dancer/<%= dancer.id %>/card/ack" method="POST" style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
-              <input type="hidden" name="award_id" value="<%= award.id %>">
-              <input type="text" name="message" maxlength="280" value="<%= ack ? ack.message : '' %>"
-                placeholder="e.g. Thank you Miss Amy, my teammates, and Mom &amp; Dad!"
-                style="flex: 1; min-width: 240px; padding: 0.6rem 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
-              <% if (ack && ack.status === 'approved') { %>
-                <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981; font-size: 0.75rem;">Note live</span>
-              <% } else if (ack && ack.status === 'pending') { %>
-                <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #aa8529; font-size: 0.75rem;">Note pending review</span>
-              <% } else if (ack && ack.status === 'rejected') { %>
-                <span class="badge" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; font-size: 0.75rem;">Note not approved</span>
-              <% } %>
-              <button type="submit" class="btn btn-outline" style="font-size: 0.85rem;">Save Note</button>
-            </form>
-          </div>
-        <% }); %>
-      </div>
-    <% } %>
-  </div>
+  <% } else { %>
+    <div class="awards-grid" id="edit-grid">
+      <% awards.forEach(function(award) { %>
+        <%- include('partials/dancer_award_card', { award: award, isGroupAward: award.dancer_count > 1, cardEditMode: true }) %>
+      <% }); %>
+    </div>
+  <% } %>
 </div>
+
+<div id="edit-toast"></div>
+
+<script src="/js/flipbook.js"></script>
+<script>
+  const DANCER_ID = <%= dancer.id %>;
+  let needConsent = <%= consent ? 'false' : 'true' %>;
+
+  function editToast(msg) {
+    const t = document.getElementById('edit-toast');
+    t.textContent = msg;
+    t.style.display = 'block';
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => { t.style.display = 'none'; }, 3500);
+  }
+
+  function editConsentOk() {
+    if (!needConsent) return true;
+    const box = document.getElementById('consent-inline');
+    if (box && box.checked) return true;
+    editToast('Please check the one-time photo permission box above the cards first.');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return false;
+  }
+
+  // ---- Card state bookkeeping (front chip + filter counts) ----
+  function editSetState(card, hasPhoto, hasAck) {
+    card.dataset.hasPhoto = hasPhoto ? '1' : '';
+    card.dataset.hasAck = hasAck ? '1' : '';
+    const state = (hasPhoto && hasAck) ? 'done' : ((hasPhoto || hasAck) ? 'partial' : 'waiting');
+    card.dataset.state = state;
+    const chip = card.querySelector('[data-role="state-chip"]');
+    chip.className = 'card-edit-chip chip-' + state;
+    chip.textContent = state === 'done' ? '✓ Done' : (state === 'partial' ? '1 to add' : '2 to add');
+    // refresh filter counts
+    const counts = { waiting: 0, partial: 0, done: 0 };
+    document.querySelectorAll('#edit-grid .flip-card').forEach(c => counts[c.dataset.state]++);
+    ['waiting', 'partial', 'done'].forEach(s => {
+      const el = document.querySelector('[data-count="' + s + '"]');
+      if (el) el.textContent = counts[s];
+    });
+  }
+  // seed per-card flags from the server-rendered state
+  document.querySelectorAll('#edit-grid .flip-card').forEach(card => {
+    const st = card.dataset.state;
+    card.dataset.hasPhoto = (st === 'done' || (st === 'partial' && card.querySelector('[data-role="photo-frame"]'))) ? '1' : '';
+    card.dataset.hasAck = (st === 'done' || (st === 'partial' && !card.querySelector('[data-role="photo-frame"]'))) ? '1' : '';
+  });
+
+  function editFilter(btn) {
+    document.querySelectorAll('.edit-filter-chip').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const f = btn.dataset.filter;
+    document.querySelectorAll('#edit-grid .flip-card').forEach(c => {
+      c.style.display = (f === 'all' || c.dataset.state === f) ? '' : 'none';
+    });
+  }
+
+  // ---- Photo editing ----
+  function editPickPhoto(btn) {
+    if (!editConsentOk()) return;
+    btn.closest('.tcb-page').querySelector('input[type="file"]').click();
+  }
+
+  async function editPhotoChosen(input) {
+    if (!input.files || !input.files[0]) return;
+    const card = input.closest('.flip-card');
+    const page = input.closest('.tcb-page');
+    const fd = new FormData();
+    fd.append('award_id', card.dataset.awardId);
+    fd.append('photo', input.files[0]);
+    if (needConsent) fd.append('consent', 'on');
+    try {
+      const res = await fetch(`/manage/dancer/${DANCER_ID}/card/award-photo?json=1`, { method: 'POST', body: fd });
+      const j = await res.json();
+      if (!res.ok || !j.success) throw new Error(j.error || 'Upload failed');
+      needConsent = false;
+      const consentBar = document.getElementById('consent-inline');
+      if (consentBar) consentBar.closest('label').style.display = 'none';
+      // swap placeholder → framed photo with pending ribbon, in place
+      const ph = page.querySelector('[data-role="photo-placeholder"]');
+      if (ph) ph.remove();
+      const hint = page.querySelector('.tcb-edit-hint');
+      if (hint) hint.remove();
+      let frame = page.querySelector('[data-role="photo-frame"]');
+      if (!frame) {
+        frame = document.createElement('div');
+        frame.className = 'tcb-photo-frame tcb-photo-frame-rect';
+        frame.dataset.role = 'photo-frame';
+        frame.innerHTML = '<img alt="Award photo">';
+        page.insertBefore(frame, page.firstChild);
+        const status = document.createElement('div');
+        status.className = 'tcb-edit-status status-pending';
+        status.dataset.role = 'photo-status';
+        frame.after(status);
+        const actions = document.createElement('div');
+        actions.className = 'tcb-edit-actions';
+        actions.innerHTML = '<button type="button" class="tcb-edit-btn" onclick="event.stopPropagation(); editPickPhoto(this);">Replace</button>' +
+          '<button type="button" class="tcb-edit-btn tcb-edit-danger" onclick="event.stopPropagation(); editRemovePhoto(this);">Remove</button>';
+        status.after(actions);
+      }
+      frame.querySelector('img').src = j.photo_url;
+      const status = page.querySelector('[data-role="photo-status"]');
+      status.className = 'tcb-edit-status status-pending';
+      status.textContent = 'Pending review';
+      editSetState(card, true, card.dataset.hasAck === '1');
+      editToast(j.propagated > 0
+        ? `Photo saved — also applied to ${j.propagated} more award${j.propagated === 1 ? '' : 's'} of this routine.`
+        : 'Photo saved — pending review.');
+    } catch (err) {
+      editToast(err.message);
+    } finally {
+      input.value = '';
+    }
+  }
+
+  async function editRemovePhoto(btn) {
+    const card = btn.closest('.flip-card');
+    const page = btn.closest('.tcb-page');
+    try {
+      const body = new URLSearchParams({ award_id: card.dataset.awardId });
+      const res = await fetch(`/manage/dancer/${DANCER_ID}/card/award-photo/remove?json=1`, {
+        method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body
+      });
+      const j = await res.json();
+      if (!res.ok || !j.success) throw new Error(j.error || 'Remove failed');
+      // framed photo → placeholder, in place
+      page.querySelector('[data-role="photo-frame"]').remove();
+      const status = page.querySelector('[data-role="photo-status"]');
+      if (status) status.remove();
+      btn.closest('.tcb-edit-actions').remove();
+      const ph = document.createElement('button');
+      ph.type = 'button';
+      ph.className = 'tcb-photo-placeholder';
+      ph.dataset.role = 'photo-placeholder';
+      ph.setAttribute('onclick', 'event.stopPropagation(); editPickPhoto(this);');
+      ph.innerHTML = '<span class="tcb-ph-icon">📷</span><span>Upload this routine\'s photo</span>';
+      page.insertBefore(ph, page.firstChild);
+      editSetState(card, false, card.dataset.hasAck === '1');
+      editToast('Photo removed.');
+    } catch (err) {
+      editToast(err.message);
+    }
+  }
+
+  // ---- Thank-you note editing ----
+  async function editSaveAck(btn) {
+    const card = btn.closest('.flip-card');
+    const page = btn.closest('.tcb-page');
+    const message = page.querySelector('[data-role="ack-input"]').value.trim();
+    try {
+      const body = new URLSearchParams({ award_id: card.dataset.awardId, message });
+      const res = await fetch(`/manage/dancer/${DANCER_ID}/card/ack?json=1`, {
+        method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body
+      });
+      const j = await res.json();
+      if (!res.ok || !j.success) throw new Error(j.error || 'Save failed');
+      const status = page.querySelector('[data-role="ack-status"]');
+      if (j.cleared) {
+        status.className = 'tcb-edit-status';
+        status.textContent = '';
+        editSetState(card, card.dataset.hasPhoto === '1', false);
+        editToast('Note removed from this award.');
+      } else {
+        status.className = 'tcb-edit-status status-pending';
+        status.textContent = 'Pending review';
+        editSetState(card, card.dataset.hasPhoto === '1', true);
+        editToast(j.propagated > 0
+          ? `Note saved — also applied to ${j.propagated} more award${j.propagated === 1 ? '' : 's'} of this routine.`
+          : 'Note saved — pending review.');
+      }
+    } catch (err) {
+      editToast(err.message);
+    }
+  }
+</script>
 
 <%- include('partials/footer') %>

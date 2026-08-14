@@ -53,6 +53,11 @@
     if (logoTf.length) logoVars.push('--org-logo-transform: ' + logoTf.join(' '));
   }
 
+  // WYSIWYG editor (manage card page): pages that would only materialize
+  // with content instead materialize as inline-editable placeholders.
+  // Never set on public pages — visitors must not see "upload here".
+  const editMode = typeof cardEditMode !== 'undefined' && !!cardEditMode;
+
   // Flipbook back-stack: pages materialize only when their content exists,
   // so the first flip always lands on a complete certificate.
   // Photo page: the per-award photo (usually the routine's performance
@@ -62,13 +67,14 @@
   const awardPhoto = design === 'flipbook' ? (award.award_photo_url || null) : null;
   const defaultPhoto = (dancer.card_photo_url && dancer.card_photo_status === 'approved') ? dancer.card_photo_url : null;
   const cardPhoto = awardPhoto || defaultPhoto;
-  const hasPhotoPage = design === 'flipbook' && !!cardPhoto;
+  const hasPhotoPage = design === 'flipbook' && (editMode || !!cardPhoto);
   const cardAcks = (design === 'flipbook' && award.acks) ? award.acks : [];
-  const hasAckPage = cardAcks.length > 0;
+  const hasAckPage = editMode || cardAcks.length > 0;
   const hasColophonPage = design === 'flipbook' && showOrgLogo;
   const pageCount = 1 + (hasPhotoPage ? 1 : 0) + (hasAckPage ? 1 : 0) + (hasColophonPage ? 1 : 0);
 %>
-<div class="flip-card <%= design === 'flipbook' ? 'flipbook' : '' %>" role="button" tabindex="0" aria-label="Flip award card"
+<div class="flip-card <%= design === 'flipbook' ? 'flipbook' : '' %>"
+  <%- editMode ? ' data-award-id="' + award.id + '" data-state="' + award.editState + '"' : '' %> role="button" tabindex="0" aria-label="Flip award card"
   onclick="if(this.dataset.swiped){delete this.dataset.swiped;return;}this.classList.toggle('flipped')"
   onkeydown="if(event.target===this&&(event.key==='Enter'||event.key===' ')){event.preventDefault();this.classList.toggle('flipped');}else if(event.target===this&&this.classList.contains('flipped')&&(event.key==='ArrowRight'||event.key==='ArrowLeft')&&window.tcbNavKey){event.preventDefault();tcbNavKey(this,event.key==='ArrowRight'?1:-1);}">
   <div class="flip-card-inner">
@@ -81,6 +87,11 @@
                   </svg>
                 </div>
                 <% } %>
+              <% if (editMode) { %>
+                <span class="card-edit-chip chip-<%= award.editState %>" data-role="state-chip">
+                  <%= award.editState === 'done' ? '✓ Done' : (award.editState === 'partial' ? '1 to add' : '2 to add') %>
+                </span>
+              <% } %>
                     <div class="content-wrapper <%= tier %>">
                       <div class="trophy-icon">
                         <% const customIconSolo=getCustomIcon(award, award.customIconsObj); %>
@@ -167,12 +178,39 @@
 
       <% if (hasPhotoPage) { %>
         <div class="tcb-page tcb-page-photo">
-          <div class="tcb-photo-frame <%= awardPhoto ? 'tcb-photo-frame-rect' : '' %>">
-            <img src="<%= cardPhoto %>" alt="<%= dancer.name %>" loading="lazy">
-          </div>
-          <div class="tcb-photo-name"><%= dancer.name %></div>
-          <% if (awardPhoto && award.performance_name) { %>
-            <div class="tcb-photo-caption">&ldquo;<%= award.performance_name %>&rdquo;</div>
+          <% if (editMode) { %>
+            <% if (award.ownPhoto) { %>
+              <div class="tcb-photo-frame tcb-photo-frame-rect" data-role="photo-frame">
+                <img src="<%= award.ownPhoto.photo_url %>" alt="Award photo" loading="lazy">
+              </div>
+              <div class="tcb-edit-status status-<%= award.ownPhoto.status %>" data-role="photo-status"><%=
+                award.ownPhoto.status === 'approved' ? '✓ Live' :
+                (award.ownPhoto.status === 'pending' ? 'Pending review' : 'Not approved — try another') %></div>
+              <div class="tcb-edit-actions">
+                <button type="button" class="tcb-edit-btn" onclick="event.stopPropagation(); editPickPhoto(this);">Replace</button>
+                <button type="button" class="tcb-edit-btn tcb-edit-danger" onclick="event.stopPropagation(); editRemovePhoto(this);">Remove</button>
+              </div>
+            <% } else { %>
+              <button type="button" class="tcb-photo-placeholder" data-role="photo-placeholder"
+                onclick="event.stopPropagation(); editPickPhoto(this);">
+                <span class="tcb-ph-icon">📷</span>
+                <span>Upload this routine's photo</span>
+              </button>
+              <% if (defaultPhoto) { %>
+                <div class="tcb-edit-hint">Cards show your default photo until then</div>
+              <% } %>
+            <% } %>
+            <input type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif"
+              style="display: none;" onclick="event.stopPropagation();" onchange="editPhotoChosen(this)">
+            <div class="tcb-photo-name"><%= dancer.name %></div>
+          <% } else { %>
+            <div class="tcb-photo-frame <%= awardPhoto ? 'tcb-photo-frame-rect' : '' %>">
+              <img src="<%= cardPhoto %>" alt="<%= dancer.name %>" loading="lazy">
+            </div>
+            <div class="tcb-photo-name"><%= dancer.name %></div>
+            <% if (awardPhoto && award.performance_name) { %>
+              <div class="tcb-photo-caption">&ldquo;<%= award.performance_name %>&rdquo;</div>
+            <% } %>
           <% } %>
         </div>
       <% } %>
@@ -181,14 +219,37 @@
         <div class="tcb-page tcb-page-ack">
           <div class="tcb-icon">💛</div>
           <div class="tcb-eyebrow">With thanks</div>
-          <div class="tcb-ack-lines">
-            <% cardAcks.forEach(function(ack) { %>
-              <div class="tcb-ack-line <%= ack.dancer_id === dancer.id ? 'tcb-ack-mine' : '' %>">
-                <span class="tcb-ack-msg">&ldquo;<%= ack.message %>&rdquo;</span>
-                <span class="tcb-ack-author">&mdash; <%= ack.dancer_name %></span>
+          <% if (editMode) { %>
+            <textarea class="tcb-ack-input" maxlength="280" rows="4" data-role="ack-input"
+              placeholder="Write your thank-you note here — teachers, teammates, family…"
+              onclick="event.stopPropagation();"><%= award.ownAck ? award.ownAck.message : '' %></textarea>
+            <div class="tcb-edit-actions">
+              <span class="tcb-edit-status <%= award.ownAck ? 'status-' + award.ownAck.status : '' %>" data-role="ack-status"><%=
+                !award.ownAck ? '' :
+                award.ownAck.status === 'approved' ? '✓ Live' :
+                (award.ownAck.status === 'pending' ? 'Pending review' : 'Not approved — edit and resave') %></span>
+              <button type="button" class="tcb-edit-btn" onclick="event.stopPropagation(); editSaveAck(this);">Save</button>
+            </div>
+            <% if (cardAcks.length) { %>
+              <div class="tcb-ack-lines tcb-ack-mates">
+                <% cardAcks.forEach(function(ack) { %>
+                  <div class="tcb-ack-line">
+                    <span class="tcb-ack-msg">&ldquo;<%= ack.message %>&rdquo;</span>
+                    <span class="tcb-ack-author">&mdash; <%= ack.dancer_name %></span>
+                  </div>
+                <% }); %>
               </div>
-            <% }); %>
-          </div>
+            <% } %>
+          <% } else { %>
+            <div class="tcb-ack-lines">
+              <% cardAcks.forEach(function(ack) { %>
+                <div class="tcb-ack-line <%= ack.dancer_id === dancer.id ? 'tcb-ack-mine' : '' %>">
+                  <span class="tcb-ack-msg">&ldquo;<%= ack.message %>&rdquo;</span>
+                  <span class="tcb-ack-author">&mdash; <%= ack.dancer_name %></span>
+                </div>
+              <% }); %>
+            </div>
+          <% } %>
         </div>
       <% } %>
 
@@ -219,18 +280,20 @@
         </div>
       <% } %>
 
-      <%
-        // "won 4th" but "was named Winner" / "were named Miss Mini Dance"
-        const shareVerb = /^\d/.test(placeText) ? 'won' : (isGroup ? 'were named' : 'was named');
-        const shareBits = [dancer.name, isGroup ? 'and teammates' : null, shareVerb, placeText];
-        if (award.performance_name) shareBits.push(`with "${award.performance_name}"`);
-        shareBits.push('at ' + formatEventTitle(award.event_name, award.org_name, award.event_year), '🏆');
-      %>
-      <button class="tcb-share" type="button" aria-label="Share this award" title="Share this award"
-        data-share-text="<%= shareBits.filter(Boolean).join(' ') %>"
-        onclick="event.stopPropagation(); shareAwardCard(this);">
-        <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
-      </button>
+      <% if (!editMode) { %>
+        <%
+          // "won 4th" but "was named Winner" / "were named Miss Mini Dance"
+          const shareVerb = /^\d/.test(placeText) ? 'won' : (isGroup ? 'were named' : 'was named');
+          const shareBits = [dancer.name, isGroup ? 'and teammates' : null, shareVerb, placeText];
+          if (award.performance_name) shareBits.push(`with "${award.performance_name}"`);
+          shareBits.push('at ' + formatEventTitle(award.event_name, award.org_name, award.event_year), '🏆');
+        %>
+        <button class="tcb-share" type="button" aria-label="Share this award" title="Share this award"
+          data-share-text="<%= shareBits.filter(Boolean).join(' ') %>"
+          onclick="event.stopPropagation(); shareAwardCard(this);">
+          <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+        </button>
+      <% } %>
       <div class="tcb-brand">AwardHome</div>
     </div>
   </div>

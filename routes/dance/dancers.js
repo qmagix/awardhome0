@@ -106,6 +106,9 @@ async function ensurePhotoConsent(db, userId, dancerId, body) {
   return null;
 }
 
+// WYSIWYG card editor: renders the dancer's actual flipbook cards with
+// pages materialized as inline-editable placeholders (cardEditMode in the
+// card partial). Sorted incomplete-first so the remaining work leads.
 router.get('/manage/dancer/:id/card', requireAuth, async (req, res) => {
   const db = await openDb();
   const dancer = await getDancerIfCardManager(db, req.session.user, req.params.id);
@@ -113,7 +116,7 @@ router.get('/manage/dancer/:id/card', requireAuth, async (req, res) => {
   await ensureCardTables(db);
 
   const awards = await db.all(`
-    SELECT a.*, e.name as event_name, e.year, o.name as org_name,
+    SELECT a.*, e.name as event_name, e.year as event_year, o.name as org_name, o.logo_url, o.custom_icons,
       (SELECT COUNT(*) FROM award_dancers ad2 WHERE ad2.award_id = a.id) as dancer_count
     FROM awards a
     JOIN award_dancers ad ON a.id = ad.award_id
@@ -133,38 +136,64 @@ router.get('/manage/dancer/:id/card', requireAuth, async (req, res) => {
   const photoMap = {};
   photoRows.forEach(r => { photoMap[r.award_id] = r; });
 
+  // Teammates' approved lines, shown read-only on group cards' ack page
+  const mateMap = {};
+  const ids = awards.map(a => a.id);
+  if (ids.length) {
+    const mates = await db.all(`
+      SELECT aa.award_id, aa.dancer_id, aa.message, d.name as dancer_name
+      FROM award_acknowledgements aa
+      JOIN dancers d ON aa.dancer_id = d.id
+      WHERE aa.status = 'approved' AND aa.dancer_id != ? AND aa.award_id IN (${ids.map(() => '?').join(',')})
+      ORDER BY d.name
+    `, [dancer.id, ...ids]);
+    mates.forEach(m => { (mateMap[m.award_id] = mateMap[m.award_id] || []).push(m); });
+  }
+
+  awards.forEach(a => {
+    if (a.custom_icons) { try { a.customIconsObj = JSON.parse(a.custom_icons); } catch (e) { } }
+    a.ownAck = ackMap[a.id] || null;
+    a.ownPhoto = photoMap[a.id] || null;
+    a.acks = mateMap[a.id] || [];
+    const hp = a.ownPhoto && a.ownPhoto.status !== 'rejected';
+    const ha = a.ownAck && a.ownAck.status !== 'rejected';
+    a.editState = (hp && ha) ? 'done' : ((hp || ha) ? 'partial' : 'waiting');
+  });
+  const rank = { waiting: 0, partial: 1, done: 2 };
+  awards.sort((x, y) => rank[x.editState] - rank[y.editState]); // stable: keeps year DESC within groups
+
   const consentRow = await db.get(
     'SELECT consented_at FROM card_photo_consents WHERE user_id = ? AND dancer_id = ?',
     [req.session.user.id, dancer.id]);
 
-  res.render('manage_dancer_card', { dancer, awards, ackMap, photoMap, consent: consentRow || null });
+  res.render('manage_dancer_card', { dancer, awards, consent: consentRow || null, cardDesign: 'flipbook' });
 });
 
 
+// The WYSIWYG editor saves via fetch with ?json=1 (JSON responses, no
+// redirect); the bare form flow keeps redirects.
 router.post('/manage/dancer/:id/card/award-photo', requireAuth, cardPhotoUpload.single('photo'), async (req, res) => {
   const db = await openDb();
   const dancer = await getDancerIfCardManager(db, req.session.user, req.params.id);
   if (!dancer) return res.status(403).send('Forbidden');
   await ensureCardTables(db);
   const back = `/manage/dancer/${req.params.id}/card`;
+  const wantsJson = req.query.json === '1';
+  const fail = (msg) => wantsJson
+    ? res.status(400).json({ error: msg })
+    : res.send(`<script>alert(${JSON.stringify(msg)}); window.location.href=${JSON.stringify(back)};</script>`);
 
   const awardId = parseInt(req.body.award_id);
-  if (!awardId) return res.status(400).send('Missing award');
-  if (!req.file) {
-    return res.send(`<script>alert("Please choose an image file."); window.location.href=${JSON.stringify(back)};</script>`);
-  }
+  if (!awardId) return fail('Missing award');
+  if (!req.file) return fail('Please choose an image file.');
   // Same one-time consent gate as the default card photo (the affirmation
   // wording covers everyone pictured, so it spans both upload kinds).
   const consentErr = await ensurePhotoConsent(db, req.session.user.id, dancer.id, req.body);
-  if (consentErr) {
-    return res.send(`<script>alert(${JSON.stringify(consentErr)}); window.location.href=${JSON.stringify(back)};</script>`);
-  }
+  if (consentErr) return fail(consentErr);
 
   const linked = await db.get(
     'SELECT 1 FROM award_dancers WHERE award_id = ? AND dancer_id = ?', [awardId, dancer.id]);
-  if (!linked) {
-    return res.send(`<script>alert("That award is not linked to this dancer."); window.location.href=${JSON.stringify(back)};</script>`);
-  }
+  if (!linked) return fail('That award is not linked to this dancer.');
 
   // Any replacement goes back to pending — every public photo was reviewed
   const photoUrl = '/uploads/dancer_photos/' + req.file.filename;
@@ -177,12 +206,15 @@ router.post('/manage/dancer/:id/card/award-photo', requireAuth, cardPhotoUpload.
   `, [awardId, dancer.id, photoUrl, req.session.user.id]);
   // Same routine, same event → same performance shot: fill the sibling
   // awards too (INSERT OR IGNORE — awards with their own photo keep it).
+  let propagated = 0;
   for (const s of await sameRoutineAwards(db, awardId, dancer.id)) {
-    await db.run(`
+    const r = await db.run(`
       INSERT OR IGNORE INTO award_card_photos (award_id, dancer_id, photo_url, status, uploaded_by)
       VALUES (?, ?, ?, 'pending', ?)
     `, [s.id, dancer.id, photoUrl, req.session.user.id]);
+    if (r.changes > 0) propagated++;
   }
+  if (wantsJson) return res.json({ success: true, photo_url: photoUrl, propagated });
   res.redirect(back);
 });
 
@@ -197,6 +229,7 @@ router.post('/manage/dancer/:id/card/award-photo/remove', requireAuth, async (re
   if (awardId) {
     await db.run('DELETE FROM award_card_photos WHERE award_id = ? AND dancer_id = ?', [awardId, dancer.id]);
   }
+  if (req.query.json === '1') return res.json({ success: true });
   res.redirect(`/manage/dancer/${req.params.id}/card`);
 });
 
@@ -206,7 +239,7 @@ router.post('/manage/dancer/:id/card/photo', requireAuth, cardPhotoUpload.single
   const dancer = await getDancerIfCardManager(db, req.session.user, req.params.id);
   if (!dancer) return res.status(403).send('Forbidden');
   await ensureCardTables(db);
-  const back = `/manage/dancer/${req.params.id}/card`;
+  const back = `/manage/dancer/${req.params.id}`;
 
   if (!req.file) {
     return res.send(`<script>alert("Please choose an image file."); window.location.href=${JSON.stringify(back)};</script>`);
@@ -221,7 +254,8 @@ router.post('/manage/dancer/:id/card/photo', requireAuth, cardPhotoUpload.single
   await db.run(
     "UPDATE dancers SET card_photo_url = ?, card_photo_status = 'pending', card_photo_uploaded_by = ? WHERE id = ?",
     ['/uploads/dancer_photos/' + req.file.filename, req.session.user.id, dancer.id]);
-  res.redirect(back);
+  // The default-photo form lives on the Manage Profile page
+  res.redirect(`/manage/dancer/${req.params.id}`);
 });
 
 
@@ -233,7 +267,7 @@ router.post('/manage/dancer/:id/card/photo/remove', requireAuth, async (req, res
   await db.run(
     "UPDATE dancers SET card_photo_url = NULL, card_photo_status = 'none', card_photo_uploaded_by = NULL WHERE id = ?",
     [dancer.id]);
-  res.redirect(`/manage/dancer/${req.params.id}/card`);
+  res.redirect(`/manage/dancer/${req.params.id}`);
 });
 
 
@@ -243,18 +277,21 @@ router.post('/manage/dancer/:id/card/ack', requireAuth, async (req, res) => {
   if (!dancer) return res.status(403).send('Forbidden');
   await ensureCardTables(db);
   const back = `/manage/dancer/${req.params.id}/card`;
+  const wantsJson = req.query.json === '1';
+  const fail = (msg) => wantsJson
+    ? res.status(400).json({ error: msg })
+    : res.send(`<script>alert(${JSON.stringify(msg)}); window.location.href=${JSON.stringify(back)};</script>`);
 
   const awardId = parseInt(req.body.award_id);
   const message = String(req.body.message || '').trim().slice(0, 280);
-  if (!awardId) return res.status(400).send('Missing award');
+  if (!awardId) return fail('Missing award');
 
   // The line must belong to an award this dancer is actually linked to
   const linked = await db.get(
     'SELECT 1 FROM award_dancers WHERE award_id = ? AND dancer_id = ?', [awardId, dancer.id]);
-  if (!linked) {
-    return res.send(`<script>alert("That award is not linked to this dancer."); window.location.href=${JSON.stringify(back)};</script>`);
-  }
+  if (!linked) return fail('That award is not linked to this dancer.');
 
+  let propagated = 0;
   if (!message) {
     // Clearing removes only THIS award's line — siblings keep theirs
     await db.run('DELETE FROM award_acknowledgements WHERE award_id = ? AND dancer_id = ?', [awardId, dancer.id]);
@@ -271,12 +308,14 @@ router.post('/manage/dancer/:id/card/ack', requireAuth, async (req, res) => {
     // siblings too so families type the note once. INSERT OR IGNORE:
     // awards that already have a line keep it — later edits stay per-award.
     for (const s of await sameRoutineAwards(db, awardId, dancer.id)) {
-      await db.run(`
+      const r = await db.run(`
         INSERT OR IGNORE INTO award_acknowledgements (award_id, dancer_id, message, status, created_by)
         VALUES (?, ?, ?, 'pending', ?)
       `, [s.id, dancer.id, message, req.session.user.id]);
+      if (r.changes > 0) propagated++;
     }
   }
+  if (wantsJson) return res.json({ success: true, cleared: !message, propagated });
   res.redirect(back);
 });
 
@@ -344,7 +383,13 @@ router.get('/manage/dancer/:id', requireAuth, async (req, res) => {
     ORDER BY e.year DESC
   `, [dancer.id]);
 
-  res.render('manage_dancer', { dancer, studios, awards });
+  // Default card photo + one-time consent live on this page's Profile section
+  await ensureCardTables(db);
+  const consentRow = await db.get(
+    'SELECT consented_at FROM card_photo_consents WHERE user_id = ? AND dancer_id = ?',
+    [req.session.user.id, dancer.id]);
+
+  res.render('manage_dancer', { dancer, studios, awards, consent: consentRow || null });
 });
 
 
