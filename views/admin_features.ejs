@@ -1,0 +1,89 @@
+<%- include('partials/header') %>
+<div class="container" style="max-width: 1000px; margin-top: 2rem; margin-bottom: 4rem;">
+  <div class="header-section">
+    <h1>Feature Flags</h1>
+    <p class="subtitle">Release console — code deploys dark, features go public here. <strong>off</strong> = nobody,
+      <strong>beta</strong> = admins + early-access users, <strong>on</strong> = everyone. A scheduled flip promotes
+      to "on" automatically at the chosen time.</p>
+    <a href="/admin" class="btn btn-outline" style="margin-top: 1rem;">&larr; Back to Admin</a>
+  </div>
+
+  <% flags.forEach(flag => { %>
+    <div class="card glass-card" style="margin-bottom: 1.5rem;" id="flag-<%= flag.key %>">
+      <div style="display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; align-items: flex-start;">
+        <div style="flex: 1; min-width: 260px;">
+          <h3 style="margin: 0 0 0.25rem 0; color: white;"><%= flag.label %>
+            <code style="font-size: 0.75rem; color: var(--text-muted); margin-left: 0.5rem;"><%= flag.key %></code>
+          </h3>
+          <p style="margin: 0 0 1rem 0; color: var(--text-muted); font-size: 0.9rem;"><%= flag.description %></p>
+        </div>
+        <div>
+          <% if (flag.state === 'on') { %>
+            <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981; font-size: 0.85rem;">● Live</span>
+          <% } else if (flag.state === 'beta') { %>
+            <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24; font-size: 0.85rem;">◐ Beta</span>
+          <% } else { %>
+            <span class="badge" style="background: rgba(255,255,255,0.08); color: var(--text-muted); font-size: 0.85rem;">○ Dark</span>
+          <% } %>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: flex-end;">
+        <div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;">State</div>
+          <div style="display: flex; gap: 0.75rem;">
+            <% ['off', 'beta', 'on'].forEach(s => { %>
+              <label style="display: flex; align-items: center; gap: 0.3rem; cursor: pointer; color: white; font-size: 0.9rem;">
+                <input type="radio" name="state-<%= flag.key %>" value="<%= s %>" <%= flag.state === s ? 'checked' : '' %>> <%= s %>
+              </label>
+            <% }); %>
+          </div>
+        </div>
+        <div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;">Scheduled flip to "on" (optional)</div>
+          <input type="datetime-local" id="flip-<%= flag.key %>"
+            value="<%= flag.flip_at ? new Date(flag.flip_at).toISOString().slice(0, 16) : '' %>"
+            style="padding: 0.5rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+        </div>
+        <div style="flex: 1; min-width: 200px;">
+          <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;">Release notes (internal)</div>
+          <input type="text" id="notes-<%= flag.key %>" maxlength="300" value="<%= flag.notes || '' %>"
+            placeholder="e.g. announce in newsletter on flip"
+            style="width: 100%; padding: 0.5rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+        </div>
+        <button class="btn btn-primary" onclick="saveFlag('<%= flag.key %>', this)">Save</button>
+      </div>
+    </div>
+  <% }); %>
+
+  <p style="color: var(--text-muted); font-size: 0.85rem;">
+    Flags propagate to visitors within ~15 seconds (in-process cache). Add new flags in
+    <code>utils/featureFlags.js</code> (FLAG_DEFS) and gate their surfaces with <code>flagOn()</code>.
+  </p>
+</div>
+
+<script>
+  async function saveFlag(key, btn) {
+    const state = document.querySelector(`input[name="state-${key}"]:checked`).value;
+    const flip_at = document.getElementById('flip-' + key).value;
+    const notes = document.getElementById('notes-' + key).value;
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+    try {
+      const res = await fetch('/api/admin/features', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key, state, flip_at, notes })
+      });
+      const j = await res.json();
+      if (!res.ok || !j.success) throw new Error(j.error || 'Save failed');
+      location.reload();
+    } catch (err) {
+      alert(err.message);
+      btn.disabled = false;
+      btn.textContent = 'Save';
+    }
+  }
+</script>
+
+<%- include('partials/footer') %>

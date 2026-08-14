@@ -81,6 +81,25 @@ The registry lives in `utils/cardDesign.js` — future designs are added there a
   - Design intent: the multi-face structure is also groundwork for auto-generated social video
     shorts (flip through faces with audio) — see ideas.md.
 
+## 3c. Release & Moderation Infrastructure
+- **Feature flags (deploy ≠ release):** `feature_flags` table + `utils/featureFlags.js`
+  (`flagOn(key, req)`, 15s in-process cache). States: `off` (nobody), `beta` (admins +
+  `users.early_access`), `on` (everyone); an optional `flip_at` promotes to `on` lazily on read —
+  scheduled releases with no cron. Superadmin release console at `/admin/features`. Surfaces must
+  pass flags explicitly to the card partial (absent = off, so a forgotten pass can't leak a dark
+  feature); write endpoints are gated server-side too. Current flags: `thank_you_notes`,
+  `award_photos` (both ship dark on prod migrate), `auto_moderation`. New flags: add to
+  `FLAG_DEFS`, gate surfaces with `flagOn()`.
+- **Auto-moderation of thank-you notes** (`utils/moderation.js`, gated by the `auto_moderation`
+  flag): tier 1 rules (links/emails/phone numbers/social handles — spam AND minor-PII protection —
+  plus profanity), tier 2 trusted authors (≥3 approved notes skip the API), tier 3 OpenAI
+  Moderation API (`omni-moderation-latest`, free). `moderation_mode` setting (`/admin/settings`):
+  `manual` (queue everything — launch default), `assisted` (🤖 verdict hints in the queue),
+  `auto` (machine-clean notes live instantly; flagged ones queue with reasons). API failure never
+  auto-approves. Propagated copies inherit the verdict. `/admin/card-content` gains a "Recently
+  Auto-Approved" trust-but-verify feed with one-click revoke (pulls identical copies together).
+  Photos remain human-reviewed regardless of mode.
+
 ## 4. Superadmin Controls
 - **Data Drafts / ETL Triage:** Review scraped web data (emails, addresses) before merging into live studios.
 - **Role Management:** Promote standard users to admins.

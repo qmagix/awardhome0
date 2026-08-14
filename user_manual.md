@@ -240,3 +240,19 @@ sorting keep big trophy cases manageable. Saves happen inline (fetch + `?json=1`
 endpoints) with a toast noting same-routine propagation. The one-time photo consent appears as a
 checkbox bar above the grid until given. The default card photo (circular fallback) and its
 consent moment moved to the Manage Profile page.
+
+## 16. Feature Flags & Auto-Moderation
+**Release console (`/admin/features`, superadmin):** every feature ships dark and goes public
+here — deploy ≠ release. States: off → beta (admins + early_access users) → on; set a "scheduled
+flip" datetime and the flag promotes itself to on at that moment (lazy, no cron). Flags propagate
+to visitors within ~15 s. Current flags: thank_you_notes, award_photos (both seeded OFF by the
+prod migration — flip them when you want the public launch), auto_moderation. Add new flags in
+utils/featureFlags.js FLAG_DEFS and gate surfaces with flagOn().
+
+**Auto-moderation (`/admin/settings` → Card Content Moderation):** requires the auto_moderation
+flag. Modes: manual (queue everything), assisted (queue everything but show 🤖 machine verdicts),
+auto (machine-clean notes go live instantly; flagged notes queue with the reason, e.g.
+"flagged: phone number"). The pipeline: rules (links/emails/phones/handles/profanity) → trusted
+authors (≥3 approved notes) → OpenAI Moderation API (free). Failures never auto-approve.
+`/admin/card-content` shows a "Recently Auto-Approved" feed — Revoke pulls a note and its
+identical copies off the cards. Photos are always human-reviewed.

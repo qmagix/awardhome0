@@ -379,7 +379,31 @@ async function initDb() {
       PRIMARY KEY (user_id, dancer_id)
     );
 
+    -- Feature flags: deploy dark, release on cadence (deploy ≠ release).
+    -- state: 'off' (hidden from everyone), 'beta' (admins + early_access
+    -- users), 'on' (everyone). flip_at: optional scheduled promotion to
+    -- 'on', applied lazily on read (utils/featureFlags.js) — no cron
+    -- needed. Managed at /admin/features.
+    CREATE TABLE IF NOT EXISTS feature_flags (
+      key TEXT PRIMARY KEY,
+      state TEXT NOT NULL DEFAULT 'off',
+      flip_at DATETIME,
+      notes TEXT,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- Known flags ship dark; releases happen at /admin/features
+    INSERT OR IGNORE INTO feature_flags (key, state) VALUES ('thank_you_notes', 'off');
+    INSERT OR IGNORE INTO feature_flags (key, state) VALUES ('award_photos', 'off');
+    INSERT OR IGNORE INTO feature_flags (key, state) VALUES ('auto_moderation', 'off');
+
     INSERT OR IGNORE INTO system_settings (key, value) VALUES ('openai_model', 'gpt-4o-mini');
+    -- Card-content moderation mode: 'manual' (every item human-reviewed),
+    -- 'assisted' (machine verdicts shown in the queue, humans still click),
+    -- 'auto' (machine-clean notes go live; flagged ones queue). See
+    -- utils/moderation.js; the auto_moderation feature flag gates whether
+    -- the pipeline runs at all.
+    INSERT OR IGNORE INTO system_settings (key, value) VALUES ('moderation_mode', 'manual');
     -- Which award-card design public pages render: 'classic' (two-face
     -- flip) or 'flipbook' (paged back). Superadmin toggle at /admin/settings;
     -- per-session preview override via ?card_design= on dancer pages.
@@ -415,6 +439,11 @@ async function initDb() {
   // the dancer is affiliated with, studio_id + code_valid route the claim
   // into that studio's Verifications queue (director confirms identity);
   // system admin remains the backstop reviewer either way.
+  // Per-feature beta cohort: early_access users see 'beta'-state flags
+  try { await db.exec("ALTER TABLE users ADD COLUMN early_access INTEGER DEFAULT 0"); } catch(e) {}
+  // Machine-moderation verdict shown in the review queue ('machine-clean',
+  // 'auto-approved', or 'flagged: <reasons>'); NULL = never machine-checked
+  try { await db.exec("ALTER TABLE award_acknowledgements ADD COLUMN moderation_note TEXT"); } catch(e) {}
   // The verifications dashboard reads ds.created_at, but the column was
   // never in the schema — the page 500'd on any freshly-migrated DB.
   // (ALTER can't add a CURRENT_TIMESTAMP default; existing rows stay NULL,

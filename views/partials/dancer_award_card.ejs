@@ -58,6 +58,12 @@
   // Never set on public pages — visitors must not see "upload here".
   const editMode = typeof cardEditMode !== 'undefined' && !!cardEditMode;
 
+  // Feature flags (deploy ≠ release): rendering surfaces must pass these
+  // explicitly; an absent flag means OFF so a forgotten pass can never
+  // leak a dark feature.
+  const notesOn = typeof featureNotes !== 'undefined' && !!featureNotes;
+  const photosOn = typeof featurePhotos !== 'undefined' && !!featurePhotos;
+
   // Flipbook back-stack: pages materialize only when their content exists,
   // so the first flip always lands on a complete certificate.
   // Photo page: the per-award photo (usually the routine's performance
@@ -67,9 +73,9 @@
   const awardPhoto = design === 'flipbook' ? (award.award_photo_url || null) : null;
   const defaultPhoto = (dancer.card_photo_url && dancer.card_photo_status === 'approved') ? dancer.card_photo_url : null;
   const cardPhoto = awardPhoto || defaultPhoto;
-  const hasPhotoPage = design === 'flipbook' && (editMode || !!cardPhoto);
+  const hasPhotoPage = photosOn && design === 'flipbook' && (editMode || !!cardPhoto);
   const cardAcks = (design === 'flipbook' && award.acks) ? award.acks : [];
-  const hasAckPage = editMode || cardAcks.length > 0;
+  const hasAckPage = notesOn && (editMode || cardAcks.length > 0);
   const hasColophonPage = design === 'flipbook' && showOrgLogo;
   const pageCount = 1 + (hasPhotoPage ? 1 : 0) + (hasAckPage ? 1 : 0) + (hasColophonPage ? 1 : 0);
 %>
@@ -89,7 +95,8 @@
                 <% } %>
               <% if (editMode) { %>
                 <span class="card-edit-chip chip-<%= award.editState %>" data-role="state-chip">
-                  <%= award.editState === 'done' ? '✓ Done' : (award.editState === 'partial' ? '1 to add' : '2 to add') %>
+                  <%= award.editState === 'done' ? '✓ Done'
+                    : (award.editMissing || (award.editState === 'partial' ? 1 : 2)) + ' to add' %>
                 </span>
               <% } %>
                     <div class="content-wrapper <%= tier %>">

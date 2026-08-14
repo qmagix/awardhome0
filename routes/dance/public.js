@@ -6,6 +6,7 @@ const { cached } = require('../../utils/cache');
 const { formatEventTitle } = require('../../utils/format');
 const { unsubscribeToken } = require('../../utils/invites');
 const { resolveCardDesign } = require('../../utils/cardDesign');
+const { flagOn } = require('../../utils/featureFlags');
 const rateLimit = require('express-rate-limit');
 const { BASE_URL } = require('../../config');
 const { requireAdmin } = require('../../middleware/auth');
@@ -822,7 +823,10 @@ router.get('/dancer/:unique_id', async (req, res) => {
   const yearSections = [...yearsMap.values()];
 
   const cardDesign = await resolveCardDesign(req, db);
-  if (cardDesign === 'flipbook' && awards.length > 0) {
+  // Feature flags: dark features fetch nothing and render nothing
+  const [featureNotes, featurePhotos] = await Promise.all([
+    flagOn('thank_you_notes', req), flagOn('award_photos', req)]);
+  if (featureNotes && cardDesign === 'flipbook' && awards.length > 0) {
     // Approved thank-you lines for the flipbook's acknowledgements page.
     // Group cards show every teammate's line, the viewing dancer's first.
     try {
@@ -843,7 +847,9 @@ router.get('/dancer/:unique_id', async (req, res) => {
           .sort((x, y) => (y.dancer_id === dancer.id) - (x.dancer_id === dancer.id));
       });
     } catch (e) { /* table missing before first migrate — cards render without acks */ }
+  }
 
+  if (featurePhotos && cardDesign === 'flipbook' && awards.length > 0) {
     // Approved per-award photos (usually the routine's performance shot).
     // The photo page prefers these over the dancer-level default card photo.
     try {
@@ -861,6 +867,7 @@ router.get('/dancer/:unique_id', async (req, res) => {
   const totalAwardCount = soloAwards.length + groupAwards.length + conventionAwards.length;
   res.render('dancer', {
     dancer, soloAwards, groupAwards, conventionAwards, yearSections, cardDesign,
+    featureNotes, featurePhotos,
     pageTitle: dancer.name,
     pageDesc: `${dancer.name}'s digital trophy case on AwardHome: ${totalAwardCount} dance awards.`
   });

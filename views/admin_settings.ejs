@@ -113,7 +113,71 @@
     <button id="btnSaveCard" class="btn btn-primary" onclick="saveCardDesign()">💾 Save Card Design</button>
     <span id="saveCardStatus" style="margin-left: 1rem; color: #10b981; display: none;">✅ Saved successfully!</span>
   </div>
+
+  <div class="card glass-card" style="margin-bottom: 2rem;">
+    <h2 style="color: var(--primary); margin-bottom: 1rem;">Card Content Moderation</h2>
+    <p style="color: var(--text-muted); margin-bottom: 1.5rem; line-height: 1.6;">
+      How thank-you notes are reviewed. The pipeline (rules &rarr; trusted authors &rarr; OpenAI
+      Moderation API) only runs when the <a href="/admin/features" style="color: var(--primary);">auto_moderation
+      feature flag</a> is enabled; photos always stay human-reviewed. Machine failures never
+      auto-approve — notes just fall back to the queue.
+    </p>
+
+    <% const modMode = settings['moderation_mode'] || 'manual'; %>
+    <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem;">
+      <label style="display: flex; align-items: flex-start; gap: 1rem; padding: 1rem; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; cursor: pointer;">
+        <input type="radio" name="moderation_mode" value="manual" <%= modMode === 'manual' ? 'checked' : '' %> style="margin-top: 0.3rem;">
+        <div>
+          <div style="font-weight: bold; color: white; margin-bottom: 0.25rem;">Manual</div>
+          <div style="font-size: 0.85rem; color: var(--text-muted);">Every note waits for human review (launch default).</div>
+        </div>
+      </label>
+      <label style="display: flex; align-items: flex-start; gap: 1rem; padding: 1rem; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; cursor: pointer;">
+        <input type="radio" name="moderation_mode" value="assisted" <%= modMode === 'assisted' ? 'checked' : '' %> style="margin-top: 0.3rem;">
+        <div>
+          <div style="font-weight: bold; color: white; margin-bottom: 0.25rem;">Assisted</div>
+          <div style="font-size: 0.85rem; color: var(--text-muted);">Machine verdicts (🤖 machine-clean / flagged + reason) appear in the review queue, but a human still clicks every approval.</div>
+        </div>
+      </label>
+      <label style="display: flex; align-items: flex-start; gap: 1rem; padding: 1rem; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; cursor: pointer;">
+        <input type="radio" name="moderation_mode" value="auto" <%= modMode === 'auto' ? 'checked' : '' %> style="margin-top: 0.3rem;">
+        <div>
+          <div style="font-weight: bold; color: white; margin-bottom: 0.25rem;">Auto <span style="background: rgba(16, 185, 129, 0.2); color: #10b981; font-size: 0.7rem; padding: 0.1rem 0.4rem; border-radius: 4px; margin-left: 0.5rem;">Sustainable</span></div>
+          <div style="font-size: 0.85rem; color: var(--text-muted);">Machine-clean notes go live instantly; flagged notes queue for review. A "Recently Auto-Approved" feed on the review page allows one-click revoke.</div>
+        </div>
+      </label>
+    </div>
+
+    <button id="btnSaveMod" class="btn btn-primary" onclick="saveSetting('moderation_mode', 'btnSaveMod', 'saveModStatus')">💾 Save Moderation Mode</button>
+    <span id="saveModStatus" style="margin-left: 1rem; color: #10b981; display: none;">✅ Saved successfully!</span>
+  </div>
 </div>
+
+<script>
+async function saveSetting(key, btnId, statusId) {
+  const selected = document.querySelector(`input[name="${key}"]:checked`).value;
+  const btn = document.getElementById(btnId);
+  const status = document.getElementById(statusId);
+  btn.disabled = true;
+  try {
+    const res = await fetch('/api/admin/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key, value: selected })
+    });
+    if (res.ok) {
+      status.style.display = 'inline';
+      setTimeout(() => status.style.display = 'none', 3000);
+    } else {
+      alert('Failed to save settings');
+    }
+  } catch (err) {
+    alert('Network error while saving settings');
+  } finally {
+    btn.disabled = false;
+  }
+}
+</script>
 
 <script>
 async function saveCardDesign() {

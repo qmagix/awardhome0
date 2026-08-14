@@ -106,6 +106,15 @@
     </div>
     <% } %>
 
+    <!-- Feature Flags -->
+    <% if (user && user.role === 'superadmin') { %>
+    <div class="card glass-card">
+      <h3 style="color: #10b981; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">🚀 Feature Flags</h3>
+      <p class="sub-text" style="margin-bottom: 1.5rem;">Release console: flip features from dark to beta to live, or schedule the flip. Deploy ≠ release.</p>
+      <a href="/admin/features" class="btn btn-outline" style="display: block; text-align: center; border-color: #10b981; color: #10b981;">Open Release Console</a>
+    </div>
+    <% } %>
+
     <!-- Card Content Review -->
     <% if (user && user.role === 'superadmin') { %>
     <div class="card glass-card">

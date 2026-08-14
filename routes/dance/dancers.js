@@ -7,6 +7,8 @@ const rateLimit = require('express-rate-limit');
 const multer = require('multer');
 const { generateDancerId } = require('../../utils.js');
 const { validateVanityTag } = require('../../utils/vanity');
+const { flagOn } = require('../../utils/featureFlags');
+const { moderateNote, getModerationMode } = require('../../utils/moderation');
 
 // ---- Flip-book card extras (photo + thank-you lines) ----
 
@@ -150,14 +152,22 @@ router.get('/manage/dancer/:id/card', requireAuth, async (req, res) => {
     mates.forEach(m => { (mateMap[m.award_id] = mateMap[m.award_id] || []).push(m); });
   }
 
+  // Feature flags: the editor only offers what's released (or in beta for
+  // this user); completion states count only the enabled features.
+  const [featureNotes, featurePhotos] = await Promise.all([
+    flagOn('thank_you_notes', req), flagOn('award_photos', req)]);
+
   awards.forEach(a => {
     if (a.custom_icons) { try { a.customIconsObj = JSON.parse(a.custom_icons); } catch (e) { } }
     a.ownAck = ackMap[a.id] || null;
     a.ownPhoto = photoMap[a.id] || null;
     a.acks = mateMap[a.id] || [];
-    const hp = a.ownPhoto && a.ownPhoto.status !== 'rejected';
-    const ha = a.ownAck && a.ownAck.status !== 'rejected';
-    a.editState = (hp && ha) ? 'done' : ((hp || ha) ? 'partial' : 'waiting');
+    const slots = [];
+    if (featurePhotos) slots.push(!!(a.ownPhoto && a.ownPhoto.status !== 'rejected'));
+    if (featureNotes) slots.push(!!(a.ownAck && a.ownAck.status !== 'rejected'));
+    a.editMissing = slots.filter(s => !s).length;
+    a.editState = slots.length === 0 || a.editMissing === 0 ? 'done'
+      : (a.editMissing === slots.length ? 'waiting' : 'partial');
   });
   const rank = { waiting: 0, partial: 1, done: 2 };
   awards.sort((x, y) => rank[x.editState] - rank[y.editState]); // stable: keeps year DESC within groups
@@ -166,7 +176,10 @@ router.get('/manage/dancer/:id/card', requireAuth, async (req, res) => {
     'SELECT consented_at FROM card_photo_consents WHERE user_id = ? AND dancer_id = ?',
     [req.session.user.id, dancer.id]);
 
-  res.render('manage_dancer_card', { dancer, awards, consent: consentRow || null, cardDesign: 'flipbook' });
+  res.render('manage_dancer_card', {
+    dancer, awards, consent: consentRow || null, cardDesign: 'flipbook',
+    featureNotes, featurePhotos,
+  });
 });
 
 
@@ -183,6 +196,7 @@ router.post('/manage/dancer/:id/card/award-photo', requireAuth, cardPhotoUpload.
     ? res.status(400).json({ error: msg })
     : res.send(`<script>alert(${JSON.stringify(msg)}); window.location.href=${JSON.stringify(back)};</script>`);
 
+  if (!await flagOn('award_photos', req)) return fail('This feature is not available yet.');
   const awardId = parseInt(req.body.award_id);
   if (!awardId) return fail('Missing award');
   if (!req.file) return fail('Please choose an image file.');
@@ -241,6 +255,7 @@ router.post('/manage/dancer/:id/card/photo', requireAuth, cardPhotoUpload.single
   await ensureCardTables(db);
   const back = `/manage/dancer/${req.params.id}`;
 
+  if (!await flagOn('award_photos', req)) return res.status(403).send('This feature is not available yet.');
   if (!req.file) {
     return res.send(`<script>alert("Please choose an image file."); window.location.href=${JSON.stringify(back)};</script>`);
   }
@@ -282,6 +297,7 @@ router.post('/manage/dancer/:id/card/ack', requireAuth, async (req, res) => {
     ? res.status(400).json({ error: msg })
     : res.send(`<script>alert(${JSON.stringify(msg)}); window.location.href=${JSON.stringify(back)};</script>`);
 
+  if (!await flagOn('thank_you_notes', req)) return fail('This feature is not available yet.');
   const awardId = parseInt(req.body.award_id);
   const message = String(req.body.message || '').trim().slice(0, 280);
   if (!awardId) return fail('Missing award');
@@ -292,30 +308,46 @@ router.post('/manage/dancer/:id/card/ack', requireAuth, async (req, res) => {
   if (!linked) return fail('That award is not linked to this dancer.');
 
   let propagated = 0;
+  let status = 'pending';
+  let modNote = null;
   if (!message) {
     // Clearing removes only THIS award's line — siblings keep theirs
     await db.run('DELETE FROM award_acknowledgements WHERE award_id = ? AND dancer_id = ?', [awardId, dancer.id]);
   } else {
-    // Any edit goes back to pending — every public line has been reviewed
+    // Machine moderation (utils/moderation.js): in 'auto' mode a clean
+    // verdict goes live immediately; 'assisted' just annotates the queue;
+    // any flag/failure leaves the note pending exactly as before.
+    if (await flagOn('auto_moderation', req)) {
+      const mode = await getModerationMode(db);
+      if (mode !== 'manual') {
+        const m = await moderateNote(message, req.session.user.id);
+        modNote = m.note;
+        if (mode === 'auto' && m.verdict === 'approve') {
+          status = 'approved';
+          modNote = 'auto-approved';
+        }
+      }
+    }
     await db.run(`
-      INSERT INTO award_acknowledgements (award_id, dancer_id, message, status, created_by)
-      VALUES (?, ?, ?, 'pending', ?)
+      INSERT INTO award_acknowledgements (award_id, dancer_id, message, status, created_by, moderation_note)
+      VALUES (?, ?, ?, ?, ?, ?)
       ON CONFLICT(award_id, dancer_id) DO UPDATE SET
-        message = excluded.message, status = 'pending',
-        created_by = excluded.created_by, updated_at = CURRENT_TIMESTAMP
-    `, [awardId, dancer.id, message, req.session.user.id]);
+        message = excluded.message, status = excluded.status,
+        created_by = excluded.created_by, moderation_note = excluded.moderation_note,
+        updated_at = CURRENT_TIMESTAMP
+    `, [awardId, dancer.id, message, status, req.session.user.id, modNote]);
     // One routine often wins several awards at the same event; fill the
     // siblings too so families type the note once. INSERT OR IGNORE:
     // awards that already have a line keep it — later edits stay per-award.
     for (const s of await sameRoutineAwards(db, awardId, dancer.id)) {
       const r = await db.run(`
-        INSERT OR IGNORE INTO award_acknowledgements (award_id, dancer_id, message, status, created_by)
-        VALUES (?, ?, ?, 'pending', ?)
-      `, [s.id, dancer.id, message, req.session.user.id]);
+        INSERT OR IGNORE INTO award_acknowledgements (award_id, dancer_id, message, status, created_by, moderation_note)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `, [s.id, dancer.id, message, status, req.session.user.id, modNote]);
       if (r.changes > 0) propagated++;
     }
   }
-  if (wantsJson) return res.json({ success: true, cleared: !message, propagated });
+  if (wantsJson) return res.json({ success: true, cleared: !message, propagated, status });
   res.redirect(back);
 });
 
@@ -388,8 +420,9 @@ router.get('/manage/dancer/:id', requireAuth, async (req, res) => {
   const consentRow = await db.get(
     'SELECT consented_at FROM card_photo_consents WHERE user_id = ? AND dancer_id = ?',
     [req.session.user.id, dancer.id]);
+  const featurePhotos = await flagOn('award_photos', req);
 
-  res.render('manage_dancer', { dancer, studios, awards, consent: consentRow || null });
+  res.render('manage_dancer', { dancer, studios, awards, consent: consentRow || null, featurePhotos });
 });
 
 

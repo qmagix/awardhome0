@@ -52,7 +52,16 @@
     <% } %>
   </div>
 
-  <% if (!consent) { %>
+  <% if (!featureNotes && !featurePhotos) { %>
+    <div class="card glass-card" style="text-align: center; padding: 4rem 2rem;">
+      <div style="font-size: 3rem; margin-bottom: 1rem;">🎁</div>
+      <h3 style="margin: 0 0 0.5rem 0; color: white;">Card extras are coming soon</h3>
+      <p style="color: var(--text-muted); margin: 0;">Photos and thank-you notes for award cards
+        haven't been released yet — check back shortly!</p>
+    </div>
+  <% } else { %>
+
+  <% if (!consent && featurePhotos) { %>
     <label style="display: flex; gap: 0.6rem; align-items: flex-start; margin-bottom: 1.5rem; padding: 1rem; background: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 8px; font-size: 0.85rem; color: var(--text-muted); cursor: pointer;">
       <input type="checkbox" id="consent-inline" style="margin-top: 0.2rem; width: 16px; height: 16px; accent-color: var(--primary);">
       <span><strong style="color: #f3e5ab;">One-time photo permission:</strong> I am this dancer's
@@ -82,6 +91,8 @@
       <% }); %>
     </div>
   <% } %>
+
+  <% } %><%# end feature-enabled branch %>
 </div>
 
 <div id="edit-toast"></div>
@@ -89,6 +100,8 @@
 <script src="/js/flipbook.js"></script>
 <script>
   const DANCER_ID = <%= dancer.id %>;
+  const FEATURE_PHOTOS = <%= featurePhotos ? 'true' : 'false' %>;
+  const FEATURE_NOTES = <%= featureNotes ? 'true' : 'false' %>;
   let needConsent = <%= consent ? 'false' : 'true' %>;
 
   function editToast(msg) {
@@ -112,11 +125,15 @@
   function editSetState(card, hasPhoto, hasAck) {
     card.dataset.hasPhoto = hasPhoto ? '1' : '';
     card.dataset.hasAck = hasAck ? '1' : '';
-    const state = (hasPhoto && hasAck) ? 'done' : ((hasPhoto || hasAck) ? 'partial' : 'waiting');
+    const slots = [];
+    if (FEATURE_PHOTOS) slots.push(hasPhoto);
+    if (FEATURE_NOTES) slots.push(hasAck);
+    const missing = slots.filter(s => !s).length;
+    const state = missing === 0 ? 'done' : (missing === slots.length ? 'waiting' : 'partial');
     card.dataset.state = state;
     const chip = card.querySelector('[data-role="state-chip"]');
     chip.className = 'card-edit-chip chip-' + state;
-    chip.textContent = state === 'done' ? '✓ Done' : (state === 'partial' ? '1 to add' : '2 to add');
+    chip.textContent = state === 'done' ? '✓ Done' : missing + ' to add';
     // refresh filter counts
     const counts = { waiting: 0, partial: 0, done: 0 };
     document.querySelectorAll('#edit-grid .flip-card').forEach(c => counts[c.dataset.state]++);
@@ -247,12 +264,14 @@
         editSetState(card, card.dataset.hasPhoto === '1', false);
         editToast('Note removed from this award.');
       } else {
-        status.className = 'tcb-edit-status status-pending';
-        status.textContent = 'Pending review';
+        const live = j.status === 'approved'; // auto-moderation cleared it
+        status.className = 'tcb-edit-status ' + (live ? 'status-approved' : 'status-pending');
+        status.textContent = live ? '✓ Live' : 'Pending review';
         editSetState(card, card.dataset.hasPhoto === '1', true);
+        const tail = live ? 'live on your card!' : 'pending review.';
         editToast(j.propagated > 0
-          ? `Note saved — also applied to ${j.propagated} more award${j.propagated === 1 ? '' : 's'} of this routine.`
-          : 'Note saved — pending review.');
+          ? `Note saved (${tail}) — also applied to ${j.propagated} more award${j.propagated === 1 ? '' : 's'} of this routine.`
+          : `Note saved — ${tail}`);
       }
     } catch (err) {
       editToast(err.message);

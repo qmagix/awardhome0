@@ -7,6 +7,7 @@ const { sendStudioInvite, buildStudioInvite, buildOrgInviteTemplate, sendOrgInvi
 const { refresh } = require('../utils/cache');
 const { requireAdmin, requireSuperadmin } = require('../middleware/auth');
 const { approveDancerClaim, rejectDancerClaim } = require('../utils/claims');
+const { FLAG_DEFS, VALID_STATES, refreshFlags } = require('../utils/featureFlags');
 const bcrypt = require('bcrypt');
 const { runBackfillForEvent } = require('../backfill_utils');
 const fs = require('fs');
@@ -117,6 +118,50 @@ router.post('/api/admin/settings', requireSuperadmin, async (req, res) => {
 });
 
 
+// ---- Feature flags (deploy ≠ release): superadmin release console ----
+router.get('/admin/features', requireSuperadmin, async (req, res) => {
+  const db = await openDb();
+  // Same defensive pattern as /admin/settings, in case initDb wasn't re-run
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS feature_flags (
+      key TEXT PRIMARY KEY,
+      state TEXT NOT NULL DEFAULT 'off',
+      flip_at DATETIME,
+      notes TEXT,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  for (const def of FLAG_DEFS) {
+    await db.run("INSERT OR IGNORE INTO feature_flags (key, state) VALUES (?, 'off')", [def.key]);
+  }
+  const rows = await db.all('SELECT * FROM feature_flags');
+  const rowMap = {};
+  rows.forEach(r => { rowMap[r.key] = r; });
+  const flags = FLAG_DEFS.map(def => ({ ...def, ...(rowMap[def.key] || { state: 'off' }) }));
+  res.render('admin_features', { user: req.session.user, flags });
+});
+
+
+router.post('/api/admin/features', requireSuperadmin, express.json(), async (req, res) => {
+  const { key, state, flip_at, notes } = req.body || {};
+  if (!FLAG_DEFS.some(d => d.key === key)) return res.status(400).json({ error: 'Unknown flag' });
+  if (!VALID_STATES.includes(state)) return res.status(400).json({ error: 'Invalid state' });
+  // Scheduled flips only make sense for a not-yet-on flag
+  let flipAt = null;
+  if (flip_at && state !== 'on') {
+    const d = new Date(flip_at);
+    if (isNaN(d.getTime())) return res.status(400).json({ error: 'Invalid flip date' });
+    flipAt = d.toISOString();
+  }
+  const db = await openDb();
+  await db.run(
+    'UPDATE feature_flags SET state = ?, flip_at = ?, notes = ?, updated_at = CURRENT_TIMESTAMP WHERE key = ?',
+    [state, flipAt, String(notes || '').slice(0, 300) || null, key]);
+  refreshFlags(); // live within the cache TTL
+  res.json({ success: true });
+});
+
+
 // ---- Flip-book card content moderation (photos + thank-you lines) ----
 // Concierge gate, same philosophy as logo-coin approval: nothing owner-
 // submitted reaches a public card until a superadmin has seen it (authors
@@ -138,7 +183,7 @@ router.get('/admin/card-content', requireSuperadmin, async (req, res) => {
   let pendingAcks = [];
   try {
     pendingAcks = await db.all(`
-      SELECT aa.id, aa.message, aa.created_at, d.name as dancer_name, d.unique_id,
+      SELECT aa.id, aa.message, aa.created_at, aa.moderation_note, d.name as dancer_name, d.unique_id,
              a.performance_name, a.award_type, a.place, e.name as event_name, e.year
       FROM award_acknowledgements aa
       JOIN dancers d ON aa.dancer_id = d.id
@@ -148,6 +193,23 @@ router.get('/admin/card-content', requireSuperadmin, async (req, res) => {
       ORDER BY aa.created_at ASC
     `);
   } catch (e) { /* table missing until `node database.js` runs */ }
+
+  // Trust-but-verify feed for auto mode: what the machine put live
+  // recently, with one-click revoke.
+  let autoApproved = [];
+  try {
+    autoApproved = await db.all(`
+      SELECT aa.id, aa.message, aa.updated_at, d.name as dancer_name, d.unique_id,
+             a.performance_name, a.award_type, e.name as event_name, e.year
+      FROM award_acknowledgements aa
+      JOIN dancers d ON aa.dancer_id = d.id
+      JOIN awards a ON aa.award_id = a.id
+      LEFT JOIN events e ON a.event_id = e.id
+      WHERE aa.status = 'approved' AND aa.moderation_note = 'auto-approved'
+      ORDER BY aa.updated_at DESC
+      LIMIT 30
+    `);
+  } catch (e) { /* moderation_note column missing until migrate */ }
 
   let pendingAwardPhotos = [];
   try {
@@ -165,7 +227,22 @@ router.get('/admin/card-content', requireSuperadmin, async (req, res) => {
     `);
   } catch (e) { /* table missing until `node database.js` runs */ }
 
-  res.render('admin_card_content', { user: req.session.user, pendingPhotos, pendingAcks, pendingAwardPhotos });
+  res.render('admin_card_content', { user: req.session.user, pendingPhotos, pendingAcks, pendingAwardPhotos, autoApproved });
+});
+
+
+// Revoke an auto-approved (or any approved) note: same-content copies by
+// the same dancer are pulled together, mirroring approve propagation.
+router.post('/api/admin/card-ack/:id/revoke', requireSuperadmin, express.json(), async (req, res) => {
+  const db = await openDb();
+  const row = await db.get("SELECT dancer_id, message FROM award_acknowledgements WHERE id = ? AND status = 'approved'", [req.params.id]);
+  if (row) {
+    await db.run(`
+      UPDATE award_acknowledgements SET status = 'rejected', updated_at = CURRENT_TIMESTAMP
+      WHERE dancer_id = ? AND message = ? AND status = 'approved'
+    `, [row.dancer_id, row.message]);
+  }
+  res.json({ success: true });
 });
 
 

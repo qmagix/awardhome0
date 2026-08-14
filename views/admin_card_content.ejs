@@ -79,6 +79,14 @@
                   on <strong><%= a.performance_name || a.award_type || 'award' %></strong>
                   (<%= a.event_name || 'event' %><%= a.year ? ', ' + a.year : '' %>)
                 </div>
+                <% if (a.moderation_note) { %>
+                  <% const flagged = a.moderation_note.startsWith('flagged'); %>
+                  <span class="badge" style="margin-top: 0.4rem; display: inline-block; font-size: 0.72rem; <%=
+                    flagged ? 'background: rgba(239, 68, 68, 0.2); color: #ef4444;'
+                            : 'background: rgba(16, 185, 129, 0.2); color: #10b981;' %>">
+                    🤖 <%= a.moderation_note %>
+                  </span>
+                <% } %>
               </div>
               <div style="display: flex; gap: 0.5rem; align-items: flex-start;">
                 <button class="btn btn-primary" style="font-size: 0.85rem;" onclick="moderate('ack', <%= a.id %>, 'approve', 'ack-row-<%= a.id %>')">Approve</button>
@@ -90,9 +98,47 @@
       </div>
     <% } %>
   </div>
+
+  <% if (autoApproved && autoApproved.length > 0) { %>
+    <div class="card glass-card" style="margin-top: 2rem;">
+      <h2 style="color: var(--primary); margin-bottom: 0.5rem;">🤖 Recently Auto-Approved Notes (<%= autoApproved.length %>)</h2>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Trust-but-verify: the machine put these live. Revoke pulls a note (and its identical copies) off the cards.</p>
+      <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+        <% autoApproved.forEach(a => { %>
+          <div id="auto-row-<%= a.id %>" style="display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 0.75rem 1rem;">
+            <div style="flex: 1; min-width: 240px; font-size: 0.9rem;">
+              <span style="font-style: italic; color: #f3e5ab;">&ldquo;<%= a.message %>&rdquo;</span>
+              <span style="color: var(--text-muted); font-size: 0.8rem;"> &mdash;
+                <a href="/dancer/<%= a.unique_id %>" target="_blank" style="color: white; text-decoration: none;"><%= a.dancer_name %></a>
+                on <%= a.performance_name || a.award_type || 'award' %> (<%= a.event_name || 'event' %><%= a.year ? ', ' + a.year : '' %>)</span>
+            </div>
+            <button class="btn btn-outline" style="font-size: 0.8rem; border-color: #ef4444; color: #ef4444;"
+              onclick="revokeAck(<%= a.id %>, 'auto-row-<%= a.id %>')">Revoke</button>
+          </div>
+        <% }); %>
+      </div>
+    </div>
+  <% } %>
 </div>
 
 <script>
+  async function revokeAck(id, rowId) {
+    if (!confirm('Pull this note (and identical copies) off the public cards?')) return;
+    try {
+      const res = await fetch('/api/admin/card-ack/' + id + '/revoke', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: '{}'
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const row = document.getElementById(rowId);
+      row.style.opacity = '0.4';
+      row.style.pointerEvents = 'none';
+    } catch (err) {
+      alert('Failed to revoke: ' + err.message);
+    }
+  }
+
   async function moderate(kind, id, action, rowId) {
     const url = kind === 'photo' ? '/api/admin/card-photo/' + id
       : kind === 'award-photo' ? '/api/admin/card-award-photo/' + id

@@ -105,6 +105,7 @@
       </div>
 
       <!-- Default card photo (fallback for award cards without their own photo) -->
+      <% if (typeof featurePhotos !== 'undefined' && featurePhotos) { %>
       <div class="card glass-card" style="margin-top: 2rem;">
         <h3 style="margin-top: 0;">📸 Default Card Photo</h3>
         <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
@@ -157,6 +158,7 @@
           </div>
         </div>
       </div>
+      <% } %>
     </section>
 
     <!-- Studios Section -->
