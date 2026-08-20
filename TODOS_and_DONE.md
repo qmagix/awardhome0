@@ -11,7 +11,8 @@
 - [ ] Admin dancer merge/split tools — the remaining half of the same-name work: merge records for a real dancer who trains at / moved between studios (split records are now the default), split any claimed profiles the 2026-05-25 cleanup skipped.
 
 ### Security / launch
-- [ ] Anti-scrape follow-up: rate-limit public /dance/studio/:id and /dancer/:unique_id per IP (sequential IDs make enumeration trivial even with the directory gated); consider Cloudflare bot-fight rules.
+- [x] (DONE 2026-08-19) Anti-scrape rate limit: per-IP limiter (PROFILE_RATE_LIMIT, default 100/5min, admins exempt) on the five enumerable surfaces — /dance/studio/:id, /dance/studio/:id/first-places, /api/studio/:id/year/:year, /dancer/:unique_id, /widget/studio/:id; smoke suite bursts a profile to verify the 429.
+- [ ] Anti-scrape follow-up: consider Cloudflare bot-fight / managed challenge rules on top of the app-level limiter.
 - [ ] Launch-day SEO: sitemap.xml for studio/dancer pages (replaces the public directory as the crawl path once BETA_MODE=false).
 
 ### Features

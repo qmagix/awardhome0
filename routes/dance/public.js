@@ -12,9 +12,24 @@ const { BASE_URL } = require('../../config');
 const { requireAdmin } = require('../../middleware/auth');
 const path = require('path');
 
+// Per-IP limit on the enumerable public data surfaces (studio/dancer
+// profiles, year partials, widget). IDs are sequential, so with the
+// directory admin-gated these pages are the remaining bulk-scrape path.
+// 100 per 5 min is far above human browsing (incl. year-tab clicks)
+// but caps a single IP at ~29k pages/day. Admins are exempt.
+const profileLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: parseInt(process.env.PROFILE_RATE_LIMIT, 10) || 100,
+  message: 'Too many requests from this address — please slow down and try again in a few minutes.',
+  skip: (req) => {
+    const role = req.session && req.session.user && req.session.user.role;
+    return role === 'admin' || role === 'superadmin';
+  }
+});
+
 
 // Public Widget Iframe Route
-router.get('/widget/studio/:id', async (req, res) => {
+router.get('/widget/studio/:id', profileLimiter, async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.removeHeader('X-Frame-Options');
   logStudioActivity(req.params.id, 'widget_embed', { dedupMinutes: 1440 });
@@ -417,7 +432,7 @@ router.get('/dance/studios', requireAdmin, async (req, res) => {
 
 
 // GET studio first places
-router.get('/dance/studio/:id/first-places', async (req, res) => {
+router.get('/dance/studio/:id/first-places', profileLimiter, async (req, res) => {
   const db = await openDb();
 
   const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
@@ -440,7 +455,7 @@ router.get('/dance/studio/:id/first-places', async (req, res) => {
 });
 
 
-router.get('/dance/studio/:id', async (req, res) => {
+router.get('/dance/studio/:id', profileLimiter, async (req, res) => {
   const db = await openDb();
 
   await db.run('UPDATE studios SET view_count = view_count + 1 WHERE id = ?', [req.params.id]);
@@ -695,7 +710,7 @@ router.get('/dance/studio/:id', async (req, res) => {
 });
 
 
-router.get('/api/studio/:id/year/:year', async (req, res) => {
+router.get('/api/studio/:id/year/:year', profileLimiter, async (req, res) => {
   const db = await openDb();
 
   const awards = await db.all(`
@@ -753,7 +768,7 @@ router.get('/api/studio/:id/year/:year', async (req, res) => {
 });
 
 
-router.get('/dancer/:unique_id', async (req, res) => {
+router.get('/dancer/:unique_id', profileLimiter, async (req, res) => {
   const db = await openDb();
   const dancer = await db.get(`
     SELECT * FROM dancers WHERE unique_id = ?

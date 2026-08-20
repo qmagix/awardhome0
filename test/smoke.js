@@ -81,6 +81,7 @@ async function main() {
       EMAIL_PROVIDER: '',          // never send real email from the smoke test
       ENABLE_NIGHTLY_BACKUPS: 'false',
       BETA_MODE: 'false',          // smoke tests the real pages, not the beta gate
+      PROFILE_RATE_LIMIT: '25',    // low ceiling so the anti-scrape burst check trips fast
     },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
@@ -94,6 +95,7 @@ async function main() {
 
     // Real-content checks: hit an actual studio profile and dancer trophy
     // case so the heaviest views render end-to-end.
+    let burstPath = null;
     try {
       const { openDb } = require('../database');
       const db = await openDb();
@@ -101,6 +103,7 @@ async function main() {
       const dancer = await db.get('SELECT id, unique_id FROM dancers ORDER BY id LIMIT 1');
       const event = await db.get('SELECT id FROM events ORDER BY id LIMIT 1');
       if (studio) CHECKS.push(['GET', `/dance/studio/${studio.id}`, [200], 'real studio profile renders']);
+      if (studio) burstPath = `/dance/studio/${studio.id}`;
       if (dancer) CHECKS.push(['GET', `/dancer/${dancer.unique_id}`, [200], 'real dancer trophy case renders']);
       if (dancer) CHECKS.push(['GET', `/claim/dancer/${dancer.id}`, [200], 'dancer claim page public (one-page apply)']);
       if (event) CHECKS.push(['GET', `/dance/event/${event.id}`, [403], 'event detail stays admin-gated']);
@@ -153,6 +156,20 @@ async function main() {
       const ok = expected.includes(status);
       if (!ok) failures++;
       console.log(`${ok ? 'PASS' : 'FAIL'}  ${method.padEnd(4)} ${path}  -> ${status} (expected ${expected.join('/')})  ${desc}`);
+    }
+
+    // Anti-scrape burst: profile pages share a per-IP limiter (PROFILE_RATE_LIMIT
+    // above). Normal browsing volume must pass, then a rapid burst must 429.
+    if (burstPath) {
+      let first = null, last = null;
+      for (let i = 0; i < 30; i++) {
+        const res = await fetch(BASE + burstPath, { redirect: 'manual' });
+        if (first === null) first = res.status;
+        last = res.status;
+      }
+      const burstOk = first === 200 && last === 429;
+      if (!burstOk) failures++;
+      console.log(`${burstOk ? 'PASS' : 'FAIL'}  GET  ${burstPath} x30  -> first ${first}, last ${last} (expected 200 then 429)  profile enumeration rate-limited`);
     }
   } catch (e) {
     failures++;
