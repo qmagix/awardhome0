@@ -7,6 +7,7 @@ const { formatEventTitle } = require('../../utils/format');
 const { unsubscribeToken } = require('../../utils/invites');
 const { resolveCardDesign } = require('../../utils/cardDesign');
 const { flagOn } = require('../../utils/featureFlags');
+const { REACTION_TYPES, readReactorKey, ensureReactorKey, toggleReaction, countsForAwards, myReactions } = require('../../utils/reactions');
 const rateLimit = require('express-rate-limit');
 const { BASE_URL } = require('../../config');
 const { requireAdmin } = require('../../middleware/auth');
@@ -839,8 +840,23 @@ router.get('/dancer/:unique_id', profileLimiter, async (req, res) => {
 
   const cardDesign = await resolveCardDesign(req, db);
   // Feature flags: dark features fetch nothing and render nothing
-  const [featureNotes, featurePhotos] = await Promise.all([
-    flagOn('thank_you_notes', req), flagOn('award_photos', req)]);
+  let [featureNotes, featurePhotos, featureReactions] = await Promise.all([
+    flagOn('thank_you_notes', req), flagOn('award_photos', req), flagOn('reactions', req)]);
+
+  if (featureReactions && awards.length > 0) {
+    // Reaction counts + the viewer's own taps, from the separate
+    // reactions DB (utils/reactions.js) — merged here, no JOIN.
+    try {
+      const ids = awards.map(a => a.id);
+      const [counts, mine] = await Promise.all([
+        countsForAwards(ids), myReactions(ids, readReactorKey(req))]);
+      awards.forEach(a => {
+        a.reactions = { cheer: 0, love: 0, ...(counts[a.id] || {}), mine: mine[a.id] || [] };
+      });
+    } catch (e) {
+      featureReactions = false; // reactions DB unavailable — cards render without the bar
+    }
+  }
   if (featureNotes && cardDesign === 'flipbook' && awards.length > 0) {
     // Approved thank-you lines for the flipbook's acknowledgements page.
     // Group cards show every teammate's line, the viewing dancer's first.
@@ -882,12 +898,34 @@ router.get('/dancer/:unique_id', profileLimiter, async (req, res) => {
   const totalAwardCount = soloAwards.length + groupAwards.length + conventionAwards.length;
   res.render('dancer', {
     dancer, soloAwards, groupAwards, conventionAwards, yearSections, cardDesign,
-    featureNotes, featurePhotos,
+    featureNotes, featurePhotos, featureReactions,
     pageTitle: dancer.name,
     pageDesc: `${dancer.name}'s digital trophy case on AwardHome: ${totalAwardCount} dance awards.`
   });
 });
 
+
+// Reaction toggle (cheer/love) on an award card. Flag-gated (404 while
+// dark), CSRF-covered by the global middleware, and rate-limited: a
+// family tapping through a trophy case is dozens of taps, not hundreds.
+const reactLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: parseInt(process.env.REACT_RATE_LIMIT, 10) || 60,
+  message: { error: 'Slow down a little.' }
+});
+
+router.post('/api/award/:id/react', reactLimiter, async (req, res) => {
+  if (!(await flagOn('reactions', req))) return res.status(404).json({ error: 'Not found' });
+  const type = req.body && req.body.type;
+  if (!REACTION_TYPES.includes(type)) return res.status(400).json({ error: 'Unknown reaction type' });
+  const awardId = parseInt(req.params.id, 10);
+  if (!Number.isInteger(awardId)) return res.status(400).json({ error: 'Bad award id' });
+  const db = await openDb();
+  const award = await db.get('SELECT id FROM awards WHERE id = ?', [awardId]);
+  if (!award) return res.status(404).json({ error: 'Not found' });
+  const result = await toggleReaction(awardId, ensureReactorKey(req, res), type);
+  res.json(result);
+});
 
 router.get('/dance/event/:id', async (req, res) => {
   if (!req.session || !req.session.user || (req.session.user.role !== 'admin' && req.session.user.role !== 'superadmin')) {

@@ -2579,3 +2579,86 @@ footer {
   font-weight: 700;
   letter-spacing: 0.5px;
 }
+
+/* --- Award reactions (feature-flagged: 'reactions') ---------------------
+   A small cheer/love chip pinned to the card's bottom-right corner. It
+   lives OUTSIDE .flip-card-inner so it doesn't rotate with the flip, and
+   inside the card container so it scales in cqw like every other card
+   element (px fallback below for browsers without container queries). */
+.flip-card {
+  position: relative; /* containing block for .reaction-bar */
+}
+
+.reaction-bar {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  z-index: 4;
+  display: flex;
+  gap: 4px;
+}
+
+.reaction-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: 999px;
+  background: rgba(10, 10, 10, 0.55);
+  color: #f3e5ab;
+  font-size: 12px;
+  line-height: 1;
+  padding: 4px 8px;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.reaction-btn:hover {
+  border-color: rgba(212, 175, 55, 0.7);
+  transform: translateY(-1px);
+}
+
+.reaction-btn.mine {
+  background: rgba(212, 175, 55, 0.28);
+  border-color: #d4af37;
+}
+
+.reaction-btn .rx-count {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.reaction-btn .rx-count:empty {
+  display: none;
+}
+
+@keyframes rx-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+
+.reaction-btn.rx-pop {
+  animation: rx-pop 0.3s ease;
+}
+
+/* Mini grids stay clean — the lightbox clone carries the chip instead. */
+.awards-grid.mini .reaction-bar {
+  display: none;
+}
+
+@supports (container-type: inline-size) {
+  /* Calibrated to the portrait design width (300px: 1cqw = 3px). */
+  .reaction-bar {
+    bottom: 2.7cqw;
+    right: 2.7cqw;
+    gap: 1.3cqw;
+  }
+
+  .reaction-btn {
+    gap: 1cqw;
+    font-size: 4cqw;
+    padding: 1.3cqw 2.7cqw;
+  }
+}

@@ -373,6 +373,9 @@
       <% } %>
   </div>
   <script src="/js/flipbook.js"></script>
+  <% if (typeof featureReactions !== 'undefined' && featureReactions) { %>
+    <script src="/js/reactions.js"></script>
+  <% } %>
   <script>
     // One flat choice: mini grid (compact overview, tap to enlarge),
     // portrait grid (original design), landscape grid (A/B variant), or

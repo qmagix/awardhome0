@@ -304,4 +304,16 @@
       <div class="tcb-brand">AwardHome</div>
     </div>
   </div>
+  <% if (typeof featureReactions !== 'undefined' && featureReactions && award.reactions) {
+       const rx = award.reactions; %>
+    <%# Sits outside .flip-card-inner so it stays put while the card
+        flips. Clicks are intercepted by /js/reactions.js in the capture
+        phase, so they never reach the card's flip handler. %>
+    <div class="reaction-bar" data-award-id="<%= award.id %>">
+      <button type="button" class="reaction-btn <%= rx.mine.includes('cheer') ? 'mine' : '' %>"
+        data-type="cheer" aria-label="Cheer this award" title="Cheer">👏<span class="rx-count"><%= rx.cheer || '' %></span></button>
+      <button type="button" class="reaction-btn <%= rx.mine.includes('love') ? 'mine' : '' %>"
+        data-type="love" aria-label="Love this award" title="Love">❤️<span class="rx-count"><%= rx.love || '' %></span></button>
+    </div>
+  <% } %>
 </div>

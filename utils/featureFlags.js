@@ -12,6 +12,7 @@ const FLAG_DEFS = [
   { key: 'thank_you_notes', label: 'Thank-You Notes', description: 'Flipbook acknowledgements page + note editing on award cards.' },
   { key: 'award_photos', label: 'Award Photos', description: 'Flipbook photo page: per-award performance shots + default card photo.' },
   { key: 'auto_moderation', label: 'Auto-Moderation', description: 'Machine moderation of thank-you notes (mode set in /admin/settings).' },
+  { key: 'reactions', label: 'Reactions', description: 'Cheer/love reaction chips on trophy-case award cards (stored in reactions.sqlite).' },
 ];
 
 const VALID_STATES = ['off', 'beta', 'on'];

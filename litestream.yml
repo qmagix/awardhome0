@@ -20,3 +20,14 @@ dbs:
         region: us-east-1           # match your bucket's region
         sync-interval: 10s
         retention: 168h             # keep 7 days of snapshots + WAL
+  # Reactions live in their own low-stakes, higher-churn DB (see
+  # utils/reactions.js). The app creates the file at boot; restart
+  # litestream.service after the first deploy that ships it.
+  - path: ./reactions.sqlite
+    replicas:
+      - type: s3
+        bucket: awardhome-backups-986110436623
+        path: reactions
+        region: us-east-1
+        sync-interval: 60s          # taps are not precious like award data
+        retention: 168h

@@ -100,6 +100,27 @@ The registry lives in `utils/cardDesign.js` — future designs are added there a
   Auto-Approved" trust-but-verify feed with one-click revoke (pulls identical copies together).
   Photos remain human-reviewed regardless of mode.
 
+## 3d. Social Reactions on Award Cards (flag: `reactions`, ships dark)
+- **What it is:** cheer (👏) / love (❤️) chips pinned to the bottom-right corner of every award
+  card in a dancer's public trophy case. Tap toggles; counts show on the chip; the viewer's own
+  reactions render highlighted on reload. No account needed — friends and family react via a
+  1-year signed anonymous cookie (`ah_rk`, HMAC over `SESSION_SECRET`); logged-in users react as
+  themselves (`u:<id>`), so their reactions follow them across devices.
+- **Storage** (`utils/reactions.js`): separate `reactions.sqlite` (the `sessions.sqlite`
+  precedent) — write isolation from app data + keeps tap churn out of the main DB's Litestream
+  stream (own replica entry in `litestream.yml`, 60s sync; **restart litestream.service after the
+  deploy that first ships this**). Self-creating schema: one `reactions` table,
+  `PRIMARY KEY (award_id, reactor_key, type)` making toggles idempotent. Counts merge in app
+  code — no cross-DB JOIN.
+- **API:** `POST /api/award/:id/react` (`{type: 'cheer'|'love'}`) → `{mine, count}`. Flag-gated
+  (404 while dark), CSRF-covered, rate-limited (`REACT_RATE_LIMIT`, default 60/5min/IP), validates
+  the award exists.
+- **UI:** chip sits inside `.flip-card` but outside `.flip-card-inner`, so it stays put while the
+  card flips; sized in cqw per the card design system (px fallback). Hidden in mini-mode grids
+  (the lightbox clone shows it). `public/js/reactions.js` uses one capture-phase delegated
+  listener: taps never reach the card's flip handler, and lightbox clones work without re-binding.
+  Not rendered on manage/editor surfaces (locals absent = hidden).
+
 ## 4. Superadmin Controls
 - **Data Drafts / ETL Triage:** Review scraped web data (emails, addresses) before merging into live studios.
 - **Role Management:** Promote standard users to admins.

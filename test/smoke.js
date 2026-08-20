@@ -48,6 +48,7 @@ const CHECKS = [
   ['POST', '/api/admin/card-ack/1', [403], 'anonymous card-ack moderation blocked'],
   ['POST', '/resend-verification', [403], 'tokenless resend-verification blocked (CSRF)'],
   ['POST', '/admin/featured/recompute', [403], 'anonymous featured recompute blocked'],
+  ['POST', '/api/award/1/react', [403], 'tokenless award reaction blocked (CSRF)'],
   ['POST', '/admin/marketing/studios/1/send-invite', [403], 'anonymous invite send blocked'],
   ['GET', '/unsubscribe?e=bogus&t=bad', [400], 'bad unsubscribe token rejected'],
   ['GET', '/claim/studio/1', [200], 'claim page public (one-page apply)'],
@@ -130,6 +131,8 @@ async function main() {
           ['POST', '/claim/studio/1/apply', [400], 'apply validates input (with CSRF token)', csrfHeaders],
           ['POST', '/claim/dancer/1/apply', [400, 404], 'dancer apply validates input (with CSRF token)', csrfHeaders],
           ['POST', '/manage/studio/1/onboarding/dismiss', [302], 'anonymous onboarding dismiss redirected to login (with CSRF token)', csrfHeaders],
+          // 404 while the 'reactions' flag is off or beta (anonymous caller)
+          ['POST', '/api/award/1/react', [404], 'reaction endpoint dark while flag off (with CSRF token)', csrfHeaders],
         );
       } else {
         failures++;
