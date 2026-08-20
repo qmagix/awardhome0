@@ -46,3 +46,23 @@ Patent-candidate details tracked in `maybe_patentable.md` (A6).
 **Concept:** A centralized "System Settings" dashboard for Superadmins that allows dynamic, zero-downtime switching of the underlying LLM model (e.g., from `gpt-4o-mini` to `gpt-4o` or `gpt-3.5-turbo`) used across the platform.
 
 **Value Proposition:** AI costs and capabilities fluctuate rapidly. By exposing the model selection to the Superadmin interface instead of hardcoding it in the codebase or requiring a `.env` server restart, the platform operator can instantly optimize for cost during high-traffic periods, or switch to a higher-intelligence model for premium users or special use cases without any technical friction.
+
+## 5. Social Reactions ("Cheers") on Award Cards (brainstormed 2026-08-19)
+**Concept:** Friends and family can tap a lightweight reaction (👏 cheer / ❤️ love) on individual awards in a dancer's trophy case. Counts render on the card (and mini-card grid), giving dancers social proof and giving relatives a one-tap way to participate without accounts-heavy friction.
+
+**Value Proposition:** turns the trophy case from a read-only archive into a shareable social object — "grandma loved your solo" is the retention loop that brings dancers back between competition seasons, and reaction counts are organic content for the share/video surfaces (ideas §3).
+
+**Backend design (agreed direction):** separate `reactions.sqlite` following the `utils/sessionStore.js` precedent (own connection, WAL, busy_timeout) — not for query speed (counts are trivially indexable) but for **write isolation**: reactions are the first tap-frequency write path in the app, and a separate file keeps them from contending with app-data writes and from inflating Litestream WAL replication churn on the main DB. Schema: `reactions (award_id, reactor_key, type, created_at, UNIQUE(award_id, reactor_key, type))` + per-award counts computed by indexed GROUP BY (denormalize later only if needed). Counts merge in app code (no cross-DB JOIN needed; ATTACH available as fallback). Reactor identity: logged-in user id, else signed anonymous cookie key; per-IP rate limit + toggle-off (re-tap removes) for abuse control. Ship behind a `reactions` feature flag to the beta cohort.
+
+## 6. Award-Flip Surprise Reveals — Sponsored Prize Lottery (brainstormed 2026-08-19)
+**Concept:** Occasionally, flipping an award card reveals a surprise "golden ticket" page: a real prize — free entry to a specific competition (funded by the event organizer) or a gift/discount from a dancewear sponsor. The flip gesture that already delights (certificate easter egg) becomes a variable-reward moment.
+
+**Value Proposition:** three-sided flywheel — dancers get a lottery-ticket thrill on every visit; organizers get a *conversion* channel ("free entry" converts a dancer to their next event, more compelling than logo placement); sponsors get performance-marketing placement inside the most emotionally-charged surface in the product. Strong carrot for org outreach: "fund surprise entries for dancers who won at YOUR events."
+
+**Monetization:** organizers/sponsors fund prize pools (flat placement fee or per-redemption); platform controls odds/pacing. Later: tiered pools (bigger prizes for verified/claimed profiles → drives claims).
+
+**⚠️ Legal gate before ANY launch:** this is a sweepstakes aimed largely at **minors** — needs attorney review (no-consideration structure, official rules, state sweepstakes law, COPPA/guardian consent, prize redemption routed to parent/guardian, tax reporting ≥$600). Same attorney touchpoint as the patent triage.
+
+**Technical sketch:** `prize_pools` (sponsor, prize, inventory, odds, window, redemption terms) + `prize_reveals` (dancer/user, award, pool, revealed_at, redeemed_at, code); server-side roll on flip event (never client-side), seeded/rate-limited per user+day so re-flip farming is useless; win → guardian-email claim flow with single-use redemption code (reuse org-claim token pattern); superadmin pool console; `surprise_reveals` feature flag. Prerequisite: partnered orgs/sponsors exist — sequence AFTER beta claims land.
+
+Patent-candidate details tracked in `maybe_patentable.md` (A7).

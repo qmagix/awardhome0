@@ -74,6 +74,18 @@ the same group award's video via the viewer-pinned ack page. Pairs with A3/A4 as
 system claim. *Captured 2026-08-12. NOT built — strongest position if filed before
 shipping.*
 
+### A7. Sponsored surprise-reveal page inside a flip-card award artifact (NEW — not built)
+A probabilistic "golden ticket" page that occasionally appears in a flip-book award
+card's page stack: server-side prize roll bound to the flip interaction on a specific
+verified award, drawing from organizer/sponsor-funded pools scoped to the award's own
+competition history (e.g. free entry to the org whose event produced the award). The
+claimable combination: variable-reward mechanics embedded in a **verified achievement
+artifact** rather than a generic app surface; prize eligibility derived from the
+award's provenance (org/event linkage); guardian-routed redemption for minors; roll
+server-side + rate-seeded per user so repeated flipping cannot farm outcomes. Pairs
+with A3 as a system claim. *Captured 2026-08-19. NOT built — sweepstakes/minors legal
+review required before any launch; strongest IP position if filed before shipping.*
+
 ## Tier B — plausible but weaker (business method or heavy prior art risk)
 
 ### B1. Dark-launch claiming via private single-use tokens (no public unclaimed state)
