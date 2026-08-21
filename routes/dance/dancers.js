@@ -384,7 +384,20 @@ router.get('/my-dancers', requireAuth, async (req, res) => {
     `, [userId]);
   } catch (e) { /* studio_id/code_valid columns missing until migrate */ }
 
-  res.render('my_dancers', { dancers, claims });
+  // Studio claims in review: a claimant who lands here (via nav) should
+  // see "approval pending", not be pushed into the parent/dancer flow.
+  let studioClaims = [];
+  try {
+    studioClaims = await db.all(`
+      SELECT sc.status, sc.created_at, s.id as studio_id, s.name as studio_name
+      FROM studio_claims sc
+      JOIN studios s ON sc.studio_id = s.id
+      WHERE sc.user_id = ? AND sc.status = 'pending'
+      ORDER BY sc.created_at DESC
+    `, [userId]);
+  } catch (e) { /* table missing before first migrate */ }
+
+  res.render('my_dancers', { dancers, claims, studioClaims });
 });
 
 

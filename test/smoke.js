@@ -161,7 +161,81 @@ async function main() {
       console.log(`${ok ? 'PASS' : 'FAIL'}  ${method.padEnd(4)} ${path}  -> ${status} (expected ${expected.join('/')})  ${desc}`);
     }
 
-    // Anti-scrape burst: profile pages share a per-IP limiter (PROFILE_RATE_LIMIT
+    // Owner-flow checks: a real studio owner must be able to render the
+    // manage surfaces with content (regression: /history threw on a bare
+    // `app` reference the anonymous 302 check couldn't catch), and a
+    // pending claimant must land on their studio page and see the
+    // approval-pending state instead of the parent/dancer flow.
+    try {
+      const bcrypt = require('bcrypt');
+      const { openDb } = require('../database');
+      const db = await openDb();
+      // Pre-clean leftovers from a crashed prior run
+      await db.run("DELETE FROM studio_claims WHERE proof_text = 'smoke-fixture'");
+      await db.run("DELETE FROM awards WHERE award_type = 'Top Smoke Studio'");
+      await db.run("DELETE FROM studios WHERE unique_id IN ('smoke-studio-1', 'smoke-studio-2')");
+      await db.run("DELETE FROM users WHERE email LIKE 'smoke-%@test.invalid'");
+
+      const hash = bcrypt.hashSync('smoke-test-pass-1', 4);
+      const event = await db.get('SELECT id, year FROM events WHERE year IS NOT NULL ORDER BY id LIMIT 1');
+      const ids = { users: [], studios: [], awards: [], claims: [] };
+      try {
+        const u1 = await db.run("INSERT INTO users (email, password_hash, role, is_verified) VALUES ('smoke-owner@test.invalid', ?, 'user', 1)", [hash]);
+        const u2 = await db.run("INSERT INTO users (email, password_hash, role, is_verified) VALUES ('smoke-claimant@test.invalid', ?, 'user', 1)", [hash]);
+        ids.users.push(u1.lastID, u2.lastID);
+        const s1 = await db.run("INSERT INTO studios (unique_id, name, status, is_claimed, owner_id) VALUES ('smoke-studio-1', 'Smoke Test Studio One', 'active', 1, ?)", [u1.lastID]);
+        const s2 = await db.run("INSERT INTO studios (unique_id, name, status, is_claimed) VALUES ('smoke-studio-2', 'Smoke Test Studio Two', 'active', 0)");
+        ids.studios.push(s1.lastID, s2.lastID);
+        const aw = await db.run("INSERT INTO awards (event_id, studio_id, performance_name, award_type, category, place, award_class) VALUES (?, ?, '', 'Top Smoke Studio', '', '', 'studio')", [event.id, s1.lastID]);
+        ids.awards.push(aw.lastID);
+        const cl = await db.run("INSERT INTO studio_claims (user_id, studio_id, proof_text, status) VALUES (?, ?, 'smoke-fixture', 'pending')", [u2.lastID, s2.lastID]);
+        ids.claims.push(cl.lastID);
+
+        const login = async (email) => {
+          const page = await fetch(BASE + '/login');
+          const cookie = (page.headers.getSetCookie ? page.headers.getSetCookie() : [page.headers.get('set-cookie')])
+            .filter(Boolean).map(c => c.split(';')[0]).join('; ');
+          const token = (await page.text()).match(/<meta name="csrf-token" content="([^"]+)"/)[1];
+          const res = await fetch(BASE + '/login', {
+            method: 'POST', redirect: 'manual',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Cookie': cookie },
+            body: `email=${encodeURIComponent(email)}&password=smoke-test-pass-1&_csrf=${encodeURIComponent(token)}`
+          });
+          return { cookie, status: res.status, location: res.headers.get('location') || '' };
+        };
+        const check = (ok, desc, detail) => {
+          if (!ok) failures++;
+          console.log(`${ok ? 'PASS' : 'FAIL'}  ${desc}${detail ? '  [' + detail + ']' : ''}`);
+        };
+
+        const owner = await login('smoke-owner@test.invalid');
+        check(owner.status === 302 && owner.location === `/dance/studio/${s1.lastID}`,
+          'owner login redirects to their studio page', owner.status + ' -> ' + owner.location);
+        const hist = await fetch(BASE + `/manage/studio/${s1.lastID}/history`, { headers: { Cookie: owner.cookie } });
+        check(hist.status === 200, 'owner studio history renders', 'status ' + hist.status);
+        const awRes = await fetch(BASE + `/manage/studio/${s1.lastID}/awards?year=${event.year}&view=routines&sort=name`, { headers: { Cookie: owner.cookie } });
+        const awHtml = await awRes.text();
+        check(awRes.status === 200 && awHtml.includes('Studio Awards'),
+          'awards editor groups placeless awards as "Studio Awards"', 'status ' + awRes.status);
+
+        const claimant = await login('smoke-claimant@test.invalid');
+        check(claimant.status === 302 && claimant.location === `/dance/studio/${s2.lastID}`,
+          'pending claimant login lands on their claimed studio', claimant.status + ' -> ' + claimant.location);
+        const sp = await fetch(BASE + claimant.location, { headers: { Cookie: claimant.cookie } });
+        const spHtml = await sp.text();
+        check(sp.status === 200 && spHtml.includes('approval pending'),
+          'studio page shows the verification-pending banner', 'status ' + sp.status);
+        const md = await fetch(BASE + '/my-dancers', { headers: { Cookie: claimant.cookie } });
+        const mdHtml = await md.text();
+        check(md.status === 200 && mdHtml.includes('approval pending'),
+          'my-dancers shows the studio-claim pending state', 'status ' + md.status);
+      } finally {
+        for (const id of ids.claims) await db.run('DELETE FROM studio_claims WHERE id = ?', [id]).catch(() => {});
+        for (const id of ids.awards) await db.run('DELETE FROM awards WHERE id = ?', [id]).catch(() => {});
+        for (const id of ids.studios) await db.run('DELETE FROM studios WHERE id = ?', [id]).catch(() => {});
+        for (const id of ids.users) await db.run('DELETE FROM users WHERE id = ?', [id]).catch(() => {});
+      }
+      // Anti-scrape burst: profile pages share a per-IP limiter (PROFILE_RATE_LIMIT
     // above). Normal browsing volume must pass, then a rapid burst must 429.
     if (burstPath) {
       let first = null, last = null;
@@ -173,6 +247,11 @@ async function main() {
       const burstOk = first === 200 && last === 429;
       if (!burstOk) failures++;
       console.log(`${burstOk ? 'PASS' : 'FAIL'}  GET  ${burstPath} x30  -> first ${first}, last ${last} (expected 200 then 429)  profile enumeration rate-limited`);
+    }
+
+  } catch (e) {
+      failures++;
+      console.log('FAIL  owner-flow checks errored: ' + e.message);
     }
   } catch (e) {
     failures++;

@@ -968,7 +968,7 @@ router.get('/manage/studio/:id/history', requireAuth, requireStudioOwner, async 
     org.total_awards_all_time++;
     if (award.is_first_place) org.first_places_all_time++;
 
-    const premiumDetails = app.locals.getPremiumDetails(award);
+    const premiumDetails = req.app.locals.getPremiumDetails(award);
     let isMajor = false;
     if (award.is_first_place && premiumDetails.isPremium) {
       const nameLower = (award.award_type || award.category || '').toLowerCase();

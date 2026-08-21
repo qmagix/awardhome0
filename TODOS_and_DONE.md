@@ -37,6 +37,12 @@
 
 ## DONE
 
+### 2026-08-21 — studio-claim walkthrough fixes (user QA on studio 62)
+- [x] Pending-claim visibility: login now lands pending studio claimants on their claimed studio's page (was: generic /dance); the studio page shows a "Verification & approval pending" banner instead of the Claim button; /my-dancers explains the pending studio claim instead of pushing the dancer flow.
+- [x] /manage/studio/:id/history 500 fixed: bare `app.locals` reference left from the server.js modularization (threw for every owner whose studio had awards). Smoke suite now has an authenticated owner-flow section (temp user/studio/award fixtures, real login) covering history, awards editor, pending-claim states — 59 checks total.
+- [x] "– #" routine names: Rainbow stores a literal placeholder for studio-level awards; scraper now blanks it, awards editor groups blank-name dancer-less awards as "Studio Awards" (dancer awards missing names stay "Unspecified Routine"), 143 rows cleaned.
+- [x] Duplicate award repair: Rainbow importer's idempotency key included derived award_class, so classifier changes re-inserted whole events — 8,838 duplicate awards (37 Rainbow events + 3 StarQuest) removed by scripts/dedup_reimported_awards.js (idempotent, deterministic keeper choice, child rows repointed). Importer key now observable-fields-only + follows studio merges + updates award_class in place. RUN ON PROD after deploy: `node scripts/dedup_reimported_awards.js`.
+
 ### 2026-08-04 → 08-09 sprint (security, deploy, beta launch — previously untracked)
 - [x] P0 security lockdown: admin/merge/backfill/feature endpoints require admin; random single-use 24h email-verification tokens; session hardening (SESSION_SECRET, custom SQLite store, 7-day cookies); login/register rate limits.
 - [x] Owner-check middleware refactor: requireStudioOwner / requireOrgOwner replace ~40 inline checks.

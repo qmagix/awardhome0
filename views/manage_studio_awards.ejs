@@ -121,7 +121,16 @@
         });
       } else if (currentView === 'routines') {
         awards.forEach(award => {
-          const key = award.performance_name ? award.performance_name : 'Unspecified Routine';
+          // Studio-level awards (e.g. "Top Elite Starz Studio") have no
+          // routine: scrapers leave the name blank (Rainbow used to store
+          // a literal "– #" placeholder). Group them as Studio Awards
+          // rather than under a junk name; dancer awards missing a name
+          // stay "Unspecified Routine".
+          const rawName = (award.performance_name || '').trim();
+          const isPlaceholder = !rawName || /^[–—-]?\s*#?$/.test(rawName);
+          const hasDancers = award.dancer_name || (groupedDancers[award.id] && groupedDancers[award.id].length > 0);
+          const key = !isPlaceholder ? award.performance_name
+            : (hasDancers ? 'Unspecified Routine' : 'Studio Awards');
           if (!groupedAwards[key]) {
             groupedAwards[key] = [];
             groupMetadata[key] = { year: award.event_year, name: key };

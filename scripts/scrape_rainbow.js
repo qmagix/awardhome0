@@ -95,6 +95,12 @@ async function scrapeRainbow(url, year = 2026) {
           perfNumber = match[1];
           perfName = match[2];
         }
+        // Studio-level awards have no routine; the site renders the cell
+        // as a bare "– #" placeholder. Store blank, not the placeholder
+        // (display groups blank-name dancer-less awards as "Studio Awards").
+        if (/^[–—-]?\s*#?$/.test(perfName)) {
+          perfName = '';
+        }
       }
 
       if (studioIdx >= 0 && cols[studioIdx]) {
@@ -111,8 +117,12 @@ async function scrapeRainbow(url, year = 2026) {
 
       if (!studioName) continue;
 
-      // Ensure studio exists
-      let studio = await db.get(`SELECT id FROM studios WHERE name = ?`, [studioName]);
+      // Ensure studio exists — following merges, so re-imports land on the
+      // canonical studio instead of resurrecting a merged-away duplicate.
+      let studio = await db.get(`SELECT id, status, merged_into_id FROM studios WHERE name = ?`, [studioName]);
+      if (studio && studio.status === 'merged' && studio.merged_into_id) {
+        studio = { id: studio.merged_into_id };
+      }
       if (!studio) {
         const studioUuid = generateStudioId(studioName);
         const res = await db.run(`INSERT INTO studios (unique_id, name) VALUES (?, ?)`, [studioUuid, studioName]);
@@ -154,10 +164,17 @@ async function scrapeRainbow(url, year = 2026) {
         awardClass = 'special';
       }
 
-      // Insert award if it doesn't already exist
+      // Insert award if it doesn't already exist. The identity key is the
+      // award's OBSERVABLE fields (event, studio, type, routine, category,
+      // place) — NEVER award_class, which is derived by our own classifier:
+      // including it once caused every classifier improvement to re-insert
+      // the whole event (8,835 duplicate awards, repaired 2026-08-21 by
+      // scripts/dedup_reimported_awards.js — keep the two keys in sync).
       const existingAward = await db.get(
-        'SELECT id FROM awards WHERE event_id = ? AND category = ? AND performance_name = ? AND IFNULL(place, "") = IFNULL(?, "") AND award_class = ?',
-        [event.id, category, perfName, place, awardClass]
+        `SELECT id, award_class FROM awards
+         WHERE event_id = ? AND studio_id = ? AND award_type = ? AND category = ?
+           AND performance_name = ? AND IFNULL(place, "") = IFNULL(?, "")`,
+        [event.id, studio.id, awardType, category, perfName, place]
       );
 
       if (!existingAward) {
@@ -165,6 +182,9 @@ async function scrapeRainbow(url, year = 2026) {
           `INSERT INTO awards (event_id, place, performance_name, performance_number, award_class, award_type, category, dancer_id, studio_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [event.id, place, perfName, perfNumber, awardClass, awardType, category, dancerId, studio.id]
         );
+      } else if (existingAward.award_class !== awardClass) {
+        // Classifier improvements propagate in place instead of duplicating
+        await db.run('UPDATE awards SET award_class = ? WHERE id = ?', [awardClass, existingAward.id]);
       }
     }
   }

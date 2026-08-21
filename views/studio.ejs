@@ -75,6 +75,16 @@
               Owner Login
             </a>
           <% } %>
+          <% } else if (typeof viewerClaimStatus !== 'undefined' && viewerClaimStatus === 'pending') { %>
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.25rem; max-width: 380px;">
+              <span style="display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(212, 175, 55, 0.12); border: 1px solid rgba(212, 175, 55, 0.5); color: var(--primary); padding: 0.5rem 1.25rem; border-radius: 24px; font-weight: 600;">
+                ⏳ Verification &amp; approval pending
+              </span>
+              <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted); text-align: right; line-height: 1.4;">
+                Your claim for this studio is being reviewed. You'll get an email when it's
+                approved, and your Manage dashboard will unlock right here.
+              </p>
+            </div>
           <% } else { %>
             <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem;">
               <div style="display: flex; align-items: center; gap: 1rem;">

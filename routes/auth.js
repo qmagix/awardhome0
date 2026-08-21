@@ -142,6 +142,16 @@ router.post('/login', authLimiter, async (req, res) => {
   if (ownedOrg) {
     return res.redirect(`/manage/org/${ownedOrg.id}`);
   }
+  // A studio claim still in review: land the claimant on their studio's
+  // page (which shows them a "verification pending" banner) rather than
+  // the generic homepage or the parent/dancer flow — a claimant with no
+  // signal that their claim exists assumes it was lost.
+  const pendingStudioClaim = await db.get(
+    "SELECT studio_id FROM studio_claims WHERE user_id = ? AND status = 'pending' ORDER BY id DESC LIMIT 1",
+    [user.id]);
+  if (pendingStudioClaim) {
+    return res.redirect(`/dance/studio/${pendingStudioClaim.studio_id}`);
+  }
   // Parents/dancers: anyone with a claimed dancer OR a claim in flight
   // lands on the My Dancers dashboard (shows claim status too — a parent
   // with only a pending claim previously landed on the generic homepage

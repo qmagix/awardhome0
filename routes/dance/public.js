@@ -702,8 +702,20 @@ router.get('/dance/studio/:id', profileLimiter, async (req, res) => {
   });
   orgsHistory.sort((a, b) => a.name.localeCompare(b.name));
 
+  // The viewer's own claim on this studio, if any — drives the
+  // "verification pending" banner in place of the Claim button.
+  let viewerClaimStatus = null;
+  if (req.session && req.session.user && !studio.is_claimed) {
+    try {
+      const claimRow = await db.get(
+        'SELECT status FROM studio_claims WHERE studio_id = ? AND user_id = ? ORDER BY id DESC LIMIT 1',
+        [studio.id, req.session.user.id]);
+      viewerClaimStatus = claimRow ? claimRow.status : null;
+    } catch (e) { /* table missing before first migrate */ }
+  }
+
   res.render('studio', {
-    studio, mergedIntoStudio, groupedData, quickStats, hallOfFame: topHallOfFame, alumni,
+    studio, mergedIntoStudio, groupedData, quickStats, hallOfFame: topHallOfFame, alumni, viewerClaimStatus,
     hasAwards: quickStats.totalAwards > 0, orgsHistory,
     pageTitle: studio.name,
     pageDesc: `${studio.name} on AwardHome: ${quickStats.totalAwards} dance awards across ${quickStats.totalEvents} competition events${quickStats.sinceYear ? ' since ' + quickStats.sinceYear : ''}.`
