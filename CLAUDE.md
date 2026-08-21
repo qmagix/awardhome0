@@ -11,6 +11,7 @@ AwardHome — "digital trophy case" for competitive dance: ~900k awards scraped/
 - `node database.js` — apply schema/migrations (idempotent; also run by deploy).
 - Deploy: commit → push to origin main → `ssh -i deploy/awardhome-key.pem ubuntu@34.197.219.72 /opt/awardhome/deploy/deploy.sh` (pull → npm ci → migrate → restart → healthz). Prod has live user data — never copy a local DB over it; achieve data parity by running the same import scripts on both sides (see `docs/db_operations.md`, memory notes).
 - Data scripts: `node scripts/<name>.js`, run from repo root. Data dirs (`raw/`, `tobeprocessed/`) live at repo root; scripts must anchor paths with `path.join(__dirname, '..')`.
+- Manual QA on prod: `node scripts/qa_fixtures.js seed|remove|status` — transient "(please ignore)" test tenant (org/studio/dancers/awards), no is_test filters by design; register walkthrough accounts as `qa-*@awardhome.com` so `remove` finds them; never leave seeded overnight (3:30am featured cron).
 
 ## Architecture
 

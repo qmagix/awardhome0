@@ -38,6 +38,7 @@
 ## DONE
 
 ### 2026-08-21 — studio-claim walkthrough fixes (user QA on studio 62)
+- [x] QA test tenant for safe manual walkthroughs on prod: `scripts/qa_fixtures.js seed|remove|status` — transient org/studio/dancers/awards, all named "(please ignore)"; deliberate decision: NO is_test discovery filters (transience + naming instead of a filter every future query must remember). `remove` is surgical (fixture keys + qa-*@awardhome.com users) and self-verifies zero leftovers. Rules: register test accounts as qa-*@awardhome.com; never leave seeded overnight (featured cron).
 - [x] Pending-claim visibility: login now lands pending studio claimants on their claimed studio's page (was: generic /dance); the studio page shows a "Verification & approval pending" banner instead of the Claim button; /my-dancers explains the pending studio claim instead of pushing the dancer flow.
 - [x] /manage/studio/:id/history 500 fixed: bare `app.locals` reference left from the server.js modularization (threw for every owner whose studio had awards). Smoke suite now has an authenticated owner-flow section (temp user/studio/award fixtures, real login) covering history, awards editor, pending-claim states — 59 checks total.
 - [x] "– #" routine names: Rainbow stores a literal placeholder for studio-level awards; scraper now blanks it, awards editor groups blank-name dancer-less awards as "Studio Awards" (dancer awards missing names stay "Unspecified Routine"), 143 rows cleaned.
