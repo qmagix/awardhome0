@@ -58,7 +58,7 @@ function buildStudioInvite({ studio, totalAwards, firstPlaces, rank }) {
 
     <p>Claiming your page takes about two minutes and costs nothing. It unlocks:</p>
     <ol>
-      <li><strong>Make it complete and correct.</strong> Merge duplicate profiles, fix dancer-name typos, and add awards from events that never published results online.</li>
+      <li><strong>Make it complete and correct.</strong> Competitions spell studio names differently — duplicate profiles may be splitting your award count and leaderboard rank right now. Merge them, fix dancer-name typos, and add awards from events that never published results online.</li>
       <li><strong>Give every dancer their own trophy case.</strong> Invite your dance families to claim verified dancer profiles.</li>
       <li><strong>Put it on your own website.</strong> Claimed studios get an embeddable awards widget, in your colors — and you control which stats are public.</li>
     </ol>
@@ -167,6 +167,8 @@ What ${n} gets:
 2. Permanent, searchable results. Dancers and parents constantly search for old placements. We host them forever, interactively — no more fielding "where can I find 2023 results?" emails, and your events sit beside the biggest names in the industry for every studio browsing the platform.
 
 3. Attendance insights. An organizer account unlocks analytics on the studios attending your events — including how many other competitions they attend each year — so you can spot loyal studios and understand your market.
+
+One more thing, while it's early: we're inviting a limited group of Founding Partner organizations this season. Founding Partners pledge a handful of free entries to their own events — we award them to standout dancers on the platform as surprise rewards, each one credited "provided by ${n}" — and in return get first access to premium placement and organizer features as the platform grows. A pledged entry costs you an empty slot; it returns a proven competitive dancer to your ballroom. If that sounds interesting, mention it when you reply and I'll hold ${n} a founding slot.
 
 Ready to get started? Claiming your free organizer account takes about two minutes with your private access link:
 
