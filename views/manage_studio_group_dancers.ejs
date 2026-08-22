@@ -1,0 +1,222 @@
+<%- include('partials/header') %>
+
+<div class="container manage-layout" style="margin-top: 4rem; display: flex; gap: 2rem;">
+
+  <!-- Sidebar Navigation -->
+  <div class="manage-sidebar" style="width: 250px; flex-shrink: 0;">
+    <div class="card glass-card" style="padding: 1.5rem; position: sticky; top: 2rem;">
+      <h3 style="margin-top: 0; color: var(--primary); font-size: 1.1rem;">Management</h3>
+      <ul style="list-style: none; padding: 0; margin: 1rem 0 0 0; display: flex; flex-direction: column; gap: 0.5rem;">
+        <li>
+          <a href="/manage/studio/<%= studio.id %>" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: var(--text-muted); transition: background 0.2s;">
+            👤 Profile & Customization
+          </a>
+        </li>
+        <li>
+          <a href="/manage/studio/<%= studio.id %>/roster" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: var(--text-muted); transition: background 0.2s;">
+            👥 Dancer Roster
+          </a>
+        </li>
+        <li>
+          <a href="/manage/studio/<%= studio.id %>/group-dancers" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: white; background: rgba(212, 175, 55, 0.1); border-left: 3px solid var(--primary); font-weight: 600;">
+            🎭 Group Routine Dancers
+          </a>
+        </li>
+        <li>
+          <a href="/manage/studio/<%= studio.id %>/history" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: var(--text-muted); transition: background 0.2s;">
+            📊 Organization History
+          </a>
+        </li>
+        <li>
+          <a href="/manage/studio/<%= studio.id %>/awards" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: var(--text-muted); transition: background 0.2s;">
+            🏆 Awards Editor
+          </a>
+        </li>
+        <li>
+          <a href="/manage/studio/<%= studio.id %>/widget" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: var(--text-muted); transition: background 0.2s;">
+            📈 Widget Builder
+          </a>
+        </li>
+        <li>
+          <a href="/manage/studio/<%= studio.id %>/verifications" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: var(--text-muted); transition: background 0.2s;">
+            ✅ Pending Verifications
+          </a>
+        </li>
+        <li>
+          <a href="/manage/studio/<%= studio.id %>/ai-summaries" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: var(--text-muted); transition: background 0.2s;">
+            ✨ AI Summaries
+          </a>
+        </li>
+      </ul>
+
+      <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
+        <a href="/dance/studio/<%= studio.id %>" style="color: var(--primary); text-decoration: none; font-size: 0.9rem;">&larr; Back to Public Profile</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div style="flex: 1; min-width: 0; margin-bottom: 4rem;">
+    <div class="header-section" style="margin-bottom: 1rem;">
+      <h1 style="margin-bottom: 0.25rem;">🎭 Group Routine Dancers</h1>
+      <p class="subtitle" style="margin: 0;">
+        Competitions rarely publish who danced in group routines. List each routine's cast so
+        every dancer gets these wins on their own trophy case.
+      </p>
+    </div>
+
+    <% if (routines.length === 0) { %>
+      <div class="card glass-card" style="padding: 2.5rem; text-align: center;">
+        <p style="margin: 0; color: var(--text-muted);">No group routines found for your studio yet.</p>
+      </div>
+    <% } else { %>
+      <div class="card glass-card" style="padding: 1rem 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem;">
+        <div style="flex: 1;">
+          <strong style="color: #fbbf24;"><%= doneCount %> of <%= routines.length %></strong>
+          <span style="color: var(--text-muted);">routines have dancers listed.</span>
+        </div>
+        <small style="color: var(--text-muted);">Paste names — one per line or comma-separated — then preview before anything saves.</small>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 1rem;">
+        <% routines.forEach((r, i) => { %>
+          <div class="card glass-card gd-card" style="padding: 1.25rem 1.5rem;"
+            data-routine="<%= r.routine %>" data-year="<%= r.year %>">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; flex-wrap: wrap;">
+              <div>
+                <strong style="font-size: 1.05rem;">"<%= r.routine %>"</strong>
+                <span class="badge" style="background: rgba(212,175,55,0.15); color: var(--primary); margin-left: 0.5rem;"><%= r.year %></span>
+                <div style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem;">
+                  <%= r.award_count %> award<%= r.award_count === 1 ? '' : 's' %> · <%= r.event_names %>
+                </div>
+              </div>
+              <% if (r.cast.length === 0) { %>
+                <span style="color: #fbbf24; font-size: 0.85rem; font-weight: 600;">No dancers listed yet</span>
+              <% } else { %>
+                <span style="color: #34d399; font-size: 0.85rem; font-weight: 600;">✓ <%= r.cast.length %> dancer<%= r.cast.length === 1 ? '' : 's' %></span>
+              <% } %>
+            </div>
+
+            <div class="gd-cast" style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.75rem;">
+              <% r.cast.forEach(d => { %>
+                <span class="gd-chip" style="display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(212,175,55,0.12); border: 1px solid rgba(212,175,55,0.4); border-radius: 14px; padding: 0.2rem 0.7rem; font-size: 0.85rem;">
+                  <%= d.name %>
+                  <button type="button" class="gd-remove" data-dancer-id="<%= d.id %>" title="Remove from this routine"
+                    style="background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 0; font-size: 0.95rem; line-height: 1;">×</button>
+                </span>
+              <% }) %>
+            </div>
+
+            <details style="margin-top: 0.75rem;" <%= r.cast.length === 0 && i < 3 ? 'open' : '' %>>
+              <summary style="cursor: pointer; color: var(--primary); font-size: 0.9rem; font-weight: 600;">
+                <%= r.cast.length === 0 ? 'Add dancers' : 'Add more dancers' %>
+              </summary>
+              <div style="margin-top: 0.75rem;">
+                <textarea class="gd-names" rows="4" placeholder="Ava Johnson&#10;Mia Chen, Sophia Rodriguez&#10;…"
+                  style="width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: white; padding: 0.6rem; font-size: 0.95rem;"></textarea>
+                <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem; align-items: center;">
+                  <button type="button" class="btn gd-preview" style="background: var(--primary); color: #0a0a0a; border: none; padding: 0.45rem 1.2rem; font-weight: 600;">Preview</button>
+                  <small style="color: var(--text-muted);">Nothing saves until you confirm.</small>
+                </div>
+                <div class="gd-result" style="margin-top: 0.75rem;"></div>
+              </div>
+            </details>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<script>
+(function () {
+  const base = '/manage/studio/<%= studio.id %>/group-dancers';
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  document.addEventListener('click', async (e) => {
+    const card = e.target.closest('.gd-card');
+    if (!card) return;
+    const ctx = { routine: card.dataset.routine, year: card.dataset.year };
+
+    if (e.target.classList.contains('gd-preview')) {
+      const names = card.querySelector('.gd-names').value;
+      if (!names.trim()) return;
+      e.target.disabled = true;
+      try {
+        const res = await fetch(base + '/preview', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...ctx, names })
+        });
+        const data = await res.json();
+        if (!res.ok) { alert(data.error || 'Preview failed'); return; }
+        renderPreview(card, data);
+      } finally { e.target.disabled = false; }
+    }
+
+    if (e.target.classList.contains('gd-apply')) {
+      const rows = [...card.querySelectorAll('.gd-row')];
+      const entries = rows.map(row => {
+        const picked = row.querySelector('input[type=radio]:checked');
+        return { name: row.dataset.name, dancer_id: picked ? picked.value : row.dataset.dancerId };
+      }).filter(en => en.dancer_id);
+      const unresolved = rows.length - entries.length;
+      if (unresolved > 0) { alert('Please choose an option for every highlighted name first.'); return; }
+      if (!entries.length) return;
+      e.target.disabled = true;
+      try {
+        const res = await fetch(base + '/apply', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...ctx, entries })
+        });
+        const data = await res.json();
+        if (!res.ok) { alert(data.error || 'Save failed'); return; }
+        location.reload();
+      } finally { e.target.disabled = false; }
+    }
+
+    if (e.target.classList.contains('gd-remove')) {
+      const chip = e.target.closest('.gd-chip');
+      if (!confirm('Remove this dancer from every award of this routine?')) return;
+      const res = await fetch(base + '/remove', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...ctx, dancer_id: e.target.dataset.dancerId })
+      });
+      if (res.ok) chip.remove(); else alert('Remove failed');
+    }
+  });
+
+  function renderPreview(card, data) {
+    const box = card.querySelector('.gd-result');
+    const rid = Math.floor(Math.random() * 1e9);
+    let html = '<div style="border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; padding: 0.75rem; background: rgba(0,0,0,0.25);">';
+    html += '<div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.5rem;">This will apply to <strong>' + data.awardCount + '</strong> award' + (data.awardCount === 1 ? '' : 's') + ' of this routine:</div>';
+    data.results.forEach((r, i) => {
+      if (r.status === 'matched') {
+        const c = r.candidates[0];
+        html += '<div class="gd-row" data-name="' + esc(r.input) + '" data-dancer-id="' + c.id + '" style="padding: 0.3rem 0; font-size: 0.92rem;">'
+          + '✅ <strong>' + esc(c.name) + '</strong> <span style="color: var(--text-muted);">— on your roster (' + c.award_count + ' awards' + (c.years && c.years !== '–' ? ', ' + c.years : '') + ') — will be linked</span></div>';
+      } else if (r.status === 'new') {
+        html += '<div class="gd-row" data-name="' + esc(r.input) + '" data-dancer-id="new" style="padding: 0.3rem 0; font-size: 0.92rem;">'
+          + '➕ <strong>' + esc(r.input) + '</strong> <span style="color: var(--text-muted);">— new dancer, will be created and added to your roster</span>'
+          + (r.note ? '<div style="color: #fbbf24; font-size: 0.82rem; margin-left: 1.4rem;">' + esc(r.note) + '</div>' : '') + '</div>';
+      } else {
+        html += '<div class="gd-row" data-name="' + esc(r.input) + '" style="padding: 0.4rem 0.5rem; font-size: 0.92rem; background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.35); border-radius: 6px; margin: 0.25rem 0;">'
+          + '⚠️ <strong>' + esc(r.input) + '</strong> <span style="color: var(--text-muted);">— more than one dancer with this name is on your roster. Which one danced this routine?</span>';
+        r.candidates.forEach(c => {
+          html += '<label style="display: block; margin: 0.25rem 0 0 1.4rem; cursor: pointer;">'
+            + '<input type="radio" name="gd-pick-' + rid + '-' + i + '" value="' + c.id + '"> '
+            + esc(c.name) + ' <span style="color: var(--text-muted);">(' + c.award_count + ' awards' + (c.years && c.years !== '–' ? ', ' + c.years : '') + (c.graduation_year ? ', grad ' + c.graduation_year : '') + ')</span></label>';
+        });
+        html += '<label style="display: block; margin: 0.25rem 0 0 1.4rem; cursor: pointer;">'
+          + '<input type="radio" name="gd-pick-' + rid + '-' + i + '" value="new"> '
+          + 'None of these — a different dancer with the same name (creates a new record)</label></div>';
+      }
+    });
+    html += '<button type="button" class="btn gd-apply" style="margin-top: 0.75rem; background: var(--primary); color: #0a0a0a; border: none; padding: 0.5rem 1.4rem; font-weight: 600;">Confirm &amp; Save</button>';
+    html += '</div>';
+    box.innerHTML = html;
+  }
+})();
+</script>
+
+<%- include('partials/footer') %>

@@ -37,6 +37,10 @@
 
 ## DONE
 
+### 2026-08-22 — Group Routine Dancers
+- [x] Group Routine Dancers page for studio owners (/manage/studio/:id/group-dancers): paste-a-list cast entry per routine-year, preview-then-apply with roster matching (link / create / ambiguous-pick for same-name dancers), applies to every award the routine won that year; sidebar link on all manage pages + onboarding step + FAQ §8b. See features.md §2b.
+- [ ] Group-dancers follow-ups: "copy cast from another routine/year" shortcut; extract the duplicated manage-sidebar markup (now 8 copies) into a partial with an active-item param.
+
 ### 2026-08-21 — studio-claim walkthrough fixes (user QA on studio 62)
 - [x] QA test tenant for safe manual walkthroughs on prod: `scripts/qa_fixtures.js seed|remove|status` — transient org/studio/dancers/awards, all named "(please ignore)"; deliberate decision: NO is_test discovery filters (transience + naming instead of a filter every future query must remember). `remove` is surgical (fixture keys + qa-*@awardhome.com users) and self-verifies zero leftovers. Rules: register test accounts as qa-*@awardhome.com; never leave seeded overnight (featured cron).
 - [x] Pending-claim visibility: login now lands pending studio claimants on their claimed studio's page (was: generic /dance); the studio page shows a "Verification & approval pending" banner instead of the Claim button; /my-dancers explains the pending studio claim instead of pushing the dancer flow.

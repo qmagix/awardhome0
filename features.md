@@ -100,6 +100,25 @@ The registry lives in `utils/cardDesign.js` — future designs are added there a
   Auto-Approved" trust-but-verify feed with one-click revoke (pulls identical copies together).
   Photos remain human-reviewed regardless of mode.
 
+## 2b. Group Routine Dancers (studio owners)
+- **The problem:** competitions rarely publish who danced in group routines, so imported group
+  awards have no cast — and the per-award edit modal made fixing that painful at scale.
+- **The page** (`/manage/studio/:id/group-dancers`, in the management sidebar + onboarding
+  checklist): every group routine listed by year (solo-typed awards excluded), missing-cast
+  routines first, with a progress header ("N of M routines have dancers listed") and the current
+  cast as removable chips.
+- **Paste-a-list input:** one name per line, commas, or semicolons — parsed, whitespace-normalized,
+  deduped, capped at 60.
+- **Preview-then-apply (duplicate safety):** preview classifies each name with NO writes —
+  ✅ exactly one roster match (shown with award count + active years) will be linked;
+  ➕ unknown name creates a dancer on the roster (with a note if same-named dancers exist at
+  other studios — records stay per-studio by design); ⚠️ two+ roster dancers share the name →
+  owner picks which one (or "none of these" → new record). Confirm applies the cast to EVERY
+  award that routine won that year (`INSERT OR IGNORE`, so re-applying is safe).
+- **Server safety:** chosen dancer ids must be on the studio's roster with the submitted name;
+  removal deletes links only, never dancer records. Activity `group_cast_added` feeds the
+  featured engine + onboarding. FAQ §8b documents it for owners.
+
 ## 3d. Social Reactions on Award Cards (flag: `reactions`, ships dark)
 - **What it is:** cheer (👏) / love (❤️) chips pinned to the bottom-right corner of every award
   card in a dancer's public trophy case. Tap toggles; counts show on the chip; the viewer's own

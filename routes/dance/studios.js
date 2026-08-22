@@ -120,6 +120,8 @@ async function buildOnboarding(db, studio) {
       hint: 'A few sentences about what makes your studio special.' },
     { key: 'awards', label: 'Review & add awards', done: await acted('award_self_report', 'awards_csv_commit', 'verification_action'), href: `/manage/studio/${studio.id}/awards`,
       hint: 'Check what our detectives found; add anything missing.' },
+    { key: 'group_cast', label: 'Add dancers to your group routines', done: await acted('group_cast_added'), href: `/manage/studio/${studio.id}/group-dancers`,
+      hint: 'Competitions rarely publish group casts — paste each routine\'s dancer list so every dancer gets their wins.' },
     { key: 'widget', label: 'Embed your trophy widget', done: await acted('widget_embed'), href: `/manage/studio/${studio.id}/widget`,
       hint: 'A live award counter for your own website.' },
     { key: 'dancers', label: 'Invite dancers with your claim code', done: await acted('award_claim'), href: '#claim-code',
@@ -1442,6 +1444,177 @@ router.get('/my-studio', requireAuth, async (req, res) => {
   } else {
     res.send(`<script>alert("You haven't claimed a studio yet! Please search for your studio in the directory and click 'Claim this Studio' to gain management access."); window.location.href="/studios";</script>`);
   }
+});
+
+// --- Group Routine Dancers -------------------------------------------------
+// Competitions rarely publish the dancers in group routines, so imported
+// group awards usually have no cast. This surface lets a director paste a
+// name list per routine, preview how each name resolves against their
+// roster (link / ambiguous / create), then apply to every award that
+// routine won that year. Preview-then-apply is deliberate: same-name
+// dancers are real (two kids named Emma), so nothing links without the
+// director seeing what will happen.
+
+// Awards belonging to one routine-year for this studio (solo-typed awards
+// excluded — solos come with dancer names from the source).
+const GROUP_AWARD_FILTER = `
+  a.studio_id = ? AND TRIM(IFNULL(a.performance_name, '')) = ?
+  AND LOWER(IFNULL(a.award_type, '')) NOT LIKE '%solo%'
+  AND LOWER(IFNULL(a.category, '')) NOT LIKE '%solo%'`;
+
+async function routineAwardIds(db, studioId, routine, year) {
+  const yearCond = year === 'Undated' ? 'e.year IS NULL' : 'e.year = ?';
+  const params = year === 'Undated' ? [studioId, routine.trim()] : [studioId, routine.trim(), year];
+  const rows = await db.all(`
+    SELECT a.id FROM awards a LEFT JOIN events e ON a.event_id = e.id
+    WHERE ${GROUP_AWARD_FILTER} AND ${yearCond}`, params);
+  return rows.map(r => r.id);
+}
+
+router.get('/manage/studio/:id/group-dancers', requireAuth, requireStudioOwner, async (req, res) => {
+  const db = await openDb();
+  const studio = req.studio;
+
+  const routines = await db.all(`
+    SELECT TRIM(a.performance_name) AS routine, IFNULL(e.year, 'Undated') AS year,
+           COUNT(DISTINCT a.id) AS award_count,
+           GROUP_CONCAT(DISTINCT IFNULL(e.name, 'Self-reported')) AS event_names
+    FROM awards a LEFT JOIN events e ON a.event_id = e.id
+    WHERE a.studio_id = ? AND TRIM(IFNULL(a.performance_name, '')) != ''
+      AND LOWER(IFNULL(a.award_type, '')) NOT LIKE '%solo%'
+      AND LOWER(IFNULL(a.category, '')) NOT LIKE '%solo%'
+    GROUP BY TRIM(a.performance_name), e.year
+    ORDER BY (e.year IS NULL), e.year DESC, TRIM(a.performance_name)
+  `, [studio.id]);
+
+  // Current cast per routine-year, one query for the whole page
+  const casts = await db.all(`
+    SELECT TRIM(a.performance_name) AS routine, IFNULL(e.year, 'Undated') AS year,
+           d.id AS dancer_id, d.name AS dancer_name
+    FROM awards a LEFT JOIN events e ON a.event_id = e.id
+    JOIN award_dancers ad ON ad.award_id = a.id
+    JOIN dancers d ON d.id = ad.dancer_id
+    WHERE a.studio_id = ? AND TRIM(IFNULL(a.performance_name, '')) != ''
+      AND LOWER(IFNULL(a.award_type, '')) NOT LIKE '%solo%'
+      AND LOWER(IFNULL(a.category, '')) NOT LIKE '%solo%'
+    GROUP BY TRIM(a.performance_name), e.year, d.id
+    ORDER BY d.name
+  `, [studio.id]);
+  const castMap = {};
+  for (const c of casts) {
+    const key = c.routine + '|||' + c.year;
+    (castMap[key] = castMap[key] || []).push({ id: c.dancer_id, name: c.dancer_name });
+  }
+  routines.forEach(r => { r.cast = castMap[r.routine + '|||' + r.year] || []; });
+
+  // Routines missing a cast first — that's the work to be done
+  routines.sort((a, b) => (a.cast.length > 0) - (b.cast.length > 0));
+  const doneCount = routines.filter(r => r.cast.length > 0).length;
+
+  res.render('manage_studio_group_dancers', {
+    studio, routines, doneCount,
+    pageTitle: 'Group Routine Dancers'
+  });
+});
+
+// Phase 1: classify each pasted name against the roster — NO writes.
+router.post('/manage/studio/:id/group-dancers/preview', requireAuth, requireStudioOwner, async (req, res) => {
+  const db = await openDb();
+  const { routine, year, names } = req.body || {};
+  if (!routine || !year || typeof names !== 'string') return res.status(400).json({ error: 'Missing routine, year, or names' });
+
+  const awardIds = await routineAwardIds(db, req.studio.id, routine, year);
+  if (!awardIds.length) return res.status(404).json({ error: 'No awards found for this routine' });
+
+  // Accept one-per-line, commas, or semicolons; dedupe case-insensitively
+  const seen = new Set();
+  const parsed = names.split(/[\n,;]+/).map(n => n.trim().replace(/\s+/g, ' ')).filter(Boolean)
+    .filter(n => { const k = n.toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; })
+    .slice(0, 60);
+
+  const results = [];
+  for (const name of parsed) {
+    const candidates = await db.all(`
+      SELECT d.id, d.name, d.graduation_year,
+             (SELECT COUNT(*) FROM award_dancers ad JOIN awards a ON ad.award_id = a.id
+              WHERE ad.dancer_id = d.id AND a.studio_id = ds.studio_id) AS award_count,
+             (SELECT IFNULL(MIN(e.year), '') || '–' || IFNULL(MAX(e.year), '')
+              FROM award_dancers ad JOIN awards a ON ad.award_id = a.id
+              JOIN events e ON a.event_id = e.id
+              WHERE ad.dancer_id = d.id AND a.studio_id = ds.studio_id) AS years
+      FROM dancers d JOIN dancer_studios ds ON ds.dancer_id = d.id
+      WHERE ds.studio_id = ? AND LOWER(d.name) = LOWER(?)
+    `, [req.studio.id, name]);
+    const elsewhere = await db.get(`
+      SELECT COUNT(*) AS n FROM dancers d
+      WHERE LOWER(d.name) = LOWER(?) AND d.id NOT IN (${candidates.length ? candidates.map(c => c.id).join(',') : '0'})
+    `, [name]);
+
+    let status = 'new';
+    if (candidates.length === 1) status = 'matched';
+    else if (candidates.length > 1) status = 'ambiguous';
+    results.push({
+      input: name, status, candidates,
+      note: status === 'new' && elsewhere.n > 0
+        ? `${elsewhere.n} dancer${elsewhere.n === 1 ? '' : 's'} named "${name}" exist at other studios — dancer records are kept separate per studio, so a new record will be created for yours.`
+        : null
+    });
+  }
+
+  res.json({ routine, year, awardCount: awardIds.length, results });
+});
+
+// Phase 2: apply the confirmed cast to every award of the routine-year.
+router.post('/manage/studio/:id/group-dancers/apply', requireAuth, requireStudioOwner, async (req, res) => {
+  const db = await openDb();
+  const { routine, year, entries } = req.body || {};
+  if (!routine || !year || !Array.isArray(entries) || !entries.length) return res.status(400).json({ error: 'Nothing to apply' });
+  if (entries.length > 60) return res.status(400).json({ error: 'Too many dancers in one routine' });
+
+  const awardIds = await routineAwardIds(db, req.studio.id, routine, year);
+  if (!awardIds.length) return res.status(404).json({ error: 'No awards found for this routine' });
+
+  let created = 0, linked = 0;
+  for (const entry of entries) {
+    const name = String(entry.name || '').trim().replace(/\s+/g, ' ');
+    if (!name) continue;
+    let dancerId;
+    if (entry.dancer_id === 'new') {
+      const r = await db.run('INSERT INTO dancers (unique_id, name) VALUES (?, ?)', [generateDancerId(name), name]);
+      dancerId = r.lastID;
+      await db.run('INSERT OR IGNORE INTO dancer_studios (dancer_id, studio_id) VALUES (?, ?)', [dancerId, req.studio.id]);
+      created++;
+    } else {
+      // The chosen dancer must be on THIS studio's roster with this name —
+      // an owner can never link someone else's dancer record.
+      const ok = await db.get(`
+        SELECT d.id FROM dancers d JOIN dancer_studios ds ON ds.dancer_id = d.id
+        WHERE d.id = ? AND ds.studio_id = ? AND LOWER(d.name) = LOWER(?)
+      `, [parseInt(entry.dancer_id, 10), req.studio.id, name]);
+      if (!ok) return res.status(400).json({ error: `"${name}" doesn't match a dancer on your roster — refresh and try again.` });
+      dancerId = ok.id;
+    }
+    for (const awardId of awardIds) {
+      const r = await db.run('INSERT OR IGNORE INTO award_dancers (award_id, dancer_id) VALUES (?, ?)', [awardId, dancerId]);
+      linked += r.changes || 0;
+    }
+  }
+
+  logStudioActivity(req.studio.id, 'group_cast_added', { dedupMinutes: 60 });
+  res.json({ success: true, created, linked, awardCount: awardIds.length });
+});
+
+// Remove one dancer from a routine-year (links only — never dancer records).
+router.post('/manage/studio/:id/group-dancers/remove', requireAuth, requireStudioOwner, async (req, res) => {
+  const db = await openDb();
+  const { routine, year, dancer_id } = req.body || {};
+  if (!routine || !year || !dancer_id) return res.status(400).json({ error: 'Missing routine, year, or dancer' });
+  const awardIds = await routineAwardIds(db, req.studio.id, routine, year);
+  if (!awardIds.length) return res.status(404).json({ error: 'No awards found for this routine' });
+  const r = await db.run(
+    `DELETE FROM award_dancers WHERE dancer_id = ? AND award_id IN (${awardIds.map(() => '?').join(',')})`,
+    [parseInt(dancer_id, 10), ...awardIds]);
+  res.json({ success: true, removed: r.changes || 0 });
 });
 
 // Navbar "Public View": the owner's studio page as visitors see it

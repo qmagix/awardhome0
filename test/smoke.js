@@ -172,7 +172,10 @@ async function main() {
       const db = await openDb();
       // Pre-clean leftovers from a crashed prior run
       await db.run("DELETE FROM studio_claims WHERE proof_text = 'smoke-fixture'");
-      await db.run("DELETE FROM awards WHERE award_type = 'Top Smoke Studio'");
+      await db.run("DELETE FROM award_dancers WHERE dancer_id IN (SELECT id FROM dancers WHERE name LIKE 'Smoke Dancer%')");
+      await db.run("DELETE FROM dancer_studios WHERE dancer_id IN (SELECT id FROM dancers WHERE name LIKE 'Smoke Dancer%')");
+      await db.run("DELETE FROM dancers WHERE name LIKE 'Smoke Dancer%'");
+      await db.run("DELETE FROM awards WHERE award_type IN ('Top Smoke Studio', 'Top Smoke Small Group')");
       await db.run("DELETE FROM studios WHERE unique_id IN ('smoke-studio-1', 'smoke-studio-2')");
       await db.run("DELETE FROM users WHERE email LIKE 'smoke-%@test.invalid'");
 
@@ -190,6 +193,11 @@ async function main() {
         ids.studios.push(s1.lastID, s2.lastID);
         const aw = await db.run("INSERT INTO awards (event_id, studio_id, performance_name, award_type, category, place, award_class) VALUES (?, ?, '', 'Top Smoke Studio', '', '', 'studio')", [event.id, s1.lastID]);
         ids.awards.push(aw.lastID);
+        // Group routine + one roster dancer for the group-dancers flow
+        const gaw = await db.run("INSERT INTO awards (event_id, studio_id, performance_name, award_type, category, place, award_class) VALUES (?, ?, 'Smoke Group Routine', 'Top Smoke Small Group', '', '1st', 'adjudication')", [event.id, s1.lastID]);
+        ids.awards.push(gaw.lastID);
+        const rosterDancer = await db.run("INSERT INTO dancers (unique_id, name) VALUES ('smoke-dancer-1', 'Smoke Dancer One')");
+        await db.run('INSERT INTO dancer_studios (dancer_id, studio_id) VALUES (?, ?)', [rosterDancer.lastID, s1.lastID]);
         const cl = await db.run("INSERT INTO studio_claims (user_id, studio_id, proof_text, status) VALUES (?, ?, 'smoke-fixture', 'pending')", [u2.lastID, s2.lastID]);
         ids.claims.push(cl.lastID);
 
@@ -229,6 +237,36 @@ async function main() {
         check(awRes.status === 200 && awHtml.includes('Studio Awards'),
           'awards editor groups placeless awards as "Studio Awards"', 'status ' + awRes.status);
 
+        // Group Routine Dancers: page renders, preview classifies against
+        // the roster without writing, apply links the confirmed cast.
+        const gdPage = await fetch(BASE + `/manage/studio/${s1.lastID}/group-dancers`, { headers: { Cookie: owner.cookie } });
+        const gdHtml = await gdPage.text();
+        check(gdPage.status === 200 && gdHtml.includes('Smoke Group Routine'),
+          'group-dancers page lists the group routine', 'status ' + gdPage.status);
+        const ownerToken = (gdHtml.match(/<meta name="csrf-token" content="([^"]+)"/) || [])[1];
+        const gdHeaders = { 'Content-Type': 'application/json', 'Cookie': owner.cookie, 'X-CSRF-Token': ownerToken };
+        const pv1 = await fetch(BASE + `/manage/studio/${s1.lastID}/group-dancers/preview`, {
+          method: 'POST', headers: gdHeaders,
+          body: JSON.stringify({ routine: 'Smoke Group Routine', year: event.year, names: 'Smoke Dancer One\nSmoke Dancer Two' })
+        });
+        const pd = pv1.status === 200 ? await pv1.json() : { results: [] };
+        const classified = pd.results.length === 2 && pd.results[0].status === 'matched' && pd.results[1].status === 'new';
+        check(classified, 'group-dancers preview classifies roster match vs new dancer',
+          pv1.status + ' ' + JSON.stringify((pd.results || []).map(r => r.status)));
+        if (classified) {
+          const ap = await fetch(BASE + `/manage/studio/${s1.lastID}/group-dancers/apply`, {
+            method: 'POST', headers: gdHeaders,
+            body: JSON.stringify({ routine: 'Smoke Group Routine', year: event.year, entries: [
+              { name: 'Smoke Dancer One', dancer_id: pd.results[0].candidates[0].id },
+              { name: 'Smoke Dancer Two', dancer_id: 'new' },
+            ] })
+          });
+          const ad = ap.status === 200 ? await ap.json() : {};
+          const linkCount = await db.get('SELECT COUNT(*) AS n FROM award_dancers WHERE award_id = ?', [gaw.lastID]);
+          check(ap.status === 200 && ad.created === 1 && linkCount.n === 2,
+            'group-dancers apply links roster dancer + creates new one', ap.status + ' created=' + ad.created + ' links=' + linkCount.n);
+        }
+
         const claimant = await login('smoke-claimant@test.invalid');
         check(claimant.status === 302 && claimant.location === `/dance/studio/${s2.lastID}`,
           'pending claimant login lands on their claimed studio', claimant.status + ' -> ' + claimant.location);
@@ -241,6 +279,9 @@ async function main() {
         check(md.status === 200 && mdHtml.includes('approval pending'),
           'my-dancers shows the studio-claim pending state', 'status ' + md.status);
       } finally {
+        await db.run("DELETE FROM award_dancers WHERE dancer_id IN (SELECT id FROM dancers WHERE name LIKE 'Smoke Dancer%')").catch(() => {});
+        await db.run("DELETE FROM dancer_studios WHERE dancer_id IN (SELECT id FROM dancers WHERE name LIKE 'Smoke Dancer%')").catch(() => {});
+        await db.run("DELETE FROM dancers WHERE name LIKE 'Smoke Dancer%'").catch(() => {});
         for (const id of ids.claims) await db.run('DELETE FROM studio_claims WHERE id = ?', [id]).catch(() => {});
         for (const id of ids.awards) await db.run('DELETE FROM awards WHERE id = ?', [id]).catch(() => {});
         for (const id of ids.studios) await db.run('DELETE FROM studios WHERE id = ?', [id]).catch(() => {});
