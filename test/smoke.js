@@ -183,7 +183,9 @@ async function main() {
         const u1 = await db.run("INSERT INTO users (email, password_hash, role, is_verified) VALUES ('smoke-owner@test.invalid', ?, 'user', 1)", [hash]);
         const u2 = await db.run("INSERT INTO users (email, password_hash, role, is_verified) VALUES ('smoke-claimant@test.invalid', ?, 'user', 1)", [hash]);
         ids.users.push(u1.lastID, u2.lastID);
-        const s1 = await db.run("INSERT INTO studios (unique_id, name, status, is_claimed, owner_id) VALUES ('smoke-studio-1', 'Smoke Test Studio One', 'active', 1, ?)", [u1.lastID]);
+        // s2's name contains s1's base name so the manage page must show
+        // it as a merge suggestion (with award context) for s1's owner.
+        const s1 = await db.run("INSERT INTO studios (unique_id, name, status, is_claimed, owner_id) VALUES ('smoke-studio-1', 'Smoke Test Studio', 'active', 1, ?)", [u1.lastID]);
         const s2 = await db.run("INSERT INTO studios (unique_id, name, status, is_claimed) VALUES ('smoke-studio-2', 'Smoke Test Studio Two', 'active', 0)");
         ids.studios.push(s1.lastID, s2.lastID);
         const aw = await db.run("INSERT INTO awards (event_id, studio_id, performance_name, award_type, category, place, award_class) VALUES (?, ?, '', 'Top Smoke Studio', '', '', 'studio')", [event.id, s1.lastID]);
@@ -213,6 +215,10 @@ async function main() {
           'owner login redirects to their studio page', owner.status + ' -> ' + owner.location);
         const hist = await fetch(BASE + `/manage/studio/${s1.lastID}/history`, { headers: { Cookie: owner.cookie } });
         check(hist.status === 200, 'owner studio history renders', 'status ' + hist.status);
+        const mg = await fetch(BASE + `/manage/studio/${s1.lastID}`, { headers: { Cookie: owner.cookie } });
+        const mgHtml = await mg.text();
+        check(mg.status === 200 && mgHtml.includes('Merge Suggestions') && mgHtml.includes('Smoke Test Studio Two'),
+          'manage dashboard shows merge suggestion with award context', 'status ' + mg.status);
         const awRes = await fetch(BASE + `/manage/studio/${s1.lastID}/awards?year=${event.year}&view=routines&sort=name`, { headers: { Cookie: owner.cookie } });
         const awHtml = await awRes.text();
         check(awRes.status === 200 && awHtml.includes('Studio Awards'),

@@ -23,6 +23,57 @@ const { OpenAI } = require('openai');
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const { generateDancerId } = require('../../utils.js');
 const { parse } = require('csv-parse/sync');
+
+// Same-name studios the owner might want to merge, enriched with enough
+// award context (counts, years, orgs, dancer names) for them to judge
+// "is this actually my studio?" — a bare name isn't evidence; shared
+// dancers are (the same rule our own dedup scripts use).
+async function findPotentialDuplicates(db, studio) {
+  const baseName = studio.name.split(',')[0].trim();
+  const searchName = `%${baseName}%`;
+  const rejectedArray = studio.rejected_merges ? studio.rejected_merges.split(',') : [];
+
+  const similarStudios = await db.all(`
+    SELECT id, name, aka, status
+    FROM studios
+    WHERE (name LIKE ? OR aka LIKE ?)
+      AND id != ?
+      AND status != 'merged'
+    LIMIT 15
+  `, [searchName, searchName, studio.id]);
+
+  const dups = similarStudios.filter(s => !rejectedArray.includes(s.id.toString()));
+  for (const dup of dups) {
+    const stats = await db.get(`
+      SELECT COUNT(a.id) AS award_count, MIN(e.year) AS first_year, MAX(e.year) AS last_year,
+             GROUP_CONCAT(DISTINCT o.name) AS org_names
+      FROM awards a
+      JOIN events e ON a.event_id = e.id
+      JOIN organizations o ON e.org_id = o.id
+      WHERE a.studio_id = ?
+    `, [dup.id]);
+    const dancers = await db.all(`
+      SELECT d.name, COUNT(*) AS n
+      FROM award_dancers ad
+      JOIN dancers d ON ad.dancer_id = d.id
+      JOIN awards a ON ad.award_id = a.id
+      WHERE a.studio_id = ?
+      GROUP BY d.id ORDER BY n DESC LIMIT 4
+    `, [dup.id]);
+    const dancerTotal = await db.get(`
+      SELECT COUNT(DISTINCT ad.dancer_id) AS n
+      FROM award_dancers ad JOIN awards a ON ad.award_id = a.id
+      WHERE a.studio_id = ?
+    `, [dup.id]);
+    dup.award_count = stats ? stats.award_count : 0;
+    dup.first_year = stats && stats.first_year;
+    dup.last_year = stats && stats.last_year;
+    dup.org_names = (stats && stats.org_names) ? stats.org_names.split(',') : [];
+    dup.dancer_names = dancers.map(d => d.name);
+    dup.dancer_total = dancerTotal ? dancerTotal.n : 0;
+  }
+  return dups;
+}
 const fs = require('fs');
 
 
@@ -37,19 +88,7 @@ router.get('/manage/studio/:id', requireAuth, requireStudioOwner, async (req, re
     studio.join_code = newCode;
   }
 
-  const baseName = studio.name.split(',')[0].trim();
-  const searchName = `%${baseName}%`;
-  const rejectedArray = studio.rejected_merges ? studio.rejected_merges.split(',') : [];
-
-  const similarStudios = await db.all(`
-    SELECT id, name, aka, status 
-    FROM studios 
-    WHERE (name LIKE ? OR aka LIKE ?)
-      AND id != ?
-      AND status != 'merged'
-  `, [searchName, searchName, studio.id]);
-
-  const potentialDuplicates = similarStudios.filter(s => !rejectedArray.includes(s.id.toString()));
+  const potentialDuplicates = await findPotentialDuplicates(db, studio);
 
   let prefs = {};
   if (studio.public_preferences) {
@@ -141,19 +180,7 @@ router.post('/manage/studio/:id/profile', requireAuth, requireStudioOwner, async
   }
   updatedStudio.prefs = parsedPrefs;
 
-  const baseName = updatedStudio.name.split(',')[0].trim();
-  const searchName = `%${baseName}%`;
-  const rejectedArray = updatedStudio.rejected_merges ? updatedStudio.rejected_merges.split(',') : [];
-
-  const similarStudios = await db.all(`
-    SELECT id, name, aka, status 
-    FROM studios 
-    WHERE (name LIKE ? OR aka LIKE ?)
-      AND id != ?
-      AND status != 'merged'
-  `, [searchName, searchName, updatedStudio.id]);
-
-  const potentialDuplicates = similarStudios.filter(s => !rejectedArray.includes(s.id.toString()));
+  const potentialDuplicates = await findPotentialDuplicates(db, updatedStudio);
 
   const onboarding = await buildOnboarding(db, updatedStudio);
   res.render('manage_studio', { studio: updatedStudio, potentialDuplicates, onboarding, success: 'Profile updated successfully!' });
