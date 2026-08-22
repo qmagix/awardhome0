@@ -180,7 +180,7 @@ async function main() {
       const event = await db.get('SELECT id, year FROM events WHERE year IS NOT NULL ORDER BY id LIMIT 1');
       const ids = { users: [], studios: [], awards: [], claims: [] };
       try {
-        const u1 = await db.run("INSERT INTO users (email, password_hash, role, is_verified) VALUES ('smoke-owner@test.invalid', ?, 'user', 1)", [hash]);
+        const u1 = await db.run("INSERT INTO users (email, password_hash, role, is_verified) VALUES ('smoke-owner@test.invalid', ?, 'studio_owner', 1)", [hash]);
         const u2 = await db.run("INSERT INTO users (email, password_hash, role, is_verified) VALUES ('smoke-claimant@test.invalid', ?, 'user', 1)", [hash]);
         ids.users.push(u1.lastID, u2.lastID);
         // s2's name contains s1's base name so the manage page must show
@@ -219,6 +219,11 @@ async function main() {
         const mgHtml = await mg.text();
         check(mg.status === 200 && mgHtml.includes('Merge Suggestions') && mgHtml.includes('Smoke Test Studio Two'),
           'manage dashboard shows merge suggestion with award context', 'status ' + mg.status);
+        check(mgHtml.includes('Manage Studio') && mgHtml.includes('Public View'),
+          'owner navbar shows Manage Studio + Public View');
+        const pv = await fetch(BASE + '/my-studio/public', { redirect: 'manual', headers: { Cookie: owner.cookie } });
+        check(pv.status === 302 && pv.headers.get('location') === `/dance/studio/${s1.lastID}`,
+          'Public View redirects to the owner\'s studio page', pv.status + ' -> ' + pv.headers.get('location'));
         const awRes = await fetch(BASE + `/manage/studio/${s1.lastID}/awards?year=${event.year}&view=routines&sort=name`, { headers: { Cookie: owner.cookie } });
         const awHtml = await awRes.text();
         check(awRes.status === 200 && awHtml.includes('Studio Awards'),

@@ -28,7 +28,8 @@
             <a href="/admin/settings" style="color: #f3e5ab; text-decoration: none; font-weight: 600;">⚙️ Settings</a>
           <% } %>
           <% if (user.role === 'studio_owner') { %>
-            <a href="/my-studio" style="color: white; text-decoration: none; font-weight: 600;">My Studio</a>
+            <a href="/my-studio" style="color: white; text-decoration: none; font-weight: 600;">Manage Studio</a>
+            <a href="/my-studio/public" style="color: white; text-decoration: none; font-weight: 600;">Public View</a>
           <% } %>
           <% if (user.role === 'dancer_owner' || user.role === 'user') { %>
             <a href="/my-dancers" style="color: white; text-decoration: none; font-weight: 600;">My Dancers</a>

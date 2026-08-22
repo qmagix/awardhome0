@@ -1444,4 +1444,15 @@ router.get('/my-studio', requireAuth, async (req, res) => {
   }
 });
 
+// Navbar "Public View": the owner's studio page as visitors see it
+router.get('/my-studio/public', requireAuth, async (req, res) => {
+  const db = await openDb();
+  const ownedStudio = await db.get('SELECT id FROM studios WHERE owner_id = ? LIMIT 1', [req.session.user.id]);
+  if (ownedStudio) {
+    res.redirect(`/dance/studio/${ownedStudio.id}`);
+  } else {
+    res.redirect('/dance');
+  }
+});
+
 module.exports = router;
