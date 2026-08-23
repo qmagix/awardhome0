@@ -310,6 +310,12 @@ router.get('/admin', requireAdmin, async (req, res) => {
     db.get(`SELECT COUNT(*) as count FROM (SELECT s.id FROM studios s JOIN awards a ON s.id = a.studio_id WHERE s.email IS NOT NULL AND s.email != '' GROUP BY s.id HAVING COUNT(a.id) > 15)`)
   ]);
 
+  // Invitation funnel for the marketing panel (tables exist post-migrate;
+  // defensively zero if not)
+  let invitesSent = 0, orgInvitesSent = 0;
+  try { invitesSent = (await db.get('SELECT COUNT(*) as count FROM studio_invites')).count; } catch (e) {}
+  try { orgInvitesSent = (await db.get('SELECT COUNT(*) as count FROM org_invites')).count; } catch (e) {}
+
   const stats = {
     orgs: totalOrgs.count,
     events: totalEvents.count,
@@ -321,7 +327,8 @@ router.get('/admin', requireAdmin, async (req, res) => {
     pendingClaims: pendingClaims.count,
     studiosWithManyAwards: studiosWithManyAwards ? studiosWithManyAwards.count : 0,
     studiosWithEmail: studiosWithEmail ? studiosWithEmail.count : 0,
-    marketingStudiosCount: marketingStudiosCount ? marketingStudiosCount.count : 0
+    marketingStudiosCount: marketingStudiosCount ? marketingStudiosCount.count : 0,
+    invitesSent, orgInvitesSent
   };
 
   const flaggedStudios = await db.all(`SELECT id, unique_id, name FROM studios WHERE needs_investigation = 1 ORDER BY name`);
