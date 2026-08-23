@@ -27,7 +27,7 @@ function escapeHtml(s) {
 
 function buildStudioInvite({ studio, totalAwards, firstPlaces, rank }) {
   const name = escapeHtml(studio.name);
-  const profileUrl = `${BASE_URL}/dance/studio/${studio.id}` +
+  const profileUrl = `${BASE_URL}/dance/studio/${studio.unique_id}` +
     (BETA_MODE && BETA_KEY ? `?beta=${BETA_KEY}` : '');
   const subject = `${studio.name}: ${totalAwards.toLocaleString()} awards, all in one place`;
 

@@ -34,7 +34,7 @@ async function findPotentialDuplicates(db, studio) {
   const rejectedArray = studio.rejected_merges ? studio.rejected_merges.split(',') : [];
 
   const similarStudios = await db.all(`
-    SELECT id, name, aka, status
+    SELECT id, unique_id, name, aka, status
     FROM studios
     WHERE (name LIKE ? OR aka LIKE ?)
       AND id != ?
@@ -1669,9 +1669,9 @@ router.post('/manage/studio/:id/group-dancers/remove', requireAuth, requireStudi
 // Navbar "Public View": the owner's studio page as visitors see it
 router.get('/my-studio/public', requireAuth, async (req, res) => {
   const db = await openDb();
-  const ownedStudio = await db.get('SELECT id FROM studios WHERE owner_id = ? LIMIT 1', [req.session.user.id]);
+  const ownedStudio = await db.get('SELECT unique_id FROM studios WHERE owner_id = ? LIMIT 1', [req.session.user.id]);
   if (ownedStudio) {
-    res.redirect(`/dance/studio/${ownedStudio.id}`);
+    res.redirect(`/dance/studio/${ownedStudio.unique_id}`);
   } else {
     res.redirect('/dance');
   }

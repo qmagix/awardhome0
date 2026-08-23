@@ -71,7 +71,7 @@ router.get('/admin/accounts', requireSuperadmin, async (req, res) => {
   `);
 
   const studios = await db.all(`
-    SELECT s.id, s.name, s.owner_id, u.email as owner_email, COUNT(a.id) as award_count
+    SELECT s.id, s.unique_id, s.name, s.owner_id, u.email as owner_email, COUNT(a.id) as award_count
     FROM studios s
     JOIN users u ON s.owner_id = u.id
     LEFT JOIN awards a ON s.id = a.studio_id
@@ -324,7 +324,7 @@ router.get('/admin', requireAdmin, async (req, res) => {
     marketingStudiosCount: marketingStudiosCount ? marketingStudiosCount.count : 0
   };
 
-  const flaggedStudios = await db.all(`SELECT id, name FROM studios WHERE needs_investigation = 1 ORDER BY name`);
+  const flaggedStudios = await db.all(`SELECT id, unique_id, name FROM studios WHERE needs_investigation = 1 ORDER BY name`);
   const flaggedDancers = await db.all(`SELECT id, name, unique_id FROM dancers WHERE needs_investigation = 1 ORDER BY name`);
   const allStudios = await db.all(`SELECT id, name FROM studios ORDER BY name`);
 
@@ -399,7 +399,7 @@ router.get('/admin/marketing/studios', requireAdmin, async (req, res) => {
   const rankMap = new Map(ranked.map((r, i) => [r.studio_id, i + 1]));
 
   const studios = await db.all(`
-    SELECT s.id, s.name, s.email, s.phone, s.is_claimed, COUNT(a.id) as award_count,
+    SELECT s.id, s.unique_id, s.name, s.email, s.phone, s.is_claimed, COUNT(a.id) as award_count,
       (SELECT MAX(sent_at) FROM studio_invites si WHERE si.studio_id = s.id) AS invited_at,
       (SELECT 1 FROM email_suppressions es WHERE es.email = LOWER(TRIM(s.email))) AS suppressed
     FROM studios s
@@ -630,7 +630,7 @@ router.get('/admin/studios', requireAdmin, async (req, res) => {
 router.get('/admin/claims', requireAdmin, async (req, res) => {
   const db = await openDb();
   const claims = await db.all(`
-    SELECT sc.*, u.email as user_email, s.name as studio_name 
+    SELECT sc.*, u.email as user_email, s.name as studio_name, s.unique_id as studio_uid
     FROM studio_claims sc
     JOIN users u ON sc.user_id = u.id
     JOIN studios s ON sc.studio_id = s.id
@@ -710,7 +710,7 @@ router.post('/admin/claims/dancer/:id/reject', requireAdmin, async (req, res) =>
 router.get('/admin/studio-drafts', requireAdmin, async (req, res) => {
   const db = await openDb();
   const drafts = await db.all(`
-    SELECT d.*, s.name as current_name, s.address as current_address, s.phone as current_phone, s.email as current_email, s.website_url as current_website_url
+    SELECT d.*, s.unique_id as studio_uid, s.name as current_name, s.address as current_address, s.phone as current_phone, s.email as current_email, s.website_url as current_website_url
     FROM studio_info_drafts d
     JOIN studios s ON d.studio_id = s.id
     WHERE d.status = 'pending'

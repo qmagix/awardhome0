@@ -33,11 +33,12 @@ const profileLimiter = rateLimit({
 router.get('/widget/studio/:id', profileLimiter, async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.removeHeader('X-Frame-Options');
-  logStudioActivity(req.params.id, 'widget_embed', { dedupMinutes: 1440 });
 
   const db = await openDb();
-  const studio = await db.get('SELECT name, logo_url FROM studios WHERE id = ?', [req.params.id]);
+  const studio = await db.get('SELECT id, name, logo_url FROM studios WHERE unique_id = ?', [req.params.id]);
   if (!studio) return res.status(404).send('Studio not found');
+  req.params.id = studio.id;
+  logStudioActivity(studio.id, 'widget_embed', { dedupMinutes: 1440 });
 
   const baseQuery = `
     SELECT a.id, a.place, a.performance_name, a.award_type, a.category, e.name as event_name, e.year, GROUP_CONCAT(d.name, ', ') as dancer_name
@@ -168,8 +169,11 @@ router.get('/', (req, res) => {
 });
 
 
-// Legacy public URLs → /dance namespace (301 so bookmarks and crawlers follow)
-router.get(['/studios', '/studio/:id', '/studio/:id/first-places', '/org/:slug', '/event/:id'],
+// Legacy public URLs → /dance namespace (301 so bookmarks and crawlers
+// follow). Studio paths deliberately dropped: public studio URLs now use
+// the non-guessable unique_id, and a numeric-id redirect would be an
+// enumeration oracle for the whole dataset.
+router.get(['/studios', '/org/:slug', '/event/:id'],
   (req, res) => res.redirect(301, '/dance' + req.originalUrl));
 
 // Homepage data is identical for every visitor and expensive to compute
@@ -179,7 +183,7 @@ async function loadHomepageData() {
   const db = await openDb();
 
   const featuredStudios = await db.all(`
-    SELECT s.id, s.name, COUNT(DISTINCT a.id) as total_awards
+    SELECT s.id, s.unique_id, s.name, COUNT(DISTINCT a.id) as total_awards
     FROM studios s
     LEFT JOIN awards a ON s.id = a.studio_id
     WHERE s.is_featured = 1 OR s.auto_featured_rank IS NOT NULL
@@ -192,7 +196,7 @@ async function loadHomepageData() {
   if (excludeIds.length === 0) excludeIds = [-1];
 
   const topStudios = await db.all(`
-    SELECT s.id, s.name, COUNT(a.id) as total_awards
+    SELECT s.id, s.unique_id, s.name, COUNT(a.id) as total_awards
     FROM studios s
     LEFT JOIN awards a ON s.id = a.studio_id
     WHERE s.id NOT IN (${excludeIds.join(',')})
@@ -202,7 +206,7 @@ async function loadHomepageData() {
   `);
 
   const topStudiosThisYear = await db.all(`
-    SELECT s.id, s.name, COUNT(a.id) as total_awards
+    SELECT s.id, s.unique_id, s.name, COUNT(a.id) as total_awards
     FROM studios s
     LEFT JOIN awards a ON s.id = a.studio_id
     LEFT JOIN events e ON a.event_id = e.id
@@ -213,7 +217,7 @@ async function loadHomepageData() {
   `);
 
   const topStudiosFirstPlaceThisYear = await db.all(`
-    SELECT s.id, s.name, COUNT(a.id) as total_awards
+    SELECT s.id, s.unique_id, s.name, COUNT(a.id) as total_awards
     FROM studios s
     LEFT JOIN awards a ON s.id = a.studio_id
     LEFT JOIN events e ON a.event_id = e.id
@@ -374,7 +378,7 @@ router.get('/dance/api/search', searchLimiter, async (req, res) => {
   const like = `%${q}%`;
 
   const studios = await db.all(`
-    SELECT s.id, s.name, COUNT(a.id) AS awards
+    SELECT s.id, s.unique_id, s.name, COUNT(a.id) AS awards
     FROM studios s LEFT JOIN awards a ON a.studio_id = s.id
     WHERE s.name LIKE ? AND s.status = 'active'
     GROUP BY s.id ORDER BY awards DESC LIMIT 6
@@ -436,8 +440,9 @@ router.get('/dance/studios', requireAdmin, async (req, res) => {
 router.get('/dance/studio/:id/first-places', profileLimiter, async (req, res) => {
   const db = await openDb();
 
-  const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
+  const studio = await db.get('SELECT * FROM studios WHERE unique_id = ?', [req.params.id]);
   if (!studio) return res.status(404).send('Studio not found');
+  req.params.id = studio.id;
 
   const awards = await db.all(`
     SELECT a.*, e.name as event_name, e.year as event_year, o.name as org_name
@@ -459,14 +464,19 @@ router.get('/dance/studio/:id/first-places', profileLimiter, async (req, res) =>
 router.get('/dance/studio/:id', profileLimiter, async (req, res) => {
   const db = await openDb();
 
-  await db.run('UPDATE studios SET view_count = view_count + 1 WHERE id = ?', [req.params.id]);
-
-  const studio = await db.get(`SELECT * FROM studios WHERE id = ?`, [req.params.id]);
+  // Public studio URLs use the non-guessable unique_id (STU-<hex>-slug),
+  // never the sequential numeric id — numeric URLs would make the whole
+  // dataset enumerable. Resolve once; downstream queries reuse the
+  // numeric id via req.params.id.
+  const studio = await db.get('SELECT * FROM studios WHERE unique_id = ?', [req.params.id]);
   if (!studio) return res.status(404).send('Studio not found');
+  req.params.id = studio.id;
+
+  await db.run('UPDATE studios SET view_count = view_count + 1 WHERE id = ?', [studio.id]);
 
   let mergedIntoStudio = null;
   if (studio.status === 'merged' && studio.merged_into_id) {
-    mergedIntoStudio = await db.get('SELECT id, name FROM studios WHERE id = ?', [studio.merged_into_id]);
+    mergedIntoStudio = await db.get('SELECT id, unique_id, name FROM studios WHERE id = ?', [studio.merged_into_id]);
   }
 
   const currentYear = new Date().getFullYear();
@@ -726,6 +736,10 @@ router.get('/dance/studio/:id', profileLimiter, async (req, res) => {
 router.get('/api/studio/:id/year/:year', profileLimiter, async (req, res) => {
   const db = await openDb();
 
+  const studioRow = await db.get('SELECT id FROM studios WHERE unique_id = ?', [req.params.id]);
+  if (!studioRow) return res.status(404).send('Studio not found');
+  req.params.id = studioRow.id;
+
   const awards = await db.all(`
     SELECT a.*, d.name as dancer_name, d.unique_id, e.name as event_name, e.year as event_year, e.date_string, o.name as org_name, o.logo_url, o.custom_icons
     FROM awards a
@@ -791,7 +805,7 @@ router.get('/dancer/:unique_id', profileLimiter, async (req, res) => {
 
   // Fetch all affiliated studios
   const studios = await db.all(`
-    SELECT s.id, s.name, ds.status 
+    SELECT s.id, s.unique_id, s.name, ds.status 
     FROM dancer_studios ds
     JOIN studios s ON ds.studio_id = s.id
     WHERE ds.dancer_id = ?
@@ -955,7 +969,7 @@ router.get('/dance/event/:id', async (req, res) => {
   if (!event) return res.status(404).send('Event not found');
 
   const awards = await db.all(`
-    SELECT a.*, d.name as dancer_name, d.unique_id, s.name as studio_name
+    SELECT a.*, d.name as dancer_name, d.unique_id, s.name as studio_name, s.unique_id as studio_uid
     FROM awards a
     LEFT JOIN dancers d ON a.dancer_id = d.id
     LEFT JOIN studios s ON a.studio_id = s.id
@@ -991,7 +1005,7 @@ router.get('/dance/event/:id', async (req, res) => {
   for (const award of awards) {
     const studioKey = award.studio_name || 'Unknown Studio';
     if (!studiosMap.has(studioKey)) {
-      studiosMap.set(studioKey, { studioId: award.studio_id, awards: [] });
+      studiosMap.set(studioKey, { studioId: award.studio_uid, awards: [] });
     }
     studiosMap.get(studioKey).awards.push(award);
   }

@@ -389,7 +389,7 @@ router.get('/my-dancers', requireAuth, async (req, res) => {
   let studioClaims = [];
   try {
     studioClaims = await db.all(`
-      SELECT sc.status, sc.created_at, s.id as studio_id, s.name as studio_name
+      SELECT sc.status, sc.created_at, s.id as studio_id, s.unique_id as studio_uid, s.name as studio_name
       FROM studio_claims sc
       JOIN studios s ON sc.studio_id = s.id
       WHERE sc.user_id = ? AND sc.status = 'pending'

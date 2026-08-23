@@ -16,7 +16,7 @@
         <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #ef4444; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem;">
           <%= error %>
           <% if (typeof showLogin !== 'undefined' && showLogin) { %>
-            <div style="margin-top: 0.75rem;"><a href="/login?next=/claim/studio/<%= studio.id %>" class="btn btn-primary" style="padding: 0.4rem 1rem; font-size: 0.85rem;">Log in to continue</a></div>
+            <div style="margin-top: 0.75rem;"><a href="/login?next=/claim/studio/<%= studio.unique_id %>" class="btn btn-primary" style="padding: 0.4rem 1rem; font-size: 0.85rem;">Log in to continue</a></div>
           <% } %>
         </div>
       <% } %>
@@ -26,7 +26,7 @@
         <p style="color: var(--text-muted); margin-bottom: 2rem;">
           You are applying to claim and manage <strong><%= studio.name %></strong> as <strong><%= user.email %></strong>.
         </p>
-        <form action="/claim/studio/<%= studio.id %>" method="POST" style="display: flex; flex-direction: column; gap: 1.5rem;"
+        <form action="/claim/studio/<%= studio.unique_id %>" method="POST" style="display: flex; flex-direction: column; gap: 1.5rem;"
           <% if (user.role === 'superadmin') { %>
             onsubmit="return confirm('You are a superadmin! Are you sure you want to claim this studio? (It is better to use a regular test account if you need to test this flow).');"
           <% } %>
@@ -57,7 +57,7 @@
           Tip: use your studio email — if its domain matches your studio's website,
           your claim is approved instantly when you verify.
         </p>
-        <form action="/claim/studio/<%= studio.id %>/apply" method="POST" style="display: flex; flex-direction: column; gap: 1.25rem;">
+        <form action="/claim/studio/<%= studio.unique_id %>/apply" method="POST" style="display: flex; flex-direction: column; gap: 1.25rem;">
           <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
           <div>
             <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Your Name</label>
@@ -86,7 +86,7 @@
           <button type="submit" class="btn btn-primary" style="padding: 1rem; font-weight: 600;">Create Account &amp; Claim Studio</button>
         </form>
         <p style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">
-          Already have an account? <a href="/login?next=/claim/studio/<%= studio.id %>">Log in to claim</a>
+          Already have an account? <a href="/login?next=/claim/studio/<%= studio.unique_id %>">Log in to claim</a>
         </p>
       <% } %>
     <% } %>

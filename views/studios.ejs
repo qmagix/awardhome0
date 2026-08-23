@@ -32,7 +32,7 @@
           <% studios.forEach(function(studio) { %>
             <tr class="<%= studio.needs_investigation ? 'investigate-row' : '' %>">
               <td>
-                <a href="/dance/studio/<%= studio.id %>" style="color: var(--primary); font-weight: 600; text-decoration: none;">
+                <a href="/dance/studio/<%= studio.unique_id %>" style="color: var(--primary); font-weight: 600; text-decoration: none;">
                   <%= studio.name %>
                 </a>
               </td>

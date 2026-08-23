@@ -1,5 +1,5 @@
 <% rows.forEach(function(r, i) { const rank = offset + i + 1; %>
-  <a href="<%= type === 'studio' ? '/dance/studio/' + r.id : '/dancer/' + r.unique_id %>" style="display: flex; padding: 1rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); text-decoration: none; color: inherit; align-items: center; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+  <a href="<%= type === 'studio' ? '/dance/studio/' + r.unique_id : '/dancer/' + r.unique_id %>" style="display: flex; padding: 1rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); text-decoration: none; color: inherit; align-items: center; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
     <%# fixed-flex columns (lb-col-*): without flex-shrink:0, rows with long
         wrapped names squeeze the rank column and the pills zigzag on mobile %>
     <div class="lb-col-rank">

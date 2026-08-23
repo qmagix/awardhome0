@@ -38,7 +38,7 @@ async function main() {
   await db.run("INSERT INTO awards (event_id, studio_id, performance_name, award_type, category, place, award_class) VALUES (?, ?, 'Audit Routine', 'Top Audit Group', '', '1st', 'adjudication')", [event.id, st.lastID]);
   const dn = await db.run("INSERT INTO dancers (unique_id, name, is_claimed, claimed_by_user_id) VALUES ('DNC-audit-dancer', 'Audit Dancer', 1, ?)", [owner.lastID]);
   await db.run('INSERT INTO dancer_studios (dancer_id, studio_id) VALUES (?, ?)', [dn.lastID, st.lastID]);
-  const realStudio = await db.get("SELECT id FROM studios WHERE status = 'active' ORDER BY id LIMIT 1");
+  const realStudio = await db.get("SELECT id, unique_id FROM studios WHERE status = 'active' ORDER BY id LIMIT 1");
   const realDancer = await db.get('SELECT id, unique_id FROM dancers ORDER BY id LIMIT 1');
   const realOrg = await db.get('SELECT id, slug FROM organizations ORDER BY id LIMIT 1');
   // temporarily own the org for /manage/org checks; remember prior owner
@@ -73,15 +73,15 @@ async function main() {
       '/manage/org/:id': `/manage/org/${realOrg.id}`,
       '/api/dancer/:id': `/api/dancer/${dn.lastID}`,
       '/api/studio/:id/history/org/:org_id': `/api/studio/${st.lastID}/history/org/${realOrg.id}`,
-      '/api/studio/:id/year/:year': `/api/studio/${realStudio.id}/year/${event.year}`,
+      '/api/studio/:id/year/:year': `/api/studio/${realStudio.unique_id}/year/${event.year}`,
       // public/admin surfaces → real data
-      '/dance/studio/:id': `/dance/studio/${realStudio.id}`,
+      '/dance/studio/:id': `/dance/studio/${realStudio.unique_id}`,
       '/dance/org/:slug': `/dance/org/${realOrg.slug}`,
       '/dance/event/:id': `/dance/event/${event.id}`,
       '/dance/leaderboard/:board': '/dance/leaderboard/studios-alltime',
       '/dancer/:unique_id': `/dancer/${realDancer.unique_id}`,
-      '/widget/studio/:id': `/widget/studio/${realStudio.id}`,
-      '/claim/studio/:id': `/claim/studio/${realStudio.id}`,
+      '/widget/studio/:id': `/widget/studio/${realStudio.unique_id}`,
+      '/claim/studio/:id': `/claim/studio/${realStudio.unique_id}`,
       '/claim/dancer/:id': `/claim/dancer/${realDancer.id}`,
       '/claim/org/:token': '/claim/org/bogustoken',
       '/login/impersonate/:token': '/login/impersonate/bogustoken',

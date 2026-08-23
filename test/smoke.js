@@ -14,7 +14,7 @@ const CHECKS = [
   ['GET', '/dance', [200], 'dance vertical home'],
   ['GET', '/dance/studios', [403], 'studio directory admin-gated'],
   ['GET', '/studios', [301], 'legacy /studios redirects to /dance'],
-  ['GET', '/studio/1', [301], 'legacy studio profile redirects to /dance'],
+  ['GET', '/studio/1', [404], 'legacy numeric studio URL is dead (no enumeration oracle)'],
   ['GET', '/login', [200], 'login page'],
   ['GET', '/register', [200], 'register page'],
   ['GET', '/faq/dancer', [200], 'dancer FAQ'],
@@ -51,7 +51,7 @@ const CHECKS = [
   ['POST', '/api/award/1/react', [403], 'tokenless award reaction blocked (CSRF)'],
   ['POST', '/admin/marketing/studios/1/send-invite', [403], 'anonymous invite send blocked'],
   ['GET', '/unsubscribe?e=bogus&t=bad', [400], 'bad unsubscribe token rejected'],
-  ['GET', '/claim/studio/1', [200], 'claim page public (one-page apply)'],
+  
   ['POST', '/claim/studio/1/apply', [403], 'tokenless claim apply blocked (CSRF)'],
   ['POST', '/claim/dancer/1/apply', [403], 'tokenless dancer apply blocked (CSRF)'],
   ['GET', '/dance/leaderboard/studios-alltime', [200], 'leaderboard fragment renders'],
@@ -100,15 +100,17 @@ async function main() {
     try {
       const { openDb } = require('../database');
       const db = await openDb();
-      const studio = await db.get("SELECT id FROM studios WHERE status = 'active' ORDER BY id LIMIT 1");
+      const studio = await db.get("SELECT id, unique_id FROM studios WHERE status = 'active' ORDER BY id LIMIT 1");
       const dancer = await db.get('SELECT id, unique_id FROM dancers ORDER BY id LIMIT 1');
       const event = await db.get('SELECT id FROM events ORDER BY id LIMIT 1');
-      if (studio) CHECKS.push(['GET', `/dance/studio/${studio.id}`, [200], 'real studio profile renders']);
-      if (studio) burstPath = `/dance/studio/${studio.id}`;
+      if (studio) CHECKS.push(['GET', `/dance/studio/${studio.unique_id}`, [200], 'real studio profile renders']);
+      if (studio) CHECKS.push(['GET', `/dance/studio/${studio.id}`, [404], 'numeric studio id 404s on public page']);
+      if (studio) CHECKS.push(['GET', `/claim/studio/${studio.unique_id}`, [200], 'claim page public (one-page apply)']);
+      if (studio) burstPath = `/dance/studio/${studio.unique_id}`;
       if (dancer) CHECKS.push(['GET', `/dancer/${dancer.unique_id}`, [200], 'real dancer trophy case renders']);
       if (dancer) CHECKS.push(['GET', `/claim/dancer/${dancer.id}`, [200], 'dancer claim page public (one-page apply)']);
       if (event) CHECKS.push(['GET', `/dance/event/${event.id}`, [403], 'event detail stays admin-gated']);
-      if (studio) CHECKS.push(['GET', `/widget/studio/${studio.id}`, [200], 'embeddable widget renders']);
+      if (studio) CHECKS.push(['GET', `/widget/studio/${studio.unique_id}`, [200], 'embeddable widget renders']);
       const org = await db.get('SELECT slug FROM organizations ORDER BY id LIMIT 1');
       if (org) CHECKS.push(['GET', `/dance/org/${org.slug}`, [200], 'org page is public']);
     } catch (e) {
@@ -119,6 +121,13 @@ async function main() {
     // then confirm state-changing endpoints work WITH the token (so the
     // original validation/auth behavior is still exercised end-to-end).
     let csrfHeaders = null;
+    let claimUid = 'unknown';
+    try {
+      const { openDb: odb } = require('../database');
+      const cdb = await odb();
+      const cs = await cdb.get("SELECT unique_id FROM studios WHERE status = 'active' ORDER BY id LIMIT 1");
+      if (cs) claimUid = cs.unique_id;
+    } catch (e) {}
     try {
       const loginRes = await fetch(BASE + '/login');
       const cookie = (loginRes.headers.getSetCookie ? loginRes.headers.getSetCookie() : [loginRes.headers.get('set-cookie')])
@@ -128,7 +137,7 @@ async function main() {
         csrfHeaders = { 'Content-Type': 'application/json', 'Cookie': cookie, 'X-CSRF-Token': tokenMatch[1] };
         CHECKS.push(
           ['POST', '/resend-verification', [200], 'resend-verification responds (with CSRF token)', csrfHeaders],
-          ['POST', '/claim/studio/1/apply', [400], 'apply validates input (with CSRF token)', csrfHeaders],
+          ['POST', `/claim/studio/${claimUid}/apply`, [400], 'apply validates input (with CSRF token)', csrfHeaders],
           ['POST', '/claim/dancer/1/apply', [400, 404], 'dancer apply validates input (with CSRF token)', csrfHeaders],
           ['POST', '/manage/studio/1/onboarding/dismiss', [302], 'anonymous onboarding dismiss redirected to login (with CSRF token)', csrfHeaders],
           // 404 while the 'reactions' flag is off or beta (anonymous caller)
@@ -220,7 +229,7 @@ async function main() {
         };
 
         const owner = await login('smoke-owner@test.invalid');
-        check(owner.status === 302 && owner.location === `/dance/studio/${s1.lastID}`,
+        check(owner.status === 302 && owner.location === '/dance/studio/smoke-studio-1',
           'owner login redirects to their studio page', owner.status + ' -> ' + owner.location);
         const hist = await fetch(BASE + `/manage/studio/${s1.lastID}/history`, { headers: { Cookie: owner.cookie } });
         check(hist.status === 200, 'owner studio history renders', 'status ' + hist.status);
@@ -235,7 +244,7 @@ async function main() {
         check(mgHtml.includes('Manage Studio') && mgHtml.includes('Public View'),
           'owner navbar shows Manage Studio + Public View');
         const pv = await fetch(BASE + '/my-studio/public', { redirect: 'manual', headers: { Cookie: owner.cookie } });
-        check(pv.status === 302 && pv.headers.get('location') === `/dance/studio/${s1.lastID}`,
+        check(pv.status === 302 && pv.headers.get('location') === '/dance/studio/smoke-studio-1',
           'Public View redirects to the owner\'s studio page', pv.status + ' -> ' + pv.headers.get('location'));
         const awRes = await fetch(BASE + `/manage/studio/${s1.lastID}/awards?year=${event.year}&view=routines&sort=name`, { headers: { Cookie: owner.cookie } });
         const awHtml = await awRes.text();
@@ -316,7 +325,7 @@ async function main() {
         }
 
         const claimant = await login('smoke-claimant@test.invalid');
-        check(claimant.status === 302 && claimant.location === `/dance/studio/${s2.lastID}`,
+        check(claimant.status === 302 && claimant.location === '/dance/studio/smoke-studio-2',
           'pending claimant login lands on their claimed studio', claimant.status + ' -> ' + claimant.location);
         const sp = await fetch(BASE + claimant.location, { headers: { Cookie: claimant.cookie } });
         const spHtml = await sp.text();

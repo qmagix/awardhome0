@@ -19,7 +19,7 @@
     if (data.studios.length) {
       rows.push('<div class="hs-group">Studios</div>');
       data.studios.forEach(s => rows.push(
-        `<a class="hs-row" href="/dance/studio/${s.id}"><span>${esc(s.name)}</span><span class="badge badge-count">${s.awards}</span></a>`));
+        `<a class="hs-row" href="/dance/studio/${s.unique_id}"><span>${esc(s.name)}</span><span class="badge badge-count">${s.awards}</span></a>`));
     }
     if (data.dancers.length) {
       rows.push('<div class="hs-group">Dancers</div>');

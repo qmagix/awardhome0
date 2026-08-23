@@ -134,9 +134,9 @@ router.post('/login', authLimiter, async (req, res) => {
     return res.redirect('/admin');
   }
 
-  const ownedStudio = await db.get('SELECT id FROM studios WHERE owner_id = ? LIMIT 1', [user.id]);
+  const ownedStudio = await db.get('SELECT unique_id FROM studios WHERE owner_id = ? LIMIT 1', [user.id]);
   if (ownedStudio) {
-    return res.redirect(`/dance/studio/${ownedStudio.id}`);
+    return res.redirect(`/dance/studio/${ownedStudio.unique_id}`);
   }
   const ownedOrg = await db.get('SELECT id FROM organizations WHERE owner_id = ? LIMIT 1', [user.id]);
   if (ownedOrg) {
@@ -146,11 +146,12 @@ router.post('/login', authLimiter, async (req, res) => {
   // page (which shows them a "verification pending" banner) rather than
   // the generic homepage or the parent/dancer flow — a claimant with no
   // signal that their claim exists assumes it was lost.
-  const pendingStudioClaim = await db.get(
-    "SELECT studio_id FROM studio_claims WHERE user_id = ? AND status = 'pending' ORDER BY id DESC LIMIT 1",
+  const pendingStudioClaim = await db.get(`
+    SELECT s.unique_id FROM studio_claims sc JOIN studios s ON s.id = sc.studio_id
+    WHERE sc.user_id = ? AND sc.status = 'pending' ORDER BY sc.id DESC LIMIT 1`,
     [user.id]);
   if (pendingStudioClaim) {
-    return res.redirect(`/dance/studio/${pendingStudioClaim.studio_id}`);
+    return res.redirect(`/dance/studio/${pendingStudioClaim.unique_id}`);
   }
   // Parents/dancers: anyone with a claimed dancer OR a claim in flight
   // lands on the My Dancers dashboard (shows claim status too — a parent

@@ -37,6 +37,9 @@
 
 ## DONE
 
+### 2026-08-23 — Non-enumerable public studio URLs
+- [x] Public studio surfaces now resolve by studios.unique_id (STU-<hex>-slug, already present + distinct on all 18,514 rows): /dance/studio, first-places, year-tab API, widget, claim pages. Numeric ids 404 with NO redirect (an id→uid redirect would be an enumeration oracle); legacy /studio/:id 301s removed for the same reason. ~45 link generators across 25 files converted (views, login redirects, invite emails, search API, leaderboards, admin consoles); smoke asserts numeric-404 + uid-200; full authenticated route audit clean. Documented as a deliberate decision in CLAUDE.md.
+
 ### 2026-08-23 — Refactor-damage audit (prompted by the lost Compare & Merge wiring)
 - [x] Three-sweep audit for silent refactor breakage: (1) runtime — every GET route hit with authenticated superadmin/owner/org-owner sessions, zero 5xx (kept as scripts/audit_get_routes.js — run after big refactors); (2) static — every onclick handler in views vs defined JS functions (3 hits, all resolved by including pages); (3) static — every form/fetch URL vs registered routes (7 hits, all false positives; /beta-unlock lives in server.js). Verdict: the two already-fixed bugs (history bare app.locals, roster merge JS deletion) were the only refactor casualties.
 

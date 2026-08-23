@@ -91,7 +91,7 @@ async function seed(db) {
 
   console.log('QA tenant seeded. Test surfaces:');
   console.log(`  org:     /dance/org/${ORG_SLUG}`);
-  console.log(`  studio:  /dance/studio/${studio.id}   (claim: /claim/studio/${studio.id})`);
+  console.log(`  studio:  /dance/studio/${STUDIO_UID}   (claim: /claim/studio/${STUDIO_UID})`);
   console.log(`  dancer:  /dancer/${DANCER_UID}   (claim: /claim/dancer/${dancers[DANCER_UID]})`);
   console.log(`  event:   /dance/event/${event.id} (admin-only)`);
   console.log('Register test accounts as qa-<anything>@awardhome.com so `remove` can find them.');

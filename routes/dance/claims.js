@@ -21,7 +21,7 @@ const applyLimiter = rateLimit({
 // claim in one submit); logged-in users get the short claim form.
 router.get('/claim/studio/:id', async (req, res) => {
   const db = await openDb();
-  const studio = await db.get('SELECT id, name, is_claimed FROM studios WHERE id = ?', [req.params.id]);
+  const studio = await db.get('SELECT id, unique_id, name, is_claimed FROM studios WHERE unique_id = ?', [req.params.id]);
   if (!studio) return res.status(404).send('Studio not found');
   res.render('claim_studio', { studio, pageTitle: `Claim ${studio.name}` });
 });
@@ -31,7 +31,7 @@ router.post('/claim/studio/:id', requireAuth, async (req, res) => {
   const { role, phone, proof } = req.body;
   const db = await openDb();
 
-  const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
+  const studio = await db.get('SELECT * FROM studios WHERE unique_id = ?', [req.params.id]);
   if (!studio) return res.status(404).send('Studio not found');
 
   if (studio.is_claimed) {
@@ -48,11 +48,11 @@ router.post('/claim/studio/:id', requireAuth, async (req, res) => {
     await db.run('INSERT INTO studio_claims (user_id, studio_id, proof_text, status) VALUES (?, ?, ?, ?)', [user.id, studio.id, proof_text, 'pending']);
     await approveStudioClaim(db, { userId: user.id, studioId: studio.id });
     if (user.role === 'user') req.session.user.role = 'studio_owner';
-    return res.send(`<script>alert("Congratulations! Your email domain matched the studio's website. Your claim has been auto-approved."); window.location.href="/dance/studio/${studio.id}";</script>`);
+    return res.send(`<script>alert("Congratulations! Your email domain matched the studio's website. Your claim has been auto-approved."); window.location.href="/dance/studio/${studio.unique_id}";</script>`);
   } else {
     // Normal pending claim
     await db.run('INSERT INTO studio_claims (user_id, studio_id, proof_text, status) VALUES (?, ?, ?, ?)', [user.id, studio.id, proof_text, 'pending']);
-    return res.send(`<script>alert("Claim submitted successfully! Our admins will review your request shortly."); window.location.href="/dance/studio/${studio.id}";</script>`);
+    return res.send(`<script>alert("Claim submitted successfully! Our admins will review your request shortly."); window.location.href="/dance/studio/${studio.unique_id}";</script>`);
   }
 });
 
@@ -63,7 +63,7 @@ router.post('/claim/studio/:id/apply', applyLimiter, async (req, res) => {
   const { contact_name, email, password, phone, role, proof } = req.body || {};
   const db = await openDb();
 
-  const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
+  const studio = await db.get('SELECT * FROM studios WHERE unique_id = ?', [req.params.id]);
   if (!studio) return res.status(404).send('Studio not found');
   const fail = (error) => res.status(400).render('claim_studio', { studio, error, pageTitle: `Claim ${studio.name}` });
 

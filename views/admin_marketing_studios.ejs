@@ -36,7 +36,7 @@
               <% } else if (s.rank && s.rank <= 300) { %><span class="badge" style="background: rgba(212,175,55,0.08); color: var(--gold-light);">#<%= s.rank %></span>
               <% } else { %><span style="color: var(--text-muted);">#<%= s.rank || '—' %></span><% } %>
             </td>
-            <td style="padding: 0.6rem 0.75rem; font-weight: 600;"><a href="/dance/studio/<%= s.id %>" target="_blank" style="color: inherit;"><%= s.name %></a></td>
+            <td style="padding: 0.6rem 0.75rem; font-weight: 600;"><a href="/dance/studio/<%= s.unique_id %>" target="_blank" style="color: inherit;"><%= s.name %></a></td>
             <td style="padding: 0.6rem 0.75rem;">
               <span id="email-view-<%= s.id %>" style="color: #10b981; cursor: pointer;" title="Click to edit"
                 onclick="editField('email', <%= s.id %>)"><%= s.email %> <span style="opacity: 0.45;">✎</span></span>

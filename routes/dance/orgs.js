@@ -62,7 +62,7 @@ router.get('/manage/org/:id', requireAuth, requireOrgOwner(), async (req, res) =
 
   // Get top studio for this org (mock example)
   const topStudio = await db.get(`
-    SELECT s.id, s.name, COUNT(a.id) as award_count
+    SELECT s.id, s.unique_id, s.name, COUNT(a.id) as award_count
     FROM studios s
     JOIN awards a ON s.id = a.studio_id
     JOIN events e ON a.event_id = e.id

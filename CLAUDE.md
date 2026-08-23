@@ -38,6 +38,7 @@ Express 4 + EJS + SQLite (no build step, no ORM, no client framework).
 - **No public claim button on organization pages** — an unclaimed state would advertise which orgs aren't partnered yet. Orgs claim only via private links in invitation emails (`/claim/org/:token`).
 - **Org logos on cards are approval-gated, default OFF** — a superadmin hand-fits each logo into the fixed circular "coin" (position/rotation sliders are superadmin-only on `/manage/org/:id/branding`) and ticks "Approved for public display". Owners get size/opacity only; the concierge step is part of the pitch.
 - Marketing language: "your brand on every card dancers share."
+- **Public studio URLs use `studios.unique_id`** (`STU-<hex>-slug`), never the numeric id — numeric `/dance/studio/62`-style URLs deliberately 404 with NO redirect (a redirect would be an enumeration oracle for scraping the whole dataset). Manage/admin routes stay numeric (auth-gated). Same pattern as dancer `unique_id` URLs.
 - Self-reported studio data enters as `is_self_added = 1, verification_status = 'unverified'`; scraped events are matched by `name + year + org_id`.
 
 ## Where things are documented
