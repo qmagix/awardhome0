@@ -78,6 +78,13 @@
         <small style="color: var(--text-muted);">Paste names — one per line or comma-separated — then preview before anything saves.</small>
       </div>
 
+      <div style="display: flex; flex-wrap: wrap; gap: 1rem; margin: -0.5rem 0 1.5rem 0.25rem; font-size: 0.8rem; color: var(--text-muted);">
+        <span><span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: rgba(212,175,55,0.5); vertical-align: middle;"></span> from competition results</span>
+        <span>👤 added by your studio</span>
+        <span><span style="color: #60a5fa;">✓</span> claimed by dancer, verified</span>
+        <span>⏳ dancer claim awaiting your verification</span>
+      </div>
+
       <div style="display: flex; flex-direction: column; gap: 1rem;">
         <% routines.forEach((r, i) => { %>
           <div class="card glass-card gd-card" style="padding: 1.25rem 1.5rem;"
@@ -98,8 +105,22 @@
             </div>
 
             <div class="gd-cast" style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.75rem;">
-              <% r.cast.forEach(d => { %>
-                <span class="gd-chip" style="display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(212,175,55,0.12); border: 1px solid rgba(212,175,55,0.4); border-radius: 14px; padding: 0.2rem 0.7rem; font-size: 0.85rem;">
+              <% r.cast.forEach(d => {
+                // Provenance styling: who asserted this link
+                let chipStyle = 'background: rgba(212,175,55,0.12); border: 1px solid rgba(212,175,55,0.4);';
+                let chipIcon = '', chipTitle = 'From competition results';
+                if (d.pending) {
+                  chipStyle = 'background: rgba(245,158,11,0.08); border: 1px dashed rgba(245,158,11,0.6);';
+                  chipIcon = '⏳'; chipTitle = 'Claimed by the dancer/parent — awaiting your verification';
+                } else if (d.source === 'studio_owner' || d.source === 'admin') {
+                  chipIcon = '👤'; chipTitle = 'Added by your studio';
+                } else if (d.source === 'dancer_claim') {
+                  chipStyle = 'background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.5);';
+                  chipIcon = '✓'; chipTitle = 'Claimed by the dancer and verified';
+                }
+              %>
+                <span class="gd-chip" title="<%= chipTitle %>" style="display: inline-flex; align-items: center; gap: 0.35rem; <%= chipStyle %> border-radius: 14px; padding: 0.2rem 0.7rem; font-size: 0.85rem;">
+                  <% if (chipIcon) { %><span style="font-size: 0.75rem;"><%= chipIcon %></span><% } %>
                   <%= d.name %>
                   <button type="button" class="gd-remove" data-dancer-id="<%= d.id %>" title="Remove from this routine"
                     style="background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 0; font-size: 0.95rem; line-height: 1;">×</button>

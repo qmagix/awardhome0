@@ -121,6 +121,7 @@ async function remove(db) {
   const inList = (ids) => ids.map(() => '?').join(',');
 
   if (awardIds.length) {
+    await run('removal_tombstones', `DELETE FROM award_dancer_removals WHERE award_id IN (${inList(awardIds)})`, awardIds);
     await run('award_dancers', `DELETE FROM award_dancers WHERE award_id IN (${inList(awardIds)})`, awardIds);
     await run('acknowledgements', `DELETE FROM award_acknowledgements WHERE award_id IN (${inList(awardIds)})`, awardIds);
     await run('card_photos', `DELETE FROM award_card_photos WHERE award_id IN (${inList(awardIds)})`, awardIds);

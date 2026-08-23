@@ -562,8 +562,10 @@ router.post('/manage/dancer/:id/claim-missing-award', requireAuth, async (req, r
       return res.status(400).json({ error: 'Already claimed this award.' });
     }
 
-    // Insert pending claim for the main award
-    await db.run("INSERT INTO award_dancers (award_id, dancer_id, status) VALUES (?, ?, 'pending')", [award_id, req.params.id]);
+    // Insert pending claim for the main award. An explicit human claim is
+    // allowed even over a tombstoned removal — the director's verification
+    // queue is the referee for that dispute.
+    await db.run("INSERT INTO award_dancers (award_id, dancer_id, status, source) VALUES (?, ?, 'pending', 'dancer_claim')", [award_id, req.params.id]);
 
     // Smart Auto-Backfill
     const targetAward = await db.get('SELECT event_id, performance_name, studio_id FROM awards WHERE id = ?', [award_id]);
@@ -578,8 +580,11 @@ router.post('/manage/dancer/:id/claim-missing-award', requireAuth, async (req, r
 
       for (let rel of relatedAwards) {
         const exist = await db.get('SELECT id FROM award_dancers WHERE dancer_id = ? AND award_id = ?', [req.params.id, rel.id]);
-        if (!exist) {
-          await db.run("INSERT INTO award_dancers (award_id, dancer_id, status) VALUES (?, ?, 'pending')", [rel.id, req.params.id]);
+        // Machine inference respects director tombstones: never re-add a
+        // link a director deliberately removed.
+        const removed = await db.get('SELECT 1 FROM award_dancer_removals WHERE award_id = ? AND dancer_id = ?', [rel.id, req.params.id]).catch(() => null);
+        if (!exist && !removed) {
+          await db.run("INSERT INTO award_dancers (award_id, dancer_id, status, source) VALUES (?, ?, 'pending', 'dancer_claim')", [rel.id, req.params.id]);
           backfilledCount++;
         }
       }
@@ -660,7 +665,7 @@ router.post('/api/claim-award', claimAwardLimiter, async (req, res) => {
     // Insert award_dancers pending for the main award
     const existingAwardLink = await db.get('SELECT id FROM award_dancers WHERE dancer_id = ? AND award_id = ?', [dancerId, award_id]);
     if (!existingAwardLink) {
-      await db.run("INSERT INTO award_dancers (award_id, dancer_id, status) VALUES (?, ?, 'pending')", [award_id, dancerId]);
+      await db.run("INSERT INTO award_dancers (award_id, dancer_id, status, source) VALUES (?, ?, 'pending', 'dancer_claim')", [award_id, dancerId]);
     } else {
       return res.status(400).json({ error: 'You are already linked to this award.' });
     }
@@ -676,8 +681,10 @@ router.post('/api/claim-award', claimAwardLimiter, async (req, res) => {
 
       for (let rel of relatedAwards) {
         const exist = await db.get('SELECT id FROM award_dancers WHERE dancer_id = ? AND award_id = ?', [dancerId, rel.id]);
-        if (!exist) {
-          await db.run("INSERT INTO award_dancers (award_id, dancer_id, status) VALUES (?, ?, 'pending')", [rel.id, dancerId]);
+        // Machine inference respects director tombstones (see above)
+        const removed = await db.get('SELECT 1 FROM award_dancer_removals WHERE award_id = ? AND dancer_id = ?', [rel.id, dancerId]).catch(() => null);
+        if (!exist && !removed) {
+          await db.run("INSERT INTO award_dancers (award_id, dancer_id, status, source) VALUES (?, ?, 'pending', 'dancer_claim')", [rel.id, dancerId]);
           backfilledAwards.push(rel.id);
         }
       }

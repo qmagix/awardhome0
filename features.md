@@ -119,6 +119,27 @@ The registry lives in `utils/cardDesign.js` — future designs are added there a
   removal deletes links only, never dancer records. Activity `group_cast_added` feeds the
   featured engine + onboarding. FAQ §8b documents it for owners.
 
+## 2c. Link Provenance & Removal Tombstones (three-source reconciliation)
+- **The model:** dancer↔award links are sourced assertions. `award_dancers.source` records who
+  asserted each link (`import` — scrapers/org data, the ADD COLUMN default so importers need no
+  changes; `studio_owner` — self-report, CSV, awards-editor, group-cast page; `dancer_claim` —
+  claim + auto-backfill flows; `admin`), `created_at` records when (stamped by DB trigger
+  `trg_award_dancers_created`, so no writer can forget). Legacy rows: claim-flow links were
+  recovered from `status`; the rest predate provenance and read as `import`.
+- **Tombstones** (`award_dancer_removals`): when a director deliberately removes a link — denies
+  a claim in Verifications (single or bulk), removes a dancer in the awards editor, or removes a
+  chip on the group-dancers page — the (award, dancer) pair is tombstoned. **Automated paths must
+  check tombstones before inserting**: dancer auto-backfill expansion already does; any future
+  cast-bearing import (org uploads!) must too. Explicit human claims are still allowed over a
+  tombstone (they land `pending` — the director's queue referees the dispute), and a director
+  re-adding by hand clears the tombstone.
+- **Surfaced provenance:** group-dancers cast chips are styled by source with tooltips + legend —
+  plain gold = imported, 👤 = added by the studio, blue ✓ = dancer-claimed & verified, dashed ⏳ =
+  claim awaiting verification. Dancer merges carry source/status/created_at to the surviving record.
+- **Design rule for the future org-upload pipeline:** org-supplied casts arrive as *suggestions*
+  diffed against the director's cast (preview-then-apply + verification queue), never as silent
+  writes. See conversation log 2026-08-23 / TODOS.
+
 ## 3d. Social Reactions on Award Cards (flag: `reactions`, ships dark)
 - **What it is:** cheer (👏) / love (❤️) chips pinned to the bottom-right corner of every award
   card in a dancer's public trophy case. Tap toggles; counts show on the chip; the viewer's own

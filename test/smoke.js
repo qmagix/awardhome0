@@ -172,6 +172,7 @@ async function main() {
       const db = await openDb();
       // Pre-clean leftovers from a crashed prior run
       await db.run("DELETE FROM studio_claims WHERE proof_text = 'smoke-fixture'");
+      await db.run("DELETE FROM award_dancer_removals WHERE dancer_id IN (SELECT id FROM dancers WHERE name LIKE 'Smoke Dancer%')").catch(() => {});
       await db.run("DELETE FROM award_dancers WHERE dancer_id IN (SELECT id FROM dancers WHERE name LIKE 'Smoke Dancer%')");
       await db.run("DELETE FROM dancer_studios WHERE dancer_id IN (SELECT id FROM dancers WHERE name LIKE 'Smoke Dancer%')");
       await db.run("DELETE FROM dancers WHERE name LIKE 'Smoke Dancer%'");
@@ -265,6 +266,29 @@ async function main() {
           const linkCount = await db.get('SELECT COUNT(*) AS n FROM award_dancers WHERE award_id = ?', [gaw.lastID]);
           check(ap.status === 200 && ad.created === 1 && linkCount.n === 2,
             'group-dancers apply links roster dancer + creates new one', ap.status + ' created=' + ad.created + ' links=' + linkCount.n);
+
+          // Provenance + tombstone lifecycle: owner-applied links carry
+          // source, removal tombstones the pair, re-adding clears it.
+          const src = await db.get('SELECT source, created_at FROM award_dancers WHERE award_id = ? AND dancer_id = ?', [gaw.lastID, rosterDancer.lastID]);
+          check(src && src.source === 'studio_owner' && !!src.created_at,
+            'owner-applied link records source + timestamp', JSON.stringify(src));
+          const rm = await fetch(BASE + `/manage/studio/${s1.lastID}/group-dancers/remove`, {
+            method: 'POST', headers: gdHeaders,
+            body: JSON.stringify({ routine: 'Smoke Group Routine', year: event.year, dancer_id: rosterDancer.lastID })
+          });
+          const tomb = await db.get('SELECT 1 AS t FROM award_dancer_removals WHERE award_id = ? AND dancer_id = ?', [gaw.lastID, rosterDancer.lastID]);
+          check(rm.status === 200 && tomb && tomb.t === 1,
+            'owner removal writes a tombstone', 'status ' + rm.status);
+          const reapply = await fetch(BASE + `/manage/studio/${s1.lastID}/group-dancers/apply`, {
+            method: 'POST', headers: gdHeaders,
+            body: JSON.stringify({ routine: 'Smoke Group Routine', year: event.year, entries: [
+              { name: 'Smoke Dancer One', dancer_id: rosterDancer.lastID },
+            ] })
+          });
+          const tomb2 = await db.get('SELECT 1 AS t FROM award_dancer_removals WHERE award_id = ? AND dancer_id = ?', [gaw.lastID, rosterDancer.lastID]);
+          const relink = await db.get('SELECT source FROM award_dancers WHERE award_id = ? AND dancer_id = ?', [gaw.lastID, rosterDancer.lastID]);
+          check(reapply.status === 200 && !tomb2 && relink && relink.source === 'studio_owner',
+            'owner re-add clears the tombstone and relinks', 'tombstone=' + !!tomb2 + ' link=' + JSON.stringify(relink));
         }
 
         const claimant = await login('smoke-claimant@test.invalid');
@@ -279,6 +303,7 @@ async function main() {
         check(md.status === 200 && mdHtml.includes('approval pending'),
           'my-dancers shows the studio-claim pending state', 'status ' + md.status);
       } finally {
+        await db.run("DELETE FROM award_dancer_removals WHERE dancer_id IN (SELECT id FROM dancers WHERE name LIKE 'Smoke Dancer%')").catch(() => {});
         await db.run("DELETE FROM award_dancers WHERE dancer_id IN (SELECT id FROM dancers WHERE name LIKE 'Smoke Dancer%')").catch(() => {});
         await db.run("DELETE FROM dancer_studios WHERE dancer_id IN (SELECT id FROM dancers WHERE name LIKE 'Smoke Dancer%')").catch(() => {});
         await db.run("DELETE FROM dancers WHERE name LIKE 'Smoke Dancer%'").catch(() => {});

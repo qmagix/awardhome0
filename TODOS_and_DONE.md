@@ -27,7 +27,7 @@
 - [ ] Director-initiated profile claims (inverse flow): director enters a parent's email on a roster dancer → pre-authorized claim link, zero review (pattern: org claim tokens).
 - [ ] Testimonials for organizations, studios, and dancers (makes them stand out; FAQ pages and org marketing profiles are done — this is the missing piece).
 - [ ] File storage to AWS S3 for uploads (org results, branding images currently on local disk; ties into the org result submission pipeline below).
-- [ ] Organization competition result submission end-to-end: upload works (org_uploads table + local disk) but the S3 storage + admin review/batch-ingestion pipeline is not built.
+- [ ] Organization competition result submission end-to-end: upload works (org_uploads table + local disk) but the S3 storage + admin review/batch-ingestion pipeline is not built. DESIGN CONSTRAINT (2026-08-23): org-supplied casts must land as suggestions diffed against the director's cast (preview-then-apply + verification queue), respect award_dancer_removals tombstones, and results-facts (placement/routine names) take precedence over user input while casts defer to directors. See features.md §2c.
 - [ ] Mobile app as a PWA (MVP). The responsive web pass is done; PWA manifest/service worker/install flow is not.
 - [x] (DONE 2026-08-12) Multi-page flip-book award card: paged back-stack (certificate → photo → acknowledgements → organizer colophon), per-dancer ack lines on group cards, all owner content superadmin-moderated at /admin/card-content, A/B design switch (classic/flipbook) at /admin/settings + ?card_design= session preview. See features.md §3b.
 - [ ] Flip-book follow-ups: per-page share-image rendering (canvas/off-screen render — groundwork for auto-generated social video shorts, see ideas.md §3); email superadmin when new card content lands in the review queue; certificate-page photo medallion inset.
@@ -36,6 +36,9 @@
 - [ ] Patent triage: have an attorney review maybe_patentable.md (Tier A first); if we commit to the flip-book card (A3/A4), consider a provisional filing BEFORE deploying it publicly.
 
 ## DONE
+
+### 2026-08-23 — Link provenance & tombstones (three-source reconciliation, phase 1)
+- [x] award_dancers.source ('import'/'studio_owner'/'dancer_claim'/'admin') + created_at (DB-trigger-stamped) on every new link; legacy claim links recovered from status. award_dancer_removals tombstones written on all four director-removal surfaces; auto-backfill respects them; explicit claims still allowed (pending → director queue referees); director re-add clears. Group-dancers chips styled by provenance with legend. Merges carry provenance. See features.md §2c; org-upload design constraint recorded in TODOS.
 
 ### 2026-08-22 — Group Routine Dancers
 - [x] Group Routine Dancers page for studio owners (/manage/studio/:id/group-dancers): paste-a-list cast entry per routine-year, preview-then-apply with roster matching (link / create / ambiguous-pick for same-name dancers), applies to every award the routine won that year; sidebar link on all manage pages + onboarding step + FAQ §8b. See features.md §2b.

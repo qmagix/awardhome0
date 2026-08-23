@@ -347,7 +347,7 @@ router.post('/manage/studio/:id/awards/self-report', requireAuth, requireStudioO
   if (dancer_ids) {
     const ids = Array.isArray(dancer_ids) ? dancer_ids : [dancer_ids];
     for (const dId of ids) {
-      await db.run('INSERT INTO award_dancers (award_id, dancer_id) VALUES (?, ?)', [award.id, dId]);
+      await db.run("INSERT INTO award_dancers (award_id, dancer_id, source) VALUES (?, ?, 'studio_owner')", [award.id, dId]);
     }
   }
 
@@ -459,12 +459,12 @@ router.post('/manage/studio/:id/awards/csv-commit', requireAuth, requireStudioOw
 
       for (const d of row.dancers) {
         if (d.matched && d.id) {
-          await db.run('INSERT INTO award_dancers (award_id, dancer_id) VALUES (?, ?)', [award.id, d.id]);
+          await db.run("INSERT INTO award_dancers (award_id, dancer_id, source) VALUES (?, ?, 'studio_owner')", [award.id, d.id]);
         } else if (!d.matched && d.name) {
           await db.run('INSERT INTO dancers (name) VALUES (?)', [d.name]);
           const newDancer = await db.get('SELECT id FROM dancers ORDER BY id DESC LIMIT 1');
           await db.run('INSERT INTO dancer_studios (dancer_id, studio_id) VALUES (?, ?)', [newDancer.id, req.params.id]);
-          await db.run('INSERT INTO award_dancers (award_id, dancer_id) VALUES (?, ?)', [award.id, newDancer.id]);
+          await db.run("INSERT INTO award_dancers (award_id, dancer_id, source) VALUES (?, ?, 'studio_owner')", [award.id, newDancer.id]);
         }
       }
     }
@@ -544,7 +544,7 @@ router.post('/manage/studio/:id/roster/merge', requireAuth, requireStudioOwner, 
     await db.run('BEGIN TRANSACTION');
 
     // 1. Move all awards from duplicate to primary (use INSERT OR IGNORE to prevent UNIQUE constraint errors if they somehow both won the exact same award record)
-    await db.run('INSERT OR IGNORE INTO award_dancers (award_id, dancer_id) SELECT award_id, ? FROM award_dancers WHERE dancer_id = ?', [primary_id, duplicate_id]);
+    await db.run('INSERT OR IGNORE INTO award_dancers (award_id, dancer_id, status, source, created_at) SELECT award_id, ?, status, source, created_at FROM award_dancers WHERE dancer_id = ?', [primary_id, duplicate_id]);
     await db.run('DELETE FROM award_dancers WHERE dancer_id = ?', [duplicate_id]);
 
     // 2. Move any OTHER studio affiliations the duplicate might have had (that aren't this studio)
@@ -600,7 +600,7 @@ router.post('/manage/studio/:id/roster/clean-duplicate-set', requireAuth, requir
     await db.run('BEGIN TRANSACTION');
 
     for (let dupId of duplicatesToMerge) {
-      await db.run('INSERT OR IGNORE INTO award_dancers (award_id, dancer_id) SELECT award_id, ? FROM award_dancers WHERE dancer_id = ?', [primaryId, dupId]);
+      await db.run('INSERT OR IGNORE INTO award_dancers (award_id, dancer_id, status, source, created_at) SELECT award_id, ?, status, source, created_at FROM award_dancers WHERE dancer_id = ?', [primaryId, dupId]);
       await db.run('DELETE FROM award_dancers WHERE dancer_id = ?', [dupId]);
 
       await db.run('INSERT OR IGNORE INTO dancer_studios (dancer_id, studio_id, status) SELECT ?, studio_id, status FROM dancer_studios WHERE dancer_id = ?', [primaryId, dupId]);
@@ -873,6 +873,13 @@ router.post('/manage/studio/:id/verifications/award/:link_id/deny', requireAuth,
   const db = await openDb();
   const studio = req.studio;
 
+  // Director's denial is a negative assertion: tombstone it so automated
+  // re-add paths (auto-backfill, future imports) don't resurrect the link.
+  const link = await db.get('SELECT award_id, dancer_id FROM award_dancers WHERE id = ?', [req.params.link_id]);
+  if (link) {
+    await db.run("INSERT OR REPLACE INTO award_dancer_removals (award_id, dancer_id, source) VALUES (?, ?, 'studio_owner')",
+      [link.award_id, link.dancer_id]).catch(() => {});
+  }
   await db.run("DELETE FROM award_dancers WHERE id = ?", [req.params.link_id]);
   res.redirect(`/manage/studio/${studio.id}/verifications`);
 });
@@ -917,6 +924,11 @@ router.post('/api/studios/:id/verifications/bulk', requireAuth, requireStudioOwn
         }
       } else if (action === 'deny') {
         for (const link_id of linkIds) {
+          const link = await db.get('SELECT award_id, dancer_id FROM award_dancers WHERE id = ?', [link_id]);
+          if (link) {
+            await db.run("INSERT OR REPLACE INTO award_dancer_removals (award_id, dancer_id, source) VALUES (?, ?, 'studio_owner')",
+              [link.award_id, link.dancer_id]).catch(() => {});
+          }
           await db.run("DELETE FROM award_dancers WHERE id = ?", [link_id]);
         }
       }
@@ -1409,7 +1421,9 @@ router.post('/manage/studio/:id/awards/:awardId/dancers', requireAuth, requireSt
       await db.run('INSERT INTO dancer_studios (dancer_id, studio_id) VALUES (?, ?)', [dancer.id, req.params.id]);
     } catch (e) { }
 
-    await db.run('INSERT INTO award_dancers (award_id, dancer_id) VALUES (?, ?)', [req.params.awardId, dancer.id]);
+    // Director re-adding by hand overrides any earlier removal
+    await db.run('DELETE FROM award_dancer_removals WHERE award_id = ? AND dancer_id = ?', [req.params.awardId, dancer.id]).catch(() => {});
+    await db.run("INSERT INTO award_dancers (award_id, dancer_id, source) VALUES (?, ?, 'studio_owner')", [req.params.awardId, dancer.id]);
   } catch (e) { console.error(e); }
 
   res.redirect(`/manage/studio/${req.params.id}/awards${yearQuery}`);
@@ -1420,6 +1434,8 @@ router.post('/manage/studio/:id/awards/:awardId/dancers/:dancerId/remove', requi
   const db = await openDb();
   const studio = req.studio;
 
+  await db.run("INSERT OR REPLACE INTO award_dancer_removals (award_id, dancer_id, source) VALUES (?, ?, 'studio_owner')",
+    [req.params.awardId, req.params.dancerId]).catch(() => {});
   await db.run('DELETE FROM award_dancers WHERE award_id = ? AND dancer_id = ?', [req.params.awardId, req.params.dancerId]);
 
   const yearQuery = req.query.year ? `?year=${req.query.year}` : '';
@@ -1487,10 +1503,15 @@ router.get('/manage/studio/:id/group-dancers', requireAuth, requireStudioOwner, 
     ORDER BY (e.year IS NULL), e.year DESC, TRIM(a.performance_name)
   `, [studio.id]);
 
-  // Current cast per routine-year, one query for the whole page
+  // Current cast per routine-year, one query for the whole page. Source
+  // and status aggregates drive the provenance styling on the chips: the
+  // director should SEE where each link came from (import vs their own
+  // entry vs a dancer's claim awaiting their verification).
   const casts = await db.all(`
     SELECT TRIM(a.performance_name) AS routine, IFNULL(e.year, 'Undated') AS year,
-           d.id AS dancer_id, d.name AS dancer_name
+           d.id AS dancer_id, d.name AS dancer_name,
+           GROUP_CONCAT(DISTINCT IFNULL(ad.source, 'import')) AS sources,
+           GROUP_CONCAT(DISTINCT IFNULL(ad.status, 'imported')) AS statuses
     FROM awards a LEFT JOIN events e ON a.event_id = e.id
     JOIN award_dancers ad ON ad.award_id = a.id
     JOIN dancers d ON d.id = ad.dancer_id
@@ -1503,7 +1524,15 @@ router.get('/manage/studio/:id/group-dancers', requireAuth, requireStudioOwner, 
   const castMap = {};
   for (const c of casts) {
     const key = c.routine + '|||' + c.year;
-    (castMap[key] = castMap[key] || []).push({ id: c.dancer_id, name: c.dancer_name });
+    const sources = (c.sources || '').split(',');
+    const statuses = (c.statuses || '').split(',');
+    // Most-authoritative source wins the label; a claim still entirely
+    // pending (no verified/imported link) renders as pending.
+    const source = sources.includes('studio_owner') ? 'studio_owner'
+      : sources.includes('admin') ? 'admin'
+      : sources.includes('dancer_claim') ? 'dancer_claim' : 'import';
+    const pending = statuses.length > 0 && statuses.every(s => s === 'pending');
+    (castMap[key] = castMap[key] || []).push({ id: c.dancer_id, name: c.dancer_name, source, pending });
   }
   routines.forEach(r => { r.cast = castMap[r.routine + '|||' + r.year] || []; });
 
@@ -1595,7 +1624,9 @@ router.post('/manage/studio/:id/group-dancers/apply', requireAuth, requireStudio
       dancerId = ok.id;
     }
     for (const awardId of awardIds) {
-      const r = await db.run('INSERT OR IGNORE INTO award_dancers (award_id, dancer_id) VALUES (?, ?)', [awardId, dancerId]);
+      // Director re-adding overrides any earlier tombstoned removal
+      await db.run('DELETE FROM award_dancer_removals WHERE award_id = ? AND dancer_id = ?', [awardId, dancerId]).catch(() => {});
+      const r = await db.run("INSERT OR IGNORE INTO award_dancers (award_id, dancer_id, source) VALUES (?, ?, 'studio_owner')", [awardId, dancerId]);
       linked += r.changes || 0;
     }
   }
@@ -1611,6 +1642,11 @@ router.post('/manage/studio/:id/group-dancers/remove', requireAuth, requireStudi
   if (!routine || !year || !dancer_id) return res.status(400).json({ error: 'Missing routine, year, or dancer' });
   const awardIds = await routineAwardIds(db, req.studio.id, routine, year);
   if (!awardIds.length) return res.status(404).json({ error: 'No awards found for this routine' });
+  // Tombstone each removed pair so automated paths can't re-add them
+  for (const awardId of awardIds) {
+    await db.run("INSERT OR REPLACE INTO award_dancer_removals (award_id, dancer_id, source) VALUES (?, ?, 'studio_owner')",
+      [awardId, parseInt(dancer_id, 10)]).catch(() => {});
+  }
   const r = await db.run(
     `DELETE FROM award_dancers WHERE dancer_id = ? AND award_id IN (${awardIds.map(() => '?').join(',')})`,
     [parseInt(dancer_id, 10), ...awardIds]);

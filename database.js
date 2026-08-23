@@ -152,6 +152,8 @@ async function initDb() {
       award_id INTEGER NOT NULL,
       dancer_id INTEGER NOT NULL,
       status TEXT DEFAULT 'imported',
+      source TEXT DEFAULT 'import',
+      created_at DATETIME,
       FOREIGN KEY (award_id) REFERENCES awards(id),
       FOREIGN KEY (dancer_id) REFERENCES dancers(id),
       UNIQUE(award_id, dancer_id)
@@ -392,6 +394,20 @@ async function initDb() {
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
+    -- Tombstones for dancer-award links a human deliberately removed
+    -- (director denied a claim, removed a dancer from a routine).
+    -- Automated re-add paths (dancer auto-backfill, future cast-bearing
+    -- imports) MUST check this table before inserting; a director
+    -- re-adding by hand clears the tombstone. Prevents the classic
+    -- "I deleted that and the sync brought it back" surprise.
+    CREATE TABLE IF NOT EXISTS award_dancer_removals (
+      award_id INTEGER NOT NULL,
+      dancer_id INTEGER NOT NULL,
+      source TEXT NOT NULL DEFAULT 'studio_owner',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (award_id, dancer_id)
+    );
+
     -- Known flags ship dark; releases happen at /admin/features
     INSERT OR IGNORE INTO feature_flags (key, state) VALUES ('thank_you_notes', 'off');
     INSERT OR IGNORE INTO feature_flags (key, state) VALUES ('award_photos', 'off');
@@ -481,6 +497,27 @@ async function initDb() {
     // Column just created: stamp pre-existing events with the era of the last
     // full scrape so they read as long-settled rather than brand new.
     await db.exec("UPDATE events SET created_at = '2026-05-15 00:00:00'");
+  } catch(e) {}
+
+  // Link provenance: who asserted each dancer-award link ('import' |
+  // 'studio_owner' | 'dancer_claim' | 'admin') and when. Importers don't
+  // set source (the ADD COLUMN default covers them); human surfaces set
+  // it explicitly. Legacy rows: claim-flow links are recoverable from
+  // status; everything else predates provenance and reads as 'import'.
+  try { await db.exec("ALTER TABLE award_dancers ADD COLUMN source TEXT DEFAULT 'import'"); } catch(e) {}
+  try { await db.exec("ALTER TABLE award_dancers ADD COLUMN created_at DATETIME"); } catch(e) {}
+  try {
+    await db.exec("UPDATE award_dancers SET source = 'dancer_claim' WHERE status IN ('pending', 'verified') AND source = 'import'");
+  } catch(e) {}
+  // created_at stamp via trigger (not per-writer code) so importers and
+  // future writers can't forget it. Must run AFTER the column ALTERs.
+  try {
+    await db.exec(`CREATE TRIGGER IF NOT EXISTS trg_award_dancers_created
+      AFTER INSERT ON award_dancers
+      WHEN NEW.created_at IS NULL
+      BEGIN
+        UPDATE award_dancers SET created_at = datetime('now') WHERE id = NEW.id;
+      END`);
   } catch(e) {}
 
   console.log("Database initialized.");
