@@ -72,7 +72,9 @@
         <p class="subtitle">Manage your team (<%= roster.filter(d => d.status !== 'alumni').length %> Active Dancers).</p>
       </div>
       <div style="display: flex; gap: 1rem;">
-        <button id="mergeBtn" class="btn" style="display: none; background: var(--primary); color: #0a0a0a;" onclick="openMergeModal()">Compare & Merge (2)</button>
+        <button id="mergeBtn" class="btn" disabled
+          title="Tick the checkbox next to two dancers who are really the same person, then compare and merge them"
+          style="background: var(--primary); color: #0a0a0a;" onclick="openMergeModal()">Compare &amp; Merge — select 2 dancers</button>
         <button class="btn btn-blue" onclick="window.location.href='/manage/studio/<%= studio.id %>/roster/export'">Export Roster CSV</button>
         <button class="btn btn-blue" onclick="document.getElementById('csvUploadModal').style.display='block'">Upload CSV</button>
         <button class="btn btn-blue" onclick="document.getElementById('claimDancerModal').style.display='block'">+ Add/Claim Dancer</button>
@@ -132,7 +134,7 @@
       <table style="width: 100%; text-align: left; border-collapse: collapse;">
         <thead>
           <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-muted);">
-            <th style="padding: 1rem 0; width: 40px;"></th>
+            <th style="padding: 1rem 0; width: 60px; font-size: 0.75rem; color: var(--text-muted);" title="Tick two dancers who are really the same person, then use Compare & Merge above">Merge</th>
             <th style="padding: 1rem 0;">Dancer Name</th>
             <th style="padding: 1rem 0;">Headshot</th>
             <th style="padding: 1rem 0;">Status</th>
@@ -152,7 +154,7 @@
             <% activeRoster.forEach(dancer => { %>
               <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                 <td style="padding: 1rem 0;">
-                  <input type="checkbox" class="merge-checkbox" value="<%= dancer.id %>" data-name="<%= dancer.name %>" data-dob="<%= dancer.birthday || '' %>" data-awards="<%= dancer.total_awards %>" style="transform: scale(1.2);">
+                  <input type="checkbox" class="merge-checkbox" value="<%= dancer.id %>" title="Select for Compare & Merge (pick 2 duplicates of the same dancer)" data-name="<%= dancer.name %>" data-dob="<%= dancer.birthday || '' %>" data-awards="<%= dancer.total_awards %>" style="transform: scale(1.2);">
                 </td>
                 <td style="padding: 1rem 0;">
                   <a href="/dancer/<%= dancer.unique_id %>" style="color: white; text-decoration: none; font-weight: 600;"><%= dancer.name %></a>
@@ -208,7 +210,7 @@
         <table style="width: 100%; text-align: left; border-collapse: collapse;">
           <thead>
             <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-muted);">
-              <th style="padding: 1rem 0; width: 40px;"></th>
+              <th style="padding: 1rem 0; width: 60px; font-size: 0.75rem; color: var(--text-muted);" title="Tick two dancers who are really the same person, then use Compare & Merge above">Merge</th>
               <th style="padding: 1rem 0;">Dancer Name</th>
               <th style="padding: 1rem 0;">Headshot</th>
               <th style="padding: 1rem 0;">Status</th>
@@ -221,7 +223,7 @@
             <% inactiveRoster.forEach(dancer => { %>
               <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); opacity: 0.8;">
                 <td style="padding: 1rem 0;">
-                  <input type="checkbox" class="merge-checkbox" value="<%= dancer.id %>" data-name="<%= dancer.name %>" data-dob="<%= dancer.birthday || '' %>" data-awards="<%= dancer.total_awards %>" style="transform: scale(1.2);">
+                  <input type="checkbox" class="merge-checkbox" value="<%= dancer.id %>" title="Select for Compare & Merge (pick 2 duplicates of the same dancer)" data-name="<%= dancer.name %>" data-dob="<%= dancer.birthday || '' %>" data-awards="<%= dancer.total_awards %>" style="transform: scale(1.2);">
                 </td>
                 <td style="padding: 1rem 0;">
                   <a href="/dancer/<%= dancer.unique_id %>" style="color: white; text-decoration: none; font-weight: 600;"><%= dancer.name %></a>
@@ -447,10 +449,49 @@
 </div>
 
 <script>
-  const mergeCheckboxes = document.querySelectorAll('.merge-checkbox');
   const mergeBtn = document.getElementById('mergeBtn');
 
-  // Logic for Merge Checkboxes
+  // Compare & Merge wiring: the button is always visible and explains
+  // itself — enabled only when exactly two dancers are ticked. (This
+  // listener was lost in an earlier refactor, leaving the button dead.)
+  function checkedMergeBoxes() {
+    return [...document.querySelectorAll('.merge-checkbox:checked')];
+  }
+  function updateMergeBtn() {
+    const n = checkedMergeBoxes().length;
+    mergeBtn.disabled = n !== 2;
+    mergeBtn.style.opacity = n === 2 ? '1' : '0.55';
+    mergeBtn.style.cursor = n === 2 ? 'pointer' : 'not-allowed';
+    mergeBtn.textContent = n === 2 ? 'Compare & Merge (2 selected)'
+      : n === 0 ? 'Compare & Merge — select 2 dancers'
+      : `Compare & Merge — select 2 dancers (${n} selected)`;
+  }
+  document.addEventListener('change', (e) => {
+    if (e.target.classList && e.target.classList.contains('merge-checkbox')) updateMergeBtn();
+  });
+  updateMergeBtn();
+
+  function openMergeModal() {
+    const boxes = checkedMergeBoxes();
+    if (boxes.length !== 2) { alert('Tick the checkboxes next to exactly two dancers first.'); return; }
+    const [a, b] = boxes;
+    document.getElementById('mergeNameA').textContent = a.dataset.name;
+    document.getElementById('mergeDobA').textContent = a.dataset.dob || 'N/A';
+    document.getElementById('mergeAwardsA').textContent = a.dataset.awards;
+    document.getElementById('mergeNameB').textContent = b.dataset.name;
+    document.getElementById('mergeDobB').textContent = b.dataset.dob || 'N/A';
+    document.getElementById('mergeAwardsB').textContent = b.dataset.awards;
+    const pA = document.getElementById('primaryA'), pB = document.getElementById('primaryB');
+    const dA = document.getElementById('dupA'), dB = document.getElementById('dupB');
+    // Choosing a primary enables the OTHER profile's id as the duplicate
+    pA.value = a.value; dA.value = b.value;
+    pB.value = b.value; dB.value = a.value;
+    pA.checked = false; pB.checked = false;
+    dA.disabled = true; dB.disabled = true;
+    pA.onchange = () => { dA.disabled = false; dB.disabled = true; };
+    pB.onchange = () => { dB.disabled = false; dA.disabled = true; };
+    document.getElementById('mergeModal').style.display = 'block';
+  }
 
   function openEditModal(btn) {
     document.getElementById('editDancerName').innerText = btn.getAttribute('data-name');

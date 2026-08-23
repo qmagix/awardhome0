@@ -224,6 +224,10 @@ async function main() {
           'owner login redirects to their studio page', owner.status + ' -> ' + owner.location);
         const hist = await fetch(BASE + `/manage/studio/${s1.lastID}/history`, { headers: { Cookie: owner.cookie } });
         check(hist.status === 200, 'owner studio history renders', 'status ' + hist.status);
+        const rosterRes = await fetch(BASE + `/manage/studio/${s1.lastID}/roster`, { headers: { Cookie: owner.cookie } });
+        const rosterHtml = await rosterRes.text();
+        check(rosterRes.status === 200 && rosterHtml.includes('function openMergeModal') && rosterHtml.includes('Compare &amp; Merge — select 2 dancers'),
+          'roster renders with Compare & Merge wiring present', 'status ' + rosterRes.status);
         const mg = await fetch(BASE + `/manage/studio/${s1.lastID}`, { headers: { Cookie: owner.cookie } });
         const mgHtml = await mg.text();
         check(mg.status === 200 && mgHtml.includes('Merge Suggestions') && mgHtml.includes('Smoke Test Studio Two'),
