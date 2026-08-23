@@ -1574,20 +1574,10 @@ router.post('/manage/studio/:id/group-dancers/preview', requireAuth, requireStud
       FROM dancers d JOIN dancer_studios ds ON ds.dancer_id = d.id
       WHERE ds.studio_id = ? AND LOWER(d.name) = LOWER(?)
     `, [req.studio.id, name]);
-    const elsewhere = await db.get(`
-      SELECT COUNT(*) AS n FROM dancers d
-      WHERE LOWER(d.name) = LOWER(?) AND d.id NOT IN (${candidates.length ? candidates.map(c => c.id).join(',') : '0'})
-    `, [name]);
-
     let status = 'new';
     if (candidates.length === 1) status = 'matched';
     else if (candidates.length > 1) status = 'ambiguous';
-    results.push({
-      input: name, status, candidates,
-      note: status === 'new' && elsewhere.n > 0
-        ? `${elsewhere.n} dancer${elsewhere.n === 1 ? '' : 's'} named "${name}" exist at other studios — dancer records are kept separate per studio, so a new record will be created for yours.`
-        : null
-    });
+    results.push({ input: name, status, candidates });
   }
 
   res.json({ routine, year, awardCount: awardIds.length, results });

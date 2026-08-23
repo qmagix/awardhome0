@@ -110,11 +110,13 @@ The registry lives in `utils/cardDesign.js` — future designs are added there a
 - **Paste-a-list input:** one name per line, commas, or semicolons — parsed, whitespace-normalized,
   deduped, capped at 60.
 - **Preview-then-apply (duplicate safety):** preview classifies each name with NO writes —
-  ✅ exactly one roster match (shown with award count + active years) will be linked;
-  ➕ unknown name creates a dancer on the roster (with a note if same-named dancers exist at
-  other studios — records stay per-studio by design); ⚠️ two+ roster dancers share the name →
-  owner picks which one (or "none of these" → new record). Confirm applies the cast to EVERY
-  award that routine won that year (`INSERT OR IGNORE`, so re-applying is safe).
+  ✅ exactly one roster match (shown with award count + active years) links by default, with a
+  pre-checked "same dancer" checkbox the owner can UNTICK to create a separate record instead
+  (an 18-year-old and a 6-year-old can share a name within one studio); ➕ unknown name creates
+  a dancer on the roster (same-named dancers at other studios are irrelevant — records are
+  per-studio by design, so no note is shown); ⚠️ two+ roster dancers share the name → owner
+  picks which one (or "none of these" → new record). Confirm applies the cast to EVERY award
+  that routine won that year (`INSERT OR IGNORE`, so re-applying is safe).
 - **Server safety:** chosen dancer ids must be on the studio's roster with the submitted name;
   removal deletes links only, never dancer records. Activity `group_cast_added` feeds the
   featured engine + onboarding. FAQ §8b documents it for owners.

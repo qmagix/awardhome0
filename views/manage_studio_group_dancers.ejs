@@ -178,7 +178,10 @@
       const rows = [...card.querySelectorAll('.gd-row')];
       const entries = rows.map(row => {
         const picked = row.querySelector('input[type=radio]:checked');
-        return { name: row.dataset.name, dancer_id: picked ? picked.value : row.dataset.dancerId };
+        if (picked) return { name: row.dataset.name, dancer_id: picked.value };
+        const sameBox = row.querySelector('.gd-same');
+        if (sameBox && !sameBox.checked) return { name: row.dataset.name, dancer_id: 'new' };
+        return { name: row.dataset.name, dancer_id: row.dataset.dancerId };
       }).filter(en => en.dancer_id);
       const unresolved = rows.length - entries.length;
       if (unresolved > 0) { alert('Please choose an option for every highlighted name first.'); return; }
@@ -215,11 +218,14 @@
       if (r.status === 'matched') {
         const c = r.candidates[0];
         html += '<div class="gd-row" data-name="' + esc(r.input) + '" data-dancer-id="' + c.id + '" style="padding: 0.3rem 0; font-size: 0.92rem;">'
-          + '✅ <strong>' + esc(c.name) + '</strong> <span style="color: var(--text-muted);">— on your roster (' + c.award_count + ' awards' + (c.years && c.years !== '–' ? ', ' + c.years : '') + ') — will be linked</span></div>';
+          + '✅ <strong>' + esc(c.name) + '</strong>'
+          + '<label style="display: block; margin: 0.15rem 0 0 1.4rem; cursor: pointer; color: var(--text-muted);">'
+          + '<input type="checkbox" class="gd-same" checked> '
+          + 'Same dancer as the ' + esc(c.name) + ' on your roster (' + c.award_count + ' awards' + (c.years && c.years !== '–' ? ', ' + c.years : '') + ')'
+          + ' <span style="font-size: 0.82rem;">— uncheck if this is a different dancer with the same name (creates a separate record)</span></label></div>';
       } else if (r.status === 'new') {
         html += '<div class="gd-row" data-name="' + esc(r.input) + '" data-dancer-id="new" style="padding: 0.3rem 0; font-size: 0.92rem;">'
-          + '➕ <strong>' + esc(r.input) + '</strong> <span style="color: var(--text-muted);">— new dancer, will be created and added to your roster</span>'
-          + (r.note ? '<div style="color: #fbbf24; font-size: 0.82rem; margin-left: 1.4rem;">' + esc(r.note) + '</div>' : '') + '</div>';
+          + '➕ <strong>' + esc(r.input) + '</strong> <span style="color: var(--text-muted);">— new dancer, will be created and added to your roster</span></div>';
       } else {
         html += '<div class="gd-row" data-name="' + esc(r.input) + '" style="padding: 0.4rem 0.5rem; font-size: 0.92rem; background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.35); border-radius: 6px; margin: 0.25rem 0;">'
           + '⚠️ <strong>' + esc(r.input) + '</strong> <span style="color: var(--text-muted);">— more than one dancer with this name is on your roster. Which one danced this routine?</span>';
