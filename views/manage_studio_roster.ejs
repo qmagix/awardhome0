@@ -64,6 +64,19 @@
     .btn-blue:hover { background-color: #2563eb; cursor: pointer; }
     .btn-primary-white { background-color: var(--primary); color: white; border: none; transition: filter 0.2s; }
     .btn-primary-white:hover { filter: brightness(1.1); cursor: pointer; }
+    /* Once dancers are selected, the merge button detaches from the
+       toolbar and floats bottom-right — the selection usually happens
+       far down the list, and the action should follow the admin. */
+    #mergeBtn.merge-floating {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      z-index: 999;
+      border-radius: 50px;
+      padding: 1rem 1.75rem;
+      font-size: 1.05rem;
+      box-shadow: 0 4px 20px rgba(212, 175, 55, 0.35), 0 4px 15px rgba(0, 0, 0, 0.4);
+    }
   </style>
   <div style="flex-grow: 1;">
     <div class="header-section" style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: flex-end;">
@@ -464,7 +477,10 @@
     mergeBtn.style.cursor = n === 2 ? 'pointer' : 'not-allowed';
     mergeBtn.textContent = n === 2 ? 'Compare & Merge (2 selected)'
       : n === 0 ? 'Compare & Merge — select 2 dancers'
-      : `Compare & Merge — select 2 dancers (${n} selected)`;
+      : n === 1 ? 'Compare & Merge — tick 1 more dancer'
+      : `Compare & Merge — select exactly 2 (${n} ticked)`;
+    // In the toolbar it teaches; once selection starts it floats along
+    mergeBtn.classList.toggle('merge-floating', n > 0);
   }
   document.addEventListener('change', (e) => {
     if (e.target.classList && e.target.classList.contains('merge-checkbox')) updateMergeBtn();
