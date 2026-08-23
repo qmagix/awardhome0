@@ -37,6 +37,9 @@
 
 ## DONE
 
+### 2026-08-23 — Refactor-damage audit (prompted by the lost Compare & Merge wiring)
+- [x] Three-sweep audit for silent refactor breakage: (1) runtime — every GET route hit with authenticated superadmin/owner/org-owner sessions, zero 5xx (kept as scripts/audit_get_routes.js — run after big refactors); (2) static — every onclick handler in views vs defined JS functions (3 hits, all resolved by including pages); (3) static — every form/fetch URL vs registered routes (7 hits, all false positives; /beta-unlock lives in server.js). Verdict: the two already-fixed bugs (history bare app.locals, roster merge JS deletion) were the only refactor casualties.
+
 ### 2026-08-23 — Link provenance & tombstones (three-source reconciliation, phase 1)
 - [x] award_dancers.source ('import'/'studio_owner'/'dancer_claim'/'admin') + created_at (DB-trigger-stamped) on every new link; legacy claim links recovered from status. award_dancer_removals tombstones written on all four director-removal surfaces; auto-backfill respects them; explicit claims still allowed (pending → director queue referees); director re-add clears. Group-dancers chips styled by provenance with legend. Merges carry provenance. See features.md §2c; org-upload design constraint recorded in TODOS.
 
