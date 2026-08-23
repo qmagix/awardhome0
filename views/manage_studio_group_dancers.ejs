@@ -121,7 +121,7 @@
               %>
                 <span class="gd-chip" title="<%= chipTitle %>" style="display: inline-flex; align-items: center; gap: 0.35rem; <%= chipStyle %> border-radius: 14px; padding: 0.2rem 0.7rem; font-size: 0.85rem;">
                   <% if (chipIcon) { %><span style="font-size: 0.75rem;"><%= chipIcon %></span><% } %>
-                  <%= d.name %>
+                  <%= d.name %><% if (d.label) { %> <span style="color: var(--text-muted); font-size: 0.78rem;">🏷 <%= d.label %></span><% } %>
                   <button type="button" class="gd-remove" data-dancer-id="<%= d.id %>" title="Remove from this routine"
                     style="background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 0; font-size: 0.95rem; line-height: 1;">×</button>
                 </span>
@@ -209,6 +209,20 @@
     }
   });
 
+  // Private dancer tags save on blur/change; green flash confirms
+  document.addEventListener('change', async (e) => {
+    if (!e.target.classList.contains('gd-tag')) return;
+    const input = e.target;
+    try {
+      const res = await fetch('/manage/studio/<%= studio.id %>/roster/' + input.dataset.dancerId + '/label', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ label: input.value })
+      });
+      input.style.borderColor = res.ok ? 'rgba(52,211,153,0.8)' : 'rgba(248,113,113,0.8)';
+      setTimeout(() => { input.style.borderColor = 'rgba(255,255,255,0.15)'; }, 1200);
+    } catch (err) { input.style.borderColor = 'rgba(248,113,113,0.8)'; }
+  });
+
   function renderPreview(card, data) {
     const box = card.querySelector('.gd-result');
     const rid = Math.floor(Math.random() * 1e9);
@@ -218,11 +232,13 @@
       if (r.status === 'matched') {
         const c = r.candidates[0];
         html += '<div class="gd-row" data-name="' + esc(r.input) + '" data-dancer-id="' + c.id + '" style="padding: 0.3rem 0; font-size: 0.92rem;">'
-          + '✅ <strong>' + esc(c.name) + '</strong>'
+          + '✅ <strong>' + esc(c.name) + '</strong>' + (c.label ? ' <span style="color: var(--text-muted); font-size: 0.82rem;">🏷 ' + esc(c.label) + '</span>' : '')
           + '<label style="display: block; margin: 0.15rem 0 0 1.4rem; cursor: pointer; color: var(--text-muted);">'
           + '<input type="checkbox" class="gd-same" checked> '
-          + 'Same dancer as the ' + esc(c.name) + ' on your roster (' + c.award_count + ' awards' + (c.years && c.years !== '–' ? ', ' + c.years : '') + ')'
-          + ' <span style="font-size: 0.82rem;">— uncheck if this is a different dancer with the same name (creates a separate record)</span></label></div>';
+          + 'Same dancer as the ' + esc(c.name) + (c.label ? ' "' + esc(c.label) + '"' : '') + ' on your roster (' + c.award_count + ' awards' + (c.years && c.years !== '–' ? ', ' + c.years : '') + ')'
+          + ' <span style="font-size: 0.82rem;">— uncheck if this is a different dancer with the same name (creates a separate record)</span></label>'
+          + (c.recent_routines ? '<div style="color: var(--text-muted); font-size: 0.82rem; margin-left: 1.4rem;">Their recent routines: ' + esc(c.recent_routines) + '</div>' : '')
+          + '</div>';
       } else if (r.status === 'new') {
         html += '<div class="gd-row" data-name="' + esc(r.input) + '" data-dancer-id="new" style="padding: 0.3rem 0; font-size: 0.92rem;">'
           + '➕ <strong>' + esc(r.input) + '</strong> <span style="color: var(--text-muted);">— new dancer, will be created and added to your roster</span></div>';
@@ -230,9 +246,16 @@
         html += '<div class="gd-row" data-name="' + esc(r.input) + '" style="padding: 0.4rem 0.5rem; font-size: 0.92rem; background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.35); border-radius: 6px; margin: 0.25rem 0;">'
           + '⚠️ <strong>' + esc(r.input) + '</strong> <span style="color: var(--text-muted);">— more than one dancer with this name is on your roster. Which one danced this routine?</span>';
         r.candidates.forEach(c => {
-          html += '<label style="display: block; margin: 0.25rem 0 0 1.4rem; cursor: pointer;">'
+          html += '<div style="margin: 0.35rem 0 0 1.4rem;">'
+            + '<label style="cursor: pointer;">'
             + '<input type="radio" name="gd-pick-' + rid + '-' + i + '" value="' + c.id + '"> '
-            + esc(c.name) + ' <span style="color: var(--text-muted);">(' + c.award_count + ' awards' + (c.years && c.years !== '–' ? ', ' + c.years : '') + (c.graduation_year ? ', grad ' + c.graduation_year : '') + ')</span></label>';
+            + esc(c.name) + (c.label ? ' <strong style="color: var(--primary);">🏷 ' + esc(c.label) + '</strong>' : '')
+            + ' <span style="color: var(--text-muted);">(' + c.award_count + ' awards' + (c.years && c.years !== '–' ? ', ' + c.years : '') + (c.graduation_year ? ', grad ' + c.graduation_year : '') + ')</span></label>'
+            + (c.recent_routines ? '<div style="color: var(--text-muted); font-size: 0.82rem; margin-left: 1.3rem;">Their recent routines: ' + esc(c.recent_routines) + '</div>' : '')
+            + '<div style="margin-left: 1.3rem; margin-top: 0.2rem;"><input type="text" class="gd-tag" data-dancer-id="' + c.id + '" value="' + esc(c.label || '') + '" placeholder="private tag, e.g. Senior Mia" maxlength="40"'
+            + ' style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; color: white; padding: 0.2rem 0.5rem; font-size: 0.8rem; width: 200px;">'
+            + ' <span style="color: var(--text-muted); font-size: 0.75rem;">saves when you click away — only your studio tools show it</span></div>'
+            + '</div>';
         });
         html += '<label style="display: block; margin: 0.25rem 0 0 1.4rem; cursor: pointer;">'
           + '<input type="radio" name="gd-pick-' + rid + '-' + i + '" value="new"> '

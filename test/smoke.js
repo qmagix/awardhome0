@@ -289,6 +289,26 @@ async function main() {
           const relink = await db.get('SELECT source FROM award_dancers WHERE award_id = ? AND dancer_id = ?', [gaw.lastID, rosterDancer.lastID]);
           check(reapply.status === 200 && !tomb2 && relink && relink.source === 'studio_owner',
             'owner re-add clears the tombstone and relinks', 'tombstone=' + !!tomb2 + ' link=' + JSON.stringify(relink));
+
+          // Same-name disambiguation: second roster dancer with the same
+          // name → preview turns ambiguous with routine context; the
+          // director's private tag saves and comes back in candidates.
+          const twin = await db.run("INSERT INTO dancers (unique_id, name) VALUES ('smoke-dancer-1b', 'Smoke Dancer One')");
+          await db.run('INSERT INTO dancer_studios (dancer_id, studio_id) VALUES (?, ?)', [twin.lastID, s1.lastID]);
+          const lb = await fetch(BASE + `/manage/studio/${s1.lastID}/roster/${rosterDancer.lastID}/label`, {
+            method: 'POST', headers: gdHeaders, body: JSON.stringify({ label: 'Senior Smoke' })
+          });
+          const pv2 = await fetch(BASE + `/manage/studio/${s1.lastID}/group-dancers/preview`, {
+            method: 'POST', headers: gdHeaders,
+            body: JSON.stringify({ routine: 'Smoke Group Routine', year: event.year, names: 'Smoke Dancer One' })
+          });
+          const pd2 = pv2.status === 200 ? await pv2.json() : { results: [] };
+          const amb = pd2.results[0] || {};
+          const tagged = (amb.candidates || []).find(c => c.label === 'Senior Smoke');
+          const withRoutines = (amb.candidates || []).some(c => (c.recent_routines || '').includes('Smoke Group Routine'));
+          check(lb.status === 200 && amb.status === 'ambiguous' && amb.candidates.length === 2 && !!tagged && withRoutines,
+            'same-name twin previews ambiguous with private tag + routine context',
+            pv2.status + ' status=' + amb.status + ' tagged=' + !!tagged + ' routines=' + withRoutines);
         }
 
         const claimant = await login('smoke-claimant@test.invalid');

@@ -117,6 +117,12 @@ The registry lives in `utils/cardDesign.js` — future designs are added there a
   per-studio by design, so no note is shown); ⚠️ two+ roster dancers share the name → owner
   picks which one (or "none of these" → new record). Confirm applies the cast to EVERY award
   that routine won that year (`INSERT OR IGNORE`, so re-applying is safe).
+- **Same-name disambiguation aids:** every candidate shows their 3 most recent routines (award
+  counts/years can coincide; routines are what a director actually recognizes), and directors can
+  set a **private tag** per dancer (`dancer_studios.label`, ≤40 chars, e.g. "Senior Mia") —
+  editable inline in the ambiguous picker and on the roster page (click the 🏷/＋ tag next to a
+  name). Tags appear across studio-management surfaces (candidates, cast chips, roster) and never
+  on public pages.
 - **Server safety:** chosen dancer ids must be on the studio's roster with the submitted name;
   removal deletes links only, never dancer records. Activity `group_cast_added` feeds the
   featured engine + onboarding. FAQ §8b documents it for owners.

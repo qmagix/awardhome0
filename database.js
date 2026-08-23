@@ -499,6 +499,11 @@ async function initDb() {
     await db.exec("UPDATE events SET created_at = '2026-05-15 00:00:00'");
   } catch(e) {}
 
+  // Director's private tag for a dancer within their studio ("Senior Mia",
+  // "Mia 2018") — shown only on studio-management surfaces to distinguish
+  // same-name dancers; never on public pages.
+  try { await db.exec("ALTER TABLE dancer_studios ADD COLUMN label TEXT"); } catch(e) {}
+
   // Link provenance: who asserted each dancer-award link ('import' |
   // 'studio_owner' | 'dancer_claim' | 'admin') and when. Importers don't
   // set source (the ADD COLUMN default covers them); human surfaces set

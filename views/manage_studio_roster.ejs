@@ -156,6 +156,7 @@
                 </td>
                 <td style="padding: 1rem 0;">
                   <a href="/dancer/<%= dancer.unique_id %>" style="color: white; text-decoration: none; font-weight: 600;"><%= dancer.name %></a>
+                  <span class="roster-tag" data-dancer-id="<%= dancer.id %>" title="Your private tag for this dancer — click to edit" style="cursor: pointer; margin-left: 0.4rem; font-size: 0.78rem; color: var(--text-muted);"><%= dancer.label ? '🏷 ' + dancer.label : '＋ tag' %></span>
                 </td>
                 <td style="padding: 1rem 0;">
                   <% if (dancer.headshot_url) { %>
@@ -224,6 +225,7 @@
                 </td>
                 <td style="padding: 1rem 0;">
                   <a href="/dancer/<%= dancer.unique_id %>" style="color: white; text-decoration: none; font-weight: 600;"><%= dancer.name %></a>
+                  <span class="roster-tag" data-dancer-id="<%= dancer.id %>" title="Your private tag for this dancer — click to edit" style="cursor: pointer; margin-left: 0.4rem; font-size: 0.78rem; color: var(--text-muted);"><%= dancer.label ? '🏷 ' + dancer.label : '＋ tag' %></span>
                 </td>
                 <td style="padding: 1rem 0;">
                   <% if (dancer.headshot_url) { %>
@@ -578,6 +580,38 @@
       alert('Error connecting to server.');
     }
   }
+
+  // Private dancer tags ("Senior Mia") — click to edit inline, Enter/blur
+  // saves. Distinguishes same-name dancers across studio-management tools.
+  document.addEventListener('click', (e) => {
+    const tag = e.target.closest('.roster-tag');
+    if (!tag || tag.querySelector('input')) return;
+    const current = tag.textContent.startsWith('🏷') ? tag.textContent.replace('🏷', '').trim() : '';
+    tag.innerHTML = '';
+    const input = document.createElement('input');
+    input.type = 'text'; input.value = current; input.maxLength = 40;
+    input.placeholder = 'e.g. Senior Mia';
+    input.style.cssText = 'background: rgba(0,0,0,0.4); border: 1px solid rgba(212,175,55,0.5); border-radius: 4px; color: white; padding: 0.15rem 0.4rem; font-size: 0.78rem; width: 140px;';
+    tag.appendChild(input);
+    input.focus();
+    let done = false;
+    const save = async () => {
+      if (done) return; done = true;
+      const label = input.value.trim();
+      try {
+        await fetch('/manage/studio/<%= studio.id %>/roster/' + tag.dataset.dancerId + '/label', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ label })
+        });
+      } catch (err) {}
+      tag.textContent = label ? '🏷 ' + label : '＋ tag';
+    };
+    input.addEventListener('blur', save);
+    input.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter') { ev.preventDefault(); input.blur(); }
+      if (ev.key === 'Escape') { done = true; tag.textContent = current ? '🏷 ' + current : '＋ tag'; }
+    });
+  });
 </script>
 
 <%- include('partials/footer') %>

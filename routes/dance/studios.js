@@ -222,7 +222,7 @@ router.get('/manage/studio/:id/roster', requireAuth, requireStudioOwner, async (
   const studio = req.studio;
 
   const roster = await db.all(`
-    SELECT d.id, d.unique_id, d.name, d.birthday, ds.status, ds.headshot_url, ds.graduation_year,
+    SELECT d.id, d.unique_id, d.name, d.birthday, ds.status, ds.headshot_url, ds.graduation_year, ds.label,
            (SELECT COUNT(*) FROM award_dancers ad JOIN awards a ON ad.award_id = a.id WHERE ad.dancer_id = d.id AND a.studio_id = ds.studio_id) as total_awards
     FROM dancers d
     JOIN dancer_studios ds ON d.id = ds.dancer_id
@@ -1509,12 +1509,13 @@ router.get('/manage/studio/:id/group-dancers', requireAuth, requireStudioOwner, 
   // entry vs a dancer's claim awaiting their verification).
   const casts = await db.all(`
     SELECT TRIM(a.performance_name) AS routine, IFNULL(e.year, 'Undated') AS year,
-           d.id AS dancer_id, d.name AS dancer_name,
+           d.id AS dancer_id, d.name AS dancer_name, MAX(ds.label) AS label,
            GROUP_CONCAT(DISTINCT IFNULL(ad.source, 'import')) AS sources,
            GROUP_CONCAT(DISTINCT IFNULL(ad.status, 'imported')) AS statuses
     FROM awards a LEFT JOIN events e ON a.event_id = e.id
     JOIN award_dancers ad ON ad.award_id = a.id
     JOIN dancers d ON d.id = ad.dancer_id
+    LEFT JOIN dancer_studios ds ON ds.dancer_id = d.id AND ds.studio_id = a.studio_id
     WHERE a.studio_id = ? AND TRIM(IFNULL(a.performance_name, '')) != ''
       AND LOWER(IFNULL(a.award_type, '')) NOT LIKE '%solo%'
       AND LOWER(IFNULL(a.category, '')) NOT LIKE '%solo%'
@@ -1532,7 +1533,7 @@ router.get('/manage/studio/:id/group-dancers', requireAuth, requireStudioOwner, 
       : sources.includes('admin') ? 'admin'
       : sources.includes('dancer_claim') ? 'dancer_claim' : 'import';
     const pending = statuses.length > 0 && statuses.every(s => s === 'pending');
-    (castMap[key] = castMap[key] || []).push({ id: c.dancer_id, name: c.dancer_name, source, pending });
+    (castMap[key] = castMap[key] || []).push({ id: c.dancer_id, name: c.dancer_name, label: c.label, source, pending });
   }
   routines.forEach(r => { r.cast = castMap[r.routine + '|||' + r.year] || []; });
 
@@ -1544,6 +1545,17 @@ router.get('/manage/studio/:id/group-dancers', requireAuth, requireStudioOwner, 
     studio, routines, doneCount,
     pageTitle: 'Group Routine Dancers'
   });
+});
+
+// Director's private tag for a roster dancer ("Senior Mia") — the
+// human-readable disambiguator for same-name dancers on manage surfaces.
+router.post('/manage/studio/:id/roster/:dancerId/label', requireAuth, requireStudioOwner, async (req, res) => {
+  const db = await openDb();
+  const label = String((req.body && req.body.label) || '').trim().slice(0, 40) || null;
+  const r = await db.run('UPDATE dancer_studios SET label = ? WHERE dancer_id = ? AND studio_id = ?',
+    [label, parseInt(req.params.dancerId, 10), req.studio.id]);
+  if (!r.changes) return res.status(404).json({ error: 'Dancer is not on your roster' });
+  res.json({ success: true, label });
 });
 
 // Phase 1: classify each pasted name against the roster — NO writes.
@@ -1564,7 +1576,7 @@ router.post('/manage/studio/:id/group-dancers/preview', requireAuth, requireStud
   const results = [];
   for (const name of parsed) {
     const candidates = await db.all(`
-      SELECT d.id, d.name, d.graduation_year,
+      SELECT d.id, d.name, d.graduation_year, ds.label,
              (SELECT COUNT(*) FROM award_dancers ad JOIN awards a ON ad.award_id = a.id
               WHERE ad.dancer_id = d.id AND a.studio_id = ds.studio_id) AS award_count,
              (SELECT IFNULL(MIN(e.year), '') || '–' || IFNULL(MAX(e.year), '')
@@ -1574,6 +1586,17 @@ router.post('/manage/studio/:id/group-dancers/preview', requireAuth, requireStud
       FROM dancers d JOIN dancer_studios ds ON ds.dancer_id = d.id
       WHERE ds.studio_id = ? AND LOWER(d.name) = LOWER(?)
     `, [req.studio.id, name]);
+    // Their recent routines — the detail a director actually recognizes
+    // when award counts and years happen to coincide.
+    for (const c of candidates) {
+      const routines = await db.all(`
+        SELECT a.performance_name AS pn
+        FROM award_dancers ad JOIN awards a ON ad.award_id = a.id
+        WHERE ad.dancer_id = ? AND a.studio_id = ? AND TRIM(IFNULL(a.performance_name, '')) != ''
+        GROUP BY a.performance_name ORDER BY MAX(a.id) DESC LIMIT 3
+      `, [c.id, req.studio.id]);
+      c.recent_routines = routines.map(r => r.pn).join(' · ');
+    }
     let status = 'new';
     if (candidates.length === 1) status = 'matched';
     else if (candidates.length > 1) status = 'ambiguous';
