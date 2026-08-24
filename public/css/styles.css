@@ -2662,3 +2662,83 @@ footer {
     padding: 1.3cqw 2.7cqw;
   }
 }
+
+/* --- Studio page polish: achievement sparkle + Hall of Fame hover ------ */
+.stat-card {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+/* gold hairline glint along the top edge */
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.55), transparent);
+  pointer-events: none;
+}
+
+/* slow diagonal shimmer sweeping each card; staggered so the row twinkles */
+.stat-card::after {
+  content: '';
+  position: absolute;
+  top: -60%;
+  bottom: -60%;
+  width: 45%;
+  left: -75%;
+  background: linear-gradient(105deg,
+    transparent 20%,
+    rgba(255, 236, 170, 0.09) 45%,
+    rgba(212, 175, 55, 0.20) 50%,
+    rgba(255, 236, 170, 0.09) 55%,
+    transparent 80%);
+  transform: rotate(8deg);
+  pointer-events: none;
+  animation: stat-shimmer 7s ease-in-out infinite;
+}
+
+.stat-card:nth-child(2n)::after { animation-delay: 1.6s; }
+.stat-card:nth-child(3n)::after { animation-delay: 3.1s; }
+.stat-card:nth-child(5n)::after { animation-delay: 4.7s; }
+
+@keyframes stat-shimmer {
+  0%   { left: -75%; opacity: 0; }
+  5%   { opacity: 1; }
+  16%  { left: 130%; opacity: 0; }
+  100% { left: 130%; opacity: 0; }
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(212, 175, 55, 0.16);
+  border-color: rgba(212, 175, 55, 0.35);
+}
+
+/* Hall of Fame: same lift language as the award cards */
+.hof-card {
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.hof-card:hover {
+  transform: translateY(-4px) scale(1.015);
+  box-shadow: 0 12px 35px rgba(212, 175, 55, 0.22), 0 6px 18px rgba(0, 0, 0, 0.45);
+}
+
+.hof-card .hof-icon {
+  opacity: 0.05;
+  transition: transform 0.4s ease, opacity 0.4s ease;
+}
+
+.hof-card:hover .hof-icon {
+  transform: rotate(-8deg) scale(1.15);
+  opacity: 0.13;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stat-card::after { animation: none; display: none; }
+  .stat-card, .hof-card, .hof-card .hof-icon { transition: none; }
+}
