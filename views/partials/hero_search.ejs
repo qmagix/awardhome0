@@ -53,5 +53,17 @@
   document.addEventListener('click', (e) => {
     if (!e.target.closest('.hero-search')) panel.style.display = 'none';
   });
+
+  // Landing-page handoff: the landing search forms submit to /dance?q=…
+  // (they can't run the typeahead cross-page). Honor the handed-off query
+  // by prefilling the box and firing the same debounced lookup.
+  try {
+    const q0 = new URLSearchParams(window.location.search).get('q');
+    if (q0 && q0.trim().length >= 2) {
+      input.value = q0.trim();
+      input.focus();
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  } catch (e) { /* very old browsers — the box still works manually */ }
 })();
 </script>
