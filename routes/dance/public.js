@@ -164,11 +164,15 @@ router.all('/unsubscribe', async (req, res) => {
 // AwardHome umbrella landing for anonymous visitors; logged-in users go
 // straight to the dance vertical home.
 router.get('/', (req, res) => {
-  // "Front Door" landing redesign preview (?design=rafters, like the studio
-  // and org previews). Also bypasses the logged-in redirect so the design
-  // can be previewed from a signed-in session.
+  // Landing redesign previews (bypass the logged-in redirect so designs
+  // can be previewed from a signed-in session): ?design=rafters is the
+  // full "Front Door" (public2); ?design=hybrid keeps the original's
+  // two-column hero + AwardHome wordmark on the Front Door system (public3).
   if (req.query.design === 'rafters') {
     return res.sendFile(path.join(__dirname, '..', '..', 'public2', 'index.html'));
+  }
+  if (req.query.design === 'hybrid') {
+    return res.sendFile(path.join(__dirname, '..', '..', 'public3', 'index.html'));
   }
   if (req.session.user) return res.redirect('/dance');
   res.sendFile(path.join(__dirname, '..', '..', 'landing', 'index.html'));
