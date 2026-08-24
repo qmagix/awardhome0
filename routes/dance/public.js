@@ -1080,7 +1080,9 @@ router.get('/dancer/:unique_id', profileLimiter, async (req, res) => {
   }
 
   const totalAwardCount = soloAwards.length + groupAwards.length + conventionAwards.length;
-  res.render('dancer', {
+  // ?design=rafters previews the Rafters page chrome. Independent of
+  // ?card_design= (the award-card variant registry) — the two compose.
+  res.render(req.query.design === 'rafters' ? 'dancer_v2' : 'dancer', {
     dancer, soloAwards, groupAwards, conventionAwards, yearSections, cardDesign,
     featureNotes, featurePhotos, featureReactions,
     pageTitle: dancer.name,

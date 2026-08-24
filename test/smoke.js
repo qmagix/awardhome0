@@ -109,6 +109,8 @@ async function main() {
       if (studio) CHECKS.push(['GET', `/claim/studio/${studio.unique_id}`, [200], 'claim page public (one-page apply)']);
       if (studio) burstPath = `/dance/studio/${studio.unique_id}`;
       if (dancer) CHECKS.push(['GET', `/dancer/${dancer.unique_id}`, [200], 'real dancer trophy case renders']);
+      if (dancer) CHECKS.push(['GET', `/dancer/${dancer.unique_id}?design=rafters&card_design=rafters`, [200], 'dancer Rafters preview + rafters card variant render']);
+      if (dancer) CHECKS.push(['GET', `/dancer/${dancer.unique_id}?card_design=default`, [200], 'card design session override clears']);
       if (dancer) CHECKS.push(['GET', `/claim/dancer/${dancer.id}`, [200], 'dancer claim page public (one-page apply)']);
       if (event) CHECKS.push(['GET', `/dance/event/${event.id}`, [403], 'event detail stays admin-gated']);
       if (studio) CHECKS.push(['GET', `/widget/studio/${studio.unique_id}`, [200], 'embeddable widget renders']);

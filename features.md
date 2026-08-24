@@ -47,6 +47,11 @@ The registry lives in `utils/cardDesign.js` — future designs are added there a
 `views/partials/dancer_award_card.ejs`.
 
 - **Classic (original):** two faces — trophy front, champagne certificate back with the share button.
+- **Rafters (2026-08-24):** the classic anatomy reskinned in the Rafters design language — engraved
+  stage-black front, gold hairlines + base strip, Cinzel display type (font ships as a data URI in
+  `public/css/card_rafters.css`, loaded only when the resolved design is `rafters`). Tier medal
+  colors, org coins, verification badges, and the certificate back all carry over; no flipbook
+  pages. Pure CSS via `.flip-card.card-rafters` — preview with `?card_design=rafters`.
 - **Flip-book (new):** the back becomes a swipeable mini-book. Pages materialize only when their
   approval-gated content exists, so the first flip always lands on a complete certificate:
   1. **Certificate** — "Presented to …" (always present; share button lives on the back across pages).
@@ -172,6 +177,15 @@ at the preview — it's shared by URL for owner feedback ahead of a full cutover
   is present, so the classic page pays nothing. Smoke check: "Rafters design preview renders".
 - **Origin:** static concept mockup lives at `design/studio_page_mockup.html` (real Triple Threat
   data, self-contained).
+
+### Dancer edition (`/dancer/:unique_id?design=rafters`)
+Rafters chrome around untouched award cards: spotlight hero (headshot coin, Cinzel name,
+affiliations, record strip, milestone line, claim/manage/share CTAs), "The Case" section with the
+classic display-mode machinery reused verbatim (mini/portrait/landscape/table toggle, lightbox,
+sortable tables, flipbook.js, reactions). `public/css/dancer_v2.css` explicitly restores the
+cards' inherited fonts inside the `.v2` wrapper so cards render pixel-identical to the classic
+page. Composes with the card registry: `?design=rafters&card_design=rafters` shows the full
+engraved look.
 
 ### Organizer edition (`/dance/org/:slug?design=rafters`)
 The same design system applied to the public org page (`views/org_v2.ejs` +

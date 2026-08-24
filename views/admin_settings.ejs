@@ -82,7 +82,8 @@
     <h2 style="color: var(--primary); margin-bottom: 1rem;">Award Card Design</h2>
     <p style="color: var(--text-muted); margin-bottom: 1.5rem; line-height: 1.6;">
       Which card design public dancer pages render (A/B probe — visitors can preview either
-      variant with <code>?card_design=classic</code> / <code>?card_design=flipbook</code> on a dancer page;
+      variant with <code>?card_design=classic</code> / <code>?card_design=flipbook</code> /
+      <code>?card_design=rafters</code> on a dancer page;
       <code>?card_design=default</code> clears their session override). Takes effect instantly.
     </p>
 
@@ -105,6 +106,16 @@
           <div style="font-size: 0.85rem; color: var(--text-muted);">
             The back becomes a paged mini-book: certificate &rarr; photo &rarr; thank-you notes &rarr; organizer colophon.
             Pages appear only when their approval-gated content exists (see <a href="/admin/card-content" style="color: var(--primary);">Card Content Review</a>).
+          </div>
+        </div>
+      </label>
+      <label style="display: flex; align-items: flex-start; gap: 1rem; padding: 1rem; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; cursor: pointer;">
+        <input type="radio" name="card_design" value="rafters" <%= cardDesign === 'rafters' ? 'checked' : '' %> style="margin-top: 0.3rem;">
+        <div>
+          <div style="font-weight: bold; color: white; margin-bottom: 0.25rem;">Rafters <span style="background: rgba(212, 175, 55, 0.2); color: #f3e5ab; font-size: 0.7rem; padding: 0.1rem 0.4rem; border-radius: 4px; margin-left: 0.5rem;">Engraved</span></div>
+          <div style="font-size: 0.85rem; color: var(--text-muted);">
+            The classic anatomy reskinned in the Rafters design language: engraved stage-black front,
+            gold hairlines and base strip, Cinzel display type. Same certificate back, no flipbook pages.
           </div>
         </div>
       </label>

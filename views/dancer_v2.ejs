@@ -1,0 +1,422 @@
+<%- include('partials/header') %>
+<link rel="stylesheet" href="/css/studio_v2.css">
+<link rel="stylesheet" href="/css/dancer_v2.css">
+<% if (typeof cardDesign !== 'undefined' && cardDesign === 'rafters') { %>
+  <link rel="stylesheet" href="/css/card_rafters.css">
+<% } %>
+
+<%
+  const allAwards = [...soloAwards, ...groupAwards, ...conventionAwards];
+  const totalAwardsCount = allAwards.length;
+  let maxYear = 0;
+  allAwards.forEach(a => { const y = parseInt(a.event_year); if (!isNaN(y) && y > maxYear) maxYear = y; });
+  const awardsThisYear = allAwards.filter(a => parseInt(a.event_year) === maxYear).length;
+  const seasonCount = yearSections.filter(s => s.year !== 'Undated').length;
+  const isOwner = typeof user !== 'undefined' && user && user.id === dancer.claimed_by_user_id;
+%>
+
+<div class="v2">
+
+  <div class="v2-preview">
+    <span>Design preview &mdash; &ldquo;The Rafters&rdquo; concept</span>
+    <a href="/dancer/<%= dancer.unique_id %>">View the classic page</a>
+  </div>
+
+  <section class="v2-hero">
+    <p class="v2-eyebrow">DIGITAL TROPHY CASE<% if (seasonCount > 0) { %> &middot; <%= seasonCount %> <%= seasonCount === 1 ? 'SEASON' : 'SEASONS' %> ON RECORD<% } %></p>
+    <div class="v2-headshot" aria-hidden="true">
+      <% if (dancer.headshot_url) { %><img src="<%= dancer.headshot_url %>" alt=""><% } else { %>&#128131;<% } %>
+    </div>
+    <h1 style="display: flex; align-items: center; justify-content: center; gap: 0.7rem; flex-wrap: wrap;">
+      <%= dancer.name %>
+      <% if (dancer.is_claimed) { %>
+        <svg viewBox="0 0 24 24" fill="#3b82f6" width="26" height="26" style="flex-shrink: 0;" title="Verified Dancer">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+        </svg>
+      <% } %>
+    </h1>
+    <% if (dancer.studios.length > 0) { %>
+      <p class="v2-affil">Dances with
+        <% dancer.studios.forEach(function(s, idx) { %><a href="/dance/studio/<%= s.unique_id %>"><%= s.name %></a><%= idx < dancer.studios.length - 1 ? ', ' : '' %><% }); %>
+      </p>
+    <% } %>
+    <div class="v2-id-row">
+      <span>ID: <code><%= dancer.unique_id %></code></span>
+      <% if (dancer.vanity_tag) { %><span class="vanity-chip">#<%= dancer.vanity_tag %></span><% } %>
+    </div>
+
+    <div class="v2-record" role="list" aria-label="Award record">
+      <div class="v2-cell" role="listitem"><div class="v2-num" data-count="<%= totalAwardsCount %>"><%= totalAwardsCount.toLocaleString() %></div><div class="v2-lbl">Total Awards</div></div>
+      <% if (soloAwards.length > 0) { %>
+        <div class="v2-cell" role="listitem"><div class="v2-num" data-count="<%= soloAwards.length %>"><%= soloAwards.length.toLocaleString() %></div><div class="v2-lbl">Solos</div></div>
+      <% } %>
+      <% if (groupAwards.length > 0) { %>
+        <div class="v2-cell" role="listitem"><div class="v2-num" data-count="<%= groupAwards.length %>"><%= groupAwards.length.toLocaleString() %></div><div class="v2-lbl">Groups</div></div>
+      <% } %>
+      <% if (conventionAwards.length > 0) { %>
+        <div class="v2-cell" role="listitem"><div class="v2-num" data-count="<%= conventionAwards.length %>"><%= conventionAwards.length.toLocaleString() %></div><div class="v2-lbl">Special</div></div>
+      <% } %>
+      <% if (seasonCount > 0) { %>
+        <div class="v2-cell" role="listitem"><div class="v2-num" data-count="<%= seasonCount %>"><%= seasonCount %></div><div class="v2-lbl">Seasons</div></div>
+      <% } %>
+    </div>
+
+    <% if (totalAwardsCount > 20 && maxYear > 0) { %>
+      <p class="v2-milestone"><span class="v2-mstar">&#10022;</span>
+        <b><%= totalAwardsCount.toLocaleString() %> awards and counting</b> &mdash;
+        <%= awardsThisYear %> of them earned in <%= maxYear %> alone.</p>
+    <% } %>
+
+    <div class="v2-meta-row">
+      <% if (dancer.instagram_handle) { %>
+        <a href="https://instagram.com/<%= dancer.instagram_handle.replace('@', '') %>" target="_blank" rel="noopener">Instagram</a>
+      <% } %>
+      <% if (dancer.tiktok_handle) { %>
+        <a href="https://tiktok.com/@<%= dancer.tiktok_handle.replace('@', '') %>" target="_blank" rel="noopener">TikTok</a>
+      <% } %>
+    </div>
+
+    <div class="v2-ctas">
+      <% if (!dancer.is_claimed) { %>
+        <a href="/claim/dancer/<%= dancer.id %>" class="v2-gold-btn">Claim this dancer</a>
+      <% } else if (isOwner) { %>
+        <a href="/manage/dancer/<%= dancer.id %>" class="v2-gold-btn">Manage profile</a>
+      <% } %>
+      <button onclick="shareProfile()" class="v2-ghost-btn" type="button">Share this trophy case</button>
+    </div>
+    <% if (!dancer.is_claimed) { %>
+      <p class="v2-claim-note">Our awards detectives occasionally miss or mislabel an award. Claiming this
+        page lets you add awards and fix anything that's wrong.</p>
+    <% } %>
+  </section>
+
+  <main class="v2-wrap">
+    <section class="v2-section" aria-labelledby="v2d-case-h">
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; flex-wrap: wrap;">
+        <div>
+          <p class="v2-kicker">The Case</p>
+          <h2 id="v2d-case-h">Every award, season by season</h2>
+        </div>
+        <div class="view-toggle">
+          <button id="btn-mode-mini" class="btn btn-outline btn-sm" onclick="setDisplayMode('mini')" title="Compact overview — tap a card to enlarge">Mini</button>
+          <button id="btn-mode-portrait" class="btn btn-primary btn-sm" onclick="setDisplayMode('portrait')" title="Portrait card grid">Portrait</button>
+          <button id="btn-mode-landscape" class="btn btn-outline btn-sm" onclick="setDisplayMode('landscape')" title="Landscape card grid">Landscape</button>
+          <button id="btn-mode-table" class="btn btn-outline btn-sm" onclick="setDisplayMode('table')" title="Sortable table">Table</button>
+        </div>
+      </div>
+
+      <div class="awards-view-grid" style="gap: 0;">
+        <% if (yearSections.length === 0) { %>
+          <p style="color: var(--v2-ink-mut); margin-top: 2rem;">No awards found yet.</p>
+        <% } else { %>
+          <% yearSections.forEach(function(sec) { %>
+            <h3 class="year-divider"><%= sec.year %></h3>
+            <% [['Group Awards', sec.group], ['Solo Awards', sec.solo], ['Special / Convention Awards', sec.convention]].forEach(function(cat) { %>
+              <% if (cat[1].length > 0) { %>
+                <h4 class="type-divider"><%= cat[0] %></h4>
+                <div class="awards-grid">
+                  <% cat[1].forEach(function(award) { %>
+                    <%- include('partials/dancer_award_card', { award: award, isGroupAward: cat[0] === 'Group Awards' }) %>
+                  <% }); %>
+                </div>
+              <% } %>
+            <% }); %>
+          <% }); %>
+        <% } %>
+      </div>
+
+      <div class="awards-view-table card glass-card" style="display: none; overflow-x: auto; margin-top: 1rem;">
+        <h2 style="margin: 1rem 1rem 0.5rem;">Group Awards</h2>
+        <table class="data-table" id="groupTable" style="width: 100%; text-align: left; border-collapse: collapse;">
+          <thead>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+              <th style="padding: 1rem; cursor: pointer;" onclick="sortTable('groupTable', 0, 'string')">Placement &#x21D5;</th>
+              <th style="padding: 1rem; cursor: pointer;" onclick="sortTable('groupTable', 1, 'string')">Performance Name &#x21D5;</th>
+              <th style="padding: 1rem; cursor: pointer;" onclick="sortTable('groupTable', 2, 'string')">Category &#x21D5;</th>
+              <th style="padding: 1rem; cursor: pointer;" onclick="sortTable('groupTable', 3, 'string')">Event &#x21D5;</th>
+              <th style="padding: 1rem; cursor: pointer;" onclick="sortTable('groupTable', 4, 'number')">Year &#x21D5;</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (groupAwards.length === 0) { %>
+              <tr><td colspan="5" style="padding: 1rem; text-align: center;">No group awards found.</td></tr>
+            <% } else { %>
+              <% groupAwards.forEach(function(award) { %>
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                  <td style="padding: 1rem;">
+                    <%= formatPlacement(award) %>
+                    <% if (!award.is_self_added) { %>
+                      <svg viewBox="0 0 24 24" fill="#10b981" width="14" height="14" style="display:inline-block; margin-left:4px;" title="Official Verified Award"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" /></svg>
+                    <% } else { %>
+                      <span style="font-size: 0.6rem; color: #eab308; margin-left: 4px;" title="Self-Reported">(Self)</span>
+                    <% } %>
+                  </td>
+                  <td style="padding: 1rem; font-weight: 600;"><%= award.performance_name || 'N/A' %></td>
+                  <td style="padding: 1rem;">
+                    <%= award.award_type %><br>
+                    <% if (award.age_division) { %>
+                      <span class="badge" style="background: rgba(255, 255, 255, 0.08); color: #e0e0e0; font-size: 0.65rem; border: 1px solid rgba(255, 255, 255, 0.15); padding: 1px 4px; margin-bottom: 2px; display: inline-block;"><%= award.age_division %></span><br>
+                    <% } %>
+                    <span style="font-size: 0.8rem; color: var(--text-muted);"><%= award.category %></span>
+                  </td>
+                  <td style="padding: 1rem;"><%= award.event_name %></td>
+                  <td style="padding: 1rem;"><%= award.event_year %></td>
+                </tr>
+              <% }); %>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="awards-view-table card glass-card" style="display: none; overflow-x: auto; margin-top: 1rem;">
+        <h2 style="margin: 1rem 1rem 0.5rem;">Solo Awards</h2>
+        <table class="data-table" id="soloTable" style="width: 100%; text-align: left; border-collapse: collapse;">
+          <thead>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+              <th style="padding: 1rem; cursor: pointer;" onclick="sortTable('soloTable', 0, 'string')">Placement &#x21D5;</th>
+              <th style="padding: 1rem; cursor: pointer;" onclick="sortTable('soloTable', 1, 'string')">Performance Name &#x21D5;</th>
+              <th style="padding: 1rem; cursor: pointer;" onclick="sortTable('soloTable', 2, 'string')">Category &#x21D5;</th>
+              <th style="padding: 1rem; cursor: pointer;" onclick="sortTable('soloTable', 3, 'string')">Event &#x21D5;</th>
+              <th style="padding: 1rem; cursor: pointer;" onclick="sortTable('soloTable', 4, 'number')">Year &#x21D5;</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (soloAwards.length === 0) { %>
+              <tr><td colspan="5" style="padding: 1rem; text-align: center;">No solo awards found.</td></tr>
+            <% } else { %>
+              <% soloAwards.forEach(function(award) { %>
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                  <td style="padding: 1rem;">
+                    <%= formatPlacement(award) %>
+                    <% if (!award.is_self_added) { %>
+                      <svg viewBox="0 0 24 24" fill="#10b981" width="14" height="14" style="display:inline-block; margin-left:4px;" title="Official Verified Award"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" /></svg>
+                    <% } else { %>
+                      <span style="font-size: 0.6rem; color: #eab308; margin-left: 4px;" title="Self-Reported">(Self)</span>
+                    <% } %>
+                  </td>
+                  <td style="padding: 1rem; font-weight: 600;"><%= award.performance_name || 'N/A' %></td>
+                  <td style="padding: 1rem;">
+                    <%= award.award_type %><br>
+                    <% if (award.age_division) { %>
+                      <span class="badge" style="background: rgba(255, 255, 255, 0.08); color: #e0e0e0; font-size: 0.65rem; border: 1px solid rgba(255, 255, 255, 0.15); padding: 1px 4px; margin-bottom: 2px; display: inline-block;"><%= award.age_division %></span><br>
+                    <% } %>
+                    <span style="font-size: 0.8rem; color: var(--text-muted);"><%= award.category %></span>
+                  </td>
+                  <td style="padding: 1rem;"><%= award.event_name %></td>
+                  <td style="padding: 1rem;"><%= award.event_year %></td>
+                </tr>
+              <% }); %>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+
+      <% if (conventionAwards && conventionAwards.length > 0) { %>
+        <div class="awards-view-table card glass-card" style="display: none; overflow-x: auto; margin-top: 1rem;">
+          <h2 style="margin: 1rem 1rem 0.5rem;">Special / Convention Awards</h2>
+          <table class="data-table" id="conventionTable" style="width: 100%; text-align: left; border-collapse: collapse;">
+            <thead>
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                <th style="padding: 1rem; cursor: pointer;" onclick="sortTable('conventionTable', 0, 'string')">Placement &#x21D5;</th>
+                <th style="padding: 1rem; cursor: pointer;" onclick="sortTable('conventionTable', 1, 'string')">Award Name &#x21D5;</th>
+                <th style="padding: 1rem; cursor: pointer;" onclick="sortTable('conventionTable', 2, 'string')">Category &#x21D5;</th>
+                <th style="padding: 1rem; cursor: pointer;" onclick="sortTable('conventionTable', 3, 'string')">Event &#x21D5;</th>
+                <th style="padding: 1rem; cursor: pointer;" onclick="sortTable('conventionTable', 4, 'number')">Year &#x21D5;</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% conventionAwards.forEach(function(award) { %>
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                  <td style="padding: 1rem;">
+                    <%= formatPlacement(award) %>
+                    <% if (!award.is_self_added) { %>
+                      <svg viewBox="0 0 24 24" fill="#10b981" width="14" height="14" style="display:inline-block; margin-left:4px;" title="Official Verified Award"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" /></svg>
+                    <% } else { %>
+                      <span style="font-size: 0.6rem; color: #eab308; margin-left: 4px;" title="Self-Reported">(Self)</span>
+                    <% } %>
+                  </td>
+                  <td style="padding: 1rem; font-weight: 600;"><%= award.performance_name || award.award_type || 'N/A' %></td>
+                  <td style="padding: 1rem;">
+                    <%= award.award_type %><br>
+                    <% if (award.age_division) { %>
+                      <span class="badge" style="background: rgba(255, 255, 255, 0.08); color: #e0e0e0; font-size: 0.65rem; border: 1px solid rgba(255, 255, 255, 0.15); padding: 1px 4px; margin-bottom: 2px; display: inline-block;"><%= award.age_division %></span><br>
+                    <% } %>
+                    <span style="font-size: 0.8rem; color: var(--text-muted);"><%= award.category %></span>
+                  </td>
+                  <td style="padding: 1rem;"><%= award.event_name %></td>
+                  <td style="padding: 1rem;"><%= award.event_year %></td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </section>
+  </main>
+
+</div>
+
+<script src="/js/flipbook.js"></script>
+<% if (typeof featureReactions !== 'undefined' && featureReactions) { %>
+  <script src="/js/reactions.js"></script>
+<% } %>
+<script>
+  // Display-mode machinery — identical contract to the classic dancer page
+  // (same element IDs, same localStorage key, same lightbox behavior).
+  function setDisplayMode(mode, persist = true) {
+    const isTable = mode === 'table';
+    document.querySelectorAll('.awards-view-grid').forEach(el => el.style.display = isTable ? 'none' : 'grid');
+    document.querySelectorAll('.awards-view-table').forEach(el => el.style.display = isTable ? 'block' : 'none');
+    if (!isTable) {
+      document.querySelectorAll('.awards-grid').forEach(g => {
+        g.classList.toggle('landscape', mode === 'landscape');
+        g.classList.toggle('mini', mode === 'mini');
+      });
+      if (persist) try { localStorage.setItem('awardCardShape', mode); } catch (e) { }
+    }
+    ['mini', 'portrait', 'landscape', 'table'].forEach(m => {
+      const btn = document.getElementById('btn-mode-' + m);
+      btn.classList.toggle('btn-primary', m === mode);
+      btn.classList.toggle('btn-outline', m !== mode);
+    });
+  }
+  try {
+    const savedShape = localStorage.getItem('awardCardShape');
+    if (savedShape === 'landscape' || savedShape === 'mini') {
+      setDisplayMode(savedShape);
+    } else if (!savedShape && window.matchMedia('(max-width: 640px)').matches
+      && document.querySelectorAll('.awards-view-grid .flip-card').length >= 12) {
+      setDisplayMode('mini', false);
+    }
+  } catch (e) { }
+
+  document.addEventListener('click', function (e) {
+    const card = e.target.closest('.awards-grid.mini .flip-card');
+    if (!card) return;
+    e.stopPropagation();
+    e.preventDefault();
+    openCardLightbox(card);
+  }, true);
+
+  let activeLightbox = null;
+  function openCardLightbox(card) {
+    closeCardLightbox();
+    const overlay = document.createElement('div');
+    overlay.className = 'card-lightbox';
+    const clone = card.cloneNode(true);
+    clone.classList.remove('flipped');
+    clone.removeAttribute('style');
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'card-lightbox-close';
+    closeBtn.setAttribute('aria-label', 'Close');
+    closeBtn.innerHTML = '&times;';
+    overlay.appendChild(closeBtn);
+    overlay.appendChild(clone);
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay || e.target === closeBtn) closeCardLightbox();
+    });
+    document.body.appendChild(overlay);
+    document.body.style.overflow = 'hidden';
+    activeLightbox = overlay;
+  }
+  function closeCardLightbox() {
+    if (!activeLightbox) return;
+    activeLightbox.remove();
+    activeLightbox = null;
+    document.body.style.overflow = '';
+  }
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeCardLightbox();
+  });
+
+  const sortDirs = {
+    soloTable: [true, true, true, true, true],
+    conventionTable: [true, true, true, true, true],
+    groupTable: [true, true, true, true, true]
+  };
+
+  function sortTable(tableId, columnIndex, type) {
+    const table = document.getElementById(tableId);
+    const tbody = table.querySelector("tbody");
+    const rows = Array.from(tbody.querySelectorAll("tr"));
+    if (rows.length === 0 || (rows.length === 1 && rows[0].cells.length === 1)) return;
+    const isAsc = sortDirs[tableId][columnIndex];
+    sortDirs[tableId][columnIndex] = !isAsc;
+    rows.sort((a, b) => {
+      let valA = a.cells[columnIndex].innerText.trim();
+      let valB = b.cells[columnIndex].innerText.trim();
+      if (type === 'number') {
+        valA = parseInt(valA) || 0;
+        valB = parseInt(valB) || 0;
+        return isAsc ? valA - valB : valB - valA;
+      }
+      return isAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+    });
+    rows.forEach(row => tbody.appendChild(row));
+  }
+
+  function shareAwardCard(btn) {
+    const text = btn.dataset.shareText;
+    const url = window.location.href;
+    if (navigator.share) {
+      navigator.share({ title: '<%= dancer.name %> | AwardHome', text: text, url: url })
+        .catch((error) => console.log('Error sharing', error));
+    } else {
+      navigator.clipboard.writeText(text + ' ' + url)
+        .then(() => {
+          const original = btn.innerHTML;
+          btn.innerHTML = '✓';
+          setTimeout(() => { btn.innerHTML = original; }, 1500);
+        })
+        .catch(() => alert('Failed to copy.'));
+    }
+  }
+
+  function shareProfile() {
+    if (navigator.share) {
+      navigator.share({
+        title: '<%= dancer.name %> | Digital Trophy Case',
+        text: 'Check out my competitive dance awards and stats on AwardHome!',
+        url: window.location.href,
+      }).catch((error) => console.log('Error sharing', error));
+    } else {
+      navigator.clipboard.writeText(window.location.href)
+        .then(() => alert("Profile link copied to clipboard!"))
+        .catch(err => alert("Failed to copy link."));
+    }
+  }
+</script>
+
+<script>
+  // Hero count-ups (same motion grammar as the other v2 pages).
+  (function () {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (!('IntersectionObserver' in window)) return;
+    function countUp(el) {
+      var target = parseInt(el.getAttribute('data-count'), 10);
+      if (!target || target < 2) return;
+      var t0 = performance.now(), dur = 1100;
+      function step(t) {
+        var p = Math.min(1, (t - t0) / dur);
+        var eased = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(target * eased).toLocaleString();
+        if (p < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        io.unobserve(en.target);
+        countUp(en.target);
+      });
+    }, { threshold: 0.3 });
+    document.querySelectorAll('.v2-num[data-count]').forEach(function (el) { io.observe(el); });
+  })();
+</script>
+
+<style>
+  .data-table th:hover { background: rgba(255, 255, 255, 0.05); }
+</style>
+
+<%- include('partials/footer') %>

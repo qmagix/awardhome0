@@ -79,7 +79,10 @@
   const hasColophonPage = design === 'flipbook' && showOrgLogo;
   const pageCount = 1 + (hasPhotoPage ? 1 : 0) + (hasAckPage ? 1 : 0) + (hasColophonPage ? 1 : 0);
 %>
-<div class="flip-card <%= design === 'flipbook' ? 'flipbook' : '' %>"
+<%# 'rafters' is a pure-CSS reskin (engraved gold, Cinzel) of the classic
+    anatomy — same front, same certificate back, no flipbook pages. The
+    class scopes public/css/card_rafters.css, loaded by the dancer views. %>
+<div class="flip-card <%= design === 'flipbook' ? 'flipbook' : '' %> <%= design === 'rafters' ? 'card-rafters' : '' %>"
   <%- editMode ? ' data-award-id="' + award.id + '" data-state="' + award.editState + '"' : '' %> role="button" tabindex="0" aria-label="Flip award card"
   onclick="if(this.dataset.swiped){delete this.dataset.swiped;return;}this.classList.toggle('flipped')"
   onkeydown="if(event.target===this&&(event.key==='Enter'||event.key===' ')){event.preventDefault();this.classList.toggle('flipped');}else if(event.target===this&&this.classList.contains('flipped')&&(event.key==='ArrowRight'||event.key==='ArrowLeft')&&window.tcbNavKey){event.preventDefault();tcbNavKey(this,event.key==='ArrowRight'?1:-1);}">

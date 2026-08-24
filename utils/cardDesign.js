@@ -4,7 +4,7 @@
 // variant for their session with ?card_design=<name> (?card_design=default
 // clears the override). Add future designs ('v3', ...) to this list and
 // branch on the value in views/partials/dancer_award_card.ejs.
-const CARD_DESIGNS = ['classic', 'flipbook'];
+const CARD_DESIGNS = ['classic', 'flipbook', 'rafters'];
 
 async function resolveCardDesign(req, db) {
   const q = req.query.card_design;

@@ -1,4 +1,7 @@
 <%- include('partials/header') %>
+  <% if (typeof cardDesign !== 'undefined' && cardDesign === 'rafters') { %>
+    <link rel="stylesheet" href="/css/card_rafters.css">
+  <% } %>
   <div class="container">
     <div class="profile-card glass-card">
       <div class="profile-header">
