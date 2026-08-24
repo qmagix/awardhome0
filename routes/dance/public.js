@@ -281,7 +281,15 @@ async function loadHomepageData() {
     ORDER BY o.name
   `);
 
-  return { featuredStudios, topStudios, topStudiosThisYear, topStudiosFirstPlaceThisYear, topDancers, topDancersThisYear, topDancersFirstPlaceThisYear, orgs };
+  // Platform-wide headline numbers (v2 homepage hero). Full-table counts,
+  // but computed at most once per cache window like everything else here.
+  const totals = await db.get(`
+    SELECT (SELECT COUNT(*) FROM awards) AS awards,
+           (SELECT COUNT(*) FROM dancers) AS dancers,
+           (SELECT COUNT(*) FROM studios WHERE status IS NULL OR status != 'merged') AS studios
+  `);
+
+  return { featuredStudios, topStudios, topStudiosThisYear, topStudiosFirstPlaceThisYear, topDancers, topDancersThisYear, topDancersFirstPlaceThisYear, orgs, totals };
 }
 
 const HOME_TTL = 5 * 60 * 1000;
@@ -309,6 +317,11 @@ router.get('/dance', async (req, res) => {
       await db.run(`INSERT INTO daily_counters (day, key, count) VALUES (date('now'), 'dance_home_views', 1)
                     ON CONFLICT(day, key) DO UPDATE SET count = count + 1`);
     } catch (e) { /* table lands with the next migrate */ }
+  }
+  // "The Hall" homepage preview (?design=rafters) — same cached data,
+  // alternate template; admins get it too so the design can be previewed.
+  if (req.query.design === 'rafters') {
+    return res.render('index_v2', { ...data, previewCount: LEADERBOARD_PREVIEW });
   }
   res.render(isAdmin ? 'index_admin' : 'index', { ...data, previewCount: LEADERBOARD_PREVIEW });
 });

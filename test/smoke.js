@@ -116,6 +116,7 @@ async function main() {
       if (org) CHECKS.push(['GET', `/dance/org/${org.slug}`, [200], 'org page is public']);
       if (org) CHECKS.push(['GET', `/dance/org/${org.slug}?design=rafters`, [200], 'org Rafters design preview renders (?design=rafters)']);
       CHECKS.push(['GET', '/?design=rafters', [200], 'Front Door landing preview renders (?design=rafters)']);
+      CHECKS.push(['GET', '/dance?design=rafters', [200], 'Hall homepage preview renders (?design=rafters)']);
     } catch (e) {
       console.log('NOTE: real-content checks skipped (' + e.message + ')');
     }

@@ -1,0 +1,349 @@
+<%- include('partials/header') %>
+<link rel="stylesheet" href="/css/studio_v2.css">
+<link rel="stylesheet" href="/css/dance_home_v2.css">
+
+<%
+  const totalEvents = orgs.reduce((sum, o) => sum + (o.event_count || 0), 0);
+%>
+
+<div class="v2">
+
+  <div class="v2-preview">
+    <span>Design preview &mdash; &ldquo;The Rafters&rdquo; concept</span>
+    <a href="/dance">View the classic page</a>
+  </div>
+
+  <section class="v2-hero">
+    <p class="v2-eyebrow">THE DIGITAL TROPHY CASE FOR COMPETITIVE DANCE</p>
+    <h1>Welcome to the hall</h1>
+    <p class="v2-bio">Every placement, every title, every season &mdash; preserved from published results and waiting to be found.</p>
+
+    <%- include('partials/hero_search') %>
+    <p class="search-hint" style="text-align: center;">Free to search &middot; no account needed</p>
+
+    <% if (typeof totals !== 'undefined' && totals) { %>
+      <div class="v2-record" role="list" aria-label="Platform record">
+        <div class="v2-cell" role="listitem"><div class="v2-num" data-count="<%= totals.awards %>"><%= totals.awards.toLocaleString() %></div><div class="v2-lbl">Awards Preserved</div></div>
+        <div class="v2-cell" role="listitem"><div class="v2-num" data-count="<%= totals.dancers %>"><%= totals.dancers.toLocaleString() %></div><div class="v2-lbl">Dancers</div></div>
+        <div class="v2-cell" role="listitem"><div class="v2-num" data-count="<%= totals.studios %>"><%= totals.studios.toLocaleString() %></div><div class="v2-lbl">Studios</div></div>
+        <div class="v2-cell" role="listitem"><div class="v2-num" data-count="<%= totalEvents %>"><%= totalEvents.toLocaleString() %></div><div class="v2-lbl">Events</div></div>
+        <div class="v2-cell" role="listitem"><div class="v2-num" data-count="<%= orgs.length %>"><%= orgs.length %></div><div class="v2-lbl">Competitions</div></div>
+      </div>
+    <% } %>
+
+    <nav class="v2-hall-nav" aria-label="Page sections">
+      <a href="#v2h-circuit">The Circuit</a>
+      <% if (featuredStudios.length > 0) { %><a href="#v2h-marquee">The Marquee</a><% } %>
+      <a href="#v2h-rafters">The Rafters</a>
+    </nav>
+  </section>
+
+  <main class="v2-wrap">
+
+    <section class="v2-section v2-reveal" id="v2h-circuit" aria-labelledby="v2h-circuit-h">
+      <p class="v2-kicker">The Circuit</p>
+      <h2 id="v2h-circuit-h">The competitions in the record</h2>
+      <p class="v2-lede">Results from every circuit below are preserved here &mdash; full competition profiles are on the way.</p>
+      <%# DELIBERATE: org cards do not link to /dance/org pages — org data
+          stays low-profile until the org partners with us. Clicks are still
+          recorded (POST /api/org-card-click) as demand evidence for outreach. %>
+      <div class="v2-circuit-cards">
+        <% orgs.forEach(function(org) { %>
+          <div class="v2-circuit-card org-card-tracked" data-org-id="<%= org.id %>" data-org-name="<%= org.name %>"
+               role="button" tabindex="0">
+            <h3><%= org.name %></h3>
+            <div class="v2-cc-meta">
+              <b><%= org.event_count || 0 %></b> events<% if (org.event_count > 0) { %> &middot; since <%= org.data_since || 2022 %><% } %>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    </section>
+
+    <% if (featuredStudios.length > 0) { %>
+    <section class="v2-section v2-reveal" id="v2h-marquee" aria-labelledby="v2h-marquee-h">
+      <p class="v2-kicker">The Marquee</p>
+      <h2 id="v2h-marquee-h">Featured studios</h2>
+      <p class="v2-lede">Studios in the spotlight &mdash; each with a living trophy case.</p>
+      <div class="v2-marquee-grid">
+        <% featuredStudios.forEach(function(s) { %>
+          <div class="v2-marquee-slot">
+            <a class="v2-marquee-card" href="/dance/studio/<%= s.unique_id %>">
+              <span class="v2-mq-star" aria-hidden="true">&#9733;</span>
+              <h3><%= s.name %></h3>
+              <span class="v2-mq-count"><b><%= s.total_awards.toLocaleString() %></b> awards</span>
+              <span class="v2-plate-strip">View the trophy case</span>
+            </a>
+            <div class="v2-door-shelf" aria-hidden="true"></div>
+          </div>
+        <% }); %>
+      </div>
+    </section>
+    <% } %>
+
+    <section class="v2-section" id="v2h-rafters" aria-labelledby="v2h-rafters-h">
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; flex-wrap: wrap;">
+        <div>
+          <p class="v2-kicker">The Rafters</p>
+          <h2 id="v2h-rafters-h">The leaderboards</h2>
+          <p class="v2-lede">The most-awarded studios and dancers across every circuit in the record.</p>
+        </div>
+        <div class="view-toggle">
+          <button id="btn-studios" class="btn btn-primary btn-sm" onclick="setLeaderboardView('studios')">Top Studios</button>
+          <button id="btn-dancers" class="btn btn-outline btn-sm" onclick="setLeaderboardView('dancers')">Top Dancers</button>
+        </div>
+      </div>
+
+      <!-- STUDIOS LEADERBOARD -->
+      <div id="leaderboard-studios-wrapper">
+        <ul class="year-tabs" style="margin-top: 2rem;">
+          <li class="tab-item active" data-target="leaderboard-alltime">All-Time (Past 5 Years)</li>
+          <li class="tab-item" data-target="leaderboard-thisyear">This Year</li>
+          <li class="tab-item" data-target="leaderboard-firstplaces-thisyear">1st Places This Year</li>
+        </ul>
+
+        <div class="tab-pane active" id="leaderboard-alltime">
+          <div class="lb-board">
+            <div class="lb-head">
+              <div style="width: 60px; text-align: center;">Rank</div>
+              <div style="flex-grow: 1;">Studio</div>
+              <div style="width: 100px; text-align: right;">Awards</div>
+            </div>
+            <%- include('partials/leaderboard_rows', { rows: topStudios.slice(0, previewCount), type: 'studio', offset: 0 }) %>
+            <% if (topStudios.length > previewCount) { %>
+              <div class="lb-more"><button class="btn btn-sm" onclick="loadFullBoard(this, 'studios-alltime')">Show all <%= topStudios.length %></button></div>
+            <% } %>
+          </div>
+        </div>
+
+        <div class="tab-pane" id="leaderboard-thisyear">
+          <div class="lb-board">
+            <div class="lb-head">
+              <div style="width: 60px; text-align: center;">Rank</div>
+              <div style="flex-grow: 1;">Studio</div>
+              <div style="width: 100px; text-align: right;">Awards</div>
+            </div>
+            <%- include('partials/leaderboard_rows', { rows: topStudiosThisYear.slice(0, previewCount), type: 'studio', offset: 0 }) %>
+            <% if (topStudiosThisYear.length > previewCount) { %>
+              <div class="lb-more"><button class="btn btn-sm" onclick="loadFullBoard(this, 'studios-thisyear')">Show all <%= topStudiosThisYear.length %></button></div>
+            <% } %>
+          </div>
+        </div>
+
+        <div class="tab-pane" id="leaderboard-firstplaces-thisyear">
+          <div class="lb-board">
+            <div class="lb-head">
+              <div style="width: 60px; text-align: center;">Rank</div>
+              <div style="flex-grow: 1;">Studio</div>
+              <div style="width: 100px; text-align: right;">1st Places</div>
+            </div>
+            <%- include('partials/leaderboard_rows', { rows: topStudiosFirstPlaceThisYear.slice(0, previewCount), type: 'studio', offset: 0 }) %>
+            <% if (topStudiosFirstPlaceThisYear.length > previewCount) { %>
+              <div class="lb-more"><button class="btn btn-sm" onclick="loadFullBoard(this, 'studios-firstplaces')">Show all <%= topStudiosFirstPlaceThisYear.length %></button></div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+
+      <!-- DANCERS LEADERBOARD -->
+      <div id="leaderboard-dancers-wrapper" style="display: none;">
+        <ul class="year-tabs" style="margin-top: 2rem;">
+          <li class="tab-item active" data-target="leaderboard-dancer-alltime">All-Time</li>
+          <li class="tab-item" data-target="leaderboard-dancer-thisyear">This Year</li>
+          <li class="tab-item" data-target="leaderboard-dancer-firstplaces-thisyear">1st Places This Year</li>
+        </ul>
+
+        <div class="tab-pane active" id="leaderboard-dancer-alltime">
+          <div class="lb-board">
+            <div class="lb-head">
+              <div style="width: 60px; text-align: center;">Rank</div>
+              <div style="width: 50px;"></div>
+              <div style="flex-grow: 1;">Dancer</div>
+              <div style="width: 100px; text-align: right;">Awards</div>
+            </div>
+            <%- include('partials/leaderboard_rows', { rows: topDancers.slice(0, previewCount), type: 'dancer', offset: 0 }) %>
+            <% if (topDancers.length > previewCount) { %>
+              <div class="lb-more"><button class="btn btn-sm" onclick="loadFullBoard(this, 'dancers-alltime')">Show all <%= topDancers.length %></button></div>
+            <% } %>
+          </div>
+        </div>
+
+        <div class="tab-pane" id="leaderboard-dancer-thisyear">
+          <div class="lb-board">
+            <div class="lb-head">
+              <div style="width: 60px; text-align: center;">Rank</div>
+              <div style="width: 50px;"></div>
+              <div style="flex-grow: 1;">Dancer</div>
+              <div style="width: 100px; text-align: right;">Awards</div>
+            </div>
+            <%- include('partials/leaderboard_rows', { rows: topDancersThisYear.slice(0, previewCount), type: 'dancer', offset: 0 }) %>
+            <% if (topDancersThisYear.length > previewCount) { %>
+              <div class="lb-more"><button class="btn btn-sm" onclick="loadFullBoard(this, 'dancers-thisyear')">Show all <%= topDancersThisYear.length %></button></div>
+            <% } %>
+          </div>
+        </div>
+
+        <div class="tab-pane" id="leaderboard-dancer-firstplaces-thisyear">
+          <div class="lb-board">
+            <div class="lb-head">
+              <div style="width: 60px; text-align: center;">Rank</div>
+              <div style="width: 50px;"></div>
+              <div style="flex-grow: 1;">Dancer</div>
+              <div style="width: 100px; text-align: right;">1st Places</div>
+            </div>
+            <%- include('partials/leaderboard_rows', { rows: topDancersFirstPlaceThisYear.slice(0, previewCount), type: 'dancer', offset: 0 }) %>
+            <% if (topDancersFirstPlaceThisYear.length > previewCount) { %>
+              <div class="lb-more"><button class="btn btn-sm" onclick="loadFullBoard(this, 'dancers-firstplaces')">Show all <%= topDancersFirstPlaceThisYear.length %></button></div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="v2-section v2-reveal" aria-labelledby="v2h-doors-h" style="text-align: center;">
+      <p class="v2-kicker">Three Doors</p>
+      <h2 id="v2h-doors-h">Whoever you are in the dance world, this is yours</h2>
+      <div class="v2-doors">
+        <a class="v2-door" href="#top" onclick="document.getElementById('hero-search-input').focus(); return false;">
+          <div class="v2-door-body">
+            <div class="v2-door-icon" aria-hidden="true">&#10022;</div>
+            <h3>Dancers &amp; Parents</h3>
+            <p>Search your name above and claim your page &mdash; your whole competitive career, verified and in one place.</p>
+          </div>
+          <span class="v2-door-plate">Find your name</span>
+          <div class="v2-door-shelf" aria-hidden="true"></div>
+        </a>
+        <a class="v2-door" href="#top" onclick="document.getElementById('hero-search-input').focus(); return false;">
+          <div class="v2-door-body">
+            <div class="v2-door-icon" aria-hidden="true">&#9670;</div>
+            <h3>Studio Owners</h3>
+            <p>Your studio already has a page with every award your dancers have won. Find it, claim it, and make it yours.</p>
+          </div>
+          <span class="v2-door-plate">Claim your studio</span>
+          <div class="v2-door-shelf" aria-hidden="true"></div>
+        </a>
+        <a class="v2-door" href="mailto:hello@awardhome.com?subject=Organizer inquiry">
+          <div class="v2-door-body">
+            <div class="v2-door-icon" aria-hidden="true">&#9733;</div>
+            <h3>Competition Organizers</h3>
+            <p>Your results, archived forever and working for you &mdash; your brand on every card dancers share.</p>
+          </div>
+          <span class="v2-door-plate">Partner with us</span>
+          <div class="v2-door-shelf" aria-hidden="true"></div>
+        </a>
+      </div>
+    </section>
+
+  </main>
+
+</div>
+
+<script>
+// Leaderboard machinery — identical contract to the classic homepage
+// (same endpoints, same partials, same element IDs).
+async function loadFullBoard(btn, board) {
+  btn.disabled = true; btn.textContent = 'Loading…';
+  try {
+    const res = await fetch('/dance/leaderboard/' + board);
+    if (!res.ok) throw new Error('fetch failed');
+    const holder = btn.closest('.lb-more');
+    holder.insertAdjacentHTML('beforebegin', await res.text());
+    holder.remove();
+  } catch (e) { btn.disabled = false; btn.textContent = 'Show all'; }
+}
+
+function setLeaderboardView(viewMode) {
+  const btnStudios = document.getElementById('btn-studios');
+  const btnDancers = document.getElementById('btn-dancers');
+  const wrapStudios = document.getElementById('leaderboard-studios-wrapper');
+  const wrapDancers = document.getElementById('leaderboard-dancers-wrapper');
+  const studios = viewMode === 'studios';
+  wrapStudios.style.display = studios ? 'block' : 'none';
+  wrapDancers.style.display = studios ? 'none' : 'block';
+  btnStudios.classList.toggle('btn-primary', studios);
+  btnStudios.classList.toggle('btn-outline', !studios);
+  btnDancers.classList.toggle('btn-primary', !studios);
+  btnDancers.classList.toggle('btn-outline', studios);
+}
+</script>
+
+<script>
+// Org-card demand telemetry: cards deliberately don't navigate (org pages
+// stay low-profile until the org partners) — a click records interest once
+// per org per session and thanks the visitor with a toast.
+(function () {
+  var toast = null;
+  function showOrgToast(name) {
+    if (toast) toast.remove();
+    toast = document.createElement('div');
+    toast.setAttribute('role', 'status');
+    toast.textContent = '✨ Full ' + name + ' competition profiles are coming soon — thanks for your interest!';
+    toast.style.cssText = 'position:fixed;left:50%;bottom:2rem;transform:translateX(-50%);z-index:9999;' +
+      'background:rgba(20,17,12,0.95);border:1px solid rgba(212,175,55,0.5);color:#f3e5ab;' +
+      'padding:0.8rem 1.4rem;border-radius:8px;font-size:0.9rem;max-width:90vw;text-align:center;' +
+      'box-shadow:0 10px 30px rgba(0,0,0,0.6);opacity:0;transition:opacity 0.25s;';
+    document.body.appendChild(toast);
+    requestAnimationFrame(function () { toast.style.opacity = '1'; });
+    setTimeout(function () {
+      if (!toast) return;
+      toast.style.opacity = '0';
+      setTimeout(function () { if (toast) { toast.remove(); toast = null; } }, 300);
+    }, 3200);
+  }
+  function recordClick(card) {
+    var id = card.getAttribute('data-org-id');
+    showOrgToast(card.getAttribute('data-org-name'));
+    try {
+      var key = 'org-card-click-' + id;
+      if (sessionStorage.getItem(key)) return;
+      sessionStorage.setItem(key, '1');
+    } catch (e) { /* storage blocked — still record */ }
+    fetch('/api/org-card-click', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ org_id: parseInt(id, 10) })
+    }).catch(function () {});
+  }
+  document.querySelectorAll('.org-card-tracked').forEach(function (card) {
+    card.addEventListener('click', function () { recordClick(card); });
+    card.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); recordClick(card); }
+    });
+  });
+})();
+</script>
+
+<script>
+// Scroll-triggered motion: section reveals + hero count-ups.
+(function () {
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function countUp(el) {
+    var target = parseInt(el.getAttribute('data-count'), 10);
+    if (!target || target < 2) return;
+    var t0 = performance.now(), dur = 1300;
+    function step(t) {
+      var p = Math.min(1, (t - t0) / dur);
+      var eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(target * eased).toLocaleString();
+      if (p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  if (reduced || !('IntersectionObserver' in window)) {
+    document.querySelectorAll('.v2-reveal').forEach(function (el) { el.classList.add('v2-in'); });
+    return;
+  }
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      if (!en.isIntersecting) return;
+      io.unobserve(en.target);
+      if (en.target.classList.contains('v2-num')) countUp(en.target);
+      else en.target.classList.add('v2-in');
+    });
+  }, { threshold: 0.25 });
+  document.querySelectorAll('.v2-reveal').forEach(function (el) { io.observe(el); });
+  document.querySelectorAll('.v2-num[data-count]').forEach(function (el) { io.observe(el); });
+})();
+</script>
+
+<%- include('partials/footer') %>
