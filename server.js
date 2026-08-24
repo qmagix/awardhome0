@@ -43,6 +43,8 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'landing'), { index: false }));
+// "Front Door" landing redesign preview — served at /?design=rafters
+app.use('/public2', express.static(path.join(__dirname, 'public2'), { index: false }));
 
 // Request logging to stdout (journald captures it in production). Static
 // assets never reach this (served above); health checks are skipped.
