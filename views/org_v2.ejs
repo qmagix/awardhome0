@@ -1,0 +1,278 @@
+<%- include('partials/header') %>
+<link rel="stylesheet" href="/css/studio_v2.css">
+<link rel="stylesheet" href="/css/org_v2.css">
+
+<%
+  const isOwner = typeof user !== 'undefined' && user && org.owner_id && user.id === org.owner_id;
+  const monogram = org.name.split(/\s+/).map(w => w[0]).join('').replace(/[^A-Za-z]/g, '').substring(0, 3).toUpperCase();
+  const orgSite = org.website ? (org.website.match(/^https?:\/\//) ? org.website : 'https://' + org.website) : null;
+  const maxYearTotal = yearlySeries.length > 0 ? Math.max(...yearlySeries.map(y => y.total)) : 0;
+  const bestSeason = yearlySeries.length > 0 ? yearlySeries.reduce((a, b) => (b.total > a.total ? b : a)) : null;
+  let orgIcons = {};
+  try { orgIcons = JSON.parse(org.custom_icons || '{}'); } catch (e) { }
+  // The real coin is approval-gated (concierge fitting); the mock follows
+  // the same rule so an unapproved logo never gets public display anywhere.
+  const showLogoInCoin = !!(org.logo_url && orgIcons.logo_approved);
+%>
+
+<div class="v2">
+
+  <div class="v2-preview">
+    <span>Design preview &mdash; &ldquo;The Rafters&rdquo; concept</span>
+    <a href="/dance/org/<%= org.slug %>">View the classic page</a>
+  </div>
+
+  <section class="v2-hero">
+    <p class="v2-eyebrow">COMPETITION ORGANIZATION<% if (stats.firstYear) { %> &middot; ARCHIVED SINCE <%= stats.firstYear %><% } %></p>
+    <div class="v2-coin" aria-hidden="true">
+      <% if (org.logo_url) { %><img src="<%= org.logo_url %>" alt=""><% } else { %><%= monogram %><% } %>
+    </div>
+    <h1><%= org.name %></h1>
+    <% if (org.slogan) { %><p class="v2-slogan"><%= org.slogan %></p><% } %>
+    <% if (org.description) { %><p class="v2-bio"><%= org.description %></p><% } %>
+
+    <div class="v2-record" role="list" aria-label="Archive record">
+      <div class="v2-cell" role="listitem">
+        <div class="v2-num" data-count="<%= stats.totalAwards || 0 %>"><%= (stats.totalAwards || 0).toLocaleString() %></div>
+        <div class="v2-lbl">Awards Preserved</div>
+      </div>
+      <% if (reach.dancers > 0) { %>
+        <div class="v2-cell" role="listitem">
+          <div class="v2-num" data-count="<%= reach.dancers %>"><%= reach.dancers.toLocaleString() %></div>
+          <div class="v2-lbl">Dancers Celebrated</div>
+        </div>
+      <% } %>
+      <div class="v2-cell" role="listitem">
+        <div class="v2-num" data-count="<%= stats.totalStudios || 0 %>"><%= (stats.totalStudios || 0).toLocaleString() %></div>
+        <div class="v2-lbl">Studios Reached</div>
+      </div>
+      <div class="v2-cell" role="listitem">
+        <div class="v2-num" data-count="<%= eventsCount %>"><%= eventsCount.toLocaleString() %></div>
+        <div class="v2-lbl">Events Archived</div>
+      </div>
+      <% if (reach.titles > 0) { %>
+        <div class="v2-cell" role="listitem">
+          <div class="v2-num" data-count="<%= reach.titles %>"><%= reach.titles.toLocaleString() %></div>
+          <div class="v2-lbl">National Titles Crowned</div>
+        </div>
+      <% } %>
+    </div>
+
+    <div class="v2-ctas">
+      <% if (orgSite) { %>
+        <a class="v2-gold-btn" href="<%= orgSite %>" target="_blank" rel="noopener">Visit website &amp; register for events &nearr;</a>
+      <% } %>
+      <% if (isOwner) { %>
+        <a class="v2-ghost-btn" href="/manage/org/<%= org.id %>">Manage organization</a>
+      <% } %>
+    </div>
+  </section>
+
+  <main class="v2-wrap">
+
+    <% if (yearlySeries.length > 0) { %>
+      <section class="v2-section v2-reveal" aria-labelledby="v2o-reach-h">
+        <div class="v2-ledger-grid">
+          <div>
+            <p class="v2-kicker">The Reach</p>
+            <h2 id="v2o-reach-h"><%= yearlySeries.length === 1 ? 'One season, every placement preserved' : yearlySeries.length + ' seasons, every placement preserved' %></h2>
+            <p class="v2-lede">Every award below was recorded from published results and lives on a dancer's or studio's permanent page &mdash; no more &ldquo;where can I find last year's results?&rdquo; emails.</p>
+            <% if (bestSeason) { %>
+              <p class="v2-ledger-note">Biggest season on record: <b><%= bestSeason.year %> &mdash; <%= bestSeason.total.toLocaleString() %> awards</b> across <%= bestSeason.events %> events.</p>
+            <% } %>
+          </div>
+          <div>
+            <div class="v2-chart" role="img" aria-label="Awards per season: <%= yearlySeries.map(y => y.year + ', ' + y.total).join('; ') %>">
+              <% yearlySeries.forEach(function(y) { %>
+                <div class="v2-col">
+                  <div class="v2-val"><%= y.total.toLocaleString() %></div>
+                  <div class="v2-bar-box">
+                    <div class="v2-bar" data-h="<%= Math.max(4, Math.round(y.total / maxYearTotal * 220)) %>"
+                      data-tip="<%= y.year %> &middot; <%= y.total.toLocaleString() %> awards &middot; <%= y.events %> events<% if (y.firsts > 0) { %> &middot; <%= y.firsts.toLocaleString() %> first places<% } %>"></div>
+                  </div>
+                  <div class="v2-yr"><%= y.year %></div>
+                  <div class="v2-fp"><%= y.events %> events</div>
+                </div>
+              <% }); %>
+            </div>
+          </div>
+        </div>
+      </section>
+    <% } %>
+
+    <section class="v2-section v2-reveal" aria-labelledby="v2o-coin-h">
+      <div class="v2-pitch-grid">
+        <div>
+          <p class="v2-kicker">The Coin</p>
+          <h2 id="v2o-coin-h">Your brand on every card dancers share</h2>
+          <p class="v2-lede">Every one of the <%= (stats.totalAwards || 0).toLocaleString() %> awards on this page becomes a share-ready trophy card &mdash; and each card carries a gold coin where your logo lives.</p>
+          <ul class="v2-pitch-points">
+            <li><b>Hand-fitted by our design team</b> &mdash; we position and polish your logo inside the coin, and nothing goes live until it's approved.</li>
+            <li><b>Shared where families already are</b> &mdash; dancers and parents post their cards to Instagram and TikTok; your mark travels with every one.</li>
+            <li><b>One click from your next event</b> &mdash; this page links straight to your registration site.</li>
+          </ul>
+        </div>
+        <div>
+          <div class="v2-card-mock-stage">
+            <div class="v2-card-mock" aria-hidden="true">
+              <div class="v2-cm-coin">
+                <% if (showLogoInCoin) { %><img src="<%= org.logo_url %>" alt=""><% } else { %>YOUR<br>LOGO<br>HERE<% } %>
+              </div>
+              <div class="v2-cm-title">Dirty Diana</div>
+              <div class="v2-cm-sub"><%= org.name %> &middot; Nationals</div>
+              <div class="v2-cm-plate">National Grand Champion</div>
+            </div>
+          </div>
+          <p class="v2-cm-caption">A share card from one of your events<% if (!showLogoInCoin) { %> &mdash; with your coin, once fitted &amp; approved<% } %>.</p>
+        </div>
+      </div>
+    </section>
+
+    <% if (topStudios.length > 0) { %>
+      <section class="v2-section v2-reveal" aria-labelledby="v2o-champs-h">
+        <p class="v2-kicker">The Champions</p>
+        <h2 id="v2o-champs-h">The studios you've crowned</h2>
+        <p class="v2-lede">Your most-awarded studios, each with a living trophy case built on your results.</p>
+        <div class="v2-circuit-grid">
+          <% topStudios.forEach(function(s) { %>
+            <a class="v2-org-card v2-champ" href="/dance/studio/<%= s.unique_id %>">
+              <div class="v2-o-count"><%= s.award_count.toLocaleString() %></div>
+              <div class="v2-o-name"><%= s.name %></div>
+              <div class="v2-o-sub">awards at your events</div>
+            </a>
+          <% }); %>
+        </div>
+      </section>
+    <% } %>
+
+    <% if (groupedData.length > 0) { %>
+      <section class="v2-section" aria-labelledby="v2o-archive-h">
+        <p class="v2-kicker">The Archive</p>
+        <h2 id="v2o-archive-h">Every event, every season, forever</h2>
+        <p class="v2-lede">Results hosted permanently and interactively &mdash; each award linked to the dancers and studios who earned it.</p>
+
+        <ul class="year-tabs">
+          <% groupedData.forEach(function(g, index) { %>
+            <li class="tab-item <%= index === 0 ? 'active' : '' %>" data-target="v2o-year-<%= g.year %>"><%= g.year %></li>
+          <% }); %>
+        </ul>
+        <div class="tab-content-container">
+          <% groupedData.forEach(function(g, index) { %>
+            <div class="tab-pane <%= index === 0 ? 'active' : '' %>" id="v2o-year-<%= g.year %>">
+              <div class="v2-event-grid">
+                <% g.events.forEach(function(event) { %>
+                  <%
+                    // Every row is this org's — drop the redundant org prefix
+                    // ("KAR Dance Competition — KAR - Riverside" → "KAR - Riverside").
+                    let evTitle = formatEventTitle(event.name, org.name);
+                    const prefix = org.name + ' — ';
+                    if (evTitle.startsWith(prefix)) evTitle = evTitle.slice(prefix.length);
+                  %>
+                  <div class="v2-event-row">
+                    <span class="v2-ev-name">
+                      <% if (isAdmin) { %>
+                        <a href="/dance/event/<%= event.id %>"><%= evTitle %></a>
+                      <% } else { %>
+                        <%= evTitle %>
+                      <% } %>
+                    </span>
+                    <% if (event.award_count > 0) { %>
+                      <span class="v2-ev-count"><%= event.award_count.toLocaleString() %></span>
+                    <% } %>
+                  </div>
+                <% }); %>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+      </section>
+    <% } %>
+
+  </main>
+
+  <section class="v2-owner">
+    <div class="v2-wrap">
+      <p class="v2-kicker">For Organizers</p>
+      <% if (isOwner) { %>
+        <h2>Your archive, working for you</h2>
+        <p class="v2-lede">Quick links to the tools that keep your brand sharp on every card.</p>
+        <div class="v2-tool-grid">
+          <a class="v2-tool" href="/manage/org/<%= org.id %>/branding">
+            <h3>Branding &amp; the coin</h3>
+            <p>Upload your logo and tune how it sits on every award card.</p>
+          </a>
+          <a class="v2-tool" href="/manage/org/<%= org.id %>">
+            <h3>Marketing profile</h3>
+            <p>Slogan, description, and the registration link this page promotes.</p>
+          </a>
+          <div class="v2-tool">
+            <h3>Permanent archive</h3>
+            <p>Every result stays hosted, linked, and searchable &mdash; forever.</p>
+          </div>
+        </div>
+        <a class="v2-gold-btn" href="/manage/org/<%= org.id %>">Open your dashboard</a>
+      <% } else { %>
+        <h2>Run this competition? This page works for you</h2>
+        <p class="v2-lede">AwardHome is free for organizers. Put your brand on every card, your registration link in front of every family, and never answer a &ldquo;where are last year's results?&rdquo; email again.</p>
+        <div class="v2-tool-grid">
+          <div class="v2-tool">
+            <h3>Your brand on every card</h3>
+            <p>Your logo, hand-fitted into the gold coin on every award card dancers share.</p>
+          </div>
+          <div class="v2-tool">
+            <h3>Drive registrations</h3>
+            <p>Every dancer and studio browsing your results is one click from your next event.</p>
+          </div>
+          <div class="v2-tool">
+            <h3>Attendance insights</h3>
+            <p>See which studios attend your events &mdash; and how many other circuits they dance.</p>
+          </div>
+        </div>
+        <a class="v2-gold-btn" href="mailto:hello@awardhome.com?subject=Organizer inquiry: <%= org.name %>">Talk to us &mdash; it's free for organizers</a>
+      <% } %>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  // Scroll-triggered motion: section reveals, bar growth, hero count-ups.
+  // (Year-tab switching comes from the global ui.js .tab-item handler.)
+  (function () {
+    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var bars = document.querySelectorAll('.v2-bar');
+    function setBar(bar) { bar.style.height = bar.getAttribute('data-h') + 'px'; }
+    function countUp(el) {
+      var target = parseInt(el.getAttribute('data-count'), 10);
+      if (!target || target < 2) return;
+      var t0 = performance.now(), dur = 1100;
+      function step(t) {
+        var p = Math.min(1, (t - t0) / dur);
+        var eased = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(target * eased).toLocaleString();
+        if (p < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+    if (reduced || !('IntersectionObserver' in window)) {
+      bars.forEach(setBar);
+      document.querySelectorAll('.v2-reveal').forEach(function (el) { el.classList.add('v2-in'); });
+      return;
+    }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        io.unobserve(en.target);
+        var el = en.target;
+        if (el.classList.contains('v2-bar')) setBar(el);
+        else if (el.classList.contains('v2-num')) countUp(el);
+        else el.classList.add('v2-in');
+      });
+    }, { threshold: 0.25 });
+    bars.forEach(function (b) { io.observe(b); });
+    document.querySelectorAll('.v2-reveal').forEach(function (el) { io.observe(el); });
+    document.querySelectorAll('.v2-num[data-count]').forEach(function (el) { io.observe(el); });
+  })();
+</script>
+
+<%- include('partials/footer') %>

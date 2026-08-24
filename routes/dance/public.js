@@ -389,11 +389,58 @@ router.get('/dance/org/:slug', async (req, res) => {
   }));
 
   const isAdmin = req.session && req.session.user && (req.session.user.role === 'admin' || req.session.user.role === 'superadmin');
-  res.render('org', {
+
+  // "Rafters" design preview (?design=rafters) — organizer edition. Same
+  // route and data, alternate template; extra reach queries run only for
+  // the preview. This page doubles as the demo link in invitation letters.
+  const useRaftersDesign = req.query.design === 'rafters';
+  let raftersExtras = {};
+  if (useRaftersDesign) {
+    const dancersRow = await db.get(`
+      SELECT COUNT(DISTINCT ad.dancer_id) AS count
+      FROM award_dancers ad
+      JOIN awards a ON ad.award_id = a.id
+      JOIN events e ON a.event_id = e.id
+      WHERE e.org_id = ?
+    `, [org.id]);
+    const titlesRow = await db.get(`
+      SELECT COUNT(*) AS count
+      FROM awards a JOIN events e ON a.event_id = e.id
+      WHERE e.org_id = ?
+        AND (a.award_type LIKE '%National Grand Champion%' OR a.category LIKE '%National Grand Champion%')
+        AND a.is_first_place = 1
+    `, [org.id]);
+    const yearlySeries = await db.all(`
+      SELECT e.year AS year, COUNT(DISTINCT e.id) AS events, COUNT(a.id) AS total,
+             SUM(CASE WHEN a.is_first_place = 1 THEN 1 ELSE 0 END) AS firsts
+      FROM events e LEFT JOIN awards a ON a.event_id = e.id
+      WHERE e.org_id = ? AND e.year IS NOT NULL
+      GROUP BY e.year
+      ORDER BY CAST(e.year AS INTEGER) ASC
+    `, [org.id]);
+    const topStudios = await db.all(`
+      SELECT s.name, s.unique_id, COUNT(a.id) AS award_count
+      FROM awards a
+      JOIN studios s ON a.studio_id = s.id
+      JOIN events e ON a.event_id = e.id
+      WHERE e.org_id = ? AND s.unique_id IS NOT NULL
+      GROUP BY s.id
+      ORDER BY award_count DESC
+      LIMIT 6
+    `, [org.id]);
+    raftersExtras = {
+      reach: { dancers: (dancersRow && dancersRow.count) || 0, titles: (titlesRow && titlesRow.count) || 0 },
+      yearlySeries,
+      topStudios
+    };
+  }
+
+  res.render(useRaftersDesign ? 'org_v2' : 'org', {
     org, groupedData, stats, isAdmin,
     eventsCount: events.length,
     pageTitle: org.name,
-    pageDesc: `${org.name} on AwardHome: ${stats.totalAwards} awards across ${events.length} events since ${stats.firstYear || ''}.`
+    pageDesc: `${org.name} on AwardHome: ${stats.totalAwards} awards across ${events.length} events since ${stats.firstYear || ''}.`,
+    ...raftersExtras
   });
 });
 

@@ -173,6 +173,24 @@ at the preview — it's shared by URL for owner feedback ahead of a full cutover
 - **Origin:** static concept mockup lives at `design/studio_page_mockup.html` (real Triple Threat
   data, self-contained).
 
+### Organizer edition (`/dance/org/:slug?design=rafters`)
+The same design system applied to the public org page (`views/org_v2.ejs` +
+`public/css/org_v2.css`, which layers org-specific pieces on top of `studio_v2.css` — the font
+and shared chrome load once). Audience: competition organizers — this page doubles as the demo
+link in invitation letters. Thesis: reach + permanence + "your brand on every card".
+
+- **Sections:** spotlight hero with reach record (awards preserved, dancers celebrated, studios
+  reached, events archived, national titles crowned) and the registration-site CTA; awards-per-
+  season chart with per-year event counts; **The Coin** — a tilted share-card mock carrying the
+  org's logo *only if fitted & approved* (`custom_icons.logo_approved`, same gate as real cards;
+  otherwise "YOUR LOGO HERE"), plus the concierge pitch; **The Champions** — top 6 studios by
+  awards, linking to their studio pages; **The Archive** — year tabs over the full event list
+  (org-name prefix stripped from rows; event links stay admin-only); closing organizer section —
+  owner sees branding/profile/dashboard links, everyone else sees the status-free
+  `hello@awardhome.com` pitch (improves on classic, which shows a "Claim This Page" button only
+  for unclaimed orgs — a status leak).
+- Extra queries (dancers reached, titles, yearly series, top studios) run only under the flag.
+
 ## 1b. Homepage Org Cards — Deliberately Unlinked + Demand Telemetry
 Public homepage org cards do **not** link to `/dance/org/:slug` — a deliberate decision
 (2026-08-24): org data stays low-profile until the org partners with us. The org page route

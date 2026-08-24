@@ -1,0 +1,83 @@
+/* ============================================================
+   Org page v2 — "The Rafters" design system, organizer edition.
+   Loaded by views/org_v2.ejs ON TOP of studio_v2.css (which owns
+   the Cinzel @font-face, the .v2 tokens, and the shared chrome:
+   hero, record strip, sections, chart, org-cards, owner block).
+   This file adds only org-specific pieces.
+   ============================================================ */
+
+/* Slogan line under the org name */
+.v2-slogan {
+  font-family: var(--v2-display); font-weight: 500;
+  font-size: clamp(0.9rem, 2.2vw, 1.15rem);
+  letter-spacing: 0.28em; text-indent: 0.28em;
+  color: var(--v2-gold); margin: 0.65rem 0 0;
+}
+
+/* ---------- "your brand on every card" pitch ---------- */
+.v2-pitch-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 3rem; align-items: center; margin-top: 2.4rem; }
+@media (max-width: 780px) { .v2-pitch-grid { grid-template-columns: 1fr; } }
+.v2-pitch-points { list-style: none; padding: 0; margin: 1.4rem 0 0; display: flex; flex-direction: column; gap: 1.05rem; }
+.v2-pitch-points li { display: flex; gap: 0.8rem; align-items: flex-start; color: var(--v2-ink-mut); font-size: 0.95rem; line-height: 1.55; }
+.v2-pitch-points li::before { content: '\2726'; color: var(--v2-gold); flex: 0 0 auto; margin-top: 0.1rem; }
+.v2-pitch-points b { color: var(--v2-ink); font-weight: 600; }
+
+/* A share-card mock with the org's coin on it — the thing being sold. */
+.v2-card-mock-stage { display: flex; justify-content: center; perspective: 900px; }
+.v2-card-mock {
+  width: min(300px, 82vw); padding: 1.6rem 1.5rem 1.4rem;
+  background: linear-gradient(165deg, #221c11, #131007 70%);
+  border: 1px solid var(--v2-hairline-strong); border-radius: 10px;
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.6), 0 0 40px rgba(212, 175, 55, 0.08);
+  transform: rotateY(-7deg) rotateX(2.5deg);
+  position: relative;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .v2-card-mock { transition: transform 0.35s ease; }
+  .v2-card-mock:hover { transform: rotateY(0deg) rotateX(0deg); }
+}
+.v2-card-mock .v2-cm-coin {
+  width: 54px; height: 54px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+  margin: 0 auto 1rem;
+  font-family: var(--v2-data); font-size: 0.5rem; font-weight: 800; letter-spacing: 0.08em;
+  text-align: center; color: var(--v2-plate-text); line-height: 1.25;
+  background: radial-gradient(circle at 32% 28%, #f6e6ae, var(--v2-gold) 52%, #9a7b1e);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.25);
+}
+.v2-card-mock .v2-cm-coin img { width: 100%; height: 100%; object-fit: cover; }
+.v2-card-mock .v2-cm-title { font-family: var(--v2-display); font-weight: 700; font-size: 1.15rem; color: var(--v2-champagne); text-align: center; }
+.v2-card-mock .v2-cm-sub { font-family: var(--v2-data); font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--v2-ink-mut); text-align: center; margin-top: 0.4rem; }
+.v2-card-mock .v2-cm-plate {
+  margin: 1.1rem -1.5rem -1.4rem; padding: 0.55rem 1rem; border-radius: 0 0 10px 10px;
+  background: linear-gradient(180deg, #eed88b, var(--v2-gold) 45%, #a8862a);
+  font-family: var(--v2-display); font-weight: 700; font-size: 0.66rem;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--v2-plate-text);
+  text-align: center; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+.v2-cm-caption { text-align: center; font-family: var(--v2-data); font-size: 0.72rem; color: var(--v2-ink-faint); margin-top: 1.3rem; }
+
+/* ---------- champions wall (reuses .v2-org-card as the tile) ---------- */
+a.v2-champ { text-decoration: none; display: block; transition: border-color 0.2s, transform 0.2s; }
+a.v2-champ:hover { border-color: var(--v2-gold); transform: translateY(-2px); }
+
+/* ---------- event archive ---------- */
+.v2-event-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 0.6rem 1.4rem; margin-top: 0.4rem; }
+.v2-event-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid transparent; border-bottom-color: rgba(212, 175, 55, 0.08);
+  border-radius: 4px;
+  font-size: 0.9rem; color: var(--v2-ink);
+}
+.v2-event-row:hover { background: rgba(212, 175, 55, 0.05); border-color: var(--v2-hairline); }
+.v2-event-row .v2-ev-name { line-height: 1.35; }
+.v2-event-row .v2-ev-name a { color: inherit; text-decoration: none; border-bottom: 1px dotted var(--v2-hairline-strong); }
+.v2-event-row .v2-ev-name a:hover { color: var(--v2-gold-bright); }
+.v2-event-row .v2-ev-count {
+  flex: 0 0 auto;
+  font-family: var(--v2-data); font-size: 0.72rem; font-weight: 700; font-variant-numeric: tabular-nums;
+  color: var(--v2-gold); border: 1px solid var(--v2-hairline); border-radius: 999px;
+  padding: 0.22rem 0.7rem; white-space: nowrap;
+}
+.v2-archive-note { font-family: var(--v2-data); font-size: 0.78rem; color: var(--v2-ink-faint); margin-top: 1.2rem; }
