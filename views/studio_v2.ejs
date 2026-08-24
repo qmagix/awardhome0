@@ -1,0 +1,596 @@
+<%- include('partials/header') %>
+<link rel="stylesheet" href="/css/studio_v2.css">
+
+<%
+  const isOwnerOrAdmin = typeof user !== 'undefined' && user && (user.role === 'admin' || user.role === 'superadmin' || user.id === studio.owner_id);
+  const maxYearTotal = yearlySeries.length > 0 ? Math.max(...yearlySeries.map(y => y.total)) : 0;
+  const bestSeason = yearlySeries.length > 0 ? yearlySeries.reduce((a, b) => (b.total > a.total ? b : a)) : null;
+  const circuit = orgsHistory.slice().sort((a, b) => b.total_awards_all_time - a.total_awards_all_time);
+  const circuitCards = circuit.slice(0, 4);
+  const circuitChips = circuit.slice(4);
+  const monogram = studio.name.split(/\s+/).map(w => w[0]).join('').replace(/[^A-Za-z]/g, '').substring(0, 2).toUpperCase();
+%>
+
+<div class="v2">
+
+  <div class="v2-preview">
+    <span>Design preview &mdash; &ldquo;The Rafters&rdquo; concept</span>
+    <a href="/dance/studio/<%= studio.unique_id %>">View the classic page</a>
+  </div>
+
+  <% if (mergedIntoStudio) { %>
+    <div class="v2-wrap" style="padding-top: 1.5rem;">
+      <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); color: #8db8f0; padding: 1.25rem 1.5rem; border-radius: 6px;">
+        This studio's records have been merged into
+        <a href="/dance/studio/<%= mergedIntoStudio.unique_id %>?design=rafters" style="color: #b8d4f5; font-weight: 600;"><%= mergedIntoStudio.name %></a>.
+        For the complete picture, visit the main studio profile.
+      </div>
+    </div>
+  <% } %>
+
+  <section class="v2-hero">
+    <p class="v2-eyebrow"><% if (quickStats.sinceYear) { %>EST. <%= quickStats.sinceYear %> &middot; <% } %>VERIFIED COMPETITION RECORD</p>
+    <div class="v2-coin" aria-hidden="true">
+      <% if (studio.logo_url) { %><img src="<%= studio.logo_url %>" alt=""><% } else { %><%= monogram %><% } %>
+    </div>
+    <h1><%= studio.name %></h1>
+    <% if (studio.bio) { %><p class="v2-bio"><%= studio.bio %></p><% } %>
+
+    <% if (studio.is_claimed) { %>
+      <div class="v2-claim-badge"><span class="v2-dot">&#10022;</span> Claimed &amp; verified studio</div>
+    <% } else if (typeof viewerClaimStatus !== 'undefined' && viewerClaimStatus === 'pending') { %>
+      <div style="margin-top: 1.6rem;">
+        <span class="v2-pending-chip">&#8987; Verification &amp; approval pending</span>
+        <p class="v2-claim-note">Your claim for this studio is being reviewed. You'll get an email when it's approved, and your Manage dashboard will unlock right here.</p>
+      </div>
+    <% } %>
+
+    <div class="v2-record" role="list" aria-label="Lifetime record">
+      <% if (studio.prefs.show_total_awards || isOwnerOrAdmin) { %>
+        <div class="v2-cell" role="listitem">
+          <% if (!studio.prefs.show_total_awards && isOwnerOrAdmin) { %><span class="v2-hidden-chip" title="Hidden from public">Hidden</span><% } %>
+          <div class="v2-num" data-count="<%= quickStats.totalAwards %>"><%= quickStats.totalAwards.toLocaleString() %></div>
+          <div class="v2-lbl">Awards</div>
+        </div>
+      <% } %>
+      <% if (studio.prefs.show_1st_place_finishes || isOwnerOrAdmin) { %>
+        <div class="v2-cell" role="listitem">
+          <% if (!studio.prefs.show_1st_place_finishes && isOwnerOrAdmin) { %><span class="v2-hidden-chip" title="Hidden from public">Hidden</span><% } %>
+          <a href="/dance/studio/<%= studio.unique_id %>/first-places" style="text-decoration: none; color: inherit;">
+            <div class="v2-num" data-count="<%= quickStats.firstPlaceCount %>"><%= quickStats.firstPlaceCount.toLocaleString() %></div>
+            <div class="v2-lbl">First Places &rarr;</div>
+          </a>
+        </div>
+      <% } %>
+      <% if (banners.length > 0) { %>
+        <div class="v2-cell" role="listitem">
+          <div class="v2-num" data-count="<%= banners.length %>"><%= banners.length %></div>
+          <div class="v2-lbl">National Titles</div>
+        </div>
+      <% } %>
+      <% if (quickStats.scholarshipCount > 0) { %>
+        <div class="v2-cell" role="listitem">
+          <div class="v2-num" data-count="<%= quickStats.scholarshipCount %>"><%= quickStats.scholarshipCount.toLocaleString() %></div>
+          <div class="v2-lbl">Scholarships</div>
+        </div>
+      <% } %>
+      <% if (quickStats.uniqueDancersCount > 0) { %>
+        <div class="v2-cell" role="listitem">
+          <div class="v2-num" data-count="<%= quickStats.uniqueDancersCount %>"><%= quickStats.uniqueDancersCount.toLocaleString() %></div>
+          <div class="v2-lbl">Dancers</div>
+        </div>
+      <% } %>
+      <% if (groupedData.length > 0) { %>
+        <div class="v2-cell" role="listitem">
+          <div class="v2-num" data-count="<%= groupedData.length %>"><%= groupedData.length %></div>
+          <div class="v2-lbl">Seasons</div>
+        </div>
+      <% } %>
+    </div>
+
+    <div class="v2-meta-row">
+      <span>&#128065;&#65039; <%= studio.view_count %> profile views</span>
+      <% if (studio.website_url) { %>
+        <a href="<%= studio.website_url.startsWith('http') ? studio.website_url : 'https://' + studio.website_url %>" target="_blank" rel="noopener">Website</a>
+      <% } %>
+      <% if (studio.instagram_handle) { %>
+        <a href="https://instagram.com/<%= studio.instagram_handle.replace(/^@/, '') %>" target="_blank" rel="noopener">Instagram</a>
+      <% } %>
+      <% if (studio.tiktok_handle) { %>
+        <a href="https://tiktok.com/@<%= studio.tiktok_handle.replace(/^@/, '') %>" target="_blank" rel="noopener">TikTok</a>
+      <% } %>
+    </div>
+
+    <div class="v2-ctas">
+      <% if (studio.is_claimed) { %>
+        <% if (isOwnerOrAdmin && user.id === studio.owner_id) { %>
+          <a href="/manage/studio/<%= studio.id %>" class="v2-gold-btn">Manage your studio</a>
+        <% } else if (typeof user === 'undefined' || !user) { %>
+          <a href="/login" class="v2-ghost-btn">Owner login</a>
+        <% } %>
+      <% } else if (typeof viewerClaimStatus === 'undefined' || viewerClaimStatus !== 'pending') { %>
+        <a href="/claim/studio/<%= studio.unique_id %>" class="v2-gold-btn">Claim this studio</a>
+        <button type="button" class="v2-ghost-btn" onclick="openBenefitsModal(event)">Why claim?</button>
+      <% } %>
+    </div>
+  </section>
+
+  <% if (isOwnerOrAdmin) { %>
+    <div class="v2-owner-strip">
+      <div class="v2-pcard">
+        <span class="v2-private-chip" title="Only you (the studio owner) and site admins can see this.">&#128274; Private</span>
+        <div class="v2-num"><%= quickStats.totalEvents %></div>
+        <div class="v2-lbl">Events Attended</div>
+      </div>
+      <div class="v2-pcard">
+        <span class="v2-private-chip" title="Only you (the studio owner) and site admins can see this.">&#128274; Private</span>
+        <div class="v2-num"><%= quickStats.awardsPast5Years %> <span style="font-size: 0.85rem;">awards</span></div>
+        <div class="v2-lbl">Past 5 Years &middot; <%= quickStats.eventsPast5Years %> events</div>
+      </div>
+      <div class="v2-pcard">
+        <% if (!studio.prefs.show_this_year) { %><span class="v2-hidden-chip" title="Hidden from public">Hidden</span><% } %>
+        <div class="v2-num"><%= quickStats.awardsThisYear %> <span style="font-size: 0.85rem;">awards</span></div>
+        <div class="v2-lbl">This Year &middot; <%= quickStats.eventsThisYear %> events</div>
+      </div>
+      <a class="v2-customize" href="/manage/studio/<%= studio.id %>">&#9998; Customize what the public sees</a>
+    </div>
+  <% } %>
+
+  <% if (banners.length > 0) { %>
+    <section class="v2-rafters">
+      <div class="v2-rafters-head v2-reveal">
+        <p class="v2-kicker">The Rafters</p>
+        <h2><%= banners.length === 1 ? 'A national title hangs here' : banners.length + ' national titles hang here' %></h2>
+        <p>Every National Grand Champion banner in the record.</p>
+      </div>
+      <div class="v2-truss" aria-hidden="true"></div>
+      <div class="v2-banner-row">
+        <% banners.forEach(function(b) { %>
+          <div class="v2-banner v2-reveal">
+            <div class="v2-b-year"><%= b.year %></div>
+            <div class="v2-b-org"><%= b.org %></div>
+            <div class="v2-b-star">&#10022;&ensp;&#10022;&ensp;&#10022;</div>
+            <div class="v2-b-piece"><%= b.piece %></div>
+            <div class="v2-b-title">National Grand Champion<% if (b.division) { %><br><%= b.division %><% } %></div>
+          </div>
+        <% }); %>
+      </div>
+    </section>
+  <% } %>
+
+  <main class="v2-wrap">
+
+    <% if (yearlySeries.length > 0) { %>
+      <section class="v2-section v2-reveal" aria-labelledby="v2-ledger-h">
+        <div class="v2-ledger-grid">
+          <div>
+            <p class="v2-kicker">Season Ledger</p>
+            <h2 id="v2-ledger-h"><%= yearlySeries.length === 1 ? 'The first season on the road' : yearlySeries.length + ' seasons on the road' %></h2>
+            <p class="v2-lede">Every placement below is pulled from published competition results &mdash; nothing self-reported, nothing inflated.</p>
+            <% if (bestSeason) { %>
+              <p class="v2-ledger-note">Best season so far: <b><%= bestSeason.year %> &mdash; <%= bestSeason.total.toLocaleString() %> awards</b><% if (bestSeason.firsts > 0) { %> with <%= bestSeason.firsts %> first-place finishes<% } %>.</p>
+            <% } %>
+          </div>
+          <div>
+            <div class="v2-chart" role="img" aria-label="Awards per season: <%= yearlySeries.map(y => y.year + ', ' + y.total).join('; ') %>">
+              <% yearlySeries.forEach(function(y) { %>
+                <div class="v2-col">
+                  <div class="v2-val"><%= y.total.toLocaleString() %></div>
+                  <div class="v2-bar-box">
+                    <div class="v2-bar" data-h="<%= Math.max(4, Math.round(y.total / maxYearTotal * 220)) %>"
+                      data-tip="<%= y.year %> &middot; <%= y.total.toLocaleString() %> awards<% if (y.firsts > 0) { %> &middot; <%= y.firsts %> first places<% } %>"></div>
+                  </div>
+                  <div class="v2-yr"><%= y.year %></div>
+                  <% if (y.firsts > 0) { %><div class="v2-fp">&#10022; <%= y.firsts %> firsts</div><% } else { %><div class="v2-fp v2-none">&mdash;</div><% } %>
+                </div>
+              <% }); %>
+            </div>
+          </div>
+        </div>
+      </section>
+    <% } %>
+
+    <% if (circuit.length > 0 && (studio.prefs.show_org_history || isOwnerOrAdmin)) { %>
+      <section class="v2-section v2-reveal" aria-labelledby="v2-circuit-h">
+        <% if (!studio.prefs.show_org_history && isOwnerOrAdmin) { %><span class="v2-section-hidden-chip" title="Hidden from public">Hidden</span><% } %>
+        <p class="v2-kicker">The Circuit</p>
+        <h2 id="v2-circuit-h">Proven on <%= circuit.length === 1 ? 'the competition stage' : circuit.length + ' competition stages' %></h2>
+        <p class="v2-lede">Awards earned by circuit, all seasons combined.</p>
+        <div class="v2-circuit-grid">
+          <% circuitCards.forEach(function(org, i) { %>
+            <div class="v2-org-card">
+              <div class="v2-o-count"><%= org.total_awards_all_time.toLocaleString() %></div>
+              <div class="v2-o-name"><%= org.name %></div>
+              <div class="v2-o-sub"><%= org.first_places_all_time %> first places<% if (org.major_awards_all_time > 0) { %> &middot; <%= org.major_awards_all_time %> major<% } %></div>
+              <% if (i === 0 && circuit.length > 1) { %><span class="v2-o-tag">Home circuit</span><% } %>
+            </div>
+          <% }); %>
+        </div>
+        <% if (circuitChips.length > 0) { %>
+          <div class="v2-chip-row">
+            <% circuitChips.forEach(function(org) { %>
+              <span class="v2-org-chip"><%= org.name %>&ensp;<b><%= org.total_awards_all_time.toLocaleString() %></b></span>
+            <% }); %>
+          </div>
+        <% } %>
+      </section>
+    <% } %>
+
+    <% if (hallOfFame && hallOfFame.length > 0) { %>
+      <section class="v2-section v2-reveal" aria-labelledby="v2-case-h">
+        <p class="v2-kicker">The Trophy Case</p>
+        <h2 id="v2-case-h">Pieces that made the walls shake</h2>
+        <div class="v2-case-grid">
+          <% hallOfFame.forEach(function(award) { %>
+            <div class="v2-trophy-slot">
+              <div class="v2-trophy">
+                <div class="v2-t-year"><%= award.org_name %> &middot; <%= award.event_year %></div>
+                <div class="v2-t-piece"><%= award.performance_name %></div>
+                <div class="v2-t-cat">
+                  <% if (award.age_division) { %><%= award.age_division %> &middot; <% } %><%= award.award_type || award.category %>
+                </div>
+                <% if (award.dancers && award.dancers.length > 0) { %>
+                  <p class="v2-t-dancers">
+                    <% award.dancers.forEach(function(d, i) { %><% if (i > 0) { %>, <% } %><% if (d.unique_id) { %><a href="/dancer/<%= d.unique_id %>"><%= d.name %></a><% } else { %><%= d.name %><% } %><% }); %>
+                  </p>
+                <% } %>
+                <div class="v2-plate"><%= getPremiumDetails(award).icon %> <%= formatPlacement(award) %></div>
+              </div>
+              <div class="v2-shelf" aria-hidden="true"></div>
+            </div>
+          <% }); %>
+        </div>
+      </section>
+    <% } %>
+
+    <section class="v2-section" aria-labelledby="v2-record-h">
+      <p class="v2-kicker">The Record</p>
+      <h2 id="v2-record-h">Every result, season by season</h2>
+      <p class="v2-lede">The full ledger is public and searchable &mdash; parents can find their dancer, and every placement links back to the event it was earned at.</p>
+
+      <% if (groupedData.length === 0) { %>
+        <p style="color: var(--v2-ink-mut); margin-top: 2rem;">No awards found for this studio yet.</p>
+      <% } else { %>
+        <ul class="year-tabs" id="yearTabs">
+          <% groupedData.forEach(function(yearGroup, index) { %>
+            <li class="tab-item <%= index === 0 ? 'active' : '' %>" data-target="year-<%= yearGroup.year %>" data-loaded="<%= yearGroup.isLoaded %>" onclick="loadYear('<%= studio.unique_id %>', '<%= yearGroup.year %>', this)">
+              <%= yearGroup.year %>
+            </li>
+          <% }); %>
+        </ul>
+
+        <div class="tab-content-container">
+          <% groupedData.forEach(function(yearGroup, index) { %>
+            <div class="tab-pane <%= index === 0 ? 'active' : '' %>" id="year-<%= yearGroup.year %>">
+              <% if (yearGroup.isLoaded) { %>
+                <%- include('partials/studio_year_events', { events: yearGroup.events }) %>
+              <% } else { %>
+                <div class="loading-spinner" style="text-align: center; padding: 4rem 2rem;">
+                  <div style="display: inline-block; width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-radius: 50%; border-top-color: var(--v2-gold); animation: spin 1s ease-in-out infinite;"></div>
+                  <p style="color: var(--v2-ink-mut); margin-top: 1rem;">Loading awards for <%= yearGroup.year %>...</p>
+                </div>
+              <% } %>
+            </div>
+          <% }); %>
+        </div>
+      <% } %>
+    </section>
+
+    <% if (quickStats.uniqueDancersCount > 0) { %>
+      <section class="v2-section v2-reveal" aria-labelledby="v2-company-h">
+        <p class="v2-kicker">The Company</p>
+        <h2 id="v2-company-h"><%= quickStats.uniqueDancersCount.toLocaleString() %> <%= quickStats.uniqueDancersCount === 1 ? 'dancer has' : 'dancers have' %> carried the name</h2>
+        <div class="v2-company">
+          <% if (dancerInitials.length > 0) { %>
+            <div class="v2-coin-stack" aria-hidden="true">
+              <% dancerInitials.forEach(function(ini) { %><div class="v2-d-coin"><%= ini %></div><% }); %>
+              <% if (quickStats.uniqueDancersCount > dancerInitials.length) { %>
+                <div class="v2-d-coin v2-more">+<%= (quickStats.uniqueDancersCount - dancerInitials.length).toLocaleString() %></div>
+              <% } %>
+            </div>
+          <% } %>
+          <p class="v2-lede" style="flex: 1; min-width: 260px;">Every dancer keeps a page of their own &mdash; their awards follow them from first solo to senior year, and every card they share carries the studio's name.</p>
+        </div>
+      </section>
+    <% } %>
+
+    <% if (alumni && alumni.length >= 5) { %>
+      <section class="v2-section v2-reveal" aria-labelledby="v2-alumni-h">
+        <p class="v2-kicker">Alumni Legacy</p>
+        <h2 id="v2-alumni-h">The dancers who came before</h2>
+        <p class="v2-lede">Showcasing the dancers who trained and graduated from <%= studio.name %>.</p>
+        <div class="v2-alumni-grid">
+          <% alumni.forEach(function(a) { %>
+            <div class="v2-alum">
+              <div class="v2-a-photo">
+                <% if (a.headshot_url) { %><img src="<%= a.headshot_url %>" alt=""><% } else { %>&#128100;<% } %>
+              </div>
+              <h4><% if (a.unique_id) { %><a href="/dancer/<%= a.unique_id %>"><%= a.name %></a><% } else { %><%= a.name %><% } %></h4>
+              <div class="v2-a-year">Class of <%= a.graduation_year %></div>
+              <% if (a.notes) { %><p class="v2-a-notes"><%= a.notes %></p><% } %>
+            </div>
+          <% }); %>
+        </div>
+      </section>
+    <% } %>
+
+  </main>
+
+  <% if (!studio.is_claimed) { %>
+    <section class="v2-owner" id="v2-owner-tools">
+      <div class="v2-wrap">
+        <p class="v2-kicker">For Studio Owners</p>
+        <h2>Your banners, working for you</h2>
+        <p class="v2-lede">This page already exists for your studio &mdash; claiming it makes it yours to polish, correct, and put in front of every prospective family.</p>
+        <div class="v2-tool-grid">
+          <div class="v2-tool">
+            <h3>Embed the trophy case</h3>
+            <p>One line of code puts a live, always-current award wall on your own website.</p>
+          </div>
+          <div class="v2-tool">
+            <h3>Cards built to be shared</h3>
+            <p>Every award becomes a share-ready card &mdash; your brand on every card dancers share to Instagram and TikTok.</p>
+          </div>
+          <div class="v2-tool">
+            <h3>The owner's box</h3>
+            <p>Private analytics, roster tools, and control over exactly which numbers the public sees.</p>
+          </div>
+        </div>
+        <a class="v2-gold-btn" href="/claim/studio/<%= studio.unique_id %>">Claim your studio &mdash; it's free</a>
+        <p class="v2-fineprint">Already claimed yours? <a href="/login">Sign in to manage it.</a></p>
+      </div>
+    </section>
+  <% } else if (isOwnerOrAdmin && user.id === studio.owner_id) { %>
+    <section class="v2-owner" id="v2-owner-tools">
+      <div class="v2-wrap">
+        <p class="v2-kicker">Owner's Box</p>
+        <h2>Put your banners to work</h2>
+        <p class="v2-lede">Quick links to the tools that keep this page sharp.</p>
+        <div class="v2-tool-grid">
+          <a class="v2-tool" href="/manage/studio/<%= studio.id %>/widget">
+            <h3>Embed the trophy case</h3>
+            <p>One line of code puts a live, always-current award wall on your own website.</p>
+          </a>
+          <a class="v2-tool" href="/manage/studio/<%= studio.id %>/awards">
+            <h3>Manage awards</h3>
+            <p>Correct records, add missing wins, and fill in dancer names.</p>
+          </a>
+          <a class="v2-tool" href="/manage/studio/<%= studio.id %>/roster">
+            <h3>Manage the roster</h3>
+            <p>Keep your company list, headshots, and alumni up to date.</p>
+          </a>
+        </div>
+        <a class="v2-gold-btn" href="/manage/studio/<%= studio.id %>">Open your dashboard</a>
+      </div>
+    </section>
+  <% } %>
+
+</div>
+
+<!-- Benefits Modal (shared behavior with classic page) -->
+<div id="benefits-modal"
+  style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 9999; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;">
+  <div class="card glass-card"
+    style="position: relative; max-width: 500px; width: 90%; padding: 2.5rem; transform: scale(0.95); transition: transform 0.3s ease;">
+    <button onclick="closeBenefitsModal()"
+      style="position: absolute; top: 1rem; right: 1rem; background: transparent; border: none; color: white; font-size: 1.5rem; cursor: pointer;">&times;</button>
+    <h2 style="margin-top: 0; margin-bottom: 1.5rem; color: var(--primary); border-left: none; padding-left: 0;">&#10024; Why Claim Your Studio?</h2>
+    <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 1.25rem;">
+      <li style="display: flex; align-items: flex-start; gap: 1rem;"><span style="font-size: 1.5rem;">&#128200;</span><div><strong style="display: block; margin-bottom: 0.25rem; color: white;">Embed Awards on Your Site</strong><span style="color: var(--text-muted); font-size: 0.9rem;">Showcase your dancers' achievements directly on your own website using our customizable widget.</span></div></li>
+      <li style="display: flex; align-items: flex-start; gap: 1rem;"><span style="font-size: 1.5rem;">&#127899;&#65039;</span><div><strong style="display: block; margin-bottom: 0.25rem; color: white;">Control Your Dashboard</strong><span style="color: var(--text-muted); font-size: 0.9rem;">Choose exactly which statistic cards you want to display on your public studio page.</span></div></li>
+      <li style="display: flex; align-items: flex-start; gap: 1rem;"><span style="font-size: 1.5rem;">&#127912;</span><div><strong style="display: block; margin-bottom: 0.25rem; color: white;">Customize Your Profile</strong><span style="color: var(--text-muted); font-size: 0.9rem;">Add your studio's logo, cover photo, bio, contact details, and social media links to stand out.</span></div></li>
+      <li style="display: flex; align-items: flex-start; gap: 1rem;"><span style="font-size: 1.5rem;">&#128221;</span><div><strong style="display: block; margin-bottom: 0.25rem; color: white;">Manage Your Awards</strong><span style="color: var(--text-muted); font-size: 0.9rem;">Correct mistakes, add missing records, update dancer names, and keep your history accurate.</span></div></li>
+      <li style="display: flex; align-items: flex-start; gap: 1rem;"><span style="font-size: 1.5rem;">&#128202;</span><div><strong style="display: block; margin-bottom: 0.25rem; color: white;">Access Exclusive Analytics</strong><span style="color: var(--text-muted); font-size: 0.9rem;">See how many people are viewing your studio's profile and tracking your success.</span></div></li>
+    </ul>
+    <div style="margin-top: 2.5rem; text-align: center;">
+      <a href="/claim/studio/<%= studio.unique_id %>" class="v2-gold-btn">Claim Your Studio Now</a>
+    </div>
+  </div>
+</div>
+
+<!-- Dancer Claim Modal (identical behavior to classic page) -->
+<div id="claim-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 9999; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;">
+  <div class="card glass-card" style="position: relative; max-width: 500px; width: 90%; padding: 2.5rem; transform: scale(0.95); transition: transform 0.3s ease;">
+    <button onclick="closeClaimModal()" style="position: absolute; top: 1rem; right: 1rem; background: transparent; border: none; color: white; font-size: 1.5rem; cursor: pointer;">&times;</button>
+    <h2 style="margin-top: 0; margin-bottom: 1.5rem; color: var(--primary); border-left: none; padding-left: 0;">Claim Award</h2>
+    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Enter your studio's secret join code to request verification from your studio director.</p>
+    <form id="claim-form" style="display: flex; flex-direction: column; gap: 1.5rem;">
+      <input type="hidden" id="claim_award_id" name="award_id">
+      <input type="hidden" name="studio_id" value="<%= studio.id %>">
+      <div id="step-1-identity">
+        <div style="background: rgba(255,255,255,0.05); padding: 1.5rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+          <h4 style="margin: 0 0 1rem 0; color: white; border-left: none; padding-left: 0;">Your Identity</h4>
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-weight: 600;">Dancer Unique ID (Optional)</label>
+            <input type="text" id="claim_unique_id" name="unique_id" placeholder="If you already have a profile" style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white; margin-bottom: 1rem;">
+          </div>
+          <div style="text-align: center; color: var(--text-muted); margin-bottom: 1rem;">&mdash; OR CREATE NEW &mdash;</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div>
+              <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-weight: 600;">Full Name</label>
+              <input type="text" id="claim_name" name="name" placeholder="First Last" style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;">
+            </div>
+            <div>
+              <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-weight: 600;">Birthday</label>
+              <input type="date" id="claim_birthday" name="birthday" style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white; color-scheme: dark;">
+            </div>
+          </div>
+        </div>
+        <button type="button" onclick="checkIdentity()" class="v2-gold-btn" style="margin-top: 1.5rem; width: 100%;">Continue</button>
+      </div>
+      <div id="step-2-code" style="display: none;">
+        <h4 style="margin: 0 0 1rem 0; color: white; border-left: none; padding-left: 0;">Verification Required</h4>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">It looks like you are not yet a verified member of this studio. Please provide the secret Join Code from your Studio Director.</p>
+        <div>
+          <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-weight: 600;">Studio Secret Code</label>
+          <input type="text" id="claim_code" name="join_code" placeholder="e.g. A8F9K2" style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white; font-family: monospace; letter-spacing: 2px;">
+        </div>
+        <button type="button" onclick="submitClaimFinal()" style="margin-top: 1.5rem; background: #10b981; color: white; border: none; padding: 0.75rem; font-size: 1rem; font-weight: 600; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); width: 100%;">Submit Claim</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
+
+<script>
+  // Year tab lazy-loading — identical contract to the classic page
+  // (same API endpoint, same partial, same dancers-cell IDs for claims).
+  async function loadYear(studioId, year, tabElement) {
+    const isLoaded = tabElement.getAttribute('data-loaded') === 'true';
+    if (isLoaded) return;
+    const pane = document.getElementById('year-' + year);
+    try {
+      const response = await fetch(`/api/studio/${studioId}/year/${year}`);
+      const html = await response.text();
+      pane.innerHTML = html;
+      tabElement.setAttribute('data-loaded', 'true');
+      if (typeof initSortableTables === 'function') setTimeout(initSortableTables, 100);
+      const accordions = pane.querySelectorAll('.accordion');
+      if (accordions.length === 1) {
+        const firstAccordionHeader = accordions[0].querySelector('.accordion-header');
+        if (firstAccordionHeader && !firstAccordionHeader.classList.contains('active')) firstAccordionHeader.click();
+      }
+    } catch (err) {
+      console.error('Failed to load year:', err);
+      pane.innerHTML = '<p style="text-align:center; color: #f87171;">Failed to load awards for this year. Please try again.</p>';
+    }
+  }
+
+  function openBenefitsModal(e) {
+    if (e) e.preventDefault();
+    const modal = document.getElementById('benefits-modal');
+    modal.style.display = 'flex';
+    setTimeout(() => { modal.style.opacity = '1'; modal.querySelector('.card').style.transform = 'scale(1)'; }, 10);
+  }
+  function closeBenefitsModal() {
+    const modal = document.getElementById('benefits-modal');
+    modal.style.opacity = '0';
+    modal.querySelector('.card').style.transform = 'scale(0.95)';
+    setTimeout(() => { modal.style.display = 'none'; }, 300);
+  }
+  function openClaimModal(awardId) {
+    document.getElementById('claim_award_id').value = awardId;
+    const modal = document.getElementById('claim-modal');
+    modal.style.display = 'flex';
+    setTimeout(() => { modal.style.opacity = '1'; modal.querySelector('.card').style.transform = 'scale(1)'; }, 10);
+  }
+  function closeClaimModal() {
+    const modal = document.getElementById('claim-modal');
+    modal.style.opacity = '0';
+    modal.querySelector('.card').style.transform = 'scale(0.95)';
+    setTimeout(() => { modal.style.display = 'none'; }, 300);
+  }
+  window.onclick = function (event) {
+    const bModal = document.getElementById('benefits-modal');
+    const cModal = document.getElementById('claim-modal');
+    if (event.target === bModal) closeBenefitsModal();
+    if (event.target === cModal) closeClaimModal();
+  };
+
+  async function checkIdentity() {
+    const form = document.getElementById('claim-form');
+    const uniqueId = document.getElementById('claim_unique_id').value.trim();
+    const name = document.getElementById('claim_name').value.trim();
+    const studioId = form.studio_id.value;
+    if (!uniqueId && !name) { alert('Please provide either your Unique ID or your Full Name.'); return; }
+    if (uniqueId) {
+      try {
+        const response = await fetch(`/api/check-dancer-studio?unique_id=${encodeURIComponent(uniqueId)}&studio_id=${studioId}`);
+        const result = await response.json();
+        if (result.linked) { submitClaimFinal(); }
+        else {
+          document.getElementById('step-1-identity').style.display = 'none';
+          document.getElementById('step-2-code').style.display = 'block';
+        }
+      } catch (e) { alert('Error checking identity.'); }
+    } else {
+      document.getElementById('step-1-identity').style.display = 'none';
+      document.getElementById('step-2-code').style.display = 'block';
+    }
+  }
+
+  async function submitClaimFinal() {
+    const form = document.getElementById('claim-form');
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    try {
+      const response = await fetch('/api/claim-award', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      const result = await response.json();
+      if (response.ok) {
+        if (result.newUniqueId) {
+          alert(`Claim submitted! \n\nIMPORTANT: Your new Dancer Unique ID is:\n\n${result.newUniqueId}\n\nPlease copy and save this ID. You can use it to instantly claim other awards without needing the Studio Code again.`);
+        } else {
+          alert('Claim submitted successfully! It is now pending admin approval.');
+        }
+        closeClaimModal();
+        const awardsToUpdate = result.backfilledAwards || [data.award_id];
+        awardsToUpdate.forEach(a_id => {
+          const cell = document.getElementById('dancers-cell-' + a_id);
+          if (cell) {
+            const em = cell.querySelector('em');
+            if (em) em.remove();
+            const badge = document.createElement('span');
+            badge.className = 'badge-common badge-pending';
+            if (result.dancerUniqueId) {
+              badge.innerHTML = `<a href="/dancer/${result.dancerUniqueId}" style="color: inherit; text-decoration: none;">${result.dancerName}</a>`;
+            } else {
+              badge.textContent = result.dancerName;
+            }
+            const btn = cell.querySelector('button');
+            if (btn) cell.insertBefore(badge, btn); else cell.appendChild(badge);
+          }
+        });
+      } else {
+        alert(result.error || 'Failed to submit claim.');
+      }
+    } catch (err) {
+      alert('An error occurred. Please try again.');
+    }
+  }
+</script>
+
+<script>
+  // Scroll-triggered motion: section reveals, bar growth, hero count-ups.
+  (function () {
+    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var bars = document.querySelectorAll('.v2-bar');
+    function setBar(bar) { bar.style.height = bar.getAttribute('data-h') + 'px'; }
+    function countUp(el) {
+      var target = parseInt(el.getAttribute('data-count'), 10);
+      if (!target || target < 2) return;
+      var t0 = performance.now(), dur = 1100;
+      function step(t) {
+        var p = Math.min(1, (t - t0) / dur);
+        var eased = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(target * eased).toLocaleString();
+        if (p < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+    if (reduced || !('IntersectionObserver' in window)) {
+      bars.forEach(setBar);
+      document.querySelectorAll('.v2-reveal').forEach(function (el) { el.classList.add('v2-in'); });
+      return;
+    }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        io.unobserve(en.target);
+        var el = en.target;
+        if (el.classList.contains('v2-bar')) setBar(el);
+        else if (el.classList.contains('v2-num')) countUp(el);
+        else el.classList.add('v2-in');
+      });
+    }, { threshold: 0.25 });
+    bars.forEach(function (b) { io.observe(b); });
+    document.querySelectorAll('.v2-reveal').forEach(function (el) { io.observe(el); });
+    document.querySelectorAll('.v2-num[data-count]').forEach(function (el) { io.observe(el); });
+  })();
+</script>
+
+<%- include('partials/footer') %>

@@ -16,6 +16,8 @@
 - [ ] Launch-day SEO: sitemap.xml for studio/dancer pages (replaces the public directory as the crawl path once BETA_MODE=false).
 
 ### Features
+- [x] (DONE 2026-08-24) Studio page "Rafters" design preview: alternate owner-conversion design on `?design=rafters` (views/studio_v2.ejs + public/css/studio_v2.css), same route/data/prefs/claim flows as classic; static concept mockup in design/studio_page_mockup.html. See features.md §2d.
+- [ ] Rafters rollout: send preview links to claimed studio owners + org contacts for feedback; instrument claim-button clicks; decide cutover (delete classic or keep as fallback for one deploy). No A/B test — traffic too low; no per-studio design picker — double maintenance.
 - [x] (DONE 2026-08-13) Feature-flag release infrastructure: feature_flags table (off/beta/on + lazy scheduled flips), flagOn() cached helper, /admin/features release console, early_access beta cohort column; thank_you_notes + award_photos ship dark on prod migrate; all card surfaces and write endpoints flag-gated (absent flag = off). See features.md §3c.
 - [x] (DONE 2026-08-13) Auto-moderation for thank-you notes behind the auto_moderation flag: rules (links/contacts/profanity — minor-PII protection) → trusted authors → free OpenAI Moderation API; moderation_mode manual/assisted/auto on /admin/settings; queue shows 🤖 verdicts; "Recently Auto-Approved" feed with one-click revoke (pulls identical copies). Photos stay human-reviewed. See features.md §3c.
 - [ ] Release-flip follow-ups: "What's New" public changelog page + release announcement email to claimed users on each flag flip; early-access opt-in toggle for users (column exists, no UI); vision-moderation pre-filter for photos + trusted-uploader auto-approve.

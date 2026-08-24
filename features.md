@@ -148,6 +148,31 @@ The registry lives in `utils/cardDesign.js` — future designs are added there a
   diffed against the director's cast (preview-then-apply + verification queue), never as silent
   writes. See conversation log 2026-08-23 / TODOS.
 
+## 2d. Studio Page Design Preview — "The Rafters" (`?design=rafters`)
+An alternate public-studio-page design aimed at studio-owner conversion, served from the same
+route/data as the classic page: `GET /dance/studio/:unique_id?design=rafters` renders
+`views/studio_v2.ejs` (classic `studio.ejs` is untouched and remains the default; no link points
+at the preview — it's shared by URL for owner feedback ahead of a full cutover decision).
+
+- **Concept:** championship-arena narrative instead of a stats dashboard — spotlight hero with an
+  engraved-serif studio name (Cinzel, embedded as a data-URI in `public/css/studio_v2.css`, so no
+  font CDN), a lifetime-record strip, then "The Rafters": every National Grand Champion win
+  (`award_type/category LIKE '%National Grand Champion%' AND is_first_place=1`) as a hanging
+  banner. Below: awards-per-season bar chart, per-circuit totals, Hall of Fame restyled as a
+  trophy shelf, the year-tab award ledger, dancer-count "Company" strip, and a closing
+  owner-conversion section (claim pitch when unclaimed; dashboard/widget/roster quick links for
+  the owner).
+- **Parity with classic:** same prefs gating (`show_*` keys, Hidden chips for the owner), same
+  owner-private stats (Events Attended, Past 5 Years — 🔒 chips), same claim modals and
+  `/api/claim-award` flow, same lazy year loading via `/api/studio/:id/year/:year` (reuses
+  `partials/studio_year_events`; v2 CSS restyles it in place), same pending-claim state.
+- **Implementation notes:** all v2 styles are `v2-`prefixed and scoped under a `.v2` wrapper in
+  `public/css/studio_v2.css` (also undoes the global heading border-left inside the wrapper); the
+  three extra queries (title banners, yearly series, top-dancer initials) run only when the flag
+  is present, so the classic page pays nothing. Smoke check: "Rafters design preview renders".
+- **Origin:** static concept mockup lives at `design/studio_page_mockup.html` (real Triple Threat
+  data, self-contained).
+
 ## 3d. Social Reactions on Award Cards (flag: `reactions`, ships dark)
 - **What it is:** cheer (👏) / love (❤️) chips pinned to the bottom-right corner of every award
   card in a dancer's public trophy case. Tap toggles; counts show on the chip; the viewer's own

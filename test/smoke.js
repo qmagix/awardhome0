@@ -105,6 +105,7 @@ async function main() {
       const event = await db.get('SELECT id FROM events ORDER BY id LIMIT 1');
       if (studio) CHECKS.push(['GET', `/dance/studio/${studio.unique_id}`, [200], 'real studio profile renders']);
       if (studio) CHECKS.push(['GET', `/dance/studio/${studio.id}`, [404], 'numeric studio id 404s on public page']);
+      if (studio) CHECKS.push(['GET', `/dance/studio/${studio.unique_id}?design=rafters`, [200], 'Rafters design preview renders (?design=rafters)']);
       if (studio) CHECKS.push(['GET', `/claim/studio/${studio.unique_id}`, [200], 'claim page public (one-page apply)']);
       if (studio) burstPath = `/dance/studio/${studio.unique_id}`;
       if (dancer) CHECKS.push(['GET', `/dancer/${dancer.unique_id}`, [200], 'real dancer trophy case renders']);

@@ -724,11 +724,62 @@ router.get('/dance/studio/:id', profileLimiter, async (req, res) => {
     } catch (e) { /* table missing before first migrate */ }
   }
 
-  res.render('studio', {
+  // "Rafters" design preview (?design=rafters) — same route, same data,
+  // alternate template. Extra queries run only for the preview so the
+  // classic page pays nothing.
+  const useRaftersDesign = req.query.design === 'rafters';
+  let raftersExtras = {};
+  if (useRaftersDesign) {
+    const titleRows = await db.all(`
+      SELECT a.performance_name, a.award_type, a.category, e.year, o.name as org_name
+      FROM awards a
+      JOIN events e ON a.event_id = e.id
+      JOIN organizations o ON e.org_id = o.id
+      WHERE a.studio_id = ?
+        AND (a.award_type LIKE '%National Grand Champion%' OR a.category LIKE '%National Grand Champion%')
+        AND a.is_first_place = 1
+      ORDER BY CAST(e.year AS INTEGER) ASC, a.performance_name ASC
+    `, [req.params.id]);
+    const banners = titleRows.map(r => ({
+      year: r.year,
+      org: r.org_name,
+      piece: r.performance_name,
+      division: (r.award_type || r.category || '').replace(/national grand champion/i, '').replace(/\s{2,}/g, ' ').trim()
+    }));
+
+    const yearlySeries = await db.all(`
+      SELECT e.year as year, COUNT(*) as total,
+             SUM(CASE WHEN a.is_first_place = 1 THEN 1 ELSE 0 END) as firsts
+      FROM awards a
+      JOIN events e ON a.event_id = e.id
+      WHERE a.studio_id = ?
+      GROUP BY e.year
+      ORDER BY CAST(e.year AS INTEGER) ASC
+    `, [req.params.id]);
+
+    const topDancers = await db.all(`
+      SELECT d.name
+      FROM award_dancers ad
+      JOIN awards a ON ad.award_id = a.id
+      JOIN dancers d ON ad.dancer_id = d.id
+      WHERE a.studio_id = ?
+      GROUP BY d.id
+      ORDER BY COUNT(*) DESC
+      LIMIT 8
+    `, [req.params.id]);
+    const dancerInitials = topDancers.map(d =>
+      d.name.trim().split(/\s+/).map(w => w[0]).join('').replace(/[^A-Za-z]/g, '').substring(0, 2).toUpperCase()
+    ).filter(Boolean);
+
+    raftersExtras = { banners, yearlySeries, dancerInitials };
+  }
+
+  res.render(useRaftersDesign ? 'studio_v2' : 'studio', {
     studio, mergedIntoStudio, groupedData, quickStats, hallOfFame: topHallOfFame, alumni, viewerClaimStatus,
     hasAwards: quickStats.totalAwards > 0, orgsHistory,
     pageTitle: studio.name,
-    pageDesc: `${studio.name} on AwardHome: ${quickStats.totalAwards} dance awards across ${quickStats.totalEvents} competition events${quickStats.sinceYear ? ' since ' + quickStats.sinceYear : ''}.`
+    pageDesc: `${studio.name} on AwardHome: ${quickStats.totalAwards} dance awards across ${quickStats.totalEvents} competition events${quickStats.sinceYear ? ' since ' + quickStats.sinceYear : ''}.`,
+    ...raftersExtras
   });
 });
 
