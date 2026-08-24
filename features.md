@@ -173,6 +173,24 @@ at the preview — it's shared by URL for owner feedback ahead of a full cutover
 - **Origin:** static concept mockup lives at `design/studio_page_mockup.html` (real Triple Threat
   data, self-contained).
 
+## 1b. Homepage Org Cards — Deliberately Unlinked + Demand Telemetry
+Public homepage org cards do **not** link to `/dance/org/:slug` — a deliberate decision
+(2026-08-24): org data stays low-profile until the org partners with us. The org page route
+itself remains public because it's the demo link in invitation letters ("your events are live
+today — see [org page link]"); it's just not discoverable from the homepage. Org cards must stay
+free of any claimed/unclaimed signal (same reasoning as the no-public-claim-button rule).
+
+- **Click telemetry:** clicking a card records demand instead of navigating — `POST
+  /api/org-card-click` (CSRF-covered, rate-limited, admins excluded, deduped per org per browser
+  session) inserts into `org_card_clicks`; the visitor gets a "profiles coming soon" toast.
+  Public homepage renders increment a `dance_home_views` day-counter in `daily_counters` as the
+  impression denominator (admin homepage renders don't count — its cards are linked).
+- **Where it surfaces:** `/admin/orgs` "Card Demand" column — 30-day clicks + CTR badge against
+  30-day homepage views. This is outreach ammunition: "X% of homepage visitors tried to open
+  your page" gives orgs an incentive to partner and get their page linked.
+- **Rollout intent:** when an org partners/approves, flip its card to a real link (per-org,
+  future work — likely a flag on the organizations row).
+
 ## 3d. Social Reactions on Award Cards (flag: `reactions`, ships dark)
 - **What it is:** cheer (👏) / love (❤️) chips pinned to the bottom-right corner of every award
   card in a dancer's public trophy case. Tap toggles; counts show on the chip; the viewer's own

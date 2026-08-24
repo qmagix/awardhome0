@@ -25,6 +25,7 @@
             <th style="padding: 0.5rem 0.75rem 0.5rem 0; color: var(--text-muted);">Slug</th>
             <th style="padding: 0.5rem 0.75rem 0.5rem 0; color: var(--text-muted);">Website</th>
             <th style="padding: 0.5rem 0.75rem 0.5rem 0; color: var(--text-muted);">Events</th>
+            <th style="padding: 0.5rem 0.75rem 0.5rem 0; color: var(--text-muted); white-space: nowrap;" title="Clicks on the (deliberately unlinked) homepage org card — demand evidence for outreach. CTR is against <%= impressions.last30 %> public homepage views in the last 30 days (<%= impressions.all_time %> all-time).">Card Demand</th>
             <th style="padding: 0.5rem 0.75rem 0.5rem 0; color: var(--text-muted);">Status</th>
             <th style="padding: 0.5rem 0; color: var(--text-muted); text-align: right;">Actions</th>
           </tr>
@@ -43,6 +44,16 @@
                 <% } %>
               </td>
               <td style="padding: 0.5rem 0.75rem 0.5rem 0;"><%= org.event_count || 0 %></td>
+              <td style="padding: 0.5rem 0.75rem 0.5rem 0; white-space: nowrap; font-variant-numeric: tabular-nums;">
+                <% if (org.card_clicks > 0) { %>
+                  <span title="<%= org.card_clicks_30d %> clicks in the last 30 days, <%= org.card_clicks %> all-time"><%= org.card_clicks_30d %> <span style="color: var(--text-muted); font-size: 0.8rem;">/30d</span></span>
+                  <% if (impressions.last30 > 0 && org.card_clicks_30d > 0) { %>
+                    <span class="badge" style="background: rgba(212, 175, 55, 0.15); color: var(--primary); margin-left: 0.3rem;"><%= Math.round(org.card_clicks_30d / impressions.last30 * 100) %>%</span>
+                  <% } %>
+                <% } else { %>
+                  <span style="color: var(--text-muted); font-size: 0.85rem;">—</span>
+                <% } %>
+              </td>
               <td style="padding: 0.5rem 0.75rem 0.5rem 0;">
                 <% if (org.owner_id) { %>
                   <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981;" title="<%= org.owner_email || '' %>">Claimed</span>

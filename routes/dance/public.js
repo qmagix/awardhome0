@@ -290,7 +290,44 @@ const LEADERBOARD_PREVIEW = 25;
 router.get('/dance', async (req, res) => {
   const data = await cached('dance-home', HOME_TTL, loadHomepageData);
   const isAdmin = req.session && req.session.user && (req.session.user.role === 'admin' || req.session.user.role === 'superadmin');
+  if (!isAdmin) {
+    // Impression denominator for org-card click-through: counted only for
+    // the public homepage, the population that sees the unlinked org cards
+    // (the admin homepage links its cards). Never blocks the render.
+    try {
+      const db = await openDb();
+      await db.run(`INSERT INTO daily_counters (day, key, count) VALUES (date('now'), 'dance_home_views', 1)
+                    ON CONFLICT(day, key) DO UPDATE SET count = count + 1`);
+    } catch (e) { /* table lands with the next migrate */ }
+  }
   res.render(isAdmin ? 'index_admin' : 'index', { ...data, previewCount: LEADERBOARD_PREVIEW });
+});
+
+// Click telemetry for the deliberately-unlinked homepage org cards (see
+// views/index.ejs): org cards don't navigate anywhere — org pages stay
+// low-profile until the org partners — but genuine visitor demand is
+// recorded per org so outreach can quote it. CSRF-covered like all POSTs.
+const orgClickLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: 30,
+  message: 'Too many requests.',
+});
+router.post('/api/org-card-click', orgClickLimiter, express.json(), async (req, res) => {
+  const orgId = parseInt(req.body && req.body.org_id, 10);
+  if (!orgId) return res.status(400).json({ error: 'org_id required' });
+  const role = req.session && req.session.user && req.session.user.role;
+  if (role === 'admin' || role === 'superadmin') return res.json({ ok: true, skipped: 'admin' });
+  const db = await openDb();
+  const org = await db.get('SELECT id FROM organizations WHERE id = ?', [orgId]);
+  if (!org) return res.status(404).json({ error: 'Unknown organization' });
+  // Defensive create so the endpoint works before the next migrate runs.
+  await db.run(`CREATE TABLE IF NOT EXISTS org_card_clicks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    org_id INTEGER NOT NULL,
+    clicked_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`);
+  await db.run('INSERT INTO org_card_clicks (org_id) VALUES (?)', [orgId]);
+  res.json({ ok: true });
 });
 
 

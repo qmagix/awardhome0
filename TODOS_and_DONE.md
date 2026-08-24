@@ -16,6 +16,8 @@
 - [ ] Launch-day SEO: sitemap.xml for studio/dancer pages (replaces the public directory as the crawl path once BETA_MODE=false).
 
 ### Features
+- [x] (DONE 2026-08-24) Homepage org-card demand telemetry: cards stay deliberately unlinked (org data low-profile until the org partners — recorded in CLAUDE.md deliberate decisions); clicks recorded via POST /api/org-card-click + dance_home_views impressions; CTR surfaces in /admin/orgs "Card Demand" column as outreach ammunition. See features.md §1b.
+- [ ] Per-org card linking: when an org partners/approves, flip its homepage card to a real /dance/org link (likely a flag on the organizations row).
 - [x] (DONE 2026-08-24) Studio page "Rafters" design preview: alternate owner-conversion design on `?design=rafters` (views/studio_v2.ejs + public/css/studio_v2.css), same route/data/prefs/claim flows as classic; static concept mockup in design/studio_page_mockup.html. See features.md §2d.
 - [ ] Rafters rollout: send preview links to claimed studio owners + org contacts for feedback; instrument claim-button clicks; decide cutover (delete classic or keep as fallback for one deploy). No A/B test — traffic too low; no per-studio design picker — double maintenance.
 - [x] (DONE 2026-08-13) Feature-flag release infrastructure: feature_flags table (off/beta/on + lazy scheduled flips), flagOn() cached helper, /admin/features release console, early_access beta cohort column; thank_you_notes + award_photos ship dark on prod migrate; all card surfaces and write endpoints flag-gated (absent flag = off). See features.md §3c.

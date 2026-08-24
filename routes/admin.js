@@ -497,7 +497,34 @@ router.get('/admin/orgs', requireAdmin, async (req, res) => {
     try { ci = JSON.parse(o.custom_icons || '{}'); } catch (e) { }
     o.logo_state = !o.logo_url ? 'none' : (ci.logo_approved ? 'live' : 'pending');
   }
-  res.render('admin_orgs', { orgs, user: req.session.user });
+
+  // Homepage org-card demand telemetry (cards are deliberately unlinked;
+  // clicks are outreach ammunition — "X% of visitors tried to open your
+  // page"). Tables may not exist before the first migrate.
+  let impressions = { last30: 0, all_time: 0 };
+  try {
+    const clickRows = await db.all(`
+      SELECT org_id, COUNT(*) AS total,
+             SUM(CASE WHEN clicked_at >= datetime('now', '-30 days') THEN 1 ELSE 0 END) AS last30
+      FROM org_card_clicks GROUP BY org_id
+    `);
+    const clickMap = {};
+    clickRows.forEach(r => { clickMap[r.org_id] = r; });
+    for (const o of orgs) {
+      o.card_clicks = clickMap[o.id] ? clickMap[o.id].total : 0;
+      o.card_clicks_30d = clickMap[o.id] ? clickMap[o.id].last30 : 0;
+    }
+    const imp = await db.get(`
+      SELECT COALESCE(SUM(count), 0) AS all_time,
+             COALESCE(SUM(CASE WHEN day >= date('now', '-30 days') THEN count ELSE 0 END), 0) AS last30
+      FROM daily_counters WHERE key = 'dance_home_views'
+    `);
+    if (imp) impressions = imp;
+  } catch (e) {
+    for (const o of orgs) { o.card_clicks = 0; o.card_clicks_30d = 0; }
+  }
+
+  res.render('admin_orgs', { orgs, impressions, user: req.session.user });
 });
 
 

@@ -408,6 +408,26 @@ async function initDb() {
       PRIMARY KEY (award_id, dancer_id)
     );
 
+    -- Demand telemetry for the homepage org cards. DELIBERATE: public org
+    -- cards do NOT link to /dance/org pages (org data stays low-profile
+    -- until the org partners with us), but clicks are recorded so outreach
+    -- can quote real visitor interest ("X% of homepage visitors tried to
+    -- open your page"). See routes/dance/public.js + views/index.ejs.
+    CREATE TABLE IF NOT EXISTS org_card_clicks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      org_id INTEGER NOT NULL,
+      clicked_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- Generic per-day counters. First user: dance_home_views, the
+    -- impression denominator for org-card click-through rates.
+    CREATE TABLE IF NOT EXISTS daily_counters (
+      day TEXT NOT NULL,
+      key TEXT NOT NULL,
+      count INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY (day, key)
+    );
+
     -- Known flags ship dark; releases happen at /admin/features
     INSERT OR IGNORE INTO feature_flags (key, state) VALUES ('thank_you_notes', 'off');
     INSERT OR IGNORE INTO feature_flags (key, state) VALUES ('award_photos', 'off');

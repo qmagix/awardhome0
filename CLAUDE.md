@@ -36,6 +36,7 @@ Express 4 + EJS + SQLite (no build step, no ORM, no client framework).
 ## Deliberate product decisions (don't "fix")
 
 - **No public claim button on organization pages** — an unclaimed state would advertise which orgs aren't partnered yet. Orgs claim only via private links in invitation emails (`/claim/org/:token`).
+- **Homepage org cards don't link to org pages** (decided 2026-08-24) — org data stays low-profile until the org partners; the org page itself stays public (it's the demo link in invitation letters). Cards instead record clicks (`POST /api/org-card-click` → `org_card_clicks`, impressions in `daily_counters`) as demand evidence for outreach — CTR shows on `/admin/orgs`. Cards must stay free of any claimed/unclaimed signal. The admin homepage (`index_admin.ejs`) keeps its links.
 - **Org logos on cards are approval-gated, default OFF** — a superadmin hand-fits each logo into the fixed circular "coin" (position/rotation sliders are superadmin-only on `/manage/org/:id/branding`) and ticks "Approved for public display". Owners get size/opacity only; the concierge step is part of the pitch.
 - Marketing language: "your brand on every card dancers share."
 - **Public studio URLs use `studios.unique_id`** (`STU-<hex>-slug`), never the numeric id — numeric `/dance/studio/62`-style URLs deliberately 404 with NO redirect (a redirect would be an enumeration oracle for scraping the whole dataset). Manage/admin routes stay numeric (auth-gated). Same pattern as dancer `unique_id` URLs.

@@ -14,8 +14,12 @@
 <div class="container">
   <h2 id="competitions" class="anchor-section">Competitions & Organizations</h2>
   <div class="grid" style="margin-bottom: 4rem;">
+    <%# DELIBERATE: org cards do not link to /dance/org pages — org data
+        stays low-profile until the org partners with us. Clicks are still
+        recorded (POST /api/org-card-click) as demand evidence for outreach. %>
     <% orgs.forEach(function(org) { %>
-      <div class="premium-org-card">
+      <div class="premium-org-card org-card-tracked" data-org-id="<%= org.id %>" data-org-name="<%= org.name %>"
+           role="button" tabindex="0" style="cursor: pointer;">
         <div class="content-wrapper">
           <h3><%= org.name %></h3>
           <div class="org-meta">
@@ -215,6 +219,51 @@ function setLeaderboardView(viewMode) {
 }
 </script>
 
-
+<script>
+// Org-card demand telemetry: cards deliberately don't navigate (org pages
+// stay low-profile until the org partners) — a click records interest once
+// per org per session and thanks the visitor with a toast.
+(function () {
+  var toast = null;
+  function showOrgToast(name) {
+    if (toast) toast.remove();
+    toast = document.createElement('div');
+    toast.setAttribute('role', 'status');
+    toast.textContent = '✨ Full ' + name + ' competition profiles are coming soon — thanks for your interest!';
+    toast.style.cssText = 'position:fixed;left:50%;bottom:2rem;transform:translateX(-50%);z-index:9999;' +
+      'background:rgba(20,17,12,0.95);border:1px solid rgba(212,175,55,0.5);color:#f3e5ab;' +
+      'padding:0.8rem 1.4rem;border-radius:8px;font-size:0.9rem;max-width:90vw;text-align:center;' +
+      'box-shadow:0 10px 30px rgba(0,0,0,0.6);opacity:0;transition:opacity 0.25s;';
+    document.body.appendChild(toast);
+    requestAnimationFrame(function () { toast.style.opacity = '1'; });
+    setTimeout(function () {
+      if (!toast) return;
+      toast.style.opacity = '0';
+      setTimeout(function () { if (toast) { toast.remove(); toast = null; } }, 300);
+    }, 3200);
+  }
+  function recordClick(card) {
+    var id = card.getAttribute('data-org-id');
+    showOrgToast(card.getAttribute('data-org-name'));
+    try {
+      // one recorded click per org per session keeps the percentages honest
+      var key = 'org-card-click-' + id;
+      if (sessionStorage.getItem(key)) return;
+      sessionStorage.setItem(key, '1');
+    } catch (e) { /* storage blocked — still record */ }
+    fetch('/api/org-card-click', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ org_id: parseInt(id, 10) })
+    }).catch(function () {});
+  }
+  document.querySelectorAll('.org-card-tracked').forEach(function (card) {
+    card.addEventListener('click', function () { recordClick(card); });
+    card.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); recordClick(card); }
+    });
+  });
+})();
+</script>
 
 <%- include('partials/footer') %>

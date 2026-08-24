@@ -143,6 +143,7 @@ async function main() {
           ['POST', '/manage/studio/1/onboarding/dismiss', [302], 'anonymous onboarding dismiss redirected to login (with CSRF token)', csrfHeaders],
           // 404 while the 'reactions' flag is off or beta (anonymous caller)
           ['POST', '/api/award/1/react', [404], 'reaction endpoint dark while flag off (with CSRF token)', csrfHeaders],
+          ['POST', '/api/org-card-click', [400], 'org card click telemetry validates input (with CSRF token)', csrfHeaders],
         );
       } else {
         failures++;
