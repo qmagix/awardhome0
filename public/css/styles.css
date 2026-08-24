@@ -2670,24 +2670,28 @@ footer {
   transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
-/* twinkling star in the corner (top-left: the top-right corner hosts the
-   Hidden / Users-Only badges); position, size, and rhythm vary per card
-   so the row sparkles organically rather than blinking in sync */
-.stat-card::before {
-  content: '✦';
+/* three twinkling stars per card — one big (top-left, away from the
+   Hidden / Users-Only badges), two small (bottom-right, mid-left).
+   Delays are offset per star AND per card so the row sparkles
+   organically rather than blinking in sync. */
+.stat-star {
   position: absolute;
-  top: 0.55rem;
-  left: 0.7rem;
-  font-size: 0.7rem;
   color: rgba(255, 236, 170, 0.95);
   text-shadow: 0 0 7px rgba(212, 175, 55, 0.85);
   pointer-events: none;
-  animation: star-twinkle 3.4s ease-in-out infinite;
+  line-height: 1;
+  animation: star-twinkle 3.6s ease-in-out infinite;
 }
 
-.stat-card:nth-child(2n)::before { animation-delay: 1.1s; top: 0.8rem; left: auto; right: 2.6rem; font-size: 0.55rem; }
-.stat-card:nth-child(3n)::before { animation-delay: 2.2s; top: auto; bottom: 0.7rem; left: 0.9rem; font-size: 0.6rem; }
-.stat-card:nth-child(5n)::before { animation-delay: 0.6s; font-size: 0.8rem; }
+.stat-star.st-a { top: 0.5rem; left: 0.7rem; font-size: 0.85rem; }                        /* the big one */
+.stat-star.st-b { bottom: 0.6rem; right: 0.8rem; font-size: 0.5rem; animation-delay: 1.3s; }
+.stat-star.st-c { top: 2.3rem; left: 1.7rem; font-size: 0.45rem; animation-delay: 2.4s; }
+
+.stat-card:nth-child(2n) .stat-star.st-a { animation-delay: 0.8s; }
+.stat-card:nth-child(2n) .stat-star.st-b { animation-delay: 2.1s; }
+.stat-card:nth-child(2n) .stat-star.st-c { animation-delay: 3.1s; }
+.stat-card:nth-child(3n) .stat-star.st-a { animation-delay: 1.7s; }
+.stat-card:nth-child(3n) .stat-star.st-c { animation-delay: 0.4s; }
 
 @keyframes star-twinkle {
   0%, 100% { opacity: 0; transform: scale(0.4) rotate(0deg); }
@@ -2764,6 +2768,6 @@ footer {
 
 @media (prefers-reduced-motion: reduce) {
   .stat-card::after { animation: none; display: none; }
-  .stat-card::before { animation: none; opacity: 0.5; }
+  .stat-star { animation: none; opacity: 0.45; }
   .stat-card, .hof-card, .hof-card .hof-icon { transition: none; }
 }

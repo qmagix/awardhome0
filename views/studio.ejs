@@ -116,7 +116,7 @@
     <div class="quick-stats grid"
       style="grid-template-columns: repeat(auto-fit, minmax(175px, 1fr)); margin-bottom: 3rem;">
       <% if (studio.prefs.show_total_awards || isOwnerOrAdmin) { %>
-      <div class="card glass-card stat-card" style="text-align: center; min-height: auto; padding: 1.5rem; position: relative;">
+      <div class="card glass-card stat-card" style="text-align: center; min-height: auto; padding: 1.5rem; position: relative;"><span class="stat-star st-a">✦</span><span class="stat-star st-b">✦</span><span class="stat-star st-c">✦</span>
         <% if (!studio.prefs.show_total_awards && isOwnerOrAdmin) { %><div style="position: absolute; top: 0.5rem; right: 0.5rem; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; background: rgba(239, 68, 68, 0.2); color: #f87171; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.3);" title="Hidden from Public">Hidden</div><% } %>
         <h4 style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase;">Total Awards</h4>
         <p class="stat-number" style="font-size: 1.8rem; font-weight: 800; color: white; margin: 0.5rem 0 0.25rem 0;">
@@ -128,7 +128,7 @@
       </div>
       <% } %>
       <% if (typeof user !== 'undefined' && user) { %>
-      <div class="card glass-card stat-card" style="text-align: center; min-height: auto; padding: 1.5rem; position: relative;">
+      <div class="card glass-card stat-card" style="text-align: center; min-height: auto; padding: 1.5rem; position: relative;"><span class="stat-star st-a">✦</span><span class="stat-star st-b">✦</span><span class="stat-star st-c">✦</span>
         <div style="position: absolute; top: 0.5rem; right: 0.5rem; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; background: rgba(59, 130, 246, 0.2); color: #60a5fa; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(59, 130, 246, 0.3);" title="Visible to Registered Users">Users Only</div>
         <h4 style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase;">Events Attended</h4>
         <p class="stat-number" style="font-size: 2.5rem; font-weight: 800; color: white; margin: 0.5rem 0 0;">
@@ -138,7 +138,7 @@
       <% } %>
 
       <% if (studio.prefs.show_1st_place_finishes || isOwnerOrAdmin) { %>
-      <a href="/dance/studio/<%= studio.unique_id %>/first-places" class="card glass-card stat-card" style="text-align: center; min-height: auto; padding: 1.5rem; position: relative; text-decoration: none; display: block; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(251, 191, 36, 0.15)';" onmouseout="this.style.transform='none'; this.style.boxShadow='var(--card-shadow)';">
+      <a href="/dance/studio/<%= studio.unique_id %>/first-places" class="card glass-card stat-card" style="text-align: center; min-height: auto; padding: 1.5rem; position: relative; text-decoration: none; display: block; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(251, 191, 36, 0.15)';" onmouseout="this.style.transform='none'; this.style.boxShadow='var(--card-shadow)';"><span class="stat-star st-a">✦</span><span class="stat-star st-b">✦</span><span class="stat-star st-c">✦</span>
         <% if (!studio.prefs.show_1st_place_finishes && isOwnerOrAdmin) { %><div style="position: absolute; top: 0.5rem; right: 0.5rem; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; background: rgba(239, 68, 68, 0.2); color: #f87171; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.3);" title="Hidden from Public">Hidden</div><% } %>
         <h4 style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase;">1st Place Finishes <span style="font-size: 0.8rem; vertical-align: middle;">&rarr;</span></h4>
         <p class="stat-number" style="font-size: 2.5rem; font-weight: 800; color: #fbbf24; margin: 0.5rem 0 0;">
@@ -148,7 +148,7 @@
       <% } %>
 
       <% if (quickStats.scholarshipCount > 0 || isOwnerOrAdmin) { %>
-      <div class="card glass-card stat-card" style="text-align: center; min-height: auto; padding: 1.5rem; position: relative;">
+      <div class="card glass-card stat-card" style="text-align: center; min-height: auto; padding: 1.5rem; position: relative;"><span class="stat-star st-a">✦</span><span class="stat-star st-b">✦</span><span class="stat-star st-c">✦</span>
         <h4 style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase;">Scholarships & Invites</h4>
         <p class="stat-number" style="font-size: 2.5rem; font-weight: 800; color: #e0e0e0; margin: 0.5rem 0 0;">
           <%= quickStats.scholarshipCount %>
@@ -157,7 +157,7 @@
       <% } %>
 
       <% if (studio.prefs.show_1st_place_this_year || isOwnerOrAdmin) { %>
-      <div class="card glass-card stat-card" style="text-align: center; min-height: auto; padding: 1.5rem; position: relative;">
+      <div class="card glass-card stat-card" style="text-align: center; min-height: auto; padding: 1.5rem; position: relative;"><span class="stat-star st-a">✦</span><span class="stat-star st-b">✦</span><span class="stat-star st-c">✦</span>
         <% if (!studio.prefs.show_1st_place_this_year && isOwnerOrAdmin) { %><div style="position: absolute; top: 0.5rem; right: 0.5rem; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; background: rgba(239, 68, 68, 0.2); color: #f87171; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.3);" title="Hidden from Public">Hidden</div><% } %>
         <h4 style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase;">1st Place (This Year)</h4>
         <p class="stat-number" style="font-size: 2.5rem; font-weight: 800; color: #fbbf24; margin: 0.5rem 0 0;">
@@ -166,7 +166,7 @@
       </div>
       <% } %>
       <% if (typeof user !== 'undefined' && user) { %>
-      <div class="card glass-card stat-card" style="text-align: center; min-height: auto; padding: 1.5rem; position: relative;">
+      <div class="card glass-card stat-card" style="text-align: center; min-height: auto; padding: 1.5rem; position: relative;"><span class="stat-star st-a">✦</span><span class="stat-star st-b">✦</span><span class="stat-star st-c">✦</span>
         <div style="position: absolute; top: 0.5rem; right: 0.5rem; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; background: rgba(59, 130, 246, 0.2); color: #60a5fa; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(59, 130, 246, 0.3);" title="Visible to Registered Users">Users Only</div>
         <h4 style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase;">Past 5 Years</h4>
         <p class="stat-number" style="font-size: 1.25rem; font-weight: 700; color: white; margin: 0.5rem 0 0.25rem 0;">
@@ -176,7 +176,7 @@
       </div>
       <% } %>
       <% if (studio.prefs.show_this_year || isOwnerOrAdmin) { %>
-      <div class="card glass-card stat-card" style="text-align: center; min-height: auto; padding: 1.5rem; background: rgba(212, 175, 55, 0.05); border-color: rgba(212, 175, 55, 0.2); position: relative;">
+      <div class="card glass-card stat-card" style="text-align: center; min-height: auto; padding: 1.5rem; background: rgba(212, 175, 55, 0.05); border-color: rgba(212, 175, 55, 0.2); position: relative;"><span class="stat-star st-a">✦</span><span class="stat-star st-b">✦</span><span class="stat-star st-c">✦</span>
         <% if (!studio.prefs.show_this_year && isOwnerOrAdmin) { %><div style="position: absolute; top: 0.5rem; right: 0.5rem; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; background: rgba(239, 68, 68, 0.2); color: #f87171; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.3);" title="Hidden from Public">Hidden</div><% } %>
         <h4 style="color: var(--primary); font-size: 0.85rem; text-transform: uppercase;">This Year</h4>
         <p class="stat-number" style="font-size: 1.5rem; font-weight: 800; color: white; margin: 0.5rem 0 0.25rem 0;">
