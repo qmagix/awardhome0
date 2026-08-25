@@ -50,6 +50,10 @@ const WEB_ORGS = [
   { key: 'believe',    script: 'batch_import.js',        args: (y) => ['believe', y] },
   { key: 'imagine',    script: 'batch_import.js',        args: (y) => ['imagine', y] },
   { key: 'dreammaker', script: 'batch_import.js',        args: (y) => ['dreammaker', y] },
+  // txt-flow orgs (scrape → reviewable txt → idempotent import): the
+  // wrapper applies into DB_PATH, so the staged validator still gates.
+  { key: 'ultra',      script: 'update_txt_org.js',      args: (y) => ['ultra', y] },
+  { key: 'refresh',    script: 'update_txt_org.js',      args: (y) => ['refresh', y] },
 ];
 // Download-only: extraction + import stay manual (the GOOD- QA step needs eyes).
 const PDF_ORGS = [
