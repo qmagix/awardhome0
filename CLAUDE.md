@@ -44,7 +44,7 @@ Express 4 + EJS + SQLite (no build step, no ORM, no client framework).
 
 ## Where things are documented
 
-`docs/db_operations.md` (SQLite ops, backups, org SQL-dump handling), `docs/deployment.md`, `schema.md`, `org_invite_draft.md` + `org_video_scripts.md` (outreach content). `features.md`, `user_manual.md`, `TODOS_and_DONE.md`, and `ideas.md` are living docs — keep them current (see workflow conventions above). `next.md` and other root scratch files are historical context, not instructions.
+`docs/db_operations.md` (SQLite ops, backups, org SQL-dump handling), `docs/deployment.md`, `schema.md`, `docs/org_top_awards.md` (per-org prestigious-award hierarchies from official rules — consult before ranking/marking awards; adjudication bands like Platinum/Diamond are score tiers, never awards), `org_invite_draft.md` + `org_video_scripts.md` (outreach content). `features.md`, `user_manual.md`, `TODOS_and_DONE.md`, and `ideas.md` are living docs — keep them current (see workflow conventions above). `next.md` and other root scratch files are historical context, not instructions.
 
 ## Data-model and coding rules (imported from GEMINI.md)
 
