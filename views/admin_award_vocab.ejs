@@ -1,0 +1,142 @@
+<%- include('partials/header') %>
+<div class="container" style="max-width: 1300px;">
+  <div class="header-section">
+    <h1>Award Vocabulary — <%= org.name %></h1>
+    <p class="subtitle">
+      Batch-rename award types and categories, and mark which values are this organizer's
+      genuinely <strong>top awards</strong> (feeds <code>awards.is_top_award</code> — used
+      wherever the system needs each event's real top honors).
+    </p>
+  </div>
+
+  <div class="card glass-card" style="padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+    <label style="color: var(--text-muted); font-weight: 600;">Scope:</label>
+    <select onchange="window.location = '/admin/orgs/<%= org.id %>/award-vocab' + (this.value ? '?event_id=' + this.value : '')"
+      style="background: rgba(0,0,0,0.35); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 0.5rem 0.75rem; max-width: 100%;">
+      <option value="">Entire organization (all <%= events.length %> events)</option>
+      <% events.forEach(ev => { %>
+        <option value="<%= ev.id %>" <%= eventId === ev.id ? 'selected' : '' %>><%= ev.year %> — <%= ev.name %> (<%= ev.award_count.toLocaleString() %> awards)</option>
+      <% }); %>
+    </select>
+    <span style="color: var(--text-muted); font-size: 0.85rem;">
+      Renames and top-award marks apply to <strong style="color: #fbbf24;"><%= eventId ? 'this event only' : 'every event of this organization' %></strong>.
+    </span>
+  </div>
+
+  <% const sections = [['Award Types', 'award_type', types], ['Categories', 'category', categories]]; %>
+  <% sections.forEach(function(sec) { const [title, field, rows] = sec; %>
+    <div class="card glass-card" style="padding: 0; overflow: hidden; margin-bottom: 2rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.1);">
+        <h3 style="margin: 0; color: var(--primary);"><%= title %> <span style="color: var(--text-muted); font-weight: 400; font-size: 0.85rem;">(<%= rows.length %> distinct values)</span></h3>
+        <input type="search" placeholder="Filter values…" oninput="filterRows(this, '<%= field %>')"
+          style="background: rgba(0,0,0,0.35); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 0.4rem 0.75rem; width: 220px;">
+      </div>
+      <div style="overflow-x: auto; max-height: 560px; overflow-y: auto;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left;" id="vocab-<%= field %>">
+          <thead>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); position: sticky; top: 0; background: #181818; z-index: 2;">
+              <th style="padding: 0.6rem 1rem 0.6rem 1.5rem; color: var(--text-muted);">Current value</th>
+              <th style="padding: 0.6rem 1rem; color: var(--text-muted); text-align: right;">Awards</th>
+              <th style="padding: 0.6rem 1rem; color: var(--text-muted);">Rename to</th>
+              <th style="padding: 0.6rem 1.5rem 0.6rem 1rem; color: var(--text-muted); text-align: right;">Top award</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% rows.forEach(function(r) { %>
+              <tr data-value="<%= r.value.toLowerCase() %>" style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <td style="padding: 0.55rem 1rem 0.55rem 1.5rem; max-width: 380px; word-break: break-word;">
+                  <%= r.value %>
+                  <% if (r.top_count > 0) { %>
+                    <span class="badge" style="background: rgba(212, 175, 55, 0.2); color: #fbbf24; margin-left: 0.4rem;" title="<%= r.top_count %> of these awards are marked as top awards">★ top<%= r.top_count < r.count ? ' (' + r.top_count + '/' + r.count + ')' : '' %></span>
+                  <% } %>
+                </td>
+                <td style="padding: 0.55rem 1rem; text-align: right; color: var(--text-muted); font-variant-numeric: tabular-nums;"><%= r.count.toLocaleString() %></td>
+                <td style="padding: 0.55rem 1rem; white-space: nowrap;">
+                  <% if (r.value !== '(blank)') { %>
+                    <input type="text" placeholder="New value…" data-role="rename-input"
+                      style="background: rgba(0,0,0,0.35); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 0.35rem 0.6rem; width: 240px;">
+                    <button class="btn btn-outline btn-sm" onclick="applyRename(this, '<%= field %>', '<%= r.value.replace(/'/g, "\\'") %>', <%= r.count %>)">Apply</button>
+                  <% } else { %>
+                    <span style="color: var(--text-muted); font-size: 0.8rem;">— blank values: use rename on real values instead</span>
+                  <% } %>
+                </td>
+                <td style="padding: 0.55rem 1.5rem 0.55rem 1rem; text-align: right; white-space: nowrap;">
+                  <% if (r.top_count >= r.count) { %>
+                    <button class="btn btn-sm" style="background: rgba(212, 175, 55, 0.25); border: 1px solid var(--primary); color: #fbbf24;"
+                      onclick="toggleTop(this, '<%= field %>', '<%= r.value.replace(/'/g, "\\'") %>', 0, <%= r.count %>)">★ Unmark top</button>
+                  <% } else { %>
+                    <button class="btn btn-outline btn-sm"
+                      onclick="toggleTop(this, '<%= field %>', '<%= r.value.replace(/'/g, "\\'") %>', 1, <%= r.count %>)">☆ Mark top</button>
+                  <% } %>
+                </td>
+              </tr>
+            <% }); %>
+            <% if (rows.length === 0) { %>
+              <tr><td colspan="4" style="padding: 1.5rem; text-align: center; color: var(--text-muted);">No awards in this scope.</td></tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% }); %>
+
+  <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 3rem;">
+    Tips: renaming merges values — rename "Grand Lines" variants to a single clean spelling and the rows
+    combine on reload. "Mark top" flags every award carrying that value (in the selected scope) as a top
+    award; the ★ badge shows partial marks (e.g. after marking a value in one event only).
+    Idempotent and instant; there is no undo, but renaming back restores the previous value.
+  </p>
+</div>
+
+<script>
+  const VOCAB_ORG = <%= org.id %>;
+  const VOCAB_EVENT = <%= eventId || 'null' %>;
+
+  function filterRows(input, field) {
+    const q = input.value.trim().toLowerCase();
+    document.querySelectorAll('#vocab-' + field + ' tbody tr').forEach(tr => {
+      const v = tr.getAttribute('data-value') || '';
+      tr.style.display = !q || v.includes(q) ? '' : 'none';
+    });
+  }
+
+  async function vocabPost(path, body) {
+    const res = await fetch('/admin/orgs/' + VOCAB_ORG + '/award-vocab/' + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...body, event_id: VOCAB_EVENT })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Request failed');
+    return data;
+  }
+
+  async function applyRename(btn, field, from, count) {
+    const input = btn.parentElement.querySelector('[data-role="rename-input"]');
+    const to = (input.value || '').trim();
+    if (!to) { input.focus(); return; }
+    if (!confirm('Rename "' + from + '" to "' + to + '" on ' + count.toLocaleString() + ' award(s) in this scope?')) return;
+    btn.disabled = true; btn.textContent = 'Saving…';
+    try {
+      const r = await vocabPost('rename', { field, from, to });
+      btn.textContent = '✓ ' + r.changed.toLocaleString();
+      setTimeout(() => window.location.reload(), 600);
+    } catch (e) {
+      alert(e.message);
+      btn.disabled = false; btn.textContent = 'Apply';
+    }
+  }
+
+  async function toggleTop(btn, field, value, set, count) {
+    if (set && !confirm('Mark "' + value + '" (' + count.toLocaleString() + ' award(s) in this scope) as a TOP award?')) return;
+    btn.disabled = true;
+    try {
+      await vocabPost('top', { field, value, set });
+      window.location.reload();
+    } catch (e) {
+      alert(e.message);
+      btn.disabled = false;
+    }
+  }
+</script>
+<%- include('partials/footer') %>

@@ -528,6 +528,102 @@ router.get('/admin/orgs', requireAdmin, async (req, res) => {
 });
 
 
+// ---- Award vocabulary batch editor (superadmin) ----
+// The scraped data mixes real awards ("National Grand Champion", titles)
+// with adjudication levels ("Diamond") and size categories ("Grand Lines")
+// in award_type/category. This surface lets a superadmin batch-rename
+// values per org or per event, and mark which values are the org's
+// genuinely TOP awards (awards.is_top_award — the hook for marquee picks
+// and future top-honor surfaces).
+
+async function ensureTopAwardColumn(db) {
+  try { await db.exec("ALTER TABLE awards ADD COLUMN is_top_award INTEGER DEFAULT 0"); } catch (e) { /* exists */ }
+}
+
+const VOCAB_FIELDS = ['award_type', 'category'];
+
+router.get('/admin/orgs/:id/award-vocab', requireSuperadmin, async (req, res) => {
+  const db = await openDb();
+  await ensureTopAwardColumn(db);
+  const org = await db.get('SELECT id, name, slug FROM organizations WHERE id = ?', [req.params.id]);
+  if (!org) return res.status(404).send('Organization not found');
+
+  const events = await db.all(`
+    SELECT e.id, e.name, e.year, COUNT(a.id) AS award_count
+    FROM events e LEFT JOIN awards a ON a.event_id = e.id
+    WHERE e.org_id = ?
+    GROUP BY e.id
+    ORDER BY CAST(e.year AS INTEGER) DESC, e.name ASC
+  `, [org.id]);
+
+  const eventId = parseInt(req.query.event_id, 10) || null;
+  const scopeWhere = eventId ? 'e.org_id = ? AND a.event_id = ?' : 'e.org_id = ?';
+  const scopeArgs = eventId ? [org.id, eventId] : [org.id];
+
+  const vocab = {};
+  for (const field of VOCAB_FIELDS) {
+    vocab[field] = await db.all(`
+      SELECT COALESCE(NULLIF(TRIM(a.${field}), ''), '(blank)') AS value,
+             COUNT(*) AS count,
+             SUM(COALESCE(a.is_top_award, 0)) AS top_count
+      FROM awards a JOIN events e ON a.event_id = e.id
+      WHERE ${scopeWhere}
+      GROUP BY value
+      ORDER BY count DESC
+    `, scopeArgs);
+  }
+
+  res.render('admin_award_vocab', {
+    org, events, eventId,
+    types: vocab.award_type, categories: vocab.category,
+    user: req.session.user,
+    pageTitle: `Award Vocabulary — ${org.name}`
+  });
+});
+
+// Batch ops share the matcher: rows of this org (optionally one event)
+// whose field value matches. '(blank)' targets NULL/empty values.
+function vocabMatchSql(field, eventId) {
+  return `
+    id IN (
+      SELECT a.id FROM awards a JOIN events e ON a.event_id = e.id
+      WHERE e.org_id = ? ${eventId ? 'AND a.event_id = ?' : ''}
+        AND COALESCE(NULLIF(TRIM(a.${field}), ''), '(blank)') = ?
+    )`;
+}
+
+router.post('/admin/orgs/:id/award-vocab/rename', requireSuperadmin, express.json(), async (req, res) => {
+  const { field, from, to } = req.body || {};
+  const eventId = parseInt(req.body && req.body.event_id, 10) || null;
+  if (!VOCAB_FIELDS.includes(field)) return res.status(400).json({ error: 'Bad field' });
+  if (!from || typeof to !== 'string' || !to.trim()) return res.status(400).json({ error: 'Both current and new value are required' });
+  const db = await openDb();
+  const org = await db.get('SELECT id FROM organizations WHERE id = ?', [req.params.id]);
+  if (!org) return res.status(404).json({ error: 'Organization not found' });
+  const args = eventId ? [org.id, eventId, from] : [org.id, from];
+  const result = await db.run(
+    `UPDATE awards SET ${field} = ? WHERE ${vocabMatchSql(field, eventId)}`,
+    [to.trim(), ...args]);
+  res.json({ ok: true, changed: result.changes });
+});
+
+router.post('/admin/orgs/:id/award-vocab/top', requireSuperadmin, express.json(), async (req, res) => {
+  const { field, value } = req.body || {};
+  const set = req.body && req.body.set ? 1 : 0;
+  const eventId = parseInt(req.body && req.body.event_id, 10) || null;
+  if (!VOCAB_FIELDS.includes(field)) return res.status(400).json({ error: 'Bad field' });
+  if (!value) return res.status(400).json({ error: 'Value is required' });
+  const db = await openDb();
+  await ensureTopAwardColumn(db);
+  const org = await db.get('SELECT id FROM organizations WHERE id = ?', [req.params.id]);
+  if (!org) return res.status(404).json({ error: 'Organization not found' });
+  const args = eventId ? [org.id, eventId, value] : [org.id, value];
+  const result = await db.run(
+    `UPDATE awards SET is_top_award = ? WHERE ${vocabMatchSql(field, eventId)}`,
+    [set, ...args]);
+  res.json({ ok: true, changed: result.changes });
+});
+
 // ---- Organizer invitation letters (superadmin) ----
 // Prefill for the compose modal: the letter template personalized with the
 // org's live stats, plus the last send (if any) so the admin sees a resend

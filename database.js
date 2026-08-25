@@ -505,6 +505,10 @@ async function initDb() {
   try { await db.exec("ALTER TABLE studios ADD COLUMN public_preferences TEXT"); } catch(e) {}
   try { await db.exec("ALTER TABLE awards ADD COLUMN award_class TEXT"); } catch(e) {}
   try { await db.exec("ALTER TABLE awards ADD COLUMN is_first_place INTEGER DEFAULT 0"); } catch(e) {}
+  // Superadmin-marked "top award of its event" (set in batch via the award
+  // vocabulary editor at /admin/orgs/:id/award-vocab). The hook for surfaces
+  // that need each org's genuinely top honors (marquee picks, future HOF).
+  try { await db.exec("ALTER TABLE awards ADD COLUMN is_top_award INTEGER DEFAULT 0"); } catch(e) {}
   try { await db.exec("ALTER TABLE studios ADD COLUMN auto_featured_rank INTEGER"); } catch(e) {}
   try { await db.exec("ALTER TABLE studios ADD COLUMN auto_featured_since DATETIME"); } catch(e) {}
   try { await db.exec("ALTER TABLE studios ADD COLUMN auto_feature_cooldown_until DATETIME"); } catch(e) {}

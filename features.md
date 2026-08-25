@@ -256,6 +256,21 @@ free of any claimed/unclaimed signal (same reasoning as the no-public-claim-butt
 - **Organization Management:** Full CRUD interface for adding, editing, and deleting Competition Organizations.
 - **Studio Deduplication:** An automated system (`dedup_studios.js`) that identifies duplicated studios containing geographic suffixes (e.g., "Studio X, CA"), merging them into their base name and maintaining an internal `aka` alias field to prevent data fragmentation.
 
+## 4b. Award Vocabulary Batch Editor (superadmin)
+`/admin/orgs/:id/award-vocab` (linked as "Vocab" on `/admin/orgs`). The scraped data mixes real
+awards ("National Grand Champion", titles) with adjudication levels ("Diamond") and size
+categories ("Grand Lines") in `award_type`/`category` — this surface is the cleanup tool:
+
+- **Scope selector:** entire organization or a single event; every action applies to the scope.
+- **Batch rename:** distinct values listed with counts; renaming merges variants (rows combine on
+  reload). Blank values are shown but not renameable.
+- **Mark top awards:** flags every award carrying a value (in scope) as `awards.is_top_award` —
+  the hook for surfaces that need each org's genuinely top honors (marquee picks, future HOF
+  logic). ★ badges show full/partial marks; filter boxes handle large vocabularies (KAR has
+  ~6.8k distinct type strings org-wide — use per-event scope or the filter).
+- Endpoints are superadmin-gated + CSRF-covered; column added by idempotent migration and
+  defensively by the routes.
+
 ## 5. FAQ & Instructions Documentation
 - **Studio Admin FAQ (`/faq/admin`)**: Outlines how to claim a studio, customize the profile, manage the roster using the Secret Join Code, approve/deny claims, handle multi-studio "Pseudo-Studio" collaborations, and embed the Widget.
 - **Dancer FAQ (`/faq/dancer`)**: Explains how to create a profile via award claiming, the difference between the Unique ID and Studio Code, what the colored verification badges mean, how Smart Auto-Backfill works, and privacy guarantees.

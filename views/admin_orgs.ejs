@@ -75,6 +75,9 @@
                           onclick="showInviteModal(this)">Invite</button>
                 <% } %>
                 <a href="/admin/org/<%= org.slug %>/categories" class="btn btn-warning" style="text-decoration: none;">Categories</a>
+                <% if (user && user.role === 'superadmin') { %>
+                  <a href="/admin/orgs/<%= org.id %>/award-vocab" class="btn btn-outline" style="text-decoration: none;" title="Batch-edit award types/categories and mark top awards">Vocab</a>
+                <% } %>
                 <a href="/manage/org/<%= org.id %>" target="_blank" class="btn btn-outline" style="border-color: var(--accent-gold); color: var(--accent-gold); text-decoration: none;">Dashboard</a>
                 <button class="btn btn-secondary" onclick="showEditOrgModal('<%= org.id %>', '<%= org.name.replace(/'/g, "\\'") %>', '<%= org.slug %>', '<%= (org.website || '').replace(/'/g, "\\'") %>')">Edit</button>
                 <form action="/admin/orgs/<%= org.id %>/delete" method="POST" onsubmit="return confirm('Are you sure you want to delete this organization? This cannot be undone.');">
