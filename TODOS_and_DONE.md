@@ -3,6 +3,7 @@
 ## TODO
 
 ### Data quality
+- [x] (DONE 2026-08-25) "Play Video" title contamination: the KAR/Rainbow results site nests a "Play Video" link in the routine cell and .text() concatenated it into 173,210 titles (125,465 KAR + 47,745 Rainbow — no clean twins, pure rename). Scrapers fixed (scrape_kar_year/scrape_rainbow/scrape_dancekar strip the suffix), cleanup via scripts/fix_play_video_titles.js (dry-run default, --apply; run identically on local + prod). Root cause of the 2026-08-24 RED import review (suffixed refetch != clean prior row -> idempotency break); dismiss that held import — the next weekly run is clean.
 - [ ] Review the 553 flagged same-name-no-evidence studios (needs_investigation=1, still tab-named) — possibly distinct studios sharing a name; merge or clean case-by-case.
 - [ ] Clean-vs-clean duplicate studios: 892 same-normalized-name groups with no tab member (case/punctuation variants like "ELITE DANCE ACADEMY" vs "Elite Dance Academy") — needs the same evidence-based approach.
 - [ ] Studio+teacher concat records from the StarQuest import (e.g. "Lanzi Academy Of Dance Christina Lanzi" #16125) — detect and merge into the base studio.

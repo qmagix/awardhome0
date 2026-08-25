@@ -95,6 +95,11 @@ async function scrapeRainbow(url, year = 2026) {
           perfNumber = match[1];
           perfName = match[2];
         }
+        // The results site nests a "Play Video" link inside the routine
+        // cell; .text() concatenates it into the title ("Steam Heat Play
+        // Video"). Strip it — it also breaks import idempotency (suffixed
+        // refetch != clean prior row -> re-insert). See fix_play_video_titles.js.
+        perfName = perfName.replace(/(\s*Play Video)+\s*$/i, '').trim();
         // Studio-level awards have no routine; the site renders the cell
         // as a bare "– #" placeholder. Store blank, not the placeholder
         // (display groups blank-name dancer-less awards as "Studio Awards").
