@@ -16,7 +16,7 @@
 # Not yet listed (add when the data supports a real top award):
 # - Spotlight Dance Cup (title rows carry dancer names, overall rows are
 #   adjudication gems — needs the top awards marked in the vocab editor)
-# - Epic (no data yet)
+# - Epic (no data yet); Refresh (first season 2026 — add a title winner when one lands)
 
 Dreams Don't Die | Petite Miss Encore | Encore 2026
 Goodness of God | Elite Title — Teen Miss Nexstar | NexStar 2026
