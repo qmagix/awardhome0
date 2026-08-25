@@ -206,8 +206,9 @@ only Elite eligible for title/prize money. Ages Mini 5&U → Senior 15-19, 20&Ov
 3. **"The Big Show"** at Nationals — **Victory Cup** (Elite; combined groups/lines per age +
    Grand Lines) and **Premier Cup** (Level 2).
 4. **National Title Champion** via "Title Showdown" (top-5 re-compete; Champion + runners-up).
-   Titles are "Title Champions" in **Miss** and **Mister** divisions (never "Miss NexStar"
-   verbatim in rules). Ages 5&U/6-8/9-11/12-14/15-19.
+   Titles are "Title Champions" in **Miss** and **Mister** divisions. UPDATE 2026-08-25: our
+   imported results DO brand them — award_type like `Elite Title - Teen Miss Nexstar`,
+   `Premier Title - Petite Miss Nexstar`. Ages 5&U/6-8/9-11/12-14/15-19.
 5. **National High Score** (Top 20 solos, Top 10 others; Star Dollars for Elite), then SDA
    Regional Champion, regional Top 10s, specials (Photogenic, Costume, Vocalist…).
 
