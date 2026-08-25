@@ -13,16 +13,12 @@
 
 <div class="v2">
 
-  <div class="v2-preview">
-    <span>Design preview &mdash; &ldquo;The Rafters&rdquo; concept</span>
-    <a href="/dance/studio/<%= studio.unique_id %>">View the classic page</a>
-  </div>
 
   <% if (mergedIntoStudio) { %>
     <div class="v2-wrap" style="padding-top: 1.5rem;">
       <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); color: #8db8f0; padding: 1.25rem 1.5rem; border-radius: 6px;">
         This studio's records have been merged into
-        <a href="/dance/studio/<%= mergedIntoStudio.unique_id %>?design=rafters" style="color: #b8d4f5; font-weight: 600;"><%= mergedIntoStudio.name %></a>.
+        <a href="/dance/studio/<%= mergedIntoStudio.unique_id %>" style="color: #b8d4f5; font-weight: 600;"><%= mergedIntoStudio.name %></a>.
         For the complete picture, visit the main studio profile.
       </div>
     </div>

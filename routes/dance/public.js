@@ -164,18 +164,18 @@ router.all('/unsubscribe', async (req, res) => {
 // AwardHome umbrella landing for anonymous visitors; logged-in users go
 // straight to the dance vertical home.
 router.get('/', (req, res) => {
-  // Landing redesign previews (bypass the logged-in redirect so designs
-  // can be previewed from a signed-in session): ?design=rafters is the
-  // full "Front Door" (public2); ?design=hybrid keeps the original's
-  // two-column hero + AwardHome wordmark on the Front Door system (public3).
+  // Landing designs (cutover 2026-08-24): the "hybrid" Front Door
+  // (public3) is the default. ?design=rafters serves the full Front Door
+  // variant (public2), ?design=v0 the original landing (escape hatch).
+  // Flags bypass the logged-in redirect so designs can be previewed.
   if (req.query.design === 'rafters') {
     return res.sendFile(path.join(__dirname, '..', '..', 'public2', 'index.html'));
   }
-  if (req.query.design === 'hybrid') {
-    return res.sendFile(path.join(__dirname, '..', '..', 'public3', 'index.html'));
+  if (req.query.design === 'v0') {
+    return res.sendFile(path.join(__dirname, '..', '..', 'landing', 'index.html'));
   }
   if (req.session.user) return res.redirect('/dance');
-  res.sendFile(path.join(__dirname, '..', '..', 'landing', 'index.html'));
+  res.sendFile(path.join(__dirname, '..', '..', 'public3', 'index.html'));
 });
 
 
@@ -318,12 +318,17 @@ router.get('/dance', async (req, res) => {
                     ON CONFLICT(day, key) DO UPDATE SET count = count + 1`);
     } catch (e) { /* table lands with the next migrate */ }
   }
-  // "The Hall" homepage preview (?design=rafters) — same cached data,
-  // alternate template; admins get it too so the design can be previewed.
+  // Homepage designs (cutover 2026-08-24): "The Hall" (index_v2) is the
+  // public default; admins keep index_admin (their working tool — linked
+  // org cards, admin shortcuts) unless they ask for the Hall explicitly.
+  // ?design=v0 is the classic escape hatch, ?design=rafters an alias.
+  if (req.query.design === 'v0') {
+    return res.render('index', { ...data, previewCount: LEADERBOARD_PREVIEW });
+  }
   if (req.query.design === 'rafters') {
     return res.render('index_v2', { ...data, previewCount: LEADERBOARD_PREVIEW });
   }
-  res.render(isAdmin ? 'index_admin' : 'index', { ...data, previewCount: LEADERBOARD_PREVIEW });
+  res.render(isAdmin ? 'index_admin' : 'index_v2', { ...data, previewCount: LEADERBOARD_PREVIEW });
 });
 
 // Click telemetry for the deliberately-unlinked homepage org cards (see
@@ -413,12 +418,13 @@ router.get('/dance/org/:slug', async (req, res) => {
 
   const isAdmin = req.session && req.session.user && (req.session.user.role === 'admin' || req.session.user.role === 'superadmin');
 
-  // "Rafters" design preview (?design=rafters) — organizer edition. Same
-  // route and data, alternate template; extra reach queries run only for
-  // the preview. This page doubles as the demo link in invitation letters.
-  const useRaftersDesign = req.query.design === 'rafters';
+  // Org page designs (cutover 2026-08-24): the "Rafters" organizer
+  // edition (org_v2) is the default — it doubles as the demo link in
+  // invitation letters. ?design=v0 is the classic escape hatch. The
+  // extra reach queries below feed only the Rafters template.
+  const useClassicDesign = req.query.design === 'v0';
   let raftersExtras = {};
-  if (useRaftersDesign) {
+  if (!useClassicDesign) {
     const dancersRow = await db.get(`
       SELECT COUNT(DISTINCT ad.dancer_id) AS count
       FROM award_dancers ad
@@ -458,7 +464,7 @@ router.get('/dance/org/:slug', async (req, res) => {
     };
   }
 
-  res.render(useRaftersDesign ? 'org_v2' : 'org', {
+  res.render(useClassicDesign ? 'org' : 'org_v2', {
     org, groupedData, stats, isAdmin,
     eventsCount: events.length,
     pageTitle: org.name,
@@ -831,12 +837,12 @@ router.get('/dance/studio/:id', profileLimiter, async (req, res) => {
     } catch (e) { /* table missing before first migrate */ }
   }
 
-  // "Rafters" design preview (?design=rafters) — same route, same data,
-  // alternate template. Extra queries run only for the preview so the
-  // classic page pays nothing.
-  const useRaftersDesign = req.query.design === 'rafters';
+  // Studio page designs (cutover 2026-08-24): "Rafters" (studio_v2) is
+  // the default; ?design=v0 is the classic escape hatch. The extra
+  // queries below feed only the Rafters template.
+  const useClassicDesign = req.query.design === 'v0';
   let raftersExtras = {};
-  if (useRaftersDesign) {
+  if (!useClassicDesign) {
     const titleRows = await db.all(`
       SELECT a.performance_name, a.award_type, a.category, e.year, o.name as org_name
       FROM awards a
@@ -881,7 +887,7 @@ router.get('/dance/studio/:id', profileLimiter, async (req, res) => {
     raftersExtras = { banners, yearlySeries, dancerInitials };
   }
 
-  res.render(useRaftersDesign ? 'studio_v2' : 'studio', {
+  res.render(useClassicDesign ? 'studio' : 'studio_v2', {
     studio, mergedIntoStudio, groupedData, quickStats, hallOfFame: topHallOfFame, alumni, viewerClaimStatus,
     hasAwards: quickStats.totalAwards > 0, orgsHistory,
     pageTitle: studio.name,
@@ -1080,9 +1086,10 @@ router.get('/dancer/:unique_id', profileLimiter, async (req, res) => {
   }
 
   const totalAwardCount = soloAwards.length + groupAwards.length + conventionAwards.length;
-  // ?design=rafters previews the Rafters page chrome. Independent of
-  // ?card_design= (the award-card variant registry) — the two compose.
-  res.render(req.query.design === 'rafters' ? 'dancer_v2' : 'dancer', {
+  // Dancer page designs (cutover 2026-08-24): Rafters chrome (dancer_v2)
+  // is the default; ?design=v0 is the classic escape hatch. Independent
+  // of ?card_design= (the award-card variant registry) — the two compose.
+  res.render(req.query.design === 'v0' ? 'dancer' : 'dancer_v2', {
     dancer, soloAwards, groupAwards, conventionAwards, yearSections, cardDesign,
     featureNotes, featurePhotos, featureReactions,
     pageTitle: dancer.name,

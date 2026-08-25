@@ -153,11 +153,17 @@ The registry lives in `utils/cardDesign.js` — future designs are added there a
   diffed against the director's cast (preview-then-apply + verification queue), never as silent
   writes. See conversation log 2026-08-23 / TODOS.
 
-## 2d. Studio Page Design Preview — "The Rafters" (`?design=rafters`)
-An alternate public-studio-page design aimed at studio-owner conversion, served from the same
-route/data as the classic page: `GET /dance/studio/:unique_id?design=rafters` renders
-`views/studio_v2.ejs` (classic `studio.ejs` is untouched and remains the default; no link points
-at the preview — it's shared by URL for owner feedback ahead of a full cutover decision).
+## 2d. "The Rafters" Design System (DEFAULT since 2026-08-24)
+The Rafters design is the site-wide default on every public surface: landing (`/` serves the
+"hybrid" `public3/`), app homepage (`index_v2.ejs`), studio (`studio_v2.ejs`), org (`org_v2.ejs`),
+and dancer (`dancer_v2.ejs`) pages. `?design=v0` is the classic escape hatch on each of those
+routes (instant rollback = flip the conditional back); `?design=rafters` still works as an alias
+for the default, and `/?design=rafters` serves the full "Front Door" landing variant (`public2/`).
+Admins keep `index_admin` as their `/dance` default (working tool — linked org cards, shortcuts).
+Award cards were deliberately NOT part of the chrome cutover — the card default remains `classic`
+in the registry (§3b) until feedback settles the `rafters` card variant.
+
+The studio page (originally built as the owner-conversion preview):
 
 - **Concept:** championship-arena narrative instead of a stats dashboard — spotlight hero with an
   engraved-serif studio name (Cinzel, embedded as a data-URI in `public/css/studio_v2.css`, so no

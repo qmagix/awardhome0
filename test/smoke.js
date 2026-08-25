@@ -117,8 +117,15 @@ async function main() {
       const org = await db.get('SELECT slug FROM organizations ORDER BY id LIMIT 1');
       if (org) CHECKS.push(['GET', `/dance/org/${org.slug}`, [200], 'org page is public']);
       if (org) CHECKS.push(['GET', `/dance/org/${org.slug}?design=rafters`, [200], 'org Rafters design preview renders (?design=rafters)']);
-      CHECKS.push(['GET', '/?design=rafters', [200], 'Front Door landing preview renders (?design=rafters)']);
-      CHECKS.push(['GET', '/dance?design=rafters', [200], 'Hall homepage preview renders (?design=rafters)']);
+      CHECKS.push(['GET', '/?design=rafters', [200], 'Front Door landing variant renders (?design=rafters)']);
+      CHECKS.push(['GET', '/dance?design=rafters', [200], 'Hall homepage renders (?design=rafters alias)']);
+      // Post-cutover (2026-08-24): Rafters is the default everywhere;
+      // ?design=v0 is the classic escape hatch and must stay reachable.
+      CHECKS.push(['GET', '/?design=v0', [200], 'classic landing escape hatch (?design=v0)']);
+      CHECKS.push(['GET', '/dance?design=v0', [200], 'classic homepage escape hatch (?design=v0)']);
+      if (studio) CHECKS.push(['GET', `/dance/studio/${studio.unique_id}?design=v0`, [200], 'classic studio page escape hatch (?design=v0)']);
+      if (org) CHECKS.push(['GET', `/dance/org/${org.slug}?design=v0`, [200], 'classic org page escape hatch (?design=v0)']);
+      if (dancer) CHECKS.push(['GET', `/dancer/${dancer.unique_id}?design=v0`, [200], 'classic dancer page escape hatch (?design=v0)']);
     } catch (e) {
       console.log('NOTE: real-content checks skipped (' + e.message + ')');
     }
