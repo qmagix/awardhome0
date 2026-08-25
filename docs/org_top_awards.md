@@ -347,8 +347,8 @@ Teen 12-14, Senior 15-19.
 
 ## Encore (encoreperformingarts.com) — identity VERIFIED 2026-08-25
 
-**Identity check result:** our DB has NO imported Encore events/awards yet (on either local
-or prod) — Encore is a PDF-queue org. The queue at `tobeprocessed/pdf/oncore/` (note the
+**Status (2026-08-25):** 63 studio-bearing events (2023–2026, 24,988 awards) are IMPORTED on
+local + prod; the 8 studio-less events (2022 era) are held pending attribution from Encore. The queue at `tobeprocessed/pdf/oncore/` (note the
 "oncore" spelling — the downloader's slug, vs. the org row's slug `encore`; the future
 importer must bridge that) holds **71 results PDFs, 2022–2026, sourced from DanceBug S3**,
 and every sampled PDF's own header reads **"Encore Performing Arts Showcase, Inc."** with
