@@ -45,31 +45,25 @@
           </thead>
           <tbody>
             <% rows.forEach(function(r) { %>
-              <tr data-value="<%= r.value.toLowerCase() %>" data-count="<%= r.count %>" style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+              <tr data-field="<%= field %>" data-value="<%= r.value.toLowerCase() %>" data-value-exact="<%= r.value %>"
+                  data-count="<%= r.count %>" data-top="<%= r.top_count || 0 %>"
+                  style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                 <td style="padding: 0.55rem 1rem 0.55rem 1.5rem; max-width: 380px; word-break: break-word;">
-                  <%= r.value %>
-                  <% if (r.top_count > 0) { %>
-                    <span class="badge" style="background: rgba(212, 175, 55, 0.2); color: #fbbf24; margin-left: 0.4rem;" title="<%= r.top_count %> of these awards are marked as top awards">★ top<%= r.top_count < r.count ? ' (' + r.top_count + '/' + r.count + ')' : '' %></span>
-                  <% } %>
+                  <span data-role="value-label"><%= r.value %></span>
+                  <span data-role="top-badge" class="badge" style="display: none; background: rgba(212, 175, 55, 0.2); color: #fbbf24; margin-left: 0.4rem;"></span>
                 </td>
-                <td style="padding: 0.55rem 1rem; text-align: right; color: var(--text-muted); font-variant-numeric: tabular-nums;"><%= r.count.toLocaleString() %></td>
+                <td data-role="count-cell" style="padding: 0.55rem 1rem; text-align: right; color: var(--text-muted); font-variant-numeric: tabular-nums;"><%= r.count.toLocaleString() %></td>
                 <td style="padding: 0.55rem 1rem; white-space: nowrap;">
                   <% if (r.value !== '(blank)') { %>
                     <input type="text" placeholder="New value…" data-role="rename-input"
                       style="background: rgba(0,0,0,0.35); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 0.35rem 0.6rem; width: 240px;">
-                    <button class="btn btn-outline btn-sm" onclick="applyRename(this, '<%= field %>', '<%= r.value.replace(/'/g, "\\'") %>', <%= r.count %>)">Apply</button>
+                    <button class="btn btn-outline btn-sm" data-action="rename">Apply</button>
                   <% } else { %>
                     <span style="color: var(--text-muted); font-size: 0.8rem;">— blank values: use rename on real values instead</span>
                   <% } %>
                 </td>
                 <td style="padding: 0.55rem 1.5rem 0.55rem 1rem; text-align: right; white-space: nowrap;">
-                  <% if (r.top_count >= r.count) { %>
-                    <button class="btn btn-sm" style="background: rgba(212, 175, 55, 0.25); border: 1px solid var(--primary); color: #fbbf24;"
-                      onclick="toggleTop(this, '<%= field %>', '<%= r.value.replace(/'/g, "\\'") %>', 0, <%= r.count %>)">★ Unmark top</button>
-                  <% } else { %>
-                    <button class="btn btn-outline btn-sm"
-                      onclick="toggleTop(this, '<%= field %>', '<%= r.value.replace(/'/g, "\\'") %>', 1, <%= r.count %>)">☆ Mark top</button>
-                  <% } %>
+                  <button class="btn btn-sm" data-action="top"></button>
                 </td>
               </tr>
             <% }); %>
@@ -83,10 +77,11 @@
   <% }); %>
 
   <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 3rem;">
-    Tips: renaming merges values — rename "Grand Lines" variants to a single clean spelling and the rows
-    combine on reload. "Mark top" flags every award carrying that value (in the selected scope) as a top
-    award; the ★ badge shows partial marks (e.g. after marking a value in one event only).
-    Idempotent and instant; there is no undo, but renaming back restores the previous value.
+    Tips: everything saves in place — your filter and sort are never reset, so you can filter to a
+    cluster and mark values one by one. Renaming merges values: if the new spelling already exists
+    in the table, the rows combine immediately. "Mark top" flags every award carrying that value
+    (in the selected scope). Idempotent and instant; there is no undo, but renaming back restores
+    the previous value.
   </p>
 </div>
 
@@ -94,38 +89,46 @@
   const VOCAB_ORG = <%= org.id %>;
   const VOCAB_EVENT = <%= eventId || 'null' %>;
 
-  // Click-to-sort: alphabetical on "Current value" clusters similar names
-  // together (the point of the cleanup workflow); "Awards" sorts by count.
-  // Direction toggles per column; default page order is count DESC.
-  const vocabSortState = {};
-  function sortVocab(field, key, th) {
-    const stateKey = field + ':' + key;
-    const asc = !(vocabSortState[stateKey] === 'asc');
-    vocabSortState[stateKey] = asc ? 'asc' : 'desc';
-    const tbody = document.querySelector('#vocab-' + field + ' tbody');
-    const rows = Array.from(tbody.querySelectorAll('tr[data-value]'));
-    rows.sort((a, b) => {
-      if (key === 'count') {
-        const d = parseInt(a.dataset.count, 10) - parseInt(b.dataset.count, 10);
-        return asc ? d : -d;
+  // ---- row state: badge + top-button are always derived from data attrs ----
+  function refreshRowState(tr) {
+    const count = parseInt(tr.dataset.count, 10) || 0;
+    const top = parseInt(tr.dataset.top, 10) || 0;
+    const badge = tr.querySelector('[data-role="top-badge"]');
+    if (badge) {
+      if (top > 0) {
+        badge.style.display = '';
+        badge.textContent = '★ top' + (top < count ? ' (' + top.toLocaleString() + '/' + count.toLocaleString() + ')' : '');
+        badge.title = top.toLocaleString() + ' of these awards are marked as top awards';
+      } else {
+        badge.style.display = 'none';
       }
-      const d = a.dataset.value.localeCompare(b.dataset.value);
-      return asc ? d : -d;
-    });
-    rows.forEach(r => tbody.appendChild(r));
-    th.closest('tr').querySelectorAll('th').forEach(h => {
-      h.innerHTML = h.innerHTML.replace(/ [↑↓]$/, ' ⇕');
-    });
-    th.innerHTML = th.innerHTML.replace(/ ⇕$/, asc ? ' ↑' : ' ↓');
+    }
+    const cell = tr.querySelector('[data-role="count-cell"]');
+    if (cell) cell.textContent = count.toLocaleString();
+    const btn = tr.querySelector('[data-action="top"]');
+    if (btn) {
+      if (top >= count && count > 0) {
+        btn.textContent = '★ Unmark top';
+        btn.style.cssText = 'background: rgba(212, 175, 55, 0.25); border: 1px solid var(--primary); color: #fbbf24;';
+        btn.classList.remove('btn-outline');
+      } else {
+        btn.textContent = '☆ Mark top';
+        btn.style.cssText = '';
+        btn.classList.add('btn-outline');
+      }
+    }
   }
+  document.querySelectorAll('tr[data-field]').forEach(refreshRowState);
 
-  function filterRows(input, field) {
-    const q = input.value.trim().toLowerCase();
-    document.querySelectorAll('#vocab-' + field + ' tbody tr').forEach(tr => {
-      const v = tr.getAttribute('data-value') || '';
-      tr.style.display = !q || v.includes(q) ? '' : 'none';
-    });
-  }
+  // ---- delegated actions: no reloads, filter and sort survive every click ----
+  document.addEventListener('click', function (e) {
+    const btn = e.target.closest('[data-action]');
+    if (!btn || btn.disabled) return;
+    const tr = btn.closest('tr[data-field]');
+    if (!tr) return;
+    if (btn.dataset.action === 'top') doToggleTop(btn, tr);
+    else if (btn.dataset.action === 'rename') doRename(btn, tr);
+  });
 
   async function vocabPost(path, body) {
     const res = await fetch('/admin/orgs/' + VOCAB_ORG + '/award-vocab/' + path, {
@@ -138,32 +141,95 @@
     return data;
   }
 
-  async function applyRename(btn, field, from, count) {
-    const input = btn.parentElement.querySelector('[data-role="rename-input"]');
-    const to = (input.value || '').trim();
-    if (!to) { input.focus(); return; }
-    if (!confirm('Rename "' + from + '" to "' + to + '" on ' + count.toLocaleString() + ' award(s) in this scope?')) return;
-    btn.disabled = true; btn.textContent = 'Saving…';
-    try {
-      const r = await vocabPost('rename', { field, from, to });
-      btn.textContent = '✓ ' + r.changed.toLocaleString();
-      setTimeout(() => window.location.reload(), 600);
-    } catch (e) {
-      alert(e.message);
-      btn.disabled = false; btn.textContent = 'Apply';
-    }
+  function flash(btn, text, revertTo) {
+    const original = revertTo !== undefined ? revertTo : btn.textContent;
+    btn.textContent = text;
+    setTimeout(() => { btn.textContent = original; btn.disabled = false; }, 900);
   }
 
-  async function toggleTop(btn, field, value, set, count) {
+  async function doToggleTop(btn, tr) {
+    const count = parseInt(tr.dataset.count, 10) || 0;
+    const top = parseInt(tr.dataset.top, 10) || 0;
+    const set = top >= count && count > 0 ? 0 : 1;
+    const value = tr.dataset.valueExact;
     if (set && !confirm('Mark "' + value + '" (' + count.toLocaleString() + ' award(s) in this scope) as a TOP award?')) return;
     btn.disabled = true;
     try {
-      await vocabPost('top', { field, value, set });
-      window.location.reload();
-    } catch (e) {
-      alert(e.message);
+      await vocabPost('top', { field: tr.dataset.field, value, set });
+      tr.dataset.top = set ? count : 0;
+      refreshRowState(tr);
+      btn.disabled = false;
+    } catch (err) {
+      alert(err.message);
       btn.disabled = false;
     }
+  }
+
+  async function doRename(btn, tr) {
+    const input = tr.querySelector('[data-role="rename-input"]');
+    const from = tr.dataset.valueExact;
+    const to = (input.value || '').trim();
+    if (!to) { input.focus(); return; }
+    const count = parseInt(tr.dataset.count, 10) || 0;
+    if (!confirm('Rename "' + from + '" to "' + to + '" on ' + count.toLocaleString() + ' award(s) in this scope?')) return;
+    btn.disabled = true;
+    const prevLabel = btn.textContent;
+    btn.textContent = 'Saving…';
+    try {
+      const r = await vocabPost('rename', { field: tr.dataset.field, from, to });
+      // Merge in place if the new spelling already has a row in this table;
+      // the is_top_award flags ride along with the renamed rows.
+      const sibling = Array.from(tr.closest('tbody').querySelectorAll('tr[data-field]'))
+        .find(row => row !== tr && row.dataset.valueExact === to);
+      if (sibling) {
+        sibling.dataset.count = (parseInt(sibling.dataset.count, 10) || 0) + count;
+        sibling.dataset.top = (parseInt(sibling.dataset.top, 10) || 0) + (parseInt(tr.dataset.top, 10) || 0);
+        refreshRowState(sibling);
+        tr.remove();
+      } else {
+        tr.dataset.valueExact = to;
+        tr.dataset.value = to.toLowerCase();
+        tr.querySelector('[data-role="value-label"]').textContent = to;
+        input.value = '';
+        refreshRowState(tr);
+        flash(btn, '✓ ' + (r.changed || 0).toLocaleString(), prevLabel);
+      }
+    } catch (err) {
+      alert(err.message);
+      btn.disabled = false;
+      btn.textContent = prevLabel;
+    }
+  }
+
+  // ---- filter + sort (client-side; untouched by the AJAX actions) ----
+  function filterRows(input, field) {
+    const q = input.value.trim().toLowerCase();
+    document.querySelectorAll('#vocab-' + field + ' tbody tr[data-value]').forEach(tr => {
+      const v = tr.getAttribute('data-value') || '';
+      tr.style.display = !q || v.includes(q) ? '' : 'none';
+    });
+  }
+
+  const vocabSortState = {};
+  function sortVocab(field, key, th) {
+    const stateKey = field + ':' + key;
+    const asc = !(vocabSortState[stateKey] === 'asc');
+    vocabSortState[stateKey] = asc ? 'asc' : 'desc';
+    const tbody = document.querySelector('#vocab-' + field + ' tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr[data-value]'));
+    rows.sort((a, b) => {
+      if (key === 'count') {
+        const d = (parseInt(a.dataset.count, 10) || 0) - (parseInt(b.dataset.count, 10) || 0);
+        return asc ? d : -d;
+      }
+      const d = a.dataset.value.localeCompare(b.dataset.value);
+      return asc ? d : -d;
+    });
+    rows.forEach(r => tbody.appendChild(r));
+    th.closest('tr').querySelectorAll('th').forEach(h => {
+      h.innerHTML = h.innerHTML.replace(/ [↑↓]$/, ' ⇕');
+    });
+    th.innerHTML = th.innerHTML.replace(/ ⇕$/, asc ? ' ↑' : ' ↓');
   }
 </script>
 <%- include('partials/footer') %>
