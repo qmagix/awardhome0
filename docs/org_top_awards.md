@@ -345,13 +345,20 @@ Teen 12-14, Senior 15-19.
 
 ---
 
-## Encore (encoreperformingarts.com) ⚠️ identity check needed
+## Encore (encoreperformingarts.com) — identity VERIFIED 2026-08-25
 
-**IMPORTANT:** encoreperformingarts.com is a real competition ("Encore Dance Experience",
-Fort Worth TX) — but at least two other US comps use "Encore" (Encore DCS with
-Silver→Diamond→"Mic Drop" bands; Encore Talent Productions). **Verify which Encore our 8
-scraped events belong to before marking anything** (if the data shows Mic Drop/Diamond
-bands, it's Encore DCS).
+**Identity check result:** our DB has NO imported Encore events/awards yet (on either local
+or prod) — Encore is a PDF-queue org. The queue at `tobeprocessed/pdf/oncore/` (note the
+"oncore" spelling — the downloader's slug, vs. the org row's slug `encore`; the future
+importer must bridge that) holds **71 results PDFs, 2022–2026, sourced from DanceBug S3**,
+and every sampled PDF's own header reads **"Encore Performing Arts Showcase, Inc."** with
+Division 1/2/3 + Mini/Petite/… vocabulary matching this rulebook. The org row's website is
+correct. Two OTHER US "Encore" competitions exist and must never be conflated:
+- **Encore DCS** (encoredcs.com) — East-coast tour; Elite-only "Mic Drop" top award; Grand
+  Finals in Sevierville TN; "Encore Extreme" convention arm.
+- **Encore Talent Productions** (encoretalentproductions.com) — Circleville OH, ~4 regionals
+  (OH/WV) + Cincinnati nationals; bands Gold → High Gold → Platinum → Double Platinum →
+  "Encore Star"; titles "Miss/Mr National Encore".
 
 **Top awards (Encore Performing Arts), ranked:** 1. Grand Champion (National Finals, per age
 category per Division). 2. Best of Show (National Finals, one per Division + Production).
