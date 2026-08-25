@@ -35,15 +35,17 @@
         <table style="width: 100%; border-collapse: collapse; text-align: left;" id="vocab-<%= field %>">
           <thead>
             <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); position: sticky; top: 0; background: #181818; z-index: 2;">
-              <th style="padding: 0.6rem 1rem 0.6rem 1.5rem; color: var(--text-muted);">Current value</th>
-              <th style="padding: 0.6rem 1rem; color: var(--text-muted); text-align: right;">Awards</th>
+              <th style="padding: 0.6rem 1rem 0.6rem 1.5rem; color: var(--text-muted); cursor: pointer;"
+                  onclick="sortVocab('<%= field %>', 'value', this)" title="Sort alphabetically — similar names cluster together">Current value &#x21D5;</th>
+              <th style="padding: 0.6rem 1rem; color: var(--text-muted); text-align: right; cursor: pointer;"
+                  onclick="sortVocab('<%= field %>', 'count', this)" title="Sort by award count">Awards &#x21D5;</th>
               <th style="padding: 0.6rem 1rem; color: var(--text-muted);">Rename to</th>
               <th style="padding: 0.6rem 1.5rem 0.6rem 1rem; color: var(--text-muted); text-align: right;">Top award</th>
             </tr>
           </thead>
           <tbody>
             <% rows.forEach(function(r) { %>
-              <tr data-value="<%= r.value.toLowerCase() %>" style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+              <tr data-value="<%= r.value.toLowerCase() %>" data-count="<%= r.count %>" style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                 <td style="padding: 0.55rem 1rem 0.55rem 1.5rem; max-width: 380px; word-break: break-word;">
                   <%= r.value %>
                   <% if (r.top_count > 0) { %>
@@ -91,6 +93,31 @@
 <script>
   const VOCAB_ORG = <%= org.id %>;
   const VOCAB_EVENT = <%= eventId || 'null' %>;
+
+  // Click-to-sort: alphabetical on "Current value" clusters similar names
+  // together (the point of the cleanup workflow); "Awards" sorts by count.
+  // Direction toggles per column; default page order is count DESC.
+  const vocabSortState = {};
+  function sortVocab(field, key, th) {
+    const stateKey = field + ':' + key;
+    const asc = !(vocabSortState[stateKey] === 'asc');
+    vocabSortState[stateKey] = asc ? 'asc' : 'desc';
+    const tbody = document.querySelector('#vocab-' + field + ' tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr[data-value]'));
+    rows.sort((a, b) => {
+      if (key === 'count') {
+        const d = parseInt(a.dataset.count, 10) - parseInt(b.dataset.count, 10);
+        return asc ? d : -d;
+      }
+      const d = a.dataset.value.localeCompare(b.dataset.value);
+      return asc ? d : -d;
+    });
+    rows.forEach(r => tbody.appendChild(r));
+    th.closest('tr').querySelectorAll('th').forEach(h => {
+      h.innerHTML = h.innerHTML.replace(/ [↑↓]$/, ' ⇕');
+    });
+    th.innerHTML = th.innerHTML.replace(/ ⇕$/, asc ? ' ↑' : ' ↓');
+  }
 
   function filterRows(input, field) {
     const q = input.value.trim().toLowerCase();
