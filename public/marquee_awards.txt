@@ -16,8 +16,10 @@
 # Not yet listed (add when the data supports a real top award):
 # - Spotlight Dance Cup (title rows carry dancer names, overall rows are
 #   adjudication gems — needs the top awards marked in the vocab editor)
-# - Encore, Epic, Nexstar (no routine-named awards in the record yet)
+# - Epic (no data yet)
 
+Dreams Don't Die | Petite Miss Encore | Encore 2026
+Goodness of God | Elite Title — Teen Miss Nexstar | NexStar 2026
 Hocus Pocus | Premier Title — Petite Miss Believe | Believe Talent 2026
 These Arms of Mine | Premier Title — Junior Mr. DreamMaker | DreamMaker 2026
 Fly | Title — Petite Miss Imagine | Imagine Dance Challenge 2026
