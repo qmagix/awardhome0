@@ -1,0 +1,30 @@
+# Landing-page champions ticker (the scrolling marquee).
+#
+# One line per award, three fields separated by |
+#   Routine Title | Award line | Organization + Year
+#
+# Rendered as:  ROUTINE TITLE · Award line · Organization Year ✦
+#
+# Editing rules:
+# - Lines starting with # are ignored. Blank lines are ignored.
+# - Keep it to ONE award per organizer so no circuit looks favored.
+# - Empty this file (or leave only comments) to HIDE the ticker entirely.
+# - Served at /marquee_awards.txt; the landing pages fetch it on load,
+#   so changes go live with the next deploy — no code edits needed.
+#
+# Current list: one top finals-level award per organizer in the record
+# (Encore, Epic, and Nexstar have no routine-named awards yet — add them
+# here when their data lands).
+
+Amber Alert | Grand Lines — Showcase 11 & Under | Believe Talent 2026
+I Wanna Rock | Grand Lines — Level 2 | DreamMaker 2026
+Wicked World | Grand Lines — Competitive 12 & Over | Imagine Dance Challenge 2026
+Kiss The Girl | National Grand Champion — Primary Mini Group | KAR 2026
+Always Forever | High Score | NYCDA 2026
+Little Bitty Pretty Ones | National Grand Champion — Petite Group | Rainbow 2026
+The Met Gala | Grand Lines — Competitive 12 & Over | Revolution Talent 2026
+Sweet Child O' Mine | High Score | Showstopper 2025
+Feel Like A Woman | Diamond Overall — Petite Small Group | Spotlight Dance Cup 2026
+The View | Title Winner | StarQuest 2026
+Fright Night | Grand Lines — 11 & Under Competitive | Starpower 2026
+Le Corsaire | Pas de Deux | Youth America Grand Prix 2026

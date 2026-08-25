@@ -43,26 +43,32 @@
     </div>
   </section>
 
-  <div class="ticker" aria-hidden="true">
-    <div class="belt">
-      <span class="plate-item"><b>Dirty Diana</b> &middot; National Grand Champion &middot; KAR 2022<span class="sep">&#10022;</span></span>
-      <span class="plate-item"><b>Hotel California</b> &middot; National Grand Champion &middot; Rainbow 2025<span class="sep">&#10022;</span></span>
-      <span class="plate-item"><b>It's A Small World</b> &middot; National Grand Champion &middot; KAR 2023<span class="sep">&#10022;</span></span>
-      <span class="plate-item"><b>The Greatest Show</b> &middot; National Grand Champion &middot; KAR 2023<span class="sep">&#10022;</span></span>
-      <span class="plate-item"><b>Sing Sing Sing</b> &middot; National Grand Champion &middot; Rainbow 2025<span class="sep">&#10022;</span></span>
-      <span class="plate-item"><b>Mr. Pinstripe</b> &middot; National Grand Champion &middot; KAR 2022<span class="sep">&#10022;</span></span>
-      <span class="plate-item"><b>Hello Dolly</b> &middot; National Grand Champion &middot; Rainbow 2025<span class="sep">&#10022;</span></span>
-      <span class="plate-item"><b>Maria</b> &middot; National Grand Champion &middot; KAR 2023<span class="sep">&#10022;</span></span>
-      <span class="plate-item"><b>Dirty Diana</b> &middot; National Grand Champion &middot; KAR 2022<span class="sep">&#10022;</span></span>
-      <span class="plate-item"><b>Hotel California</b> &middot; National Grand Champion &middot; Rainbow 2025<span class="sep">&#10022;</span></span>
-      <span class="plate-item"><b>It's A Small World</b> &middot; National Grand Champion &middot; KAR 2023<span class="sep">&#10022;</span></span>
-      <span class="plate-item"><b>The Greatest Show</b> &middot; National Grand Champion &middot; KAR 2023<span class="sep">&#10022;</span></span>
-      <span class="plate-item"><b>Sing Sing Sing</b> &middot; National Grand Champion &middot; Rainbow 2025<span class="sep">&#10022;</span></span>
-      <span class="plate-item"><b>Mr. Pinstripe</b> &middot; National Grand Champion &middot; KAR 2022<span class="sep">&#10022;</span></span>
-      <span class="plate-item"><b>Hello Dolly</b> &middot; National Grand Champion &middot; Rainbow 2025<span class="sep">&#10022;</span></span>
-      <span class="plate-item"><b>Maria</b> &middot; National Grand Champion &middot; KAR 2023<span class="sep">&#10022;</span></span>
-    </div>
+  <div class="ticker" aria-hidden="true" hidden>
+    <div class="belt"></div>
   </div>
+  <script>
+    // Champions ticker, fed from /marquee_awards.txt (one award per
+    // organizer, editable without touching this page). Empty or missing
+    // file -> the ticker simply never appears.
+    (function () {
+      var ticker = document.querySelector('.ticker');
+      var belt = ticker && ticker.querySelector('.belt');
+      if (!belt) return;
+      function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+      fetch('/marquee_awards.txt').then(function (r) { return r.ok ? r.text() : ''; }).then(function (txt) {
+        var items = txt.split(/\r?\n/).map(function (l) { return l.trim(); })
+          .filter(function (l) { return l && l.charAt(0) !== '#'; })
+          .map(function (l) { return l.split('|').map(function (s) { return s.trim(); }); })
+          .filter(function (p) { return p.length >= 3 && p[0] && p[1] && p[2]; });
+        if (!items.length) return;
+        var html = items.map(function (p) {
+          return '<span class="plate-item"><b>' + esc(p[0]) + '</b> &middot; ' + esc(p[1]) + ' &middot; ' + esc(p[2]) + '<span class="sep">&#10022;</span></span>';
+        }).join('');
+        belt.innerHTML = html + html; // duplicated once for the seamless -50% loop
+        ticker.hidden = false;
+      }).catch(function () {});
+    })();
+  </script>
 
   <main>
 
