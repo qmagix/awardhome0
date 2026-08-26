@@ -154,7 +154,7 @@ function buildOrgInviteTemplate({ org, eventCount = 0, awardCount = 0 }) {
   const subject = `Featuring ${n} on AwardHome`;
   const body = `Hi Competition Director,
 
-I'm Q, founder of AwardHome — the digital trophy case for competitive dance. We aggregate results from events nationwide into beautiful, shareable award pages for dancers and studios: today that's over 900,000 awards from 2,700+ events across 14 competitions, including YAGP, Starpower, KAR, NYCDA, and Rainbow.
+I'm Q, founder of AwardHome — the digital trophy case for competitive dance. We aggregate results from events nationwide into beautiful, shareable award pages for dancers and studios: today that's over 1.1 million awards from 3,200+ events across 17 competitions, including YAGP, Starpower, KAR, NYCDA, and Rainbow.
 
 We'd love to feature ${n} alongside them.
 
@@ -170,7 +170,7 @@ What ${n} gets:
 
 One more thing, while it's early: we're inviting a limited group of Founding Partner organizations this season. Founding Partners pledge a handful of free entries to their own events — we award them to standout dancers on the platform as surprise rewards, each one credited "provided by ${n}" — and in return get first access to premium placement and organizer features as the platform grows. A pledged entry costs you an empty slot; it returns a proven competitive dancer to your ballroom. If that sounds interesting, mention it when you reply and I'll hold ${n} a founding slot.
 
-Ready to get started? Claiming your free organizer account takes about two minutes with your private access link:
+Ready to get started? Claiming your free organizer account takes about two minutes with your private access link — and your dashboard walks you through the whole setup in three steps (upload results, add your profile, send us your logo):
 
 {CLAIM_LINK}
 

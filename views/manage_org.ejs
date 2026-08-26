@@ -27,7 +27,7 @@
                 <div class="sub-nav">
                     <a href="#stats-section" class="sub-nav-link active-sub" onclick="showTab('stats-section'); return false;">↳ Stats & Examples</a>
                     <a href="#marketing-profile" class="sub-nav-link" onclick="showTab('marketing-profile'); return false;">↳ Marketing Profile</a>
-                    <a href="#upload-section" class="sub-nav-link" onclick="showTab('upload-section'); return false;">↳ Update Event Results</a>
+                    <a href="#upload-section" class="sub-nav-link" onclick="showTab('upload-section'); return false;">↳ Upload Results</a>
                     <a href="#past-events" class="sub-nav-link" onclick="showTab('past-events'); return false;">↳ Past Events</a>
                 </div>
                 <a href="/manage/org/<%= org.id %>/branding" style="margin-top: 1rem;">Branding & Icons</a>
@@ -37,9 +37,71 @@
 
         <main class="dashboard-content">
             <header class="dashboard-header">
-                <h1>Organizer Overview</h1>
-                <p class="text-muted">Welcome to your dashboard. Upload results directly to instantly update dancer portfolios across the platform.</p>
+                <% if (!onboarding.hasData && !onboarding.hasUpload) { %>
+                    <h1>Welcome to AwardHome 🎉</h1>
+                    <p class="text-muted">Your organizer account is live. One upload is all it takes to get <%= org.name %>'s results onto dancer and studio pages across the platform.</p>
+                <% } else { %>
+                    <h1>Organizer Overview</h1>
+                    <p class="text-muted">Welcome to your dashboard. Upload results directly to instantly update dancer portfolios across the platform.</p>
+                <% } %>
             </header>
+
+            <% if (!onboarding.complete) { %>
+            <section class="card glass-card" style="margin-bottom: 2rem; border-color: rgba(212, 175, 55, 0.45); background: linear-gradient(145deg, rgba(212, 175, 55, 0.08) 0%, rgba(0,0,0,0.25) 100%);">
+                <div class="card-body" style="padding: 1.5rem 1.75rem;">
+                    <h2 style="margin: 0 0 0.35rem; font-size: 1.15rem; color: var(--accent-gold);">
+                        <%= (!onboarding.hasData && !onboarding.hasUpload) ? 'Get set up in three steps' : 'Finish setting up ' + org.name %>
+                    </h2>
+                    <p class="text-muted" style="margin: 0 0 1.25rem; font-size: 0.9rem;">
+                        Everything here is concierge — you send, our team does the rest.
+                    </p>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1rem;">
+
+                        <div style="border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1.1rem 1.2rem; <%= (onboarding.hasData || onboarding.hasUpload) ? 'opacity: 0.75;' : 'border-color: rgba(212, 175, 55, 0.5);' %>">
+                            <div style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; color: <%= (onboarding.hasData || onboarding.hasUpload) ? '#10b981' : 'var(--accent-gold)' %>; margin-bottom: 0.4rem;">
+                                <%= onboarding.hasData ? '✓ RESULTS LIVE' : (onboarding.hasUpload ? '✓ UPLOADED — WE\'RE ON IT' : 'STEP 1 · START HERE' ) %>
+                            </div>
+                            <h3 style="margin: 0 0 0.4rem; font-size: 1rem;">Upload your results</h3>
+                            <p class="text-muted" style="margin: 0 0 0.8rem; font-size: 0.85rem; line-height: 1.5;">
+                                Any format works — CSV, Excel, PDFs, even a database export. We parse, verify, and publish, usually within a few days.
+                            </p>
+                            <% if (!onboarding.hasData && !onboarding.hasUpload) { %>
+                                <button class="btn btn-primary" style="padding: 0.45rem 1rem; font-size: 0.85rem;" onclick="showTab('upload-section')">Upload results</button>
+                            <% } else if (!onboarding.hasData) { %>
+                                <button class="btn btn-outline" style="padding: 0.45rem 1rem; font-size: 0.85rem;" onclick="showTab('upload-section')">Upload another event</button>
+                            <% } %>
+                        </div>
+
+                        <div style="border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1.1rem 1.2rem; <%= onboarding.hasProfile ? 'opacity: 0.75;' : '' %>">
+                            <div style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; color: <%= onboarding.hasProfile ? '#10b981' : 'var(--text-muted)' %>; margin-bottom: 0.4rem;">
+                                <%= onboarding.hasProfile ? '✓ DONE' : 'STEP 2' %>
+                            </div>
+                            <h3 style="margin: 0 0 0.4rem; font-size: 1rem;">Tell studios who you are</h3>
+                            <p class="text-muted" style="margin: 0 0 0.8rem; font-size: 0.85rem; line-height: 1.5;">
+                                Slogan, description, and your registration link — shown on your public page to every studio and family browsing results.
+                            </p>
+                            <% if (!onboarding.hasProfile) { %>
+                                <button class="btn btn-outline" style="padding: 0.45rem 1rem; font-size: 0.85rem;" onclick="showTab('marketing-profile')">Set up profile</button>
+                            <% } %>
+                        </div>
+
+                        <div style="border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1.1rem 1.2rem; <%= onboarding.hasLogo ? 'opacity: 0.75;' : '' %>">
+                            <div style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; color: <%= onboarding.hasLogo ? '#10b981' : 'var(--text-muted)' %>; margin-bottom: 0.4rem;">
+                                <%= onboarding.hasLogo ? (onboarding.logoApproved ? '✓ LIVE ON CARDS' : '✓ UPLOADED — BEING FITTED') : 'STEP 3' %>
+                            </div>
+                            <h3 style="margin: 0 0 0.4rem; font-size: 1rem;">Your brand on every card</h3>
+                            <p class="text-muted" style="margin: 0 0 0.8rem; font-size: 0.85rem; line-height: 1.5;">
+                                Upload your logo and our design team hand-fits it into the gold coin on every award card dancers share.
+                            </p>
+                            <% if (!onboarding.hasLogo) { %>
+                                <a href="/manage/org/<%= org.id %>/branding" class="btn btn-outline" style="padding: 0.45rem 1rem; font-size: 0.85rem; text-decoration: none; display: inline-block;">Upload logo</a>
+                            <% } %>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+            <% } %>
 
             <div id="stats-section" class="dashboard-tab">
                 <section class="stats-grid">
@@ -311,6 +373,13 @@
                 activeLink.style.fontWeight = '600';
             }
         }
+
+        <% if (!onboarding.hasData && !onboarding.hasUpload) { %>
+        // Fresh org: the useful first screen is the upload form, not an
+        // empty stats grid — open it directly (the welcome checklist above
+        // it explains the rest).
+        document.addEventListener('DOMContentLoaded', () => showTab('upload-section'));
+        <% } %>
 
         // Initialize first sub-nav state
         document.addEventListener('DOMContentLoaded', () => {

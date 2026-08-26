@@ -22,6 +22,7 @@
 - [ ] Launch-day SEO: sitemap.xml for studio/dancer pages (replaces the public directory as the crawl path once BETA_MODE=false).
 
 ### Features
+- [x] (DONE 2026-08-25) Organizer onboarding revamp: /manage/org/:id now computes checklist state (results uploaded/live, marketing profile, logo) — fresh orgs get a welcome header + three-step concierge checklist and land directly on the upload form (was buried two menu levels deep); partially-set-up orgs get a "finish setting up" strip until complete. Sub-nav renamed "Upload Results"; organizer FAQ updated; invite letter (utils/invites.js + org_invite_draft.md v4) refreshed to 1.1M awards / 3,200+ events / 17 competitions + three-step onboarding promise.
 - [x] (DONE 2026-08-24) Homepage org-card demand telemetry: cards stay deliberately unlinked (org data low-profile until the org partners — recorded in CLAUDE.md deliberate decisions); clicks recorded via POST /api/org-card-click + dance_home_views impressions; CTR surfaces in /admin/orgs "Card Demand" column as outreach ammunition. See features.md §1b.
 - [ ] Per-org card linking: when an org partners/approves, flip its homepage card to a real /dance/org link (likely a flag on the organizations row).
 - [x] (DONE 2026-08-24) Studio page "Rafters" design preview: alternate owner-conversion design on `?design=rafters` (views/studio_v2.ejs + public/css/studio_v2.css), same route/data/prefs/claim flows as classic; static concept mockup in design/studio_page_mockup.html. See features.md §2d.

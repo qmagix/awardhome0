@@ -75,7 +75,21 @@ router.get('/manage/org/:id', requireAuth, requireOrgOwner(), async (req, res) =
   // Get org uploads
   const uploads = await db.all('SELECT * FROM org_uploads WHERE org_id = ? ORDER BY created_at DESC', [org.id]);
 
-  res.render('manage_org', { org, stats, rank, events, uploads, topDancer, topStudio, user: req.session.user });
+  // Onboarding checklist state: a fresh org (no data yet) gets an
+  // upload-first welcome instead of an empty stats dashboard; partially
+  // set-up orgs get a slim checklist until every step is done.
+  let orgIcons = {};
+  try { orgIcons = JSON.parse(org.custom_icons || '{}'); } catch (e) { }
+  const onboarding = {
+    hasData: events.length > 0,
+    hasUpload: uploads.length > 0,
+    hasProfile: !!(org.slogan || org.description) && !!org.website,
+    hasLogo: !!org.logo_url,
+    logoApproved: !!orgIcons.logo_approved,
+  };
+  onboarding.complete = (onboarding.hasData || onboarding.hasUpload) && onboarding.hasProfile && onboarding.hasLogo;
+
+  res.render('manage_org', { org, stats, rank, events, uploads, topDancer, topStudio, onboarding, user: req.session.user });
 });
 
 

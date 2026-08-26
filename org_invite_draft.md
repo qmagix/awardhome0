@@ -1,4 +1,11 @@
-# Draft: Organization Outreach Letters (v3, 2026-08-20)
+# Draft: Organization Outreach Letters (v4, 2026-08-25)
+
+*(v4: numbers refreshed to 1.1M awards / 3,200+ events / 17 competitions;
+the org page demo link now lands on the Rafters organizer edition — reach
+hero, "your brand on every card" coin mock, champions wall — which IS the
+pitch, so lead with it whenever their data is live; claim landing →
+dashboard now opens on an upload-first three-step onboarding, so "two
+minutes to claim, one upload to go live" is literally true.)*
 
 ## Strategy: the commitment ladder
 
