@@ -380,3 +380,11 @@ yes featured studio on top still.
 
 ## User Request - 2026-05-14
 please summarize recent update and git commit
+
+
+## [2026-08-26 13:37:49] Hollywood Vibe Scraping
+HollywoodVibe competition results are in pdf files as well, the top url is here: https://www.hollywoodvibe.com/results/, please download the pdfs for further processing in the tobeprocessed/pdf folder
+
+
+## [2026-08-26 13:38:11] Hollywood Vibe Scraping
+HollywoodVibe competition results are in pdf files as well, the top url is here: https://www.hollywoodvibe.com/results/, please download the pdfs for further processing in the tobeprocessed/pdf folder

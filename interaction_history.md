@@ -840,3 +840,17 @@ Advised the user to re-run the Revolution batch script to backfill the purged da
 - Added a view toggle and an "All Time" year selector.
 - Added sorting toggles (Name A-Z, Most Recent) that dynamically sort the Routine or Dancer groupings.
 - Updated documentation files (`features.md`, `docs/user_manual.md`, `TODOS_and_DONE.md`) to reflect these new capabilities.
+
+
+## [2026-08-26 13:37:49] Hollywood Vibe Scraping
+HollywoodVibe competition results are in pdf files as well, the top url is here: https://www.hollywoodvibe.com/results/, please download the pdfs for further processing in the tobeprocessed/pdf folder
+
+**Agent Action:**
+I created a python script  to visit the main results page, extract all season links, visit each season link, and download all unique PDF links into the  folder. I then executed the script in the background.
+
+
+## [2026-08-26 13:38:11] Hollywood Vibe Scraping
+HollywoodVibe competition results are in pdf files as well, the top url is here: https://www.hollywoodvibe.com/results/, please download the pdfs for further processing in the tobeprocessed/pdf folder
+
+**Agent Action:**
+I created a python script `scripts/scrape_hollywoodvibe.py` to visit the main results page, extract all season links, visit each season link, and download all unique PDF links into the `tobeprocessed/pdf` folder. I then executed the script in the background.
