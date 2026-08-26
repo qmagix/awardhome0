@@ -4,6 +4,7 @@
 
 <%
   const isOwner = typeof user !== 'undefined' && user && org.owner_id && user.id === org.owner_id;
+  const isClaimed = !!org.owner_id;
   const monogram = org.name.split(/\s+/).map(w => w[0]).join('').replace(/[^A-Za-z]/g, '').substring(0, 3).toUpperCase();
   const orgSite = org.website ? (org.website.match(/^https?:\/\//) ? org.website : 'https://' + org.website) : null;
   const maxYearTotal = yearlySeries.length > 0 ? Math.max(...yearlySeries.map(y => y.total)) : 0;
@@ -31,6 +32,9 @@
     <h1><%= org.name %></h1>
     <% if (org.slogan) { %><p class="v2-slogan"><%= org.slogan %></p><% } %>
     <% if (org.description) { %><p class="v2-bio"><%= org.description %></p><% } %>
+    <% if (isClaimed) { %>
+      <div class="v2-claim-badge"><span class="v2-dot">&#10022;</span> Official partner</div>
+    <% } %>
 
     <div class="v2-record" role="list" aria-label="Archive record">
       <div class="v2-cell" role="listitem">
@@ -103,6 +107,31 @@
 
     <section class="v2-section v2-reveal" aria-labelledby="v2o-coin-h">
       <div class="v2-pitch-grid">
+        <% if (isClaimed) { %>
+        <div>
+          <p class="v2-kicker">The Card</p>
+          <h2 id="v2o-coin-h">Every award here becomes a card worth sharing</h2>
+          <p class="v2-lede">All <%= (stats.totalAwards || 0).toLocaleString() %> awards on this page live on dancers' own trophy pages as share-ready cards<% if (showLogoInCoin) { %> &mdash; each one carrying the <%= org.name %> coin<% } %>.</p>
+          <ul class="v2-pitch-points">
+            <li><span><b>Built to be shared</b> &mdash; families post their cards to Instagram and TikTok; every one credits the event where it was earned.</span></li>
+            <li><span><b>Verified at the source</b> &mdash; recorded from published results, never self-reported.</span></li>
+            <li><span><b>Yours forever</b> &mdash; awards follow each dancer from first solo to senior year.</span></li>
+          </ul>
+        </div>
+        <div>
+          <div class="v2-card-mock-stage">
+            <div class="v2-card-mock" aria-hidden="true">
+              <div class="v2-cm-coin">
+                <% if (showLogoInCoin) { %><img src="<%= org.logo_url %>" alt=""><% } else { %><%= monogram %><% } %>
+              </div>
+              <div class="v2-cm-title">Dirty Diana</div>
+              <div class="v2-cm-sub"><%= org.name %> &middot; Nationals</div>
+              <div class="v2-cm-plate">National Grand Champion</div>
+            </div>
+          </div>
+          <p class="v2-cm-caption">A <%= org.name %> award card, as families share it.</p>
+        </div>
+        <% } else { %>
         <div>
           <p class="v2-kicker">The Coin</p>
           <h2 id="v2o-coin-h">Your brand on every card dancers share</h2>
@@ -126,6 +155,7 @@
           </div>
           <p class="v2-cm-caption">A share card from one of your events<% if (!showLogoInCoin) { %> &mdash; with your coin, once fitted &amp; approved<% } %>.</p>
         </div>
+        <% } %>
       </div>
     </section>
 
@@ -147,7 +177,7 @@
     <% } %>
 
     <% if (groupedData.length > 0) { %>
-      <section class="v2-section" aria-labelledby="v2o-archive-h">
+      <section class="v2-section" id="v2o-archive" aria-labelledby="v2o-archive-h">
         <p class="v2-kicker">The Archive</p>
         <h2 id="v2o-archive-h">Every event, every season, forever</h2>
         <p class="v2-lede">Results hosted permanently and interactively &mdash; each award linked to the dancers and studios who earned it.</p>
@@ -193,8 +223,8 @@
 
   <section class="v2-owner">
     <div class="v2-wrap">
-      <p class="v2-kicker">For Organizers</p>
       <% if (isOwner) { %>
+      <p class="v2-kicker">For Organizers</p>
         <h2>Your archive, working for you</h2>
         <p class="v2-lede">Quick links to the tools that keep your brand sharp on every card.</p>
         <div class="v2-tool-grid">
@@ -212,7 +242,18 @@
           </div>
         </div>
         <a class="v2-gold-btn" href="/manage/org/<%= org.id %>">Open your dashboard</a>
+      <% } else if (isClaimed) { %>
+      <p class="v2-kicker">For Dancers &amp; Studios</p>
+        <h2>Dance with <%= org.name %></h2>
+        <p class="v2-lede"><%= org.slogan || org.description || `Join the studios and dancers competing at ${org.name} — every placement earned there lives on, right here.` %></p>
+        <div class="v2-ctas" style="margin-top: 2.2rem;">
+          <% if (orgSite) { %>
+            <a class="v2-gold-btn" href="<%= orgSite %>" target="_blank" rel="noopener">Visit website &amp; register &nearr;</a>
+          <% } %>
+          <a class="v2-ghost-btn" href="#v2o-archive">Browse every event</a>
+        </div>
       <% } else { %>
+      <p class="v2-kicker">For Organizers</p>
         <h2>Run this competition? This page works for you</h2>
         <p class="v2-lede">AwardHome is free for organizers. Put your brand on every card, your registration link in front of every family, and never answer a &ldquo;where are last year's results?&rdquo; email again.</p>
         <div class="v2-tool-grid">
