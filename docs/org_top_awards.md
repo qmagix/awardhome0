@@ -421,3 +421,10 @@ Senior 16-19. **Sources:** epicdanceinc.com/rules. **Confidence:** high.
    YAGP → Grand Prix / Youth Grand Prix / Hope; 1st places; Top 12.
    Encore → Grand Champion, Best of Show, Miss/Mr Encore (after identity check).
    Epic → Studio Overall; Overall 1st places.
+
+## ADC IBC (Youth International Ballet Competition — adcibc.com)
+- **Top award: ADC|IBC Grand Prix Recipient** (one per age division — Primary/Junior/Senior — highest-scoring gold medalist; imported as place='GRAND PRIX RECIPIENT', is_first_place=1).
+- Solo ladder per gender×division: Gold Medal > Silver > Bronze > 4th > 5th, then Top 25 (female) / Top 10 (senior male) — Top-N are placements-of-honor, NOT podium.
+- Ensemble division (Classical Pas de Deux / Duet|Trio / Large Ensemble): 1st-5th Place; routine names preserved in performance_name, dancers via award_dancers.
+- Special awards: jury awards, Traditional Excellence, Outstanding International Dancer, Fernando Bujones Memorial Award (prestigious honoree) imported; Outstanding School = studio-level award; choreographer/coach/photographer awards not imported (not dancer awards).
+- Site publishes World Finals only (St. Petersburg FL); ~10 regional semi-finals per season unpublished — that's the outreach ask. Archives back to 2006 on the site.
