@@ -158,7 +158,7 @@ I'm Q, founder of AwardHome — the digital trophy case for competitive dance. W
 
 We'd love to feature ${n} alongside them.
 
-${alreadyLive}The offer, plainly: send us your results in whatever format you have — CSV, Excel, PDFs, database exports, anything — and we handle 100% of the processing. Zero technical work on your end, at no cost.
+${alreadyLive}The offer, plainly: send us your results in whatever format you have — CSV, Excel, PDFs, database exports, anything, one event or your entire history in a single zip or Drive link — and we handle 100% of the processing. Zero technical work on your end, at no cost.
 
 What ${n} gets:
 

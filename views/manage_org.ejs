@@ -63,7 +63,7 @@
                             </div>
                             <h3 style="margin: 0 0 0.4rem; font-size: 1rem;">Upload your results</h3>
                             <p class="text-muted" style="margin: 0 0 0.8rem; font-size: 0.85rem; line-height: 1.5;">
-                                Any format works — CSV, Excel, PDFs, even a database export. We parse, verify, and publish, usually within a few days.
+                                One event or your entire history at once — any format, even a zipped archive or a database export. We parse, verify, and publish, usually within a few days.
                             </p>
                             <% if (!onboarding.hasData && !onboarding.hasUpload) { %>
                                 <button class="btn btn-primary" style="padding: 0.45rem 1rem; font-size: 0.85rem;" onclick="showTab('upload-section')">Upload results</button>
@@ -173,6 +173,16 @@
                     <p class="text-muted">Send results in whatever format your scoring system produces. Our team will parse, verify, and publish them to dancer and studio portfolios.</p>
                 </div>
                 <div class="card-body">
+                    <div style="background: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.35); padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                        <h4 style="margin: 0 0 0.5rem 0; color: var(--accent-gold);">Years of history? Send it all at once — never one event at a time</h4>
+                        <p style="margin: 0; font-size: 0.9rem; color: var(--text-muted); line-height: 1.5;">
+                            Zip your entire results archive (any folder structure, any mix of formats) and upload it
+                            as a single file — put something like <em>"Full archive 2019&ndash;2025"</em> as the event name.
+                            Or skip the form entirely: email <a href="mailto:hello@awardhome.com?subject=Results archive" style="color: var(--accent-gold);">hello@awardhome.com</a>
+                            a Google Drive or Dropbox link. Our team and parsing scripts handle the splitting,
+                            matching, and publishing — that's the whole point of the concierge model.
+                        </p>
+                    </div>
                     <div style="background: rgba(234, 179, 8, 0.1); border: 1px solid rgba(234, 179, 8, 0.3); padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 2rem;">
                         <h4 style="margin: 0 0 0.5rem 0; color: #eab308;">What to include — results go live fastest in this shape</h4>
                         <p style="margin: 0 0 0.5rem 0; font-size: 0.9rem; color: var(--text-muted);">
@@ -193,7 +203,7 @@
                     </div>
                     <form action="/manage/org/<%= org.id %>/upload" method="POST" enctype="multipart/form-data" class="upload-form">
                         <div class="form-group">
-                            <label>Event Name (e.g. Baltimore Nationals)</label>
+                            <label>Event Name (e.g. Baltimore Nationals — or "Full archive 2019–2025" for a bulk zip)</label>
                             <input type="text" name="event_name" required>
                         </div>
                         <div class="form-group" style="display: flex; gap: 1rem;">
