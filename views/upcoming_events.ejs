@@ -129,7 +129,9 @@
                 <a class="ue-reg <%= isGold ? '' : 'ue-reg-ghost' %>" href="<%= ev.registration_url %>" target="_blank" rel="noopener nofollow"
                    <%= isGold ? 'title="Featured partner placement"' : '' %>>Register</a>
               <% } else if (ev.org_website) { %>
-                <a class="ue-reg ue-reg-ghost" href="<%= ev.org_website %>" target="_blank" rel="noopener nofollow">Official Site</a>
+                <% const isGoldSite = ev.org_sponsored || ev.gold; %>
+                <a class="ue-reg <%= isGoldSite ? '' : 'ue-reg-ghost' %>" href="<%= ev.org_website %>" target="_blank" rel="noopener nofollow"
+                   <%= isGoldSite ? 'title="Featured partner placement"' : '' %>>Official Site</a>
               <% } %>
             </div>
           </div>
