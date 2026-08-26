@@ -153,6 +153,23 @@ a:focus-visible, button:focus-visible, input:focus-visible {
 
 /* floating card fan + glow orb (original .hero-visual, brand-native content) */
 .hero-visual { position: relative; height: 400px; }
+
+/* mockup-image variant (landing/assets/mockup.webp — the glassy
+   trophy-case render; image already sits on black, so blend it in
+   rather than boxing it) */
+.hero-visual.has-mockup { height: auto; display: flex; align-items: center; justify-content: center; }
+.hero-visual.has-mockup .mockup-img {
+  width: 100%; max-width: 560px; height: auto;
+  border-radius: 18px;
+  border: 1px solid rgba(212, 175, 55, 0.22);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.65), 0 0 60px rgba(212, 175, 55, 0.10);
+  position: relative; z-index: 1;
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+.hero-visual.has-mockup:hover .mockup-img {
+  transform: scale(1.02);
+  box-shadow: 0 36px 80px rgba(0, 0, 0, 0.75), 0 0 80px rgba(212, 175, 55, 0.18);
+}
 @media (prefers-reduced-motion: no-preference) {
   .hero-visual { animation: float 6s ease-in-out infinite; }
 }
