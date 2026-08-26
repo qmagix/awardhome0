@@ -428,3 +428,10 @@ Senior 16-19. **Sources:** epicdanceinc.com/rules. **Confidence:** high.
 - Ensemble division (Classical Pas de Deux / Duet|Trio / Large Ensemble): 1st-5th Place; routine names preserved in performance_name, dancers via award_dancers.
 - Special awards: jury awards, Traditional Excellence, Outstanding International Dancer, Fernando Bujones Memorial Award (prestigious honoree) imported; Outstanding School = studio-level award; choreographer/coach/photographer awards not imported (not dancer awards).
 - Site publishes World Finals only (St. Petersburg FL); ~10 regional semi-finals per season unpublished — that's the outreach ask. Archives back to 2006 on the site.
+
+## Universal Ballet Competition (UBC — universalballetcompetition.com)
+- **Top award: Grand Prix Finals 1st place** per division; regional 1st places qualify dancers to the Finals (season ends with GRAND PRIX FINALS each May).
+- Placement ladder is numeric (1..12) inside each division×level×genre section, e.g. "SENIOR COM CLASSICAL", "JUNIOR INT CONTEMPORARY". **INT = Intermediate, COM = Competitive** — these are skill levels, NOT awards; PRE-COMPETITIVE is the entry level.
+- Group sections: DUO/TRIO, PDD (Pas de Deux), ENSEMBLE. Ensembles are studio-level (no dancer names published); duo/trio/PDD list every dancer.
+- "Additional Awards" per event: Rising Star / Aspire / Legacy (dancer honors), Outstanding Choreographer / Classical Coach / Contemporary Coach (people-and-school honors, imported at studio level).
+- Data source: the registration backend (api.reg.universalballetcompetition.com/public/results.cfm?event_id=N) publishes EVERY event including regionals — unlike ADC IBC, no outreach ask needed for regional data. Dates come from scripts/seed/ubc_events.json (site + Wayback index snapshots). Archive reaches 2019 (ids 8-28) if we want more history.

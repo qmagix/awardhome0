@@ -1,0 +1,488 @@
+{
+ "8": {
+  "city": "Miramar, FL.",
+  "date": "2019-02-15",
+  "season": "2021/2022",
+  "year": 2019
+ },
+ "11": {
+  "city": "Atlanta, GA",
+  "date": "2019-03-15",
+  "season": "2021/2022",
+  "year": 2019
+ },
+ "12": {
+  "city": "State College, PA",
+  "date": "2019-05-17",
+  "season": "2021/2022",
+  "year": 2019
+ },
+ "17": {
+  "city": "Miramar, FL",
+  "date": "2020-02-13",
+  "season": "2021/2022",
+  "year": 2020
+ },
+ "18": {
+  "city": "Atlanta, GA",
+  "date": "2020-02-28",
+  "season": "2021/2022",
+  "year": 2020
+ },
+ "19": {
+  "city": "Houston, TX",
+  "date": "2020-10-09",
+  "season": "2021/2022",
+  "year": 2020
+ },
+ "20": {
+  "city": "Pittsburgh, PA",
+  "date": "2020-10-17",
+  "season": "2021/2022",
+  "year": 2020
+ },
+ "24": {
+  "city": "Chicago, IL",
+  "date": "2021-02-05",
+  "season": "2021/2022",
+  "year": 2021
+ },
+ "25": {
+  "city": "Miramar, FL",
+  "date": "2021-02-18",
+  "season": "2021/2022",
+  "year": 2021
+ },
+ "26": {
+  "city": "Atlanta, GA",
+  "date": "2021-04-09",
+  "season": "2021/2022",
+  "year": 2021
+ },
+ "27": {
+  "city": "Pittsburgh, PA",
+  "date": "2021-04-24",
+  "season": "2021/2022",
+  "year": 2021
+ },
+ "28": {
+  "city": "Houston, TX",
+  "date": "2021-05-01",
+  "season": "2021/2022",
+  "year": 2021
+ },
+ "29": {
+  "city": "Cancun, MX",
+  "date": "2021-10-15",
+  "season": "2021/2022",
+  "year": 2021
+ },
+ "30": {
+  "city": "Los Angeles, CA",
+  "date": "2021-11-06",
+  "season": "2021/2022",
+  "year": 2021
+ },
+ "31": {
+  "city": "Chicago IL",
+  "date": "2022-03-04",
+  "season": "2021/2022",
+  "year": 2022
+ },
+ "32": {
+  "city": "Ft Lauderdale, FL",
+  "date": "2022-02-17",
+  "season": "2021/2022",
+  "year": 2022
+ },
+ "33": {
+  "city": "Atlanta, GA",
+  "date": "2022-02-25",
+  "season": "2021/2022",
+  "year": 2022
+ },
+ "34": {
+  "city": "Pittsburgh, PA",
+  "date": "2022-04-01",
+  "season": "2021/2022",
+  "year": 2022
+ },
+ "35": {
+  "city": "Houston, TX",
+  "date": "2022-04-29",
+  "season": "2021/2022",
+  "year": 2022
+ },
+ "36": {
+  "city": "Jacksonville, FL UBC Grand Prix Finals",
+  "date": "2022-05-28",
+  "season": "2021/2022",
+  "year": 2022
+ },
+ "37": {
+  "city": "Denver CO",
+  "date": "2022-01-21",
+  "season": "2021/2022",
+  "year": 2022
+ },
+ "38": {
+  "city": "Merida, Yucatan",
+  "date": "2022-10-28",
+  "season": "2022/2023",
+  "year": 2022
+ },
+ "39": {
+  "city": "Denver, CO",
+  "date": "2023-01-20",
+  "season": "2022/2023",
+  "year": 2023
+ },
+ "40": {
+  "city": "Atlanta, GA",
+  "date": "2023-02-24",
+  "season": "2022/2023",
+  "year": 2023
+ },
+ "41": {
+  "city": "Jacksonville, FL",
+  "date": "2023-03-17",
+  "season": "2022/2023",
+  "year": 2023
+ },
+ "42": {
+  "city": "Boston, MA",
+  "date": "2023-01-07",
+  "season": "2022/2023",
+  "year": 2023
+ },
+ "43": {
+  "city": "Ft. Lauderdale, FL",
+  "date": "2023-02-16",
+  "season": "2022/2023",
+  "year": 2023
+ },
+ "44": {
+  "city": "Chicago, IL",
+  "date": "2023-03-03",
+  "season": "2022/2023",
+  "year": 2023
+ },
+ "45": {
+  "city": "Los Angeles, CA",
+  "date": "2023-03-24",
+  "season": "2022/2023",
+  "year": 2023
+ },
+ "46": {
+  "city": "Pittsburgh, PA",
+  "date": "2023-03-31",
+  "season": "2022/2023",
+  "year": 2023
+ },
+ "47": {
+  "city": "Houston, TX",
+  "date": "2023-04-28",
+  "season": "2022/2023",
+  "year": 2023
+ },
+ "48": {
+  "city": "Winston-Salem, NC",
+  "date": "2023-05-06",
+  "season": "2022/2023",
+  "year": 2023
+ },
+ "49": {
+  "city": "Grand Prix Finals Orlando, FL",
+  "date": "2023-05-29",
+  "season": "2022/2023",
+  "year": 2023
+ },
+ "51": {
+  "city": "Brazil",
+  "date": "2023-06-04",
+  "season": "2022/2023",
+  "year": 2023
+ },
+ "52": {
+  "city": "Toronto, Ontario, Canada",
+  "date": "2023-11-11",
+  "season": "2023/2024",
+  "year": 2023
+ },
+ "53": {
+  "city": "Denver, CO",
+  "date": "2024-01-19",
+  "season": "2023/2024",
+  "year": 2024
+ },
+ "54": {
+  "city": "Boston, MA",
+  "date": "2024-02-03",
+  "season": "2023/2024",
+  "year": 2024
+ },
+ "55": {
+  "city": "Miramar, FL",
+  "date": "2024-02-16",
+  "season": "2023/2024",
+  "year": 2024
+ },
+ "56": {
+  "city": "Chicago, IL",
+  "date": "2024-02-23",
+  "season": "2023/2024",
+  "year": 2024
+ },
+ "57": {
+  "city": "Atlanta, GA",
+  "date": "2024-03-15",
+  "season": "2023/2024",
+  "year": 2024
+ },
+ "58": {
+  "city": "Los Angeles, CA",
+  "date": "2024-03-28",
+  "season": "2023/2024",
+  "year": 2024
+ },
+ "59": {
+  "city": "Jacksonville, FL",
+  "date": "2024-04-05",
+  "season": "2023/2024",
+  "year": 2024
+ },
+ "60": {
+  "city": "Pittsburgh, PA",
+  "date": "2024-04-12",
+  "season": "2023/2024",
+  "year": 2024
+ },
+ "61": {
+  "city": "Houston, TX",
+  "date": "2024-04-26",
+  "season": "2023/2024",
+  "year": 2024
+ },
+ "62": {
+  "city": "Wilmington, NC",
+  "date": "2024-05-03",
+  "season": "2023/2024",
+  "year": 2024
+ },
+ "63": {
+  "city": "GRAND PRIX FINALS",
+  "date": "2024-05-24",
+  "season": "2023/2024",
+  "year": 2024
+ },
+ "64": {
+  "city": "Dayton, OH",
+  "date": "2024-10-18",
+  "season": "2024/2025",
+  "year": 2024
+ },
+ "65": {
+  "city": "Denver, CO",
+  "date": "2025-01-17",
+  "season": "2024/2025",
+  "year": 2025
+ },
+ "66": {
+  "city": "Boston, MA",
+  "date": "2025-01-31",
+  "season": "2024/2025",
+  "year": 2025
+ },
+ "67": {
+  "city": "Miramar, FL",
+  "date": "2025-02-14",
+  "season": "2024/2025",
+  "year": 2025
+ },
+ "68": {
+  "city": "Chicago, IL",
+  "date": "2025-02-21",
+  "season": "2024/2025",
+  "year": 2025
+ },
+ "69": {
+  "city": "Irvine, CA",
+  "date": "2025-03-07",
+  "season": "2024/2025",
+  "year": 2025
+ },
+ "70": {
+  "city": "Atlanta, GA",
+  "date": "2025-03-14",
+  "season": "2024/2025",
+  "year": 2025
+ },
+ "71": {
+  "city": "Jacksonville, FL",
+  "date": "2025-04-04",
+  "season": "2024/2025",
+  "year": 2025
+ },
+ "72": {
+  "city": "Pittsburgh, PA",
+  "date": "2025-04-11",
+  "season": "2024/2025",
+  "year": 2025
+ },
+ "73": {
+  "city": "Iowa City, IA",
+  "date": "2025-03-21",
+  "season": "2024/2025",
+  "year": 2025
+ },
+ "74": {
+  "city": "Scottsdale, AZ",
+  "date": "2025-04-18",
+  "season": "2024/2025",
+  "year": 2025
+ },
+ "75": {
+  "city": "Houston, TX",
+  "date": "2025-04-25",
+  "season": "2024/2025",
+  "year": 2025
+ },
+ "76": {
+  "city": "Raleigh, NC",
+  "date": "2025-05-02",
+  "season": "2024/2025",
+  "year": 2025
+ },
+ "77": {
+  "city": "GRAND PRIX FINALS",
+  "date": "2025-05-28",
+  "season": "2024/2025",
+  "year": 2025
+ },
+ "79": {
+  "city": "Salt Lake City, UT",
+  "date": "2024-11-02",
+  "season": "2024/2025",
+  "year": 2024
+ },
+ "80": {
+  "city": "Austin, TX",
+  "date": "2025-02-14",
+  "season": "2024/2025",
+  "year": 2025
+ },
+ "81": {
+  "city": "San Francisco, CA",
+  "date": "2025-10-03",
+  "season": "2025/2026",
+  "year": 2025
+ },
+ "82": {
+  "city": "Dayton, OH",
+  "date": "2025-10-17",
+  "season": "2025/2026",
+  "year": 2025
+ },
+ "83": {
+  "city": "Shanghai, China",
+  "date": "2025-12-13",
+  "season": "2025/2026",
+  "year": 2025
+ },
+ "84": {
+  "city": "Denver, CO",
+  "date": "2026-01-16",
+  "season": "2025/2026",
+  "year": 2026
+ },
+ "85": {
+  "city": "Skokie, IL",
+  "date": "2026-01-16",
+  "season": "2025/2026",
+  "year": 2026
+ },
+ "86": {
+  "city": "Manchester, NH",
+  "date": "2026-01-30",
+  "season": "2025/2026",
+  "year": 2026
+ },
+ "87": {
+  "city": "Chicago, IL",
+  "date": "2026-02-06",
+  "season": "2025/2026",
+  "year": 2026
+ },
+ "88": {
+  "city": "Palm Beach Gardens, FL",
+  "date": "2026-02-13",
+  "season": "2025/2026",
+  "year": 2026
+ },
+ "89": {
+  "city": "Austin, TX",
+  "date": "2026-02-13",
+  "season": "2025/2026",
+  "year": 2026
+ },
+ "90": {
+  "city": "Pittsburgh, PA",
+  "date": "2026-02-20",
+  "season": "2025/2026",
+  "year": 2026
+ },
+ "91": {
+  "city": "Bartlett, TN",
+  "date": "2026-02-20",
+  "season": "2025/2026",
+  "year": 2026
+ },
+ "92": {
+  "city": "Atlanta, GA",
+  "date": "2026-03-13",
+  "season": "2025/2026",
+  "year": 2026
+ },
+ "93": {
+  "city": "Iowa City, IA",
+  "date": "2026-03-20",
+  "season": "2025/2026",
+  "year": 2026
+ },
+ "94": {
+  "city": "Irvine, CA",
+  "date": "2026-03-26",
+  "season": "2025/2026",
+  "year": 2026
+ },
+ "95": {
+  "city": "Jacksonville, FL",
+  "date": "2026-04-02",
+  "season": "2025/2026",
+  "year": 2026
+ },
+ "96": {
+  "city": "Houston, TX",
+  "date": "2026-04-24",
+  "season": "2025/2026",
+  "year": 2026
+ },
+ "97": {
+  "city": "Raleigh, NC",
+  "date": "2026-05-01",
+  "season": "2025/2026",
+  "year": 2026
+ },
+ "98": {
+  "city": "GRAND PRIX FINALS – Houston, TX",
+  "date": "2026-05-28",
+  "season": "2025/2026",
+  "year": 2026
+ },
+ "99": {
+  "city": "Salt Lake City, UT",
+  "date": "2025-10-11",
+  "season": "2025/2026",
+  "year": 2025
+ }
+}
