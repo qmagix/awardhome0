@@ -209,7 +209,11 @@
               </div>
               <div>
                 <% if (ev.registration_url) { %>
-                  <a href="<%= ev.registration_url %>" target="_blank" rel="noopener nofollow" style="font-family: var(--v2-display); font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--v2-plate-text); background: linear-gradient(160deg, var(--v2-gold-bright), var(--v2-gold-deep)); border-radius: 6px; padding: 0.45rem 0.85rem; text-decoration: none; white-space: nowrap;">Register</a>
+                  <% if (org.is_sponsor) { %>
+                    <a href="<%= ev.registration_url %>" target="_blank" rel="noopener nofollow" style="font-family: var(--v2-display); font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--v2-plate-text); background: linear-gradient(160deg, var(--v2-gold-bright), var(--v2-gold-deep)); border-radius: 6px; padding: 0.45rem 0.85rem; text-decoration: none; white-space: nowrap;">Register</a>
+                  <% } else { %>
+                    <a href="<%= ev.registration_url %>" target="_blank" rel="noopener nofollow" style="font-family: var(--v2-display); font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--v2-ink-mut); border: 1px solid var(--v2-hairline-strong); border-radius: 6px; padding: 0.45rem 0.85rem; text-decoration: none; white-space: nowrap;">Register</a>
+                  <% } %>
                 <% } %>
               </div>
             </div>

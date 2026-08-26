@@ -545,6 +545,19 @@ router.post('/admin/orgs/:id/visibility', requireSuperadmin, express.json(), asy
   res.json({ ok: true });
 });
 
+// First revenue stream: partner organizers' Register buttons render in
+// featured gold on /dance/events and their org page (default is the
+// ghost style). Emphasis only — sorting stays neutral by design.
+router.post('/admin/orgs/:id/sponsor', requireSuperadmin, express.json(), async (req, res) => {
+  const on = req.body && req.body.sponsor === true;
+  const db = await openDb();
+  try { await db.exec("ALTER TABLE organizations ADD COLUMN is_sponsor INTEGER DEFAULT 0"); } catch (e) { }
+  const org = await db.get('SELECT id FROM organizations WHERE id = ?', [req.params.id]);
+  if (!org) return res.status(404).json({ error: 'Organization not found' });
+  await db.run('UPDATE organizations SET is_sponsor = ? WHERE id = ?', [on ? 1 : 0, req.params.id]);
+  res.json({ ok: true, sponsor: on });
+});
+
 // ---- Award vocabulary batch editor (superadmin) ----
 // The scraped data mixes real awards ("National Grand Champion", titles)
 // with adjudication levels ("Diamond") and size categories ("Grand Lines")

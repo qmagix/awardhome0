@@ -425,7 +425,8 @@ async function loadUpcomingFiltered(db, req) {
   }
 
   let rows = await db.all(`
-    SELECT ue.*, o.name AS org_name, o.website AS org_website
+    SELECT ue.*, o.name AS org_name, o.website AS org_website,
+           COALESCE(o.is_sponsor, 0) AS org_sponsored
     FROM org_upcoming_events ue
     JOIN organizations o ON o.id = ue.org_id
     WHERE ${where.join(' AND ')}

@@ -125,7 +125,8 @@
                 <a class="ue-star" href="/login?redirect=<%= encodeURIComponent('/dance/events') %>" title="Sign in to save events to a shortlist">&#9734;</a>
               <% } %>
               <% if (ev.registration_url) { %>
-                <a class="ue-reg" href="<%= ev.registration_url %>" target="_blank" rel="noopener nofollow">Register</a>
+                <a class="ue-reg <%= ev.org_sponsored ? '' : 'ue-reg-ghost' %>" href="<%= ev.registration_url %>" target="_blank" rel="noopener nofollow"
+                   <%= ev.org_sponsored ? 'title="Featured partner placement"' : '' %>>Register</a>
               <% } else if (ev.org_website) { %>
                 <a class="ue-reg ue-reg-ghost" href="<%= ev.org_website %>" target="_blank" rel="noopener nofollow">Official Site</a>
               <% } %>
@@ -138,6 +139,8 @@
         Dates come from each organizer's published schedule and from organizers who maintain their
         listings here directly<% if (lastChecked) { %> (last checked <%= lastChecked %>)<% } %>.
         Schedules change &mdash; always confirm dates and venues with the organizer before booking travel.
+        Gold Register buttons are featured placements from partner organizers &mdash; one of the ways
+        AwardHome stays free for dancers, families, and studios. Listing order is never sponsored.
       </p>
     <% } %>
   </main>
