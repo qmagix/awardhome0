@@ -6,9 +6,13 @@
 // Line format (matches the research handoff format; # comments allowed):
 //   OrgName | Event/Stop Name | City | ST | Venue | YYYY-MM-DD | YYYY-MM-DD | RegistrationURL | SourceURL
 //
-// Idempotency key: org_id + start_date + city (case-insensitive). Existing
-// 'seed'/'scraped' rows are updated in place; rows entered by owners
-// (source 'owner') are NEVER touched — the dashboard is authoritative.
+// Idempotency key: org_id + start_date + city + venue + name
+// (case-insensitive) — venue matters because circuits run two venues in
+// the same city on the same weekend (KAR Detroit 2027-03-12), and name
+// matters because companion events share even the venue slot (StarQuest
+// "(AUC)" events).
+// Existing 'seed'/'scraped' rows are updated in place; rows entered by
+// owners (source 'owner') are NEVER touched — the dashboard is authoritative.
 const path = require('path');
 const fs = require('fs');
 const { openDb } = require(path.join(__dirname, '..', 'database'));
@@ -50,7 +54,8 @@ async function main() {
     const existing = await db.get(`
       SELECT * FROM org_upcoming_events
       WHERE org_id = ? AND start_date = ? AND LOWER(COALESCE(city, '')) = LOWER(?)
-    `, [orgId, start, city]);
+        AND LOWER(COALESCE(venue, '')) = LOWER(?) AND LOWER(name) = LOWER(?)
+    `, [orgId, start, city, venue, name]);
 
     if (existing && existing.source === 'owner') { skippedOwner++; continue; }
 
@@ -63,7 +68,7 @@ async function main() {
         `, [orgId, name, city || null, state.toUpperCase() || null, venue || null, start, end || null, regUrl || null, sourceUrl || null]);
       }
     } else {
-      const same = existing.name === name && (existing.venue || '') === venue &&
+      const same = (existing.venue || '') === venue &&
         (existing.end_date || '') === end && (existing.registration_url || '') === regUrl &&
         (existing.state || '') === state.toUpperCase();
       if (same) {
@@ -74,10 +79,10 @@ async function main() {
         if (APPLY) {
           await db.run(`
             UPDATE org_upcoming_events
-            SET name = ?, state = ?, venue = ?, end_date = ?, registration_url = ?, source_url = ?,
+            SET state = ?, venue = ?, end_date = ?, registration_url = ?, source_url = ?,
                 updated_at = CURRENT_TIMESTAMP, last_seen_at = CURRENT_TIMESTAMP
             WHERE id = ?
-          `, [name, state.toUpperCase() || null, venue || null, end || null, regUrl || null, sourceUrl || null, existing.id]);
+          `, [state.toUpperCase() || null, venue || null, end || null, regUrl || null, sourceUrl || null, existing.id]);
         }
       }
     }
