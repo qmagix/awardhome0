@@ -854,3 +854,10 @@ HollywoodVibe competition results are in pdf files as well, the top url is here:
 
 **Agent Action:**
 I created a python script `scripts/scrape_hollywoodvibe.py` to visit the main results page, extract all season links, visit each season link, and download all unique PDF links into the `tobeprocessed/pdf` folder. I then executed the script in the background.
+
+
+## [2026-08-26 14:24:42] Hollywood Vibe Meta JSON & Directory Move
+Two issues regarding the new downloads, the first is the files should be in a hollywoodvibe subfolder like starpower etc, second is you forgot to create a json meta file for each pdf regarding the location and dates for each event and source url for import and forensic purpose, please check the starpower subfolder for the json meta file examples.
+
+**Agent Action:**
+I checked the `starpower` folder to understand the expected JSON meta structure. I then moved the downloaded HollywoodVibe PDFs from `tobeprocessed/pdf` to `tobeprocessed/pdf/hollywoodvibe`. I modified `scripts/scrape_hollywoodvibe.py` to extract the location from the link text and year from the filename, and automatically generate the corresponding JSON metadata files alongside the PDFs. I executed this updated script in the background to build the JSON files.

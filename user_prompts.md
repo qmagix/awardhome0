@@ -388,3 +388,7 @@ HollywoodVibe competition results are in pdf files as well, the top url is here:
 
 ## [2026-08-26 13:38:11] Hollywood Vibe Scraping
 HollywoodVibe competition results are in pdf files as well, the top url is here: https://www.hollywoodvibe.com/results/, please download the pdfs for further processing in the tobeprocessed/pdf folder
+
+
+## [2026-08-26 14:24:42] Hollywood Vibe Meta JSON & Directory Move
+Two issues regarding the new downloads, the first is the files should be in a hollywoodvibe subfolder like starpower etc, second is you forgot to create a json meta file for each pdf regarding the location and dates for each event and source url for import and forensic purpose, please check the starpower subfolder for the json meta file examples.
