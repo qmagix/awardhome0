@@ -444,10 +444,12 @@ router.get('/dance/events', async (req, res) => {
     groups[groups.length - 1].events.push(row);
   }
 
+  const lastCheckedRow = await db.get('SELECT MAX(last_seen_at) AS t FROM org_upcoming_events');
   res.render('upcoming_events', {
     groups, states, months, orgOptions,
     filters: { state, month, org: orgId },
     totalCount: rows.length,
+    lastChecked: (lastCheckedRow && lastCheckedRow.t) ? String(lastCheckedRow.t).slice(0, 10) : null,
     pageTitle: 'Upcoming Dance Competitions',
     pageDesc: 'Plan your competition season: upcoming dance competition tour dates by city, state, and organizer.'
   });

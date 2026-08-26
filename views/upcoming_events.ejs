@@ -96,8 +96,8 @@
 
       <p class="ue-note">
         Dates come from each organizer's published schedule and from organizers who maintain their
-        listings here directly. Schedules change &mdash; always confirm dates and venues with the
-        organizer before booking travel.
+        listings here directly<% if (lastChecked) { %> (last checked <%= lastChecked %>)<% } %>.
+        Schedules change &mdash; always confirm dates and venues with the organizer before booking travel.
       </p>
     <% } %>
   </main>

@@ -180,6 +180,19 @@ async function runPipeline(opts) {
     }
   }
 
+  // ---- Upcoming Events refresh (tour dates, directory phase 2) ----
+  // Runs against DB_PATH like everything else, so the staged validator
+  // still gates promotion. A source failing is a warning, not a blocker —
+  // owner-entered rows are never touched and stale rows only unlist after
+  // a healthy scrape of that org.
+  if (!pdfOnly) {
+    console.log('\n[upcoming] node scrape_upcoming_events.js --apply');
+    const up = spawnSync('node', [path.join(__dirname, 'scrape_upcoming_events.js'), '--apply'],
+      { cwd: __dirname, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
+    console.log((up.stdout || '').trim().split('\n').map(l => `      ${l}`).join('\n'));
+    if (up.status !== 0) failures.push(`upcoming-events refresh: exit ${up.status} — see log above`);
+  }
+
   // ---- PDF downloads (report-only; extraction/import stay manual) ----
   const pdfNew = {};
   if (!skipPdf) {
