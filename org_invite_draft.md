@@ -102,6 +102,8 @@ Or if you have a recent results file handy, just reply with it attached and
 we'll build a live demo page for [Competition Name] — usually within a few
 days. And if you'd rather talk first, I'm happy to do a quick 15-minute call.
 
+However this lands, one thing is true either way: we'd welcome [Competition Name] as a partner, not just a name in our archive. And if anything on AwardHome could serve you better — how your events are presented, a feature you wish existed, anything at all — just tell us. We're building this for the people who actually run competitions, so your thoughts and needs genuinely shape what we build next.
+
 Thank you for everything you do for the dance community.
 
 Best regards,
