@@ -44,7 +44,7 @@ function buildStudioInvite({ studio, totalAwards, firstPlaces, rank }) {
 
     ${BETA_MODE ? '<p style="background: #faf6e8; border: 1px solid #d4af37; border-radius: 8px; padding: 10px 14px;"><strong>You\'re invited to our private beta.</strong> The link below is your early-access pass — AwardHome opens to the public soon, and beta studios get a head start.</p>' : ''}
     <p>Congratulations on a great season. Your competition results are already live on
-    <strong>AwardHome</strong> — we aggregate results from 17 competitions (YAGP, KAR, Starpower,
+    <strong>AwardHome</strong> — we aggregate results from 18 competitions (YAGP, KAR, Starpower,
     NYCDA, Showstopper, Rainbow, and more) into a single digital trophy case: over 1.1 million awards
     from 20,000+ studios since 2021.</p>
 
@@ -159,7 +159,7 @@ function buildOrgInviteTemplate({ org, eventCount = 0, awardCount = 0 }) {
   const subject = `Featuring ${n} on AwardHome`;
   const body = `Hi Competition Director,
 
-I'm Q, founder of AwardHome — the digital trophy case for competitive dance. We aggregate results from events nationwide into beautiful, shareable award pages for dancers and studios: today that's over 1.1 million awards from 3,200+ events across 17 competitions, including YAGP, Starpower, KAR, NYCDA, and Rainbow.
+I'm Q, founder of AwardHome — the digital trophy case for competitive dance. We aggregate results from events nationwide into beautiful, shareable award pages for dancers and studios: today that's over 1.1 million awards from 3,280+ events across 18 competitions, including YAGP, Starpower, KAR, NYCDA, and Rainbow.
 
 We'd love to feature ${n} alongside them.
 
