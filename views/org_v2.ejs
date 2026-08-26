@@ -24,6 +24,18 @@
     </div>
   <% } %>
 
+  <% if (isOwner) { %>
+    <%# Owners see the page exactly as the public does (that's what the
+        navbar "Public Page" button promises) — management lives in this
+        slim strip, not in the page content. %>
+    <div class="v2-preview">
+      <span>You manage this page</span>
+      <a href="/manage/org/<%= org.id %>">Dashboard</a>
+      <a href="/manage/org/<%= org.id %>?tab=upload-section">Upload results</a>
+      <a href="/manage/org/<%= org.id %>/branding">Branding</a>
+    </div>
+  <% } %>
+
   <section class="v2-hero">
     <p class="v2-eyebrow">COMPETITION ORGANIZATION<% if (stats.firstYear) { %> &middot; ARCHIVED SINCE <%= stats.firstYear %><% } %></p>
     <div class="v2-coin" aria-hidden="true">
@@ -223,26 +235,7 @@
 
   <section class="v2-owner">
     <div class="v2-wrap">
-      <% if (isOwner) { %>
-      <p class="v2-kicker">For Organizers</p>
-        <h2>Your archive, working for you</h2>
-        <p class="v2-lede">Quick links to the tools that keep your brand sharp on every card.</p>
-        <div class="v2-tool-grid">
-          <a class="v2-tool" href="/manage/org/<%= org.id %>/branding">
-            <h3>Branding &amp; the coin</h3>
-            <p>Upload your logo and tune how it sits on every award card.</p>
-          </a>
-          <a class="v2-tool" href="/manage/org/<%= org.id %>">
-            <h3>Marketing profile</h3>
-            <p>Slogan, description, and the registration link this page promotes.</p>
-          </a>
-          <div class="v2-tool">
-            <h3>Permanent archive</h3>
-            <p>Every result stays hosted, linked, and searchable &mdash; forever.</p>
-          </div>
-        </div>
-        <a class="v2-gold-btn" href="/manage/org/<%= org.id %>">Open your dashboard</a>
-      <% } else if (isClaimed) { %>
+      <% if (isClaimed) { %>
       <p class="v2-kicker">For Dancers &amp; Studios</p>
         <h2>Dance with <%= org.name %></h2>
         <p class="v2-lede"><%= org.slogan || org.description || `Join the studios and dancers competing at ${org.name} — every placement earned there lives on, right here.` %></p>
