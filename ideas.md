@@ -66,3 +66,15 @@ Patent-candidate details tracked in `maybe_patentable.md` (A6).
 **Technical sketch:** `prize_pools` (sponsor, prize, inventory, odds, window, redemption terms) + `prize_reveals` (dancer/user, award, pool, revealed_at, redeemed_at, code); server-side roll on flip event (never client-side), seeded/rate-limited per user+day so re-flip farming is useless; win → guardian-email claim flow with single-use redemption code (reuse org-claim token pattern); superadmin pool console; `surprise_reveals` feature flag. Prerequisite: partnered orgs/sponsors exist — sequence AFTER beta claims land.
 
 Patent-candidate details tracked in `maybe_patentable.md` (A7).
+
+## 7. Upcoming Events Directory — "Plan Your Season" (brainstormed 2026-08-26)
+**Concept:** Aggregate every organizer's upcoming tour dates (city, venue, dates, registration link) into a searchable directory — filter by state/region, month, and organizer — plus an "Upcoming Events" section on each org's public page. Sourced by scraping organizer tour pages (many share registration platforms like DanceBug, so one scraper covers several orgs); claimed organizers manage their own listings in the dashboard, which overrides scraped data.
+
+**Value Proposition (three-sided):**
+- *Studios*: Q ran a studio — every year studio owners hand-compile nearby-competition spreadsheets (location, venue, dates) to plan the season. A trusted aggregated calendar removes real annual toil and creates a second visit season (planning/booking in fall, results in spring) → year-round traffic instead of post-results spikes.
+- *Organizers*: reaches studios at the exact moment they decide where to compete — filling next season's ballroom is worth more to an org than flattering last season. Registration-link clicks become per-org demand telemetry (stronger outreach ammunition than card clicks).
+- *Platform stickiness / objection defense*: an org that wants off the results archive would also drop off the directory studios use to book — leaving costs them forward-looking bookings, not just archival vanity. Listing management is also a fresh claim incentive ("your dates, under your control").
+
+**Risks/cautions:** stale dates actively harm (studios plan trips) — needs weekly refresh, "last updated" stamps, season rollover cleanup, and an "always confirm with the organizer" line linking the official page; scraped ≠ authoritative, so owner-entered data must always win.
+
+**Technical sketch:** `org_upcoming_events` (org_id, name, city, state, venue, start_date, end_date, registration_url, source 'scraped'|'owner', last_seen_at, status) — idempotent scrape keyed org+city+start_date; owner rows never overwritten. Phase 1: schema + owner/superadmin manual entry + org-page section + public directory page with state/month filters (seed the 17 orgs by hand — validates UX before any scraper). Phase 2: scrapers for platform-hosted tour lists + weekly pipeline slot. Phase 3: studio tools — near-me, shortlist, ICS calendar export, season-planning email digest.
