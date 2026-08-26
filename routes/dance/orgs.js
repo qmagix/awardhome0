@@ -107,8 +107,8 @@ const orgUpload = multer({
   dest: 'tobeprocessed/org_uploads/',
   limits: { fileSize: 50 * 1024 * 1024, files: 1 },
   fileFilter: (req, file, cb) => {
-    if (/\.(csv|xlsx|xls|pdf|sql|sqlite|sqlite3|db|mdb|accdb|zip)$/i.test(file.originalname || '')) return cb(null, true);
-    const err = new Error('Accepted result formats: .csv, .xlsx, .xls, .pdf, .sql, .sqlite, .db, .mdb, .accdb, or a .zip of these.');
+    if (/\.(csv|txt|xlsx|xls|pdf|sql|sqlite|sqlite3|db|mdb|accdb|zip)$/i.test(file.originalname || '')) return cb(null, true);
+    const err = new Error('Accepted result formats: .csv, .txt, .xlsx, .xls, .pdf, .sql, .sqlite, .db, .mdb, .accdb, or a .zip of these.');
     err.status = 400;
     cb(err);
   },
