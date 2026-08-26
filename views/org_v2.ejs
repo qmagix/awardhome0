@@ -32,6 +32,7 @@
       <span>You manage this page</span>
       <a href="/manage/org/<%= org.id %>">Dashboard</a>
       <a href="/manage/org/<%= org.id %>?tab=upload-section">Upload results</a>
+      <a href="/manage/org/<%= org.id %>?tab=upcoming-events">Tour dates</a>
       <a href="/manage/org/<%= org.id %>/branding">Branding</a>
     </div>
   <% } %>
@@ -183,6 +184,35 @@
               <div class="v2-o-name"><%= s.name %></div>
               <div class="v2-o-sub">awards at your events</div>
             </a>
+          <% }); %>
+        </div>
+      </section>
+    <% } %>
+
+    <% if (typeof upcomingEvents !== 'undefined' && upcomingEvents && upcomingEvents.length > 0) { %>
+      <section class="v2-section v2-reveal" id="v2o-tour" aria-labelledby="v2o-tour-h">
+        <p class="v2-kicker">On Tour</p>
+        <h2 id="v2o-tour-h">Where <%= org.name %> is headed next</h2>
+        <p class="v2-lede">Upcoming stops from the official schedule &mdash; confirm dates with the organizer before booking travel.</p>
+        <div style="max-width: 46rem; margin: 0 auto;">
+          <% upcomingEvents.forEach(function(ev) { %>
+            <div style="display: grid; grid-template-columns: 8.5rem 1fr auto; gap: 1rem; align-items: center; padding: 0.85rem 1rem; border: 1px solid var(--v2-hairline); border-radius: 8px; background: linear-gradient(145deg, var(--v2-curtain) 0%, var(--v2-stage) 100%); margin-bottom: 0.6rem;">
+              <div style="font-family: var(--v2-display); color: var(--v2-gold); font-size: 0.85rem; letter-spacing: 0.05em;">
+                <%= ev.start_date.slice(5).replace('-', '/') %><%= ev.end_date ? ' – ' + ev.end_date.slice(5).replace('-', '/') : '' %>
+                <span style="color: var(--v2-ink-faint);">&middot; <%= ev.start_date.slice(0, 4) %></span>
+              </div>
+              <div>
+                <div style="color: var(--v2-ink); font-size: 1.02rem;"><%= ev.name %></div>
+                <% if (ev.city || ev.venue) { %>
+                  <div style="color: var(--v2-ink-mut); font-size: 0.88rem; margin-top: 0.1rem;"><%= [ [ev.city, ev.state].filter(Boolean).join(', '), ev.venue ].filter(Boolean).join(' — ') %></div>
+                <% } %>
+              </div>
+              <div>
+                <% if (ev.registration_url) { %>
+                  <a href="<%= ev.registration_url %>" target="_blank" rel="noopener nofollow" style="font-family: var(--v2-display); font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--v2-plate-text); background: linear-gradient(160deg, var(--v2-gold-bright), var(--v2-gold-deep)); border-radius: 6px; padding: 0.45rem 0.85rem; text-decoration: none; white-space: nowrap;">Register</a>
+                <% } %>
+              </div>
+            </div>
           <% }); %>
         </div>
       </section>

@@ -428,6 +428,31 @@ async function initDb() {
       PRIMARY KEY (day, key)
     );
 
+    -- Upcoming Events Directory (ideas.md §7): organizers' future tour
+    -- stops, shown on org pages + /dance/events. source: 'owner' (entered
+    -- in the dashboard — authoritative, never overwritten by automation),
+    -- 'seed' (hand-curated from official sites), 'scraped' (phase 2).
+    -- status 'cancelled' keeps the row for history but hides it publicly.
+    CREATE TABLE IF NOT EXISTS org_upcoming_events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      org_id INTEGER NOT NULL REFERENCES organizations(id),
+      name TEXT NOT NULL,
+      city TEXT,
+      state TEXT,
+      venue TEXT,
+      start_date TEXT NOT NULL,
+      end_date TEXT,
+      registration_url TEXT,
+      source TEXT NOT NULL DEFAULT 'owner',
+      source_url TEXT,
+      status TEXT NOT NULL DEFAULT 'active',
+      last_seen_at DATETIME,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE INDEX IF NOT EXISTS idx_org_upcoming_events_org_date
+      ON org_upcoming_events(org_id, start_date);
+
     -- Known flags ship dark; releases happen at /admin/features
     INSERT OR IGNORE INTO feature_flags (key, state) VALUES ('thank_you_notes', 'off');
     INSERT OR IGNORE INTO feature_flags (key, state) VALUES ('award_photos', 'off');

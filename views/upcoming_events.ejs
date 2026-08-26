@@ -1,0 +1,106 @@
+<%- include('partials/header') %>
+<link rel="stylesheet" href="/css/studio_v2.css">
+<link rel="stylesheet" href="/css/dance_home_v2.css">
+<style>
+  /* Directory-only styles, layered on the Rafters base tokens. */
+  .v2 .ue-filters { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: flex-end; justify-content: center; margin: 1.5rem 0 0; }
+  .v2 .ue-filters label { display: block; font-family: var(--v2-display); font-size: 0.62rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--v2-ink-mut); margin-bottom: 0.35rem; }
+  .v2 .ue-filters select { background: var(--v2-curtain); color: var(--v2-ink); border: 1px solid var(--v2-hairline-strong); border-radius: 6px; padding: 0.55rem 0.75rem; font-family: var(--v2-body); font-size: 0.95rem; min-width: 10.5rem; }
+  .v2 .ue-filters .ue-clear { color: var(--v2-ink-mut); font-size: 0.85rem; text-decoration: underline; padding-bottom: 0.65rem; }
+  .v2 .ue-month { font-family: var(--v2-display); color: var(--v2-champagne); letter-spacing: 0.14em; text-transform: uppercase; font-size: 0.95rem; margin: 2.5rem 0 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--v2-hairline); }
+  .v2 .ue-row { display: grid; grid-template-columns: 8.5rem 1fr auto; gap: 1rem; align-items: center; padding: 0.9rem 1rem; border: 1px solid var(--v2-hairline); border-radius: 8px; background: linear-gradient(145deg, var(--v2-curtain) 0%, var(--v2-stage) 100%); margin-bottom: 0.6rem; }
+  .v2 .ue-dates { font-family: var(--v2-display); color: var(--v2-gold); font-size: 0.85rem; letter-spacing: 0.05em; }
+  .v2 .ue-org { font-family: var(--v2-display); font-size: 0.68rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--v2-ink-mut); margin-bottom: 0.2rem; }
+  .v2 .ue-name { color: var(--v2-ink); font-size: 1.05rem; }
+  .v2 .ue-place { color: var(--v2-ink-mut); font-size: 0.9rem; margin-top: 0.15rem; }
+  .v2 .ue-reg { font-family: var(--v2-display); font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--v2-plate-text); background: linear-gradient(160deg, var(--v2-gold-bright), var(--v2-gold-deep)); border-radius: 6px; padding: 0.5rem 0.9rem; text-decoration: none; white-space: nowrap; }
+  .v2 .ue-reg.ue-reg-ghost { background: none; color: var(--v2-ink-mut); border: 1px solid var(--v2-hairline-strong); }
+  .v2 .ue-note { color: var(--v2-ink-faint); font-size: 0.85rem; text-align: center; margin: 2.5rem auto 0; max-width: 44rem; line-height: 1.6; }
+  @media (max-width: 640px) { .v2 .ue-row { grid-template-columns: 1fr; gap: 0.4rem; } }
+</style>
+
+<div class="v2">
+  <section class="v2-hero">
+    <p class="v2-eyebrow">PLAN YOUR SEASON</p>
+    <h1>Upcoming Events</h1>
+    <p class="v2-bio">Every competition's published tour dates, in one place &mdash; filter by state, month, or circuit and map out the season without the spreadsheet.</p>
+
+    <form class="ue-filters" method="GET" action="/dance/events">
+      <div>
+        <label for="ue-state">State</label>
+        <select id="ue-state" name="state" onchange="this.form.submit()">
+          <option value="">All states</option>
+          <% states.forEach(function(s) { %>
+            <option value="<%= s %>" <%= filters.state === s ? 'selected' : '' %>><%= s %></option>
+          <% }); %>
+        </select>
+      </div>
+      <div>
+        <label for="ue-month">Month</label>
+        <select id="ue-month" name="month" onchange="this.form.submit()">
+          <option value="">All months</option>
+          <% months.forEach(function(m) { %>
+            <option value="<%= m.value %>" <%= filters.month === m.value ? 'selected' : '' %>><%= m.label %></option>
+          <% }); %>
+        </select>
+      </div>
+      <div>
+        <label for="ue-org">Competition</label>
+        <select id="ue-org" name="org" onchange="this.form.submit()">
+          <option value="">All competitions</option>
+          <% orgOptions.forEach(function(o) { %>
+            <option value="<%= o.id %>" <%= filters.org === o.id ? 'selected' : '' %>><%= o.name %></option>
+          <% }); %>
+        </select>
+      </div>
+      <% if (filters.state || filters.month || filters.org) { %>
+        <a class="ue-clear" href="/dance/events">Clear filters</a>
+      <% } %>
+    </form>
+  </section>
+
+  <main class="v2-wrap">
+    <% if (groups.length === 0) { %>
+      <p class="ue-note" style="margin-top: 3rem;">
+        <% if (filters.state || filters.month || filters.org) { %>
+          No upcoming events match these filters &mdash; try <a href="/dance/events" style="color: var(--v2-gold);">clearing them</a>.
+        <% } else { %>
+          Tour dates for the coming season are being gathered now &mdash; check back soon.
+        <% } %>
+      </p>
+    <% } else { %>
+      <% groups.forEach(function(g) { %>
+        <h2 class="ue-month"><%= g.label %></h2>
+        <% g.events.forEach(function(ev) { %>
+          <div class="ue-row">
+            <div class="ue-dates">
+              <%= ev.start_date.slice(5).replace('-', '/') %><%= ev.end_date ? ' – ' + ev.end_date.slice(5).replace('-', '/') : '' %>
+            </div>
+            <div>
+              <div class="ue-org"><%= ev.org_name %></div>
+              <div class="ue-name"><%= ev.name %></div>
+              <% if (ev.city || ev.venue) { %>
+                <div class="ue-place"><%= [ [ev.city, ev.state].filter(Boolean).join(', '), ev.venue ].filter(Boolean).join(' — ') %></div>
+              <% } %>
+            </div>
+            <div>
+              <% if (ev.registration_url) { %>
+                <a class="ue-reg" href="<%= ev.registration_url %>" target="_blank" rel="noopener nofollow">Register</a>
+              <% } else if (ev.org_website) { %>
+                <a class="ue-reg ue-reg-ghost" href="<%= ev.org_website %>" target="_blank" rel="noopener nofollow">Official Site</a>
+              <% } %>
+            </div>
+          </div>
+        <% }); %>
+      <% }); %>
+
+      <p class="ue-note">
+        Dates come from each organizer's published schedule and from organizers who maintain their
+        listings here directly. Schedules change &mdash; always confirm dates and venues with the
+        organizer before booking travel.
+      </p>
+    <% } %>
+  </main>
+</div>
+
+<%- include('partials/footer') %>

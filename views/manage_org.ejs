@@ -29,6 +29,7 @@
                     <a href="#marketing-profile" class="sub-nav-link" onclick="showTab('marketing-profile'); return false;">↳ Marketing Profile</a>
                     <a href="#upload-section" class="sub-nav-link" onclick="showTab('upload-section'); return false;">↳ Upload Results</a>
                     <a href="#past-events" class="sub-nav-link" onclick="showTab('past-events'); return false;">↳ Past Events</a>
+                    <a href="#upcoming-events" class="sub-nav-link" onclick="showTab('upcoming-events'); return false;">↳ Upcoming Events</a>
                 </div>
                 <a href="/manage/org/<%= org.id %>/branding" style="margin-top: 1rem;">Branding & Icons</a>
                 <a href="/faq/organizer" class="text-muted" style="margin-top: 2rem;">Organizer FAQ</a>
@@ -356,6 +357,110 @@
             <% } else { %>
                 <p>No past events found.</p>
             <% } %>
+        </div>
+    </section>
+
+    <section id="upcoming-events" class="card glass-card dashboard-tab" style="display: none; margin-top: 2rem;">
+        <div class="card-header">
+            <h2>Upcoming Events</h2>
+            <p class="text-muted">Your tour dates, shown on your public page and in the studio-facing
+                <a href="/dance/events" target="_blank" style="color: var(--accent-gold);">Upcoming Events directory</a>
+                — where studios plan their competition season. Keep them current: dates you enter here are
+                authoritative and always override anything our team imported.</p>
+        </div>
+        <div class="card-body">
+            <form id="upcomingForm" action="/manage/org/<%= org.id %>/upcoming" method="POST"
+                  style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; padding: 1.25rem; margin-bottom: 2rem;">
+                <h4 id="upcomingFormTitle" style="margin: 0 0 1rem 0;">Add an event</h4>
+                <div style="display: grid; grid-template-columns: 2fr 1.2fr 0.6fr; gap: 1rem;">
+                    <div class="form-group" style="margin: 0;">
+                        <label>Event Name *</label>
+                        <input type="text" name="name" required maxlength="120" placeholder="e.g. Regional — Dallas" class="form-control">
+                    </div>
+                    <div class="form-group" style="margin: 0;">
+                        <label>City</label>
+                        <input type="text" name="city" maxlength="80" placeholder="e.g. Dallas" class="form-control">
+                    </div>
+                    <div class="form-group" style="margin: 0;">
+                        <label>State</label>
+                        <input type="text" name="state" maxlength="2" placeholder="TX" class="form-control" style="text-transform: uppercase;">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 2fr; gap: 1rem; margin-top: 1rem;">
+                    <div class="form-group" style="margin: 0;">
+                        <label>Start Date *</label>
+                        <input type="date" name="start_date" required class="form-control">
+                    </div>
+                    <div class="form-group" style="margin: 0;">
+                        <label>End Date</label>
+                        <input type="date" name="end_date" class="form-control">
+                    </div>
+                    <div class="form-group" style="margin: 0;">
+                        <label>Venue</label>
+                        <input type="text" name="venue" maxlength="120" placeholder="e.g. Gaylord Texan Convention Center" class="form-control">
+                    </div>
+                </div>
+                <div class="form-group" style="margin: 1rem 0 0 0;">
+                    <label>Registration Link</label>
+                    <input type="text" name="registration_url" maxlength="300" placeholder="https://..." class="form-control">
+                </div>
+                <div style="margin-top: 1.25rem; display: flex; gap: 0.75rem;">
+                    <button type="submit" class="btn btn-primary" id="upcomingSubmitBtn">Add Event</button>
+                    <button type="button" class="btn btn-outline" id="upcomingCancelEdit" style="display: none;" onclick="resetUpcomingForm()">Cancel Edit</button>
+                </div>
+            </form>
+
+            <% if (upcomingEvents && upcomingEvents.length > 0) { %>
+                <table class="data-table" style="width: 100%;">
+                    <thead>
+                        <tr><th>Dates</th><th>Event</th><th>Location</th><th>Register</th><th style="width: 130px;">Actions</th></tr>
+                    </thead>
+                    <tbody>
+                        <% upcomingEvents.forEach((ev) => { %>
+                            <% const past = (ev.end_date || ev.start_date) < new Date().toISOString().slice(0, 10); %>
+                            <tr style="<%= past ? 'opacity: 0.45;' : '' %>"
+                                data-ev='<%- JSON.stringify({ id: ev.id, name: ev.name, city: ev.city, state: ev.state, venue: ev.venue, start_date: ev.start_date, end_date: ev.end_date, registration_url: ev.registration_url }).replace(/'/g, "&#39;") %>'>
+                                <td style="white-space: nowrap;"><%= ev.start_date %><%= ev.end_date ? ' → ' + ev.end_date : '' %><%= past ? ' (past)' : '' %></td>
+                                <td><%= ev.name %><% if (ev.venue) { %><br><small class="text-muted"><%= ev.venue %></small><% } %></td>
+                                <td><%= [ev.city, ev.state].filter(Boolean).join(', ') %></td>
+                                <td><% if (ev.registration_url) { %><a href="<%= ev.registration_url %>" target="_blank" rel="noopener" style="color: var(--accent-gold);">Link</a><% } %></td>
+                                <td style="white-space: nowrap;">
+                                    <button type="button" class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" onclick="editUpcoming(this)">Edit</button>
+                                    <form action="/manage/org/<%= org.id %>/upcoming/<%= ev.id %>/delete" method="POST" style="display: inline;"
+                                          onsubmit="return confirm('Remove this event from your public listings?');">
+                                        <button type="submit" class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; border-color: #b91c1c; color: #ef4444;">Remove</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            <% } else { %>
+                <p class="text-muted">No upcoming events listed yet. Add your first tour stop above — it appears on your public page and in the directory studios browse when picking next season's competitions.</p>
+            <% } %>
+
+            <script>
+                const upcomingForm = document.getElementById('upcomingForm');
+                const upcomingAddAction = upcomingForm.action;
+                function editUpcoming(btn) {
+                    const ev = JSON.parse(btn.closest('tr').getAttribute('data-ev'));
+                    upcomingForm.action = '/manage/org/<%= org.id %>/upcoming/' + ev.id + '/update';
+                    for (const f of ['name', 'city', 'state', 'venue', 'start_date', 'end_date', 'registration_url']) {
+                        upcomingForm.elements[f].value = ev[f] || '';
+                    }
+                    document.getElementById('upcomingFormTitle').textContent = 'Edit: ' + ev.name;
+                    document.getElementById('upcomingSubmitBtn').textContent = 'Save Changes';
+                    document.getElementById('upcomingCancelEdit').style.display = '';
+                    upcomingForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                function resetUpcomingForm() {
+                    upcomingForm.action = upcomingAddAction;
+                    upcomingForm.reset();
+                    document.getElementById('upcomingFormTitle').textContent = 'Add an event';
+                    document.getElementById('upcomingSubmitBtn').textContent = 'Add Event';
+                    document.getElementById('upcomingCancelEdit').style.display = 'none';
+                }
+            </script>
         </div>
     </section>
 

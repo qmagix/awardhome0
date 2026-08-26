@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { openDb } = require('../../database');
 const { requireAuth, requireOrgOwner } = require('../../middleware/auth');
+const { ensureUpcomingTable, cleanUpcomingInput } = require('../../utils/upcoming');
 const { sendEmail } = require('../../utils/mailer');
 const { getReviewerEmails } = require('../../utils/reviewers');
 const multer = require('multer');
@@ -75,6 +76,12 @@ router.get('/manage/org/:id', requireAuth, requireOrgOwner(), async (req, res) =
   // Get org uploads
   const uploads = await db.all('SELECT * FROM org_uploads WHERE org_id = ? ORDER BY created_at DESC', [org.id]);
 
+  // Upcoming tour stops (all of them, past ones too — owners manage the
+  // full list here; public surfaces filter to future+active themselves).
+  await ensureUpcomingTable(db);
+  const upcomingEvents = await db.all(
+    'SELECT * FROM org_upcoming_events WHERE org_id = ? ORDER BY start_date ASC', [org.id]);
+
   // Onboarding checklist state: a fresh org (no data yet) gets an
   // upload-first welcome instead of an empty stats dashboard; partially
   // set-up orgs get a slim checklist until every step is done.
@@ -90,10 +97,10 @@ router.get('/manage/org/:id', requireAuth, requireOrgOwner(), async (req, res) =
   onboarding.complete = (onboarding.hasData || onboarding.hasUpload) && onboarding.hasProfile && onboarding.hasLogo;
 
   // ?tab= deep-links a dashboard tab (navbar "My Events" → past-events)
-  const TABS = ['stats-section', 'marketing-profile', 'upload-section', 'past-events'];
+  const TABS = ['stats-section', 'marketing-profile', 'upload-section', 'past-events', 'upcoming-events'];
   const initialTab = TABS.includes(req.query.tab) ? req.query.tab : null;
 
-  res.render('manage_org', { org, stats, rank, events, uploads, topDancer, topStudio, onboarding, initialTab, user: req.session.user });
+  res.render('manage_org', { org, stats, rank, events, uploads, upcomingEvents, topDancer, topStudio, onboarding, initialTab, user: req.session.user });
 });
 
 
@@ -318,7 +325,47 @@ router.post('/manage/org/:id/branding/icon/delete', requireAuth, requireOrgOwner
 // Navbar shortcuts: org owners reach their dashboard / public page without
 // knowing their org id (mirrors /my-studio for studio owners). ?tab=
 // passes through so "My Events" can deep-link a dashboard tab.
-const ORG_DASH_TABS = ['stats-section', 'marketing-profile', 'upload-section', 'past-events'];
+// Upcoming Events CRUD (dashboard "Upcoming Events" tab). Owner-entered
+// rows are the authoritative source for the public directory + org page;
+// any row saved here becomes source 'owner' so future scrapers keep off it.
+const UPCOMING_TAB = '?tab=upcoming-events';
+
+router.post('/manage/org/:id/upcoming', requireAuth, requireOrgOwner(), async (req, res) => {
+  const db = await openDb();
+  await ensureUpcomingTable(db);
+  const input = cleanUpcomingInput(req.body);
+  if (!input.ok) return res.status(400).send(input.error);
+  const v = input.values;
+  await db.run(`
+    INSERT INTO org_upcoming_events (org_id, name, city, state, venue, start_date, end_date, registration_url, source, last_seen_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'owner', CURRENT_TIMESTAMP)
+  `, [req.org.id, v.name, v.city, v.state, v.venue, v.start_date, v.end_date, v.registration_url]);
+  res.redirect(`/manage/org/${req.org.id}${UPCOMING_TAB}`);
+});
+
+router.post('/manage/org/:id/upcoming/:eventId/update', requireAuth, requireOrgOwner(), async (req, res) => {
+  const db = await openDb();
+  await ensureUpcomingTable(db);
+  const input = cleanUpcomingInput(req.body);
+  if (!input.ok) return res.status(400).send(input.error);
+  const v = input.values;
+  await db.run(`
+    UPDATE org_upcoming_events
+    SET name = ?, city = ?, state = ?, venue = ?, start_date = ?, end_date = ?, registration_url = ?,
+        source = 'owner', updated_at = CURRENT_TIMESTAMP, last_seen_at = CURRENT_TIMESTAMP
+    WHERE id = ? AND org_id = ?
+  `, [v.name, v.city, v.state, v.venue, v.start_date, v.end_date, v.registration_url, req.params.eventId, req.org.id]);
+  res.redirect(`/manage/org/${req.org.id}${UPCOMING_TAB}`);
+});
+
+router.post('/manage/org/:id/upcoming/:eventId/delete', requireAuth, requireOrgOwner(), async (req, res) => {
+  const db = await openDb();
+  await ensureUpcomingTable(db);
+  await db.run('DELETE FROM org_upcoming_events WHERE id = ? AND org_id = ?', [req.params.eventId, req.org.id]);
+  res.redirect(`/manage/org/${req.org.id}${UPCOMING_TAB}`);
+});
+
+const ORG_DASH_TABS = ['stats-section', 'marketing-profile', 'upload-section', 'past-events', 'upcoming-events'];
 
 router.get('/my-org', requireAuth, async (req, res) => {
   const db = await openDb();

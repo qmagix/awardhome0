@@ -7,6 +7,7 @@ const { formatEventTitle } = require('../../utils/format');
 const { unsubscribeToken } = require('../../utils/invites');
 const { resolveCardDesign } = require('../../utils/cardDesign');
 const { flagOn } = require('../../utils/featureFlags');
+const { ensureUpcomingTable, upcomingForOrg } = require('../../utils/upcoming');
 const { REACTION_TYPES, readReactorKey, ensureReactorKey, toggleReaction, countsForAwards, myReactions } = require('../../utils/reactions');
 const rateLimit = require('express-rate-limit');
 const { BASE_URL } = require('../../config');
@@ -384,6 +385,74 @@ router.get('/dance/leaderboard/:board', async (req, res) => {
 
 // Public organization showcase: branding + stats + event history. Per-event
 // award detail stays admin-only (the event pages keep their gate).
+// Upcoming Events Directory ("Plan Your Season"): every organizer's future
+// tour stops, filterable by state / month / competition. Studios use this
+// to plan their season — the forward-looking counterpart to the archive.
+// DELIBERATE: rows show org names as text, not /dance/org links, matching
+// the homepage-card rule (org pages stay low-profile until orgs partner).
+const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'];
+
+router.get('/dance/events', async (req, res) => {
+  const db = await openDb();
+  await ensureUpcomingTable(db);
+
+  const state = /^[A-Za-z]{2}$/.test(req.query.state || '') ? req.query.state.toUpperCase() : '';
+  const month = /^\d{4}-\d{2}$/.test(req.query.month || '') ? req.query.month : '';
+  const orgId = /^\d+$/.test(req.query.org || '') ? Number(req.query.org) : 0;
+
+  const where = [`ue.status = 'active'`,
+    `COALESCE(ue.end_date, ue.start_date) >= date('now')`,
+    `COALESCE(o.visibility, 'public') = 'public'`];
+  const params = [];
+  if (state) { where.push('ue.state = ?'); params.push(state); }
+  if (month) { where.push('substr(ue.start_date, 1, 7) = ?'); params.push(month); }
+  if (orgId) { where.push('ue.org_id = ?'); params.push(orgId); }
+
+  const rows = await db.all(`
+    SELECT ue.*, o.name AS org_name, o.website AS org_website
+    FROM org_upcoming_events ue
+    JOIN organizations o ON o.id = ue.org_id
+    WHERE ${where.join(' AND ')}
+    ORDER BY ue.start_date ASC, o.name ASC
+  `, params);
+
+  // Filter options always come from the full future set, so narrowing one
+  // filter never empties the other dropdowns.
+  const optionRows = await db.all(`
+    SELECT ue.state, substr(ue.start_date, 1, 7) AS month, ue.org_id, o.name AS org_name
+    FROM org_upcoming_events ue
+    JOIN organizations o ON o.id = ue.org_id
+    WHERE ue.status = 'active'
+      AND COALESCE(ue.end_date, ue.start_date) >= date('now')
+      AND COALESCE(o.visibility, 'public') = 'public'
+  `);
+  const monthLabel = (m) => `${MONTH_NAMES[Number(m.slice(5, 7)) - 1]} ${m.slice(0, 4)}`;
+  const states = [...new Set(optionRows.map(r => r.state).filter(Boolean))].sort();
+  const months = [...new Set(optionRows.map(r => r.month))].sort()
+    .map(m => ({ value: m, label: monthLabel(m) }));
+  const orgOptions = [...new Map(optionRows.map(r => [r.org_id, r.org_name])).entries()]
+    .map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
+
+  // Group the result rows by month for display.
+  const groups = [];
+  for (const row of rows) {
+    const m = row.start_date.slice(0, 7);
+    if (!groups.length || groups[groups.length - 1].month !== m) {
+      groups.push({ month: m, label: monthLabel(m), events: [] });
+    }
+    groups[groups.length - 1].events.push(row);
+  }
+
+  res.render('upcoming_events', {
+    groups, states, months, orgOptions,
+    filters: { state, month, org: orgId },
+    totalCount: rows.length,
+    pageTitle: 'Upcoming Dance Competitions',
+    pageDesc: 'Plan your competition season: upcoming dance competition tour dates by city, state, and organizer.'
+  });
+});
+
 router.get('/dance/org/:slug', async (req, res) => {
   const db = await openDb();
   const org = await db.get(`SELECT * FROM organizations WHERE slug = ?`, [req.params.slug]);
@@ -470,10 +539,13 @@ router.get('/dance/org/:slug', async (req, res) => {
       ORDER BY award_count DESC
       LIMIT 6
     `, [org.id]);
+    await ensureUpcomingTable(db);
+    const upcomingEvents = await upcomingForOrg(db, org.id);
     raftersExtras = {
       reach: { dancers: (dancersRow && dancersRow.count) || 0, titles: (titlesRow && titlesRow.count) || 0 },
       yearlySeries,
-      topStudios
+      topStudios,
+      upcomingEvents
     };
   }
 
