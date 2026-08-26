@@ -553,6 +553,7 @@ async function initDb() {
   try { await db.exec("ALTER TABLE organizations ADD COLUMN visibility_note TEXT"); } catch(e) {}
   try { await db.exec("ALTER TABLE org_upcoming_events ADD COLUMN lat REAL"); } catch(e) {}
   try { await db.exec("ALTER TABLE organizations ADD COLUMN is_sponsor INTEGER DEFAULT 0"); } catch(e) {}
+  try { await db.exec("ALTER TABLE org_upcoming_events ADD COLUMN gold TEXT"); } catch(e) {}
   try { await db.exec("ALTER TABLE org_upcoming_events ADD COLUMN lng REAL"); } catch(e) {}
   try { await db.exec("ALTER TABLE studios ADD COLUMN auto_featured_rank INTEGER"); } catch(e) {}
   try { await db.exec("ALTER TABLE studios ADD COLUMN auto_featured_since DATETIME"); } catch(e) {}

@@ -47,6 +47,7 @@ const CHECKS = [
   ['GET', '/dance/events.ics?saved=1', [401], 'anonymous shortlist export blocked'],
   ['POST', '/api/upcoming/1/save', [403], 'anonymous shortlist toggle blocked (CSRF)'],
   ['POST', '/manage/org/1/upcoming', [403], 'anonymous upcoming-event add blocked (CSRF)'],
+  ['POST', '/manage/org/1/upcoming/1/gold', [403], 'anonymous gold placement blocked (CSRF)'],
   ['POST', '/manage/org/1/upcoming/1/delete', [403], 'anonymous upcoming-event delete blocked (CSRF)'],
   ['GET', '/manage/dancer/1/card', [302], 'anonymous dancer card-extras redirected to login'],
   ['GET', '/my-dancers', [302], 'anonymous my-dancers redirected to login'],

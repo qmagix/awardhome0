@@ -368,6 +368,13 @@
                 — where studios and parents plan their competition season, sorted by distance from them, with
                 shortlists and calendar export. A complete, current schedule is what turns browsers into
                 bookings — dates you enter here are authoritative and always override anything our team imported.</p>
+            <p class="text-muted" style="margin-top: 0.5rem;">
+                <span style="color: var(--accent-gold);">✦ Gold Register buttons:</span> your first one is
+                <strong>free</strong> — place it on any event below (you can move it anytime) and that event's
+                Register button appears in featured gold in the directory. Additional gold buttons are available
+                per event starting <strong>October 15, 2026</strong> — email
+                <a href="mailto:hello@awardhome.com?subject=Gold Register buttons" style="color: var(--accent-gold);">hello@awardhome.com</a>.
+                Placement changes emphasis only; listing order is never sponsored.</p>
         </div>
         <div class="card-body">
             <form id="upcomingForm" action="/manage/org/<%= org.id %>/upcoming" method="POST"
@@ -414,7 +421,7 @@
             <% if (upcomingEvents && upcomingEvents.length > 0) { %>
                 <table class="data-table" style="width: 100%;">
                     <thead>
-                        <tr><th>Dates</th><th>Event</th><th>Location</th><th>Register</th><th style="width: 130px;">Actions</th></tr>
+                        <tr><th>Dates</th><th>Event</th><th>Location</th><th>Register</th><th>Gold</th><th style="width: 130px;">Actions</th></tr>
                     </thead>
                     <tbody>
                         <% upcomingEvents.forEach((ev) => { %>
@@ -425,6 +432,33 @@
                                 <td><%= ev.name %><% if (ev.venue) { %><br><small class="text-muted"><%= ev.venue %></small><% } %></td>
                                 <td><%= [ev.city, ev.state].filter(Boolean).join(', ') %></td>
                                 <td><% if (ev.registration_url) { %><a href="<%= ev.registration_url %>" target="_blank" rel="noopener" style="color: var(--accent-gold);">Link</a><% } %></td>
+                                <td style="white-space: nowrap;">
+                                    <% if (ev.gold === 'free') { %>
+                                        <span style="color: var(--accent-gold); font-size: 0.8rem;" title="Your free gold button — move it by placing it on another event">✦ Free gold</span>
+                                    <% } else if (ev.gold === 'paid') { %>
+                                        <span style="color: var(--accent-gold); font-size: 0.8rem;">✦ Gold</span>
+                                    <% } else if (!past) { %>
+                                        <form action="/manage/org/<%= org.id %>/upcoming/<%= ev.id %>/gold" method="POST" style="display: inline;">
+                                            <input type="hidden" name="action" value="free">
+                                            <button type="submit" class="btn btn-outline" style="padding: 0.2rem 0.45rem; font-size: 0.72rem;"
+                                                title="Place (or move) your one free gold button on this event">Use free gold</button>
+                                        </form>
+                                    <% } %>
+                                    <% if (user && ['admin', 'superadmin'].includes(user.role)) { %>
+                                        <% if (ev.gold !== 'paid') { %>
+                                        <form action="/manage/org/<%= org.id %>/upcoming/<%= ev.id %>/gold" method="POST" style="display: inline;">
+                                            <input type="hidden" name="action" value="paid">
+                                            <button type="submit" class="btn btn-outline" style="padding: 0.2rem 0.45rem; font-size: 0.72rem;" title="Admin: mark as purchased gold">$→✦</button>
+                                        </form>
+                                        <% } %>
+                                        <% if (ev.gold) { %>
+                                        <form action="/manage/org/<%= org.id %>/upcoming/<%= ev.id %>/gold" method="POST" style="display: inline;">
+                                            <input type="hidden" name="action" value="clear">
+                                            <button type="submit" class="btn btn-outline" style="padding: 0.2rem 0.45rem; font-size: 0.72rem;" title="Admin: remove gold">✕</button>
+                                        </form>
+                                        <% } %>
+                                    <% } %>
+                                </td>
                                 <td style="white-space: nowrap;">
                                     <button type="button" class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" onclick="editUpcoming(this)">Edit</button>
                                     <form action="/manage/org/<%= org.id %>/upcoming/<%= ev.id %>/delete" method="POST" style="display: inline;"

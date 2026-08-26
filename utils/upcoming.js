@@ -40,6 +40,7 @@ async function ensureUpcomingTable(db) {
   await db.exec(UPCOMING_DDL);
   try { await db.exec('ALTER TABLE org_upcoming_events ADD COLUMN lat REAL'); } catch (e) { }
   try { await db.exec('ALTER TABLE org_upcoming_events ADD COLUMN lng REAL'); } catch (e) { }
+  try { await db.exec("ALTER TABLE org_upcoming_events ADD COLUMN gold TEXT"); } catch (e) { }
 }
 
 // Great-circle distance in miles (haversine) — near-me sorting.

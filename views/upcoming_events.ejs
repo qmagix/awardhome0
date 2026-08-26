@@ -125,8 +125,9 @@
                 <a class="ue-star" href="/login?redirect=<%= encodeURIComponent('/dance/events') %>" title="Sign in to save events to a shortlist">&#9734;</a>
               <% } %>
               <% if (ev.registration_url) { %>
-                <a class="ue-reg <%= ev.org_sponsored ? '' : 'ue-reg-ghost' %>" href="<%= ev.registration_url %>" target="_blank" rel="noopener nofollow"
-                   <%= ev.org_sponsored ? 'title="Featured partner placement"' : '' %>>Register</a>
+                <% const isGold = ev.org_sponsored || ev.gold; %>
+                <a class="ue-reg <%= isGold ? '' : 'ue-reg-ghost' %>" href="<%= ev.registration_url %>" target="_blank" rel="noopener nofollow"
+                   <%= isGold ? 'title="Featured partner placement"' : '' %>>Register</a>
               <% } else if (ev.org_website) { %>
                 <a class="ue-reg ue-reg-ghost" href="<%= ev.org_website %>" target="_blank" rel="noopener nofollow">Official Site</a>
               <% } %>

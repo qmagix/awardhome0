@@ -365,6 +365,32 @@ router.post('/manage/org/:id/upcoming/:eventId/delete', requireAuth, requireOrgO
   res.redirect(`/manage/org/${req.org.id}${UPCOMING_TAB}`);
 });
 
+// Gold Register buttons (revenue model): every organizer gets ONE free
+// gold button to place on an event of their choice (moving it is fine);
+// additional buttons are per-event purchases (opens mid-Oct 2026 —
+// handled off-platform for now, superadmin marks 'paid').
+router.post('/manage/org/:id/upcoming/:eventId/gold', requireAuth, requireOrgOwner(), async (req, res) => {
+  const db = await openDb();
+  await ensureUpcomingTable(db);
+  const ev = await db.get('SELECT * FROM org_upcoming_events WHERE id = ? AND org_id = ?', [req.params.eventId, req.org.id]);
+  if (!ev) return res.status(404).send('Event not found');
+  const action = String(req.body.action || '');
+  const isAdmin = ['admin', 'superadmin'].includes(req.session.user.role);
+
+  if (action === 'free') {
+    // one free per organization — placing it elsewhere moves it
+    await db.run(`UPDATE org_upcoming_events SET gold = NULL WHERE org_id = ? AND gold = 'free'`, [req.org.id]);
+    await db.run(`UPDATE org_upcoming_events SET gold = 'free', updated_at = CURRENT_TIMESTAMP WHERE id = ?`, [ev.id]);
+  } else if (action === 'paid' && isAdmin) {
+    await db.run(`UPDATE org_upcoming_events SET gold = 'paid', updated_at = CURRENT_TIMESTAMP WHERE id = ?`, [ev.id]);
+  } else if (action === 'clear' && (isAdmin || ev.gold === 'free')) {
+    await db.run(`UPDATE org_upcoming_events SET gold = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?`, [ev.id]);
+  } else {
+    return res.status(400).send('Bad action');
+  }
+  res.redirect(`/manage/org/${req.org.id}${UPCOMING_TAB}`);
+});
+
 const ORG_DASH_TABS = ['stats-section', 'marketing-profile', 'upload-section', 'past-events', 'upcoming-events'];
 
 router.get('/my-org', requireAuth, async (req, res) => {
