@@ -49,7 +49,7 @@
                role="button" tabindex="0">
             <h3><%= org.name %></h3>
             <div class="v2-cc-meta">
-              <b><%= org.event_count || 0 %></b> events<% if (org.event_count > 0) { %> &middot; since <%= org.data_since || 2022 %><% } %>
+              <b><%= org.event_count || 0 %></b> events<% if (org.event_count > 0) { %> &middot; since <%= org.data_since %><% } %>
             </div>
           </div>
         <% }); %>

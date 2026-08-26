@@ -20,7 +20,7 @@
         <div style="margin-bottom: 1.5rem; color: var(--text-muted); font-size: 0.9rem;">
           <span class="badge" style="background: rgba(255, 255, 255, 0.1);"><%= org.event_count || 0 %> Events</span>
           <% if (org.event_count > 0) { %>
-            <span style="font-size: 0.8rem;">(Since <%= org.data_since || 2022 %>)</span>
+            <span style="font-size: 0.8rem;">(Since <%= org.data_since %>)</span>
           <% } %>
         </div>
         <span class="btn btn-outline">View Events &rarr;</span>

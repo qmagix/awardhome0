@@ -274,7 +274,9 @@ async function loadHomepageData() {
   `);
 
   const orgs = await db.all(`
-    SELECT o.id, o.name, o.slug, o.data_since, COUNT(e.id) as event_count
+    SELECT o.id, o.name, o.slug,
+           COALESCE(o.data_since, MIN(CAST(e.year AS INTEGER))) AS data_since,
+           COUNT(e.id) as event_count
     FROM organizations o
     LEFT JOIN events e ON o.id = e.org_id
     WHERE COALESCE(o.visibility, 'public') = 'public'
