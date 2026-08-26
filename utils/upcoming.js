@@ -27,10 +27,27 @@ const UPCOMING_DDL = `
   );
   CREATE INDEX IF NOT EXISTS idx_org_upcoming_events_org_date
     ON org_upcoming_events(org_id, start_date);
+  CREATE TABLE IF NOT EXISTS event_shortlists (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    upcoming_event_id INTEGER NOT NULL REFERENCES org_upcoming_events(id),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, upcoming_event_id)
+  );
 `;
 
 async function ensureUpcomingTable(db) {
   await db.exec(UPCOMING_DDL);
+  try { await db.exec('ALTER TABLE org_upcoming_events ADD COLUMN lat REAL'); } catch (e) { }
+  try { await db.exec('ALTER TABLE org_upcoming_events ADD COLUMN lng REAL'); } catch (e) { }
+}
+
+// Great-circle distance in miles (haversine) — near-me sorting.
+function distanceMiles(lat1, lng1, lat2, lng2) {
+  const rad = (d) => d * Math.PI / 180;
+  const a = Math.sin(rad(lat2 - lat1) / 2) ** 2 +
+    Math.cos(rad(lat1)) * Math.cos(rad(lat2)) * Math.sin(rad(lng2 - lng1) / 2) ** 2;
+  return 3959 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -66,4 +83,4 @@ async function upcomingForOrg(db, orgId) {
   `, [orgId]);
 }
 
-module.exports = { ensureUpcomingTable, cleanUpcomingInput, upcomingForOrg };
+module.exports = { ensureUpcomingTable, cleanUpcomingInput, upcomingForOrg, distanceMiles };

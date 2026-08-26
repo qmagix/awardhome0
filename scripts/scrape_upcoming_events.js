@@ -65,6 +65,8 @@ const STATES = {
   'west virginia': 'WV', wisconsin: 'WI', wyoming: 'WY', 'district of columbia': 'DC',
 };
 
+const STATES_BY_CODE = new Set(Object.values(STATES).concat(['ON']));
+
 const iso = (y, m, d) => `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 
 // "January 29-31, 2027" | "June 28 - July 4, 2027" | "February 15, 2027"
@@ -105,7 +107,10 @@ function parsePlace(text) {
     const last = parts[parts.length - 1];
     if (/^(us|usa|canada)$/i.test(last)) { parts.pop(); continue; }
     if (!state && STATES[last.toLowerCase()]) { state = STATES[last.toLowerCase()]; parts.pop(); continue; }
-    if (!state && /^[A-Z]{2}$/.test(last)) { state = last; parts.pop(); continue; }
+    // a state code possibly trailed by org display junk: "OH (Newark)",
+    // "MI - 2", "VA - The Battlegrounds"
+    const codeJunk = last.match(/^([A-Za-z]{2})(\s*[-–]\s*.+|\s*\(.*\))?$/);
+    if (!state && codeJunk && (STATES_BY_CODE.has(codeJunk[1].toUpperCase()))) { state = codeJunk[1].toUpperCase(); parts.pop(); continue; }
     if (state && /^[A-Z]{2}(\s*-\s*\d+)?(\s*\(.*\))?$/i.test(last)) { parts.pop(); continue; }
     break;
   }
@@ -158,7 +163,9 @@ function parseKarGrid(src, html) {
     const { city, state } = parsePlace(cityText);
     if (!city) return;
     const venue = $el.find('.event-location').first().text().replace(/\s+/g, ' ').replace(/^\s*\/\s*/, '').trim();
-    const ev = { start, end, city, state, venue, regUrl: href0 ? new URL(href0, src.base).href : null, sourceUrl: src.url };
+    const lat = Number($el.attr('data-lat')) || null;
+    const lng = Number($el.attr('data-lng')) || null;
+    const ev = { start, end, city, state, venue, lat, lng, regUrl: href0 ? new URL(href0, src.base).href : null, sourceUrl: src.url };
     ev.name = (natGrid || spanDays(ev) >= 4)
       ? `${src.nationalsLabel || 'Nationals'} — ${city}`
       : `Regional — ${city}`;
@@ -242,9 +249,9 @@ async function upsertScraped(db, orgId, ev, counts, touched) {
     counts.inserted++;
     if (APPLY) {
       const ins = await db.run(`
-        INSERT INTO org_upcoming_events (org_id, name, city, state, venue, start_date, end_date, registration_url, source, source_url, status, last_seen_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'scraped', ?, 'active', CURRENT_TIMESTAMP)
-      `, [orgId, ev.name, ev.city, ev.state || null, ev.venue || null, ev.start, ev.end, ev.regUrl, ev.sourceUrl]);
+        INSERT INTO org_upcoming_events (org_id, name, city, state, venue, start_date, end_date, registration_url, source, source_url, status, lat, lng, last_seen_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'scraped', ?, 'active', ?, ?, CURRENT_TIMESTAMP)
+      `, [orgId, ev.name, ev.city, ev.state || null, ev.venue || null, ev.start, ev.end, ev.regUrl, ev.sourceUrl, ev.lat || null, ev.lng || null]);
       touched.add(ins.lastID);
     }
     return;
@@ -265,10 +272,11 @@ async function upsertScraped(db, orgId, ev, counts, touched) {
         UPDATE org_upcoming_events
         SET name = ?, state = ?, venue = ?, end_date = ?,
             registration_url = COALESCE(?, registration_url), source_url = ?,
+            lat = COALESCE(?, lat), lng = COALESCE(?, lng),
             source = 'scraped', status = 'active',
             updated_at = CURRENT_TIMESTAMP, last_seen_at = CURRENT_TIMESTAMP
         WHERE id = ?
-      `, [ev.name, ev.state || null, ev.venue || null, ev.end, ev.regUrl, ev.sourceUrl, row.id]);
+      `, [ev.name, ev.state || null, ev.venue || null, ev.end, ev.regUrl, ev.sourceUrl, ev.lat || null, ev.lng || null, row.id]);
     }
   }
 }

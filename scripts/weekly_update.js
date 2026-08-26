@@ -191,6 +191,13 @@ async function runPipeline(opts) {
       { cwd: __dirname, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
     console.log((up.stdout || '').trim().split('\n').map(l => `      ${l}`).join('\n'));
     if (up.status !== 0) failures.push(`upcoming-events refresh: exit ${up.status} — see log above`);
+
+    // Coordinates for near-me: committed cache resolves almost everything;
+    // --fetch geocodes the few genuinely new cities a season adds.
+    const geo = spawnSync('node', [path.join(__dirname, 'geocode_upcoming.js'), '--fetch', '--apply'],
+      { cwd: __dirname, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
+    console.log(`      ${(geo.stdout || '').trim().split('\n').pop()}`);
+    if (geo.status !== 0) failures.push(`upcoming-events geocode: exit ${geo.status}`);
   }
 
   // ---- PDF downloads (report-only; extraction/import stay manual) ----

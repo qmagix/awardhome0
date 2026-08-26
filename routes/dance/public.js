@@ -7,7 +7,7 @@ const { formatEventTitle } = require('../../utils/format');
 const { unsubscribeToken } = require('../../utils/invites');
 const { resolveCardDesign } = require('../../utils/cardDesign');
 const { flagOn } = require('../../utils/featureFlags');
-const { ensureUpcomingTable, upcomingForOrg } = require('../../utils/upcoming');
+const { ensureUpcomingTable, upcomingForOrg, distanceMiles } = require('../../utils/upcoming');
 const { REACTION_TYPES, readReactorKey, ensureReactorKey, toggleReaction, countsForAwards, myReactions } = require('../../utils/reactions');
 const rateLimit = require('express-rate-limit');
 const { BASE_URL } = require('../../config');
@@ -393,13 +393,24 @@ router.get('/dance/leaderboard/:board', async (req, res) => {
 const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December'];
 
-router.get('/dance/events', async (req, res) => {
-  const db = await openDb();
-  await ensureUpcomingTable(db);
-
+// Parse + load the directory's filtered event set. Shared by the HTML
+// page and the .ics export so a saved calendar always matches the view.
+// "near" is browser-geolocation lat,lng passed as a query param — used
+// for this one request to compute distances, never stored anywhere.
+async function loadUpcomingFiltered(db, req) {
   const state = /^[A-Za-z]{2}$/.test(req.query.state || '') ? req.query.state.toUpperCase() : '';
   const month = /^\d{4}-\d{2}$/.test(req.query.month || '') ? req.query.month : '';
   const orgId = /^\d+$/.test(req.query.org || '') ? Number(req.query.org) : 0;
+  const saved = req.query.saved === '1';
+  const userId = req.session && req.session.user ? req.session.user.id : null;
+  let near = null;
+  const nearMatch = String(req.query.near || '').match(/^(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)$/);
+  if (nearMatch) {
+    const lat = Number(nearMatch[1]), lng = Number(nearMatch[2]);
+    if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) near = { lat, lng };
+  }
+  const RADII = [100, 250, 500];
+  const radius = near && RADII.includes(Number(req.query.radius)) ? Number(req.query.radius) : (near ? 250 : 0);
 
   const where = [`ue.status = 'active'`,
     `COALESCE(ue.end_date, ue.start_date) >= date('now')`,
@@ -408,14 +419,51 @@ router.get('/dance/events', async (req, res) => {
   if (state) { where.push('ue.state = ?'); params.push(state); }
   if (month) { where.push('substr(ue.start_date, 1, 7) = ?'); params.push(month); }
   if (orgId) { where.push('ue.org_id = ?'); params.push(orgId); }
+  if (saved && userId) {
+    where.push('ue.id IN (SELECT upcoming_event_id FROM event_shortlists WHERE user_id = ?)');
+    params.push(userId);
+  }
 
-  const rows = await db.all(`
+  let rows = await db.all(`
     SELECT ue.*, o.name AS org_name, o.website AS org_website
     FROM org_upcoming_events ue
     JOIN organizations o ON o.id = ue.org_id
     WHERE ${where.join(' AND ')}
     ORDER BY ue.start_date ASC, o.name ASC
   `, params);
+
+  if (near) {
+    for (const r of rows) {
+      r.distance = (r.lat != null && r.lng != null)
+        ? Math.round(distanceMiles(near.lat, near.lng, r.lat, r.lng)) : null;
+    }
+    // radius keeps un-geocoded rows visible (distance simply unknown)
+    rows = rows.filter(r => r.distance === null || r.distance <= radius);
+    // month grouping stays; within a month, closest first
+    rows.sort((a, b) => a.start_date.slice(0, 7).localeCompare(b.start_date.slice(0, 7))
+      || (a.distance ?? 1e9) - (b.distance ?? 1e9));
+  }
+
+  if (userId) {
+    const savedRows = await db.all('SELECT upcoming_event_id FROM event_shortlists WHERE user_id = ?', [userId]);
+    const savedSet = new Set(savedRows.map(r => r.upcoming_event_id));
+    for (const r of rows) r.saved = savedSet.has(r.id);
+  }
+
+  return { rows, filters: { state, month, org: orgId, saved, near, radius } };
+}
+
+router.get('/dance/events', async (req, res) => {
+  const db = await openDb();
+  await ensureUpcomingTable(db);
+
+  // the shortlist filter is per-account — send signed-out visitors to login
+  if (req.query.saved === '1' && !(req.session && req.session.user)) {
+    return res.redirect('/login?redirect=' + encodeURIComponent('/dance/events?saved=1'));
+  }
+
+  const { rows, filters } = await loadUpcomingFiltered(db, req);
+  const { state, month, org: orgId } = filters;
 
   // Filter options always come from the full future set, so narrowing one
   // filter never empties the other dropdowns.
@@ -444,15 +492,84 @@ router.get('/dance/events', async (req, res) => {
     groups[groups.length - 1].events.push(row);
   }
 
+  const userId = req.session && req.session.user ? req.session.user.id : null;
+  const shortlistCount = userId
+    ? (await db.get('SELECT COUNT(*) AS n FROM event_shortlists WHERE user_id = ?', [userId])).n
+    : 0;
+
   const lastCheckedRow = await db.get('SELECT MAX(last_seen_at) AS t FROM org_upcoming_events');
   res.render('upcoming_events', {
     groups, states, months, orgOptions,
-    filters: { state, month, org: orgId },
+    filters,
+    isLoggedIn: !!userId,
+    shortlistCount,
     totalCount: rows.length,
     lastChecked: (lastCheckedRow && lastCheckedRow.t) ? String(lastCheckedRow.t).slice(0, 10) : null,
     pageTitle: 'Upcoming Dance Competitions',
     pageDesc: 'Plan your competition season: upcoming dance competition tour dates by city, state, and organizer.'
   });
+});
+
+// Shortlist toggle — any signed-in account (studio owner, parent, dancer).
+router.post('/api/upcoming/:id/save', async (req, res) => {
+  if (!(req.session && req.session.user)) return res.status(401).json({ error: 'Sign in to save events' });
+  if (!/^\d+$/.test(req.params.id)) return res.status(400).json({ error: 'Bad id' });
+  const db = await openDb();
+  await ensureUpcomingTable(db);
+  const ev = await db.get(`SELECT id FROM org_upcoming_events WHERE id = ? AND status = 'active'`, [req.params.id]);
+  if (!ev) return res.status(404).json({ error: 'Event not found' });
+  const userId = req.session.user.id;
+  const existing = await db.get('SELECT id FROM event_shortlists WHERE user_id = ? AND upcoming_event_id = ?', [userId, ev.id]);
+  if (existing) await db.run('DELETE FROM event_shortlists WHERE id = ?', [existing.id]);
+  else await db.run('INSERT INTO event_shortlists (user_id, upcoming_event_id) VALUES (?, ?)', [userId, ev.id]);
+  const count = (await db.get('SELECT COUNT(*) AS n FROM event_shortlists WHERE user_id = ?', [userId])).n;
+  res.json({ saved: !existing, count });
+});
+
+// Calendar export: the current filtered view (or the shortlist with
+// ?saved=1) as an iCalendar file — imports into Google/Apple/Outlook.
+router.get('/dance/events.ics', async (req, res) => {
+  if (req.query.saved === '1' && !(req.session && req.session.user)) {
+    return res.status(401).send('Sign in to export your shortlist');
+  }
+  const db = await openDb();
+  await ensureUpcomingTable(db);
+  const { rows } = await loadUpcomingFiltered(db, req);
+
+  const esc = (s) => String(s || '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+  const dateNum = (d) => d.replace(/-/g, '');
+  // DTEND is exclusive in iCalendar: all-day events end the day after
+  const nextDay = (d) => {
+    const t = new Date(`${d}T12:00:00Z`);
+    t.setUTCDate(t.getUTCDate() + 1);
+    return t.toISOString().slice(0, 10).replace(/-/g, '');
+  };
+  const stamp = new Date().toISOString().replace(/[-:]/g, '').slice(0, 15) + 'Z';
+
+  const lines = [
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//AwardHome//Upcoming Events//EN',
+    'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'X-WR-CALNAME:Dance Competitions — AwardHome',
+  ];
+  for (const ev of rows) {
+    const place = [[ev.city, ev.state].filter(Boolean).join(', '), ev.venue].filter(Boolean).join(' — ');
+    lines.push(
+      'BEGIN:VEVENT',
+      `UID:upcoming-${ev.id}@awardhome.com`,
+      `DTSTAMP:${stamp}`,
+      `DTSTART;VALUE=DATE:${dateNum(ev.start_date)}`,
+      `DTEND;VALUE=DATE:${nextDay(ev.end_date || ev.start_date)}`,
+      `SUMMARY:${esc(`${ev.org_name}: ${ev.name}`)}`,
+      place ? `LOCATION:${esc(place)}` : null,
+      `DESCRIPTION:${esc('Dates from the organizer\'s published schedule — confirm with the organizer before booking travel.' + (ev.registration_url ? ` Register: ${ev.registration_url}` : ''))}`,
+      ev.registration_url ? `URL:${esc(ev.registration_url)}` : null,
+      'END:VEVENT',
+    );
+  }
+  lines.push('END:VCALENDAR');
+
+  res.set('Content-Type', 'text/calendar; charset=utf-8');
+  res.set('Content-Disposition', 'attachment; filename="awardhome-events.ics"');
+  res.send(lines.filter(Boolean).join('\r\n') + '\r\n');
 });
 
 router.get('/dance/org/:slug', async (req, res) => {

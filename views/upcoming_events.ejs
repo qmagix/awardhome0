@@ -16,6 +16,14 @@
   .v2 .ue-reg { font-family: var(--v2-display); font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--v2-plate-text); background: linear-gradient(160deg, var(--v2-gold-bright), var(--v2-gold-deep)); border-radius: 6px; padding: 0.5rem 0.9rem; text-decoration: none; white-space: nowrap; }
   .v2 .ue-reg.ue-reg-ghost { background: none; color: var(--v2-ink-mut); border: 1px solid var(--v2-hairline-strong); }
   .v2 .ue-note { color: var(--v2-ink-faint); font-size: 0.85rem; text-align: center; margin: 2.5rem auto 0; max-width: 44rem; line-height: 1.6; }
+  .v2 .ue-actions { display: flex; align-items: center; gap: 0.6rem; }
+  .v2 .ue-star { background: none; border: 1px solid var(--v2-hairline-strong); border-radius: 6px; color: var(--v2-ink-mut); font-size: 1rem; line-height: 1; padding: 0.45rem 0.6rem; cursor: pointer; }
+  .v2 .ue-star.ue-starred { color: var(--v2-gold-bright); border-color: var(--v2-gold-deep); }
+  .v2 .ue-dist { font-family: var(--v2-display); font-size: 0.62rem; letter-spacing: 0.12em; color: var(--v2-champagne); border: 1px solid var(--v2-hairline); border-radius: 999px; padding: 0.2rem 0.55rem; white-space: nowrap; }
+  .v2 .ue-toolbtn { font-family: var(--v2-display); font-size: 0.66rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--v2-ink); background: none; border: 1px solid var(--v2-hairline-strong); border-radius: 6px; padding: 0.55rem 0.9rem; cursor: pointer; text-decoration: none; display: inline-block; }
+  .v2 .ue-toolbtn.ue-on { color: var(--v2-plate-text); background: linear-gradient(160deg, var(--v2-gold-bright), var(--v2-gold-deep)); border-color: transparent; }
+  .v2 .ue-toolbar { display: flex; flex-wrap: wrap; gap: 0.6rem; justify-content: center; margin-top: 0.9rem; align-items: center; }
+  .v2 .ue-geo-note { color: var(--v2-ink-faint); font-size: 0.78rem; width: 100%; text-align: center; }
   @media (max-width: 640px) { .v2 .ue-row { grid-template-columns: 1fr; gap: 0.4rem; } }
 </style>
 
@@ -25,7 +33,10 @@
     <h1>Upcoming Events</h1>
     <p class="v2-bio">Every competition's published tour dates, in one place &mdash; filter by state, month, or circuit and map out the season without the spreadsheet.</p>
 
-    <form class="ue-filters" method="GET" action="/dance/events">
+    <form class="ue-filters" method="GET" action="/dance/events" id="ue-filter-form">
+      <% if (filters.near) { %><input type="hidden" name="near" value="<%= filters.near.lat %>,<%= filters.near.lng %>"><% } %>
+      <% if (filters.near && filters.radius) { %><input type="hidden" name="radius" value="<%= filters.radius %>" id="ue-radius-hidden"><% } %>
+      <% if (filters.saved) { %><input type="hidden" name="saved" value="1"><% } %>
       <div>
         <label for="ue-state">State</label>
         <select id="ue-state" name="state" onchange="this.form.submit()">
@@ -53,17 +64,37 @@
           <% }); %>
         </select>
       </div>
-      <% if (filters.state || filters.month || filters.org) { %>
+      <% if (filters.state || filters.month || filters.org || filters.near || filters.saved) { %>
         <a class="ue-clear" href="/dance/events">Clear filters</a>
       <% } %>
     </form>
+
+    <div class="ue-toolbar">
+      <% if (filters.near) { %>
+        <span class="ue-toolbtn ue-on">&#128205; Near me</span>
+        <select id="ue-radius" class="ue-toolbtn" style="cursor: pointer;">
+          <% [100, 250, 500].forEach(function(r) { %>
+            <option value="<%= r %>" <%= filters.radius === r ? 'selected' : '' %>>within <%= r %> mi</option>
+          <% }); %>
+        </select>
+      <% } else { %>
+        <button type="button" class="ue-toolbtn" id="ue-nearme">&#128205; Near me</button>
+      <% } %>
+      <% if (isLoggedIn) { %>
+        <a class="ue-toolbtn <%= filters.saved ? 'ue-on' : '' %>" href="/dance/events<%= filters.saved ? '' : '?saved=1' %>">&#9733; My Shortlist<%= shortlistCount ? ' (' + shortlistCount + ')' : '' %></a>
+      <% } %>
+      <a class="ue-toolbtn" id="ue-ics" href="/dance/events.ics">&#8681; Add to Calendar (.ics)</a>
+      <span class="ue-geo-note" id="ue-geo-note" style="display: none;"></span>
+    </div>
   </section>
 
   <main class="v2-wrap">
     <% if (groups.length === 0) { %>
       <p class="ue-note" style="margin-top: 3rem;">
-        <% if (filters.state || filters.month || filters.org) { %>
-          No upcoming events match these filters &mdash; try <a href="/dance/events" style="color: var(--v2-gold);">clearing them</a>.
+        <% if (filters.saved) { %>
+          Nothing on your shortlist yet &mdash; browse the <a href="/dance/events" style="color: var(--v2-gold);">full directory</a> and tap the &#9734; on events you're considering.
+        <% } else if (filters.state || filters.month || filters.org || filters.near) { %>
+          No upcoming events match these filters &mdash; try <a href="/dance/events" style="color: var(--v2-gold);">clearing them</a><% if (filters.near) { %> or widening the radius<% } %>.
         <% } else { %>
           Tour dates for the coming season are being gathered now &mdash; check back soon.
         <% } %>
@@ -83,7 +114,16 @@
                 <div class="ue-place"><%= [ [ev.city, ev.state].filter(Boolean).join(', '), ev.venue ].filter(Boolean).join(' — ') %></div>
               <% } %>
             </div>
-            <div>
+            <div class="ue-actions">
+              <% if (typeof ev.distance === 'number') { %>
+                <span class="ue-dist">&asymp; <%= ev.distance %> mi</span>
+              <% } %>
+              <% if (isLoggedIn) { %>
+                <button type="button" class="ue-star <%= ev.saved ? 'ue-starred' : '' %>" data-event-id="<%= ev.id %>"
+                        title="<%= ev.saved ? 'Remove from shortlist' : 'Save to shortlist' %>" aria-pressed="<%= ev.saved ? 'true' : 'false' %>"><%= ev.saved ? '\u2605' : '\u2606' %></button>
+              <% } else { %>
+                <a class="ue-star" href="/login?redirect=<%= encodeURIComponent('/dance/events') %>" title="Sign in to save events to a shortlist">&#9734;</a>
+              <% } %>
               <% if (ev.registration_url) { %>
                 <a class="ue-reg" href="<%= ev.registration_url %>" target="_blank" rel="noopener nofollow">Register</a>
               <% } else if (ev.org_website) { %>
@@ -102,5 +142,67 @@
     <% } %>
   </main>
 </div>
+
+<script>
+(function () {
+  // "Near me": browser geolocation, used once as a query param — never stored.
+  var nearBtn = document.getElementById('ue-nearme');
+  var note = document.getElementById('ue-geo-note');
+  if (nearBtn) {
+    nearBtn.addEventListener('click', function () {
+      if (!navigator.geolocation) { note.textContent = 'Location is not available in this browser — use the State filter instead.'; note.style.display = ''; return; }
+      nearBtn.disabled = true; nearBtn.textContent = 'Locating…';
+      navigator.geolocation.getCurrentPosition(function (pos) {
+        var u = new URL(location.href);
+        u.searchParams.set('near', pos.coords.latitude.toFixed(3) + ',' + pos.coords.longitude.toFixed(3));
+        location.href = u.href;
+      }, function () {
+        nearBtn.disabled = false; nearBtn.innerHTML = '&#128205; Near me';
+        note.textContent = 'Location was declined — no problem, the State filter works too.';
+        note.style.display = '';
+      }, { timeout: 10000, maximumAge: 300000 });
+    });
+  }
+
+  var radiusSel = document.getElementById('ue-radius');
+  if (radiusSel) {
+    radiusSel.addEventListener('change', function () {
+      var u = new URL(location.href);
+      u.searchParams.set('radius', radiusSel.value);
+      location.href = u.href;
+    });
+  }
+
+  // calendar export mirrors the current filters
+  var ics = document.getElementById('ue-ics');
+  if (ics) {
+    var qs = location.search;
+    if (qs) ics.href = '/dance/events.ics' + qs;
+  }
+
+  // shortlist stars (csrf.js adds the X-CSRF-Token header to fetch)
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('button.ue-star');
+    if (!btn) return;
+    var id = btn.getAttribute('data-event-id');
+    btn.disabled = true;
+    fetch('/api/upcoming/' + id + '/save', { method: 'POST', headers: { 'Accept': 'application/json' } })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        btn.disabled = false;
+        if (typeof data.saved !== 'boolean') return;
+        btn.classList.toggle('ue-starred', data.saved);
+        btn.textContent = data.saved ? '\u2605' : '\u2606';
+        btn.title = data.saved ? 'Remove from shortlist' : 'Save to shortlist';
+        btn.setAttribute('aria-pressed', data.saved ? 'true' : 'false');
+        var chip = document.querySelector('a[href$="saved=1"], a.ue-toolbtn.ue-on[href="/dance/events"]');
+        if (chip && /Shortlist/.test(chip.textContent)) {
+          chip.innerHTML = '&#9733; My Shortlist' + (data.count ? ' (' + data.count + ')' : '');
+        }
+      })
+      .catch(function () { btn.disabled = false; });
+  });
+})();
+</script>
 
 <%- include('partials/footer') %>

@@ -259,4 +259,7 @@ identical copies off the cards. Photos are always human-reviewed.
 
 ## Upcoming Events (planning your season)
 - **Studios/parents:** browse `/dance/events` for every competition's published tour dates in one place. Filter by state, month, or competition; each listing links to registration or the organizer's official site. Always confirm dates and venues with the organizer before booking travel.
+  - **Near me:** tap "📍 Near me" and allow the browser location prompt — events sort by distance (miles shown) with a 100/250/500-mile radius picker. Your location is used for that page view only and never stored; declining the prompt just leaves the State filter.
+  - **Shortlist:** signed in, tap the ☆ on any event to save it; "★ My Shortlist" filters to your saved events. Works for studio owners and parents alike.
+  - **Calendar:** "Add to Calendar (.ics)" downloads whatever you're currently viewing (filters, near-me, or your shortlist) as an iCalendar file that imports into Google/Apple/Outlook calendars.
 - **Organizers:** manage your listings in the dashboard's **Upcoming Events** tab (also reachable from the "Tour dates" link when viewing your public page). Dates you enter yourself always override anything imported. Your stops appear on your public page ("On Tour") and in the directory.

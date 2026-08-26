@@ -453,6 +453,16 @@ async function initDb() {
     CREATE INDEX IF NOT EXISTS idx_org_upcoming_events_org_date
       ON org_upcoming_events(org_id, start_date);
 
+    -- Directory phase 3: per-user saved events ("My Shortlist") for
+    -- studio admins and parents planning their season.
+    CREATE TABLE IF NOT EXISTS event_shortlists (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      upcoming_event_id INTEGER NOT NULL REFERENCES org_upcoming_events(id),
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(user_id, upcoming_event_id)
+    );
+
     -- Known flags ship dark; releases happen at /admin/features
     INSERT OR IGNORE INTO feature_flags (key, state) VALUES ('thank_you_notes', 'off');
     INSERT OR IGNORE INTO feature_flags (key, state) VALUES ('award_photos', 'off');
@@ -541,6 +551,8 @@ async function initDb() {
   // enforcement not yet built, state reserved). Set at /admin/orgs.
   try { await db.exec("ALTER TABLE organizations ADD COLUMN visibility TEXT DEFAULT 'public'"); } catch(e) {}
   try { await db.exec("ALTER TABLE organizations ADD COLUMN visibility_note TEXT"); } catch(e) {}
+  try { await db.exec("ALTER TABLE org_upcoming_events ADD COLUMN lat REAL"); } catch(e) {}
+  try { await db.exec("ALTER TABLE org_upcoming_events ADD COLUMN lng REAL"); } catch(e) {}
   try { await db.exec("ALTER TABLE studios ADD COLUMN auto_featured_rank INTEGER"); } catch(e) {}
   try { await db.exec("ALTER TABLE studios ADD COLUMN auto_featured_since DATETIME"); } catch(e) {}
   try { await db.exec("ALTER TABLE studios ADD COLUMN auto_feature_cooldown_until DATETIME"); } catch(e) {}
