@@ -275,3 +275,11 @@ categories ("Grand Lines") in `award_type`/`category` — this surface is the cl
 - **Studio Admin FAQ (`/faq/admin`)**: Outlines how to claim a studio, customize the profile, manage the roster using the Secret Join Code, approve/deny claims, handle multi-studio "Pseudo-Studio" collaborations, and embed the Widget.
 - **Dancer FAQ (`/faq/dancer`)**: Explains how to create a profile via award claiming, the difference between the Unique ID and Studio Code, what the colored verification badges mean, how Smart Auto-Backfill works, and privacy guarantees.
 - **Global Footer Navigation**: Both FAQ pages are permanently linked in the website footer for easy accessibility from any page.
+
+## Upcoming Events Directory — "Plan Your Season" (2026-08-26, phase 1)
+- `org_upcoming_events` table: organizers' future tour stops (name, city/state, venue, start/end dates, registration link). `source` records provenance — `owner` (dashboard-entered, authoritative, never overwritten by automation), `seed` (hand-curated from official sites via `scripts/import_upcoming_txt.js`), `scraped` (reserved for phase 2).
+- Organizer dashboard "Upcoming Events" tab (`/manage/org/:id?tab=upcoming-events`): add/edit/remove tour stops; past stops dim automatically; superadmins can manage any org's list through the same UI.
+- Public directory at `/dance/events`: all orgs' future events, filterable by state / month / competition, grouped by month, with Register (or Official Site) links. Org names are deliberately plain text, not links — same low-profile rule as homepage org cards. Unlisted/hidden orgs are excluded.
+- "On Tour" section on the Rafters org public page (between Champions and Archive) whenever the org has future dates; owner strip gains a "Tour dates" link; homepage circuit section links to the directory.
+- Freshness guardrails: every public surface shows only `status='active'` rows with end (or start) date >= today, plus a "confirm with the organizer before booking travel" note.
+- Seed importer: `node scripts/import_upcoming_txt.js [file] [--apply]` reads a committed pipe-format seed file (default `scripts/seed/upcoming_events_2026.txt`) — idempotent on org+start_date+city, updates seed rows in place, never touches owner rows; run identically on local and prod (parity rule).

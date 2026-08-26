@@ -256,3 +256,7 @@ auto (machine-clean notes go live instantly; flagged notes queue with the reason
 authors (≥3 approved notes) → OpenAI Moderation API (free). Failures never auto-approve.
 `/admin/card-content` shows a "Recently Auto-Approved" feed — Revoke pulls a note and its
 identical copies off the cards. Photos are always human-reviewed.
+
+## Upcoming Events (planning your season)
+- **Studios/parents:** browse `/dance/events` for every competition's published tour dates in one place. Filter by state, month, or competition; each listing links to registration or the organizer's official site. Always confirm dates and venues with the organizer before booking travel.
+- **Organizers:** manage your listings in the dashboard's **Upcoming Events** tab (also reachable from the "Tour dates" link when viewing your public page). Dates you enter yourself always override anything imported. Your stops appear on your public page ("On Tour") and in the directory.

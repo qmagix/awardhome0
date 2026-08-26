@@ -78,7 +78,13 @@ processing. Zero technical work on your end, at no cost.
    for old placements. We host them forever, interactively — no more
    "where can I find 2023 results?" emails, and your events sit beside the
    biggest names in the industry.
-3. **Attendance insights.** An organizer account unlocks analytics on the
+3. **Your tour dates, where studios plan their season.** Our Upcoming
+Events directory gathers every circuit's published dates in one place —
+studios browse it when deciding which competitions to attend, and your
+listings link straight to your registration. You control your dates from
+your dashboard.
+
+4. **Attendance insights.** An organizer account unlocks analytics on the
    studios attending your events — including how many other competitions
    they attend each year — so you can spot loyal studios and understand
    your market.

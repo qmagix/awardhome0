@@ -166,7 +166,9 @@ What ${n} gets:
 
 2. Permanent, searchable results. Dancers and parents constantly search for old placements. We host them forever, interactively — no more fielding "where can I find 2023 results?" emails, and your events sit beside the biggest names in the industry for every studio browsing the platform.
 
-3. Attendance insights. An organizer account unlocks analytics on the studios attending your events — including how many other competitions they attend each year — so you can spot loyal studios and understand your market.
+3. Your tour dates, where studios plan their season. Our Upcoming Events directory gathers every circuit's published dates in one place — studios browse it when deciding which competitions to attend, and your listings link straight to your registration. You control your dates from your dashboard.
+
+4. Attendance insights. An organizer account unlocks analytics on the studios attending your events — including how many other competitions they attend each year — so you can spot loyal studios and understand your market.
 
 One more thing, while it's early: we're inviting a limited group of Founding Partner organizations this season. Founding Partners pledge a handful of free entries to their own events — we award them to standout dancers on the platform as surprise rewards, each one credited "provided by ${n}" — and in return get first access to premium placement and organizer features as the platform grows. A pledged entry costs you an empty slot; it returns a proven competitive dancer to your ballroom. If that sounds interesting, mention it when you reply and I'll hold ${n} a founding slot.
 
