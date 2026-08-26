@@ -80,9 +80,11 @@ processing. Zero technical work on your end, at no cost.
    biggest names in the industry.
 3. **Your tour dates, where studios plan their season.** Our Upcoming
 Events directory gathers every circuit's published dates in one place —
-studios browse it when deciding which competitions to attend, and your
-listings link straight to your registration. You control your dates from
-your dashboard.
+studios and parents browse it when deciding which competitions to attend,
+sorted by distance from their studio, and they can shortlist your events
+and export them straight into their family calendars, with your
+registration one click away. You control your dates from your dashboard;
+complete, current listings are what turn browsers into bookings.
 
 4. **Attendance insights.** An organizer account unlocks analytics on the
    studios attending your events — including how many other competitions

@@ -44,9 +44,9 @@ function buildStudioInvite({ studio, totalAwards, firstPlaces, rank }) {
 
     ${BETA_MODE ? '<p style="background: #faf6e8; border: 1px solid #d4af37; border-radius: 8px; padding: 10px 14px;"><strong>You\'re invited to our private beta.</strong> The link below is your early-access pass — AwardHome opens to the public soon, and beta studios get a head start.</p>' : ''}
     <p>Congratulations on a great season. Your competition results are already live on
-    <strong>AwardHome</strong> — we aggregate results from 14 competitions (YAGP, KAR, Starpower,
-    NYCDA, Showstopper, Rainbow, and more) into a single digital trophy case: over 900,000 awards
-    from 17,000+ studios since 2022.</p>
+    <strong>AwardHome</strong> — we aggregate results from 17 competitions (YAGP, KAR, Starpower,
+    NYCDA, Showstopper, Rainbow, and more) into a single digital trophy case: over 1.1 million awards
+    from 20,000+ studios since 2021.</p>
 
     <p>${name}'s page — with <strong>${totalAwards.toLocaleString()} awards</strong>${firstPlaces ? ` and <strong>${firstPlaces.toLocaleString()} first-place finishes</strong>` : ''} — is here:</p>
 
@@ -62,6 +62,11 @@ function buildStudioInvite({ studio, totalAwards, firstPlaces, rank }) {
       <li><strong>Give every dancer their own trophy case.</strong> Invite your dance families to claim verified dancer profiles.</li>
       <li><strong>Put it on your own website.</strong> Claimed studios get an embeddable awards widget, in your colors — and you control which stats are public.</li>
     </ol>
+
+    <p>Your login also makes next season easier: our <strong>Upcoming Events</strong> directory gathers
+    every circuit's published tour dates in one place — tap <strong>"Near me"</strong> to sort by distance
+    from your studio, star the events you're considering into a shortlist, and export it straight into
+    your calendar. The season-planning spreadsheet, retired.</p>
 
     <p>Our homepage <strong>Featured Studios</strong> section is selected automatically from claimed
     studios with complete profiles — no payment, no favoritism. Claim early and you're eligible
@@ -166,7 +171,7 @@ What ${n} gets:
 
 2. Permanent, searchable results. Dancers and parents constantly search for old placements. We host them forever, interactively — no more fielding "where can I find 2023 results?" emails, and your events sit beside the biggest names in the industry for every studio browsing the platform.
 
-3. Your tour dates, where studios plan their season. Our Upcoming Events directory gathers every circuit's published dates in one place — studios browse it when deciding which competitions to attend, and your listings link straight to your registration. You control your dates from your dashboard.
+3. Your tour dates, where studios plan their season. Our Upcoming Events directory gathers every circuit's published dates in one place — studios and parents browse it when deciding which competitions to attend, sorted by distance from their studio, and they can shortlist your events and export them straight into their family calendars, with your registration one click away. You control your dates from your dashboard; complete, current listings are what turn browsers into bookings.
 
 4. Attendance insights. An organizer account unlocks analytics on the studios attending your events — including how many other competitions they attend each year — so you can spot loyal studios and understand your market.
 
