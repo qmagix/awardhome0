@@ -32,6 +32,12 @@
             <a href="/my-studio" style="color: white; text-decoration: none; font-weight: 600;">Manage Studio</a>
             <a href="/my-studio/public" style="color: white; text-decoration: none; font-weight: 600;">Public View</a>
           <% } %>
+          <% if (user.role === 'org_owner') { %>
+            <a href="/dance" style="color: white; text-decoration: none; font-weight: 600;">Home</a>
+            <a href="/my-org" style="color: white; text-decoration: none; font-weight: 600;">Dashboard</a>
+            <a href="/my-org?tab=past-events" style="color: white; text-decoration: none; font-weight: 600;">My Events</a>
+            <a href="/my-org/public" style="color: white; text-decoration: none; font-weight: 600;">Public Page</a>
+          <% } %>
           <% if (user.role === 'dancer_owner' || user.role === 'user') { %>
             <a href="/my-dancers" style="color: white; text-decoration: none; font-weight: 600;">My Dancers</a>
           <% } %>

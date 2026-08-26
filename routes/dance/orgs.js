@@ -89,7 +89,11 @@ router.get('/manage/org/:id', requireAuth, requireOrgOwner(), async (req, res) =
   };
   onboarding.complete = (onboarding.hasData || onboarding.hasUpload) && onboarding.hasProfile && onboarding.hasLogo;
 
-  res.render('manage_org', { org, stats, rank, events, uploads, topDancer, topStudio, onboarding, user: req.session.user });
+  // ?tab= deep-links a dashboard tab (navbar "My Events" → past-events)
+  const TABS = ['stats-section', 'marketing-profile', 'upload-section', 'past-events'];
+  const initialTab = TABS.includes(req.query.tab) ? req.query.tab : null;
+
+  res.render('manage_org', { org, stats, rank, events, uploads, topDancer, topStudio, onboarding, initialTab, user: req.session.user });
 });
 
 
@@ -309,6 +313,25 @@ router.post('/manage/org/:id/branding/icon/delete', requireAuth, requireOrgOwner
   }
 
   res.redirect('/manage/org/' + org.id + '/branding');
+});
+
+// Navbar shortcuts: org owners reach their dashboard / public page without
+// knowing their org id (mirrors /my-studio for studio owners). ?tab=
+// passes through so "My Events" can deep-link a dashboard tab.
+const ORG_DASH_TABS = ['stats-section', 'marketing-profile', 'upload-section', 'past-events'];
+
+router.get('/my-org', requireAuth, async (req, res) => {
+  const db = await openDb();
+  const owned = await db.get('SELECT id FROM organizations WHERE owner_id = ? LIMIT 1', [req.session.user.id]);
+  if (!owned) return res.redirect('/dance');
+  const tab = ORG_DASH_TABS.includes(req.query.tab) ? `?tab=${req.query.tab}` : '';
+  res.redirect(`/manage/org/${owned.id}${tab}`);
+});
+
+router.get('/my-org/public', requireAuth, async (req, res) => {
+  const db = await openDb();
+  const owned = await db.get('SELECT slug FROM organizations WHERE owner_id = ? LIMIT 1', [req.session.user.id]);
+  res.redirect(owned ? `/dance/org/${owned.slug}` : '/dance');
 });
 
 module.exports = router;

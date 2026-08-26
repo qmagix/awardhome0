@@ -25,6 +25,8 @@ const CHECKS = [
   ['POST', '/api/studios/1/investigate', [403], 'anonymous investigate blocked'],
   ['POST', '/api/studios/1/feature', [403], 'anonymous feature blocked'],
   ['GET', '/admin/orgs/1/award-vocab', [403], 'award vocab editor superadmin-gated'],
+  ['GET', '/my-org', [302], 'anonymous my-org redirected to login'],
+  ['GET', '/my-org/public', [302], 'anonymous my-org public redirected to login'],
   ['POST', '/admin/orgs/1/award-vocab/rename', [403], 'award vocab rename superadmin-gated'],
   ['POST', '/admin/orgs/1/award-vocab/top', [403], 'award vocab top-mark superadmin-gated'],
   ['GET', '/admin/compare/studios', [403], 'anonymous compare blocked'],

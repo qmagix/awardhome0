@@ -374,7 +374,11 @@
             }
         }
 
-        <% if (!onboarding.hasData && !onboarding.hasUpload) { %>
+        <% if (initialTab) { %>
+        // Deep-linked tab (navbar "My Events" and friends) wins over the
+        // fresh-org default below.
+        document.addEventListener('DOMContentLoaded', () => showTab('<%= initialTab %>'));
+        <% } else if (!onboarding.hasData && !onboarding.hasUpload) { %>
         // Fresh org: the useful first screen is the upload form, not an
         // empty stats grid — open it directly (the welcome checklist above
         // it explains the rest).
