@@ -509,6 +509,13 @@ async function initDb() {
   // vocabulary editor at /admin/orgs/:id/award-vocab). The hook for surfaces
   // that need each org's genuinely top honors (marquee picks, future HOF).
   try { await db.exec("ALTER TABLE awards ADD COLUMN is_top_award INTEGER DEFAULT 0"); } catch(e) {}
+  // Organizer-objection readiness (see org_invite_draft.md "objection
+  // response"): 'public' (default) | 'unlisted' (org page 404s publicly,
+  // homepage card gone; awards still shown) | 'hidden' (phase 2: awards
+  // excluded from all public surfaces except claimed owners' own views —
+  // enforcement not yet built, state reserved). Set at /admin/orgs.
+  try { await db.exec("ALTER TABLE organizations ADD COLUMN visibility TEXT DEFAULT 'public'"); } catch(e) {}
+  try { await db.exec("ALTER TABLE organizations ADD COLUMN visibility_note TEXT"); } catch(e) {}
   try { await db.exec("ALTER TABLE studios ADD COLUMN auto_featured_rank INTEGER"); } catch(e) {}
   try { await db.exec("ALTER TABLE studios ADD COLUMN auto_featured_since DATETIME"); } catch(e) {}
   try { await db.exec("ALTER TABLE studios ADD COLUMN auto_feature_cooldown_until DATETIME"); } catch(e) {}

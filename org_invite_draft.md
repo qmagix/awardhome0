@@ -172,3 +172,68 @@ Q
   starts (ideas.md §6 technical sketch already covers prize pools).
 - Never write "lottery"/"sweepstakes"; award editorially (merit) until the
   legal review clears a chance-based mechanic.
+
+
+---
+
+## Letter 3 — objection / takedown response (readiness playbook, added v4)
+
+**Strategy (see also TODOS "org visibility"):** never argue the legal point in
+email (results are facts and were published publicly — solid ground, but
+winning that argument loses the partner). Ladder: (1) convert with the
+concierge offer, (2) unlist gracefully with the family-first line, (3) full
+hiding (phase 2 build) only if pressed, deletion only under legal compulsion
+and after notifying claimed families. Superadmin control: /admin/orgs →
+Visibility column (always record who/when in the note).
+
+### 3a — first reply to an objection (goal: convert)
+
+Subject: Re: [their subject]
+
+Hi [Name],
+
+Thanks for reaching out — and I want to start with what AwardHome is actually
+for, because I suspect we're on the same side. We built the platform so that
+the achievements dancers earn at events like [Competition Name] don't
+disappear when a results page comes down — families keep a permanent, shareable
+record, and the competitions that awarded them stay visible and credited.
+
+Everything shown for [Competition Name] comes from your own published results,
+presented with your name simply as the factual source — but how your brand
+appears there should absolutely be in your control. That's what the free
+organizer account is for: your logo (hand-fitted by our design team) on every
+award card families share, authority to correct any record, your registration
+link in front of every family browsing results, and analytics on the studios
+attending your events. Here's your page as it stands, and a private claim
+link: [org page link] / [claim link].
+
+If after seeing that you'd still prefer not to have a public presence on
+AwardHome, I'll respect that — reply and I'll unlist [Competition Name]
+within [3] business days (details below). But I'd love 15 minutes to show you
+what your families already do with these pages before you decide.
+
+[signature]
+
+### 3b — unlisting confirmation (goal: graceful exit, door open)
+
+Hi [Name],
+
+Done — [Competition Name] is now unlisted on AwardHome: your organization
+page is no longer publicly accessible and [Competition Name] no longer
+appears in our public competition listings.
+
+One thing we don't do is delete families' own records. Dancers and studios
+who claimed their profiles keep access to the achievements they earned —
+those belong to them, and removing them would punish your own customers for
+a decision they didn't make. [Phase 2 wording, once built: "We have also
+removed [Competition Name] results from public browsing entirely; they remain
+visible only to the individual families and studios who claimed them."]
+
+If you ever want the page back — with your branding on it, on your terms —
+it's one email. The door stays open.
+
+[signature]
+
+**Never say:** "scrape", "we're legally allowed", "public data" as a retort,
+anything about other organizers' arrangements. **Always:** family-first
+framing, a concrete day count, the open door.

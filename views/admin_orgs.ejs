@@ -26,6 +26,7 @@
             <th style="padding: 0.5rem 0.75rem 0.5rem 0; color: var(--text-muted);">Website</th>
             <th style="padding: 0.5rem 0.75rem 0.5rem 0; color: var(--text-muted);">Events</th>
             <th style="padding: 0.5rem 0.75rem 0.5rem 0; color: var(--text-muted); white-space: nowrap;" title="Clicks on the (deliberately unlinked) homepage org card — demand evidence for outreach. CTR is against <%= impressions.last30 %> public homepage views in the last 30 days (<%= impressions.all_time %> all-time).">Card Demand</th>
+            <th style="padding: 0.5rem 0.75rem 0.5rem 0; color: var(--text-muted);" title="Organizer-objection accommodation: unlisted = org page 404s publicly + homepage card hidden (awards still shown); hidden = reserved for phase 2 (full public exclusion — enforcement not built yet, currently behaves like unlisted)">Visibility</th>
             <th style="padding: 0.5rem 0.75rem 0.5rem 0; color: var(--text-muted);">Status</th>
             <th style="padding: 0.5rem 0; color: var(--text-muted); text-align: right;">Actions</th>
           </tr>
@@ -52,6 +53,20 @@
                   <% } %>
                 <% } else { %>
                   <span style="color: var(--text-muted); font-size: 0.85rem;">—</span>
+                <% } %>
+              </td>
+              <td style="padding: 0.5rem 0.75rem 0.5rem 0;">
+                <% const vis = org.visibility || 'public'; %>
+                <% if (user && user.role === 'superadmin') { %>
+                  <select onchange="setVisibility(this, <%= org.id %>, '<%= org.name.replace(/'/g, "\\'") %>')" data-prev="<%= vis %>"
+                    style="background: rgba(0,0,0,0.35); color: <%= vis === 'public' ? 'white' : '#eab308' %>; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 0.25rem 0.4rem; font-size: 0.8rem;"
+                    <%= org.visibility_note ? `title="${org.visibility_note.replace(/"/g, '&quot;')}"` : '' %>>
+                    <option value="public" <%= vis === 'public' ? 'selected' : '' %>>public</option>
+                    <option value="unlisted" <%= vis === 'unlisted' ? 'selected' : '' %>>unlisted</option>
+                    <option value="hidden" <%= vis === 'hidden' ? 'selected' : '' %>>hidden*</option>
+                  </select>
+                <% } else { %>
+                  <span style="font-size: 0.8rem; color: <%= vis === 'public' ? 'var(--text-muted)' : '#eab308' %>;"><%= vis %></span>
                 <% } %>
               </td>
               <td style="padding: 0.5rem 0.75rem 0.5rem 0;">
@@ -332,4 +347,31 @@ async function sendInvite(event) {
 </script>
 <% } %>
 
+<script>
+  async function setVisibility(sel, orgId, orgName) {
+    const value = sel.value;
+    const prev = sel.getAttribute('data-prev');
+    const warnings = {
+      unlisted: `Unlist "${orgName}"?\n\nTheir org page will 404 for the public and their homepage card disappears. Awards remain visible on dancer/studio pages. The owner and superadmins can still open the org page.`,
+      hidden: `Mark "${orgName}" hidden?\n\nNOTE: full award hiding is phase 2 and NOT built yet — today this behaves exactly like unlisted. Use it to record intent.`,
+      public: `Restore "${orgName}" to full public visibility?`,
+    };
+    if (!confirm(warnings[value])) { sel.value = prev; return; }
+    const note = prompt('Note for the record (who asked, when, ticket/email ref):', '') || '';
+    try {
+      const res = await fetch(`/admin/orgs/${orgId}/visibility`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ visibility: value, note })
+      });
+      if (!res.ok) throw new Error((await res.json()).error || 'Failed');
+      sel.setAttribute('data-prev', value);
+      sel.style.color = value === 'public' ? 'white' : '#eab308';
+      if (note) sel.title = note;
+    } catch (e) {
+      alert(e.message);
+      sel.value = prev;
+    }
+  }
+</script>
 <%- include('partials/footer') %>

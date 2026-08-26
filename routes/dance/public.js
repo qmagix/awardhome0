@@ -277,6 +277,7 @@ async function loadHomepageData() {
     SELECT o.id, o.name, o.slug, o.data_since, COUNT(e.id) as event_count
     FROM organizations o
     LEFT JOIN events e ON o.id = e.org_id
+    WHERE COALESCE(o.visibility, 'public') = 'public'
     GROUP BY o.id
     ORDER BY o.name
   `);
@@ -386,6 +387,16 @@ router.get('/dance/org/:slug', async (req, res) => {
   const org = await db.get(`SELECT * FROM organizations WHERE slug = ?`, [req.params.slug]);
   if (!org) return res.status(404).send('Organization not found');
 
+  // Organizer-objection accommodation: an unlisted/hidden org's page 404s
+  // for the public (indistinguishable from not existing — no oracle), but
+  // the owner and superadmins still see it, with a banner.
+  const orgVisibility = org.visibility || 'public';
+  if (orgVisibility !== 'public') {
+    const u = req.session && req.session.user;
+    const allowed = u && (u.role === 'superadmin' || (org.owner_id && u.id === org.owner_id));
+    if (!allowed) return res.status(404).send('Organization not found');
+  }
+
   const stats = await db.get(`
     SELECT COUNT(DISTINCT a.id) AS totalAwards,
            COUNT(DISTINCT a.studio_id) AS totalStudios,
@@ -465,7 +476,7 @@ router.get('/dance/org/:slug', async (req, res) => {
   }
 
   res.render(useClassicDesign ? 'org' : 'org_v2', {
-    org, groupedData, stats, isAdmin,
+    org, orgVisibility, groupedData, stats, isAdmin,
     eventsCount: events.length,
     pageTitle: org.name,
     pageDesc: `${org.name} on AwardHome: ${stats.totalAwards} awards across ${events.length} events since ${stats.firstYear || ''}.`,

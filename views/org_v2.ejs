@@ -17,6 +17,11 @@
 
 <div class="v2">
 
+  <% if (typeof orgVisibility !== 'undefined' && orgVisibility !== 'public') { %>
+    <div style="background: rgba(234, 179, 8, 0.12); border-bottom: 1px solid rgba(234, 179, 8, 0.4); color: #eab308; padding: 0.6rem 1rem; text-align: center; font-size: 0.85rem; font-weight: 600;">
+      This page is <%= orgVisibility %> &mdash; visible only to you and site administrators. The public sees a 404.
+    </div>
+  <% } %>
 
   <section class="v2-hero">
     <p class="v2-eyebrow">COMPETITION ORGANIZATION<% if (stats.firstYear) { %> &middot; ARCHIVED SINCE <%= stats.firstYear %><% } %></p>

@@ -528,6 +528,23 @@ router.get('/admin/orgs', requireAdmin, async (req, res) => {
 });
 
 
+// Organizer-objection accommodation: superadmin sets org visibility
+// (public / unlisted / hidden — see org_invite_draft.md "objection
+// response" for the strategy and database.js for state semantics).
+router.post('/admin/orgs/:id/visibility', requireSuperadmin, express.json(), async (req, res) => {
+  const { visibility, note } = req.body || {};
+  if (!['public', 'unlisted', 'hidden'].includes(visibility)) return res.status(400).json({ error: 'Bad visibility value' });
+  const db = await openDb();
+  try { await db.exec("ALTER TABLE organizations ADD COLUMN visibility TEXT DEFAULT 'public'"); } catch (e) { }
+  try { await db.exec("ALTER TABLE organizations ADD COLUMN visibility_note TEXT"); } catch (e) { }
+  const org = await db.get('SELECT id FROM organizations WHERE id = ?', [req.params.id]);
+  if (!org) return res.status(404).json({ error: 'Organization not found' });
+  await db.run('UPDATE organizations SET visibility = ?, visibility_note = ? WHERE id = ?',
+    [visibility, (note || '').trim() || null, req.params.id]);
+  refresh('dance-home'); // homepage circuit cards react immediately
+  res.json({ ok: true });
+});
+
 // ---- Award vocabulary batch editor (superadmin) ----
 // The scraped data mixes real awards ("National Grand Champion", titles)
 // with adjudication levels ("Diamond") and size categories ("Grand Lines")

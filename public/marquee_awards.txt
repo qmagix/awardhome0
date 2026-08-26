@@ -9,6 +9,8 @@
 # - Lines starting with # are ignored. Blank lines are ignored.
 # - Keep it to ONE award per organizer so no circuit looks favored.
 # - Empty this file (or leave only comments) to HIDE the ticker entirely.
+# - If an org is ever unlisted/hidden (/admin/orgs Visibility), REMOVE its
+#   line here too — this file is manual and does not follow the flag.
 # - Served at /marquee_awards.txt; the landing pages fetch it on load,
 #   so changes go live with the next deploy — no code edits needed.
 #
