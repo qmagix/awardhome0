@@ -174,7 +174,7 @@ Ready to get started? Claiming your free organizer account takes about two minut
 
 {CLAIM_LINK}
 
-Or if you have a recent results file handy, just reply with it attached and we'll build a live demo page for ${n} — usually within a few days. And if you'd rather talk first, I'm happy to do a quick 15-minute call.
+Or if you have a recent results file handy, just reply with it attached — or with a Google Drive or Dropbox link — and we'll build a live demo page for ${n}, usually within a few days. And if you'd rather talk first, I'm happy to do a quick 15-minute call.
 
 Thank you for everything you do for the dance community.
 
