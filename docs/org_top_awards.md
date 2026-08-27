@@ -449,3 +449,8 @@ Senior 16-19. **Sources:** epicdanceinc.com/rules. **Confidence:** high.
 - **Placements**: HIGH SCORE BY AGE and HIGH SCORE BY PERFORMANCE, 1st..10th, in categories shaped "Age : Type" (e.g. "Teen : Solo", "JUMPstart : Jazz"). Solo rows name the dancer; group rows are studio-level. JUMPstart is JUMP's youngest division, not an award.
 - **Scholarships** (award_type='SCHOLARSHIP'): "<Age> JUMP VIP" plus per-class scholarships (TAP / BALLET / HIP-HOP & JAZZ FUNK / JAZZ, CONTEMP. & LYRICAL). Places are **WINNER** and **RUNNER-UP** — these are scholarship outcomes, NOT competition placements, so they should not be ranked against 1st/2nd/3rd.
 - Source is clean HTML tables at jumptour.com/results/?id=N; the event index at /past-seasons/ lists every season at once (its ?season= parameter is ignored server-side). Seasons reach back to 2019-2020 if we ever want more history.
+
+## NUVO Dance Convention (gonuvo.com)
+- DanceOne sibling of JUMP — identical results anatomy and award vocabulary. **Top awards: SPECIAL AWARDS** ("Best of NUVO" per age division, "Best in Studio"); **NUbie is the youngest age division** (their JUMPstart), not an award.
+- Placements: HIGH SCORE BY AGE / BY PERFORMANCE, 1st..10th, categories "Age : Type". Scholarships: "<Age> NUVO" honors + per-class scholarships (incl. BALLROOM — a class JUMP doesn't run); places are WINNER / RUNNER-UP (scholarship outcomes, not competition placements). Class-scholarship tables add a Faculty column (the presenting teacher — not imported).
+- Shared tooling: scripts/lib/danceone.js + danceone_import.js drive both brands (and future DanceOne siblings like 24SEVEN); per-org scripts are thin configs. Seasons reach 2019-2020 on the site.
