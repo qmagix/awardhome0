@@ -86,6 +86,16 @@ server-side + rate-seeded per user so repeated flipping cannot farm outcomes. Pa
 with A3 as a system claim. *Captured 2026-08-19. NOT built — sweepstakes/minors legal
 review required before any launch; strongest IP position if filed before shipping.*
 
+### A8. Guardian-mediated selective-disclosure registration identity ("DancerID")
+Lifetime portable dancer ID (`dancers.unique_id`) + consent grants: a guardian scopes
+which profile fields (DOB, contacts, waivers, competitive history) a specific organizer
+may pull, until an expiry, revocable, fully audited; organizer access via token API.
+The claimable combination: guardian-mediated field-level disclosure scoping for a
+minor's identity, tied to a *verifiable competitive-history record* (division/level
+anti-sandbagging proof no generic ID provider holds). Likely the strongest §101
+survivor in the inventory (consent/auth protocol mechanics). *Captured 2026-08-27.
+NOT built — paper design first, then provisional (see plan P3).*
+
 ## Tier B — plausible but weaker (business method or heavy prior art risk)
 
 ### B1. Dark-launch claiming via private single-use tokens (no public unclaimed state)
@@ -130,13 +140,14 @@ Heavy prior art (Spotify Wrapped et al.). Keep only as dependent claim material.
 
 ---
 
-## Next steps (when we investigate)
+## Next steps
 
-1. Attorney triage: A1–A5 first; confirm whether server-side-only pipelines (A1, A2)
-   are undisclosed for grace-period purposes.
-2. Anything in Tier A we intend to ship (A3, A4 especially): consider a **provisional
-   application before deploy** — cheap, preserves worldwide rights for 12 months.
-3. Separately explore a **design patent** on the award-card appearance (front +
-   certificate back) and the AwardHome trade dress.
-4. Keep this file current: new brainstorm ideas get an entry with a capture date and
-   shipped/not-shipped status at the time of capture.
+**Filing strategy now lives in `provisional_patent_plan.md` (2026-08-27):** three
+provisionals — P1 omnibus card-artifact system (A3–A7 + B2/B4/B5, urgent: `?card_design=`
+preview is publicly reachable on prod), P2 staged-import pipeline (A1, A2 as embodiment
+text; trade-secret fork at month 10), P3 DancerID (A8, after paper-design pass). Design
+patent + trade dress tracked there too. Pre-filing freeze list in plan §2.
+
+Keep this file current: new brainstorm ideas get an entry with a capture date and
+shipped/not-shipped status at the time of capture; status changes update the plan's
+disclosure audit — the dates are the whole game.
