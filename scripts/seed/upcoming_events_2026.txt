@@ -965,3 +965,109 @@ Inspire National Dance Competition | Regionals — West Monroe | West Monroe | L
 Inspire National Dance Competition | Regionals — Fort Mill | Fort Mill | SC | The River Place | 2027-05-14 | 2027-05-16 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
 Inspire National Dance Competition | Regionals — St. Augustine #2 | St. Augustine | FL | World Golf Village Renaissance | 2027-05-14 | 2027-05-16 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
 Inspire National Dance Competition | Nationals — Orlando | Orlando | FL | Lake Brantley High School | 2027-06-27 | 2027-07-02 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/nationals/
+
+# --- Added 2026-08-28: DanceOne convention brands' 2026-27 tours (results
+# orgs on the platform; tour-dates pages, season-container data-season=76).
+# Their season finale is The Dance Awards (rows above).
+JUMP Dance Convention | Tour — Ft. Lauderdale | Ft. Lauderdale | FL | Broward County Convention Center | 2026-10-16 | 2026-10-18 | https://jumptour.com/2026-2027/ft-lauderdale-fl/ | https://jumptour.com/tour-dates/
+JUMP Dance Convention | Tour — Greenville | Greenville | SC | Hyatt Regency Greenville | 2026-11-06 | 2026-11-08 | https://jumptour.com/2026-2027/greenville-sc/ | https://jumptour.com/tour-dates/
+JUMP Dance Convention | Tour — Las Vegas | Las Vegas | NV | Hilton Lake Las Vegas Resort & Spa | 2026-11-13 | 2026-11-15 | https://jumptour.com/2026-2027/las-vegas-nv/ | https://jumptour.com/tour-dates/
+JUMP Dance Convention | Tour — Boston | Boston | MA | The Westin Boston Seaport District | 2026-11-20 | 2026-11-22 | https://jumptour.com/2026-2027/boston-ma/ | https://jumptour.com/tour-dates/
+JUMP Dance Convention | Tour — Mexico City | Mexico City | DF | Expo Bancomer Santa Fe | 2026-12-04 | 2026-12-06 | https://jumptour.com/2026-2027/mexico-city-df/ | https://jumptour.com/tour-dates/
+JUMP Dance Convention | Tour — Toronto | Toronto | ON | Delta Marriott Toronto Airport | 2026-12-11 | 2026-12-13 | https://jumptour.com/2026-2027/toronto-on/ | https://jumptour.com/tour-dates/
+JUMP Dance Convention | Tour — Washington | Washington | DC | Grand Hyatt Washington | 2027-01-08 | 2027-01-10 | https://jumptour.com/2026-2027/washington-dc/ | https://jumptour.com/tour-dates/
+JUMP Dance Convention | Tour — Louisville | Louisville | KY | Kentucky International Convention Center | 2027-01-15 | 2027-01-17 | https://jumptour.com/2026-2027/louisville-ky/ | https://jumptour.com/tour-dates/
+JUMP Dance Convention | Tour — Chicago | Chicago | IL | Hyatt Regency O'Hare Chicago | 2027-01-22 | 2027-01-24 | https://jumptour.com/2026-2027/chicago-il/ | https://jumptour.com/tour-dates/
+JUMP Dance Convention | Tour — Houston | Houston | TX | Westin Galleria Houston | 2027-01-29 | 2027-01-31 | https://jumptour.com/2026-2027/houston-tx/ | https://jumptour.com/tour-dates/
+JUMP Dance Convention | Tour — Philadelphia | Philadelphia | PA | Sheraton Philadelphia Downtown | 2027-02-05 | 2027-02-07 | https://jumptour.com/2026-2027/philadelphia-pa/ | https://jumptour.com/tour-dates/
+JUMP Dance Convention | Tour — Dallas | Dallas | TX | Hyatt Regency Dallas | 2027-02-12 | 2027-02-14 | https://jumptour.com/2026-2027/dallas-tx/ | https://jumptour.com/tour-dates/
+JUMP Dance Convention | Tour — Monterrey | Monterrey | NL | Cintermex Monterrey | 2027-02-19 | 2027-02-21 | https://jumptour.com/2026-2027/monterrey-nl/ | https://jumptour.com/tour-dates/
+JUMP Dance Convention | Tour — Westminster | Westminster | CO | Westin Westminster | 2027-02-19 | 2027-02-21 | https://jumptour.com/2026-2027/westminster-co/ | https://jumptour.com/tour-dates/
+JUMP Dance Convention | Tour — Glendale | Glendale | AZ | Renaissance Glendale Hotel and Spa | 2027-02-26 | 2027-02-28 | https://jumptour.com/2026-2027/glendale-az/ | https://jumptour.com/tour-dates/
+JUMP Dance Convention | Tour — Portland | Portland | OR | Oregon Convention Center | 2027-03-05 | 2027-03-07 | https://jumptour.com/2026-2027/portland-or/ | https://jumptour.com/tour-dates/
+JUMP Dance Convention | Tour — Orlando | Orlando | FL | Hyatt Regency Orlando | 2027-03-12 | 2027-03-14 | https://jumptour.com/2026-2027/orlando-fl/ | https://jumptour.com/tour-dates/
+JUMP Dance Convention | Tour — Minneapolis | Minneapolis | MN | Hyatt Regency Minneapolis | 2027-03-19 | 2027-03-21 | https://jumptour.com/2026-2027/minneapolis-mn/ | https://jumptour.com/tour-dates/
+JUMP Dance Convention | Tour — Provo | Provo | UT | Utah Valley Convention Center | 2027-04-01 | 2027-04-03 | https://jumptour.com/2026-2027/provo-ut/ | https://jumptour.com/tour-dates/
+JUMP Dance Convention | Tour — Detroit | Detroit | MI | Detroit Marriott at the Renaissance Center | 2027-04-09 | 2027-04-11 | https://jumptour.com/2026-2027/detroit-mi/ | https://jumptour.com/tour-dates/
+JUMP Dance Convention | Tour — Atlanta | Atlanta | GA | Atlanta Marriott Marquis | 2027-04-16 | 2027-04-18 | https://jumptour.com/2026-2027/atlanta-ga/ | https://jumptour.com/tour-dates/
+JUMP Dance Convention | Tour — New York | New York | NY | New York Hilton Midtown | 2027-04-23 | 2027-04-25 | https://jumptour.com/2026-2027/new-york-ny/ | https://jumptour.com/tour-dates/
+JUMP Dance Convention | Tour — Buffalo | Buffalo | NY | Buffalo Niagara Convention Center | 2027-04-30 | 2027-05-02 | https://jumptour.com/2026-2027/buffalo-ny/ | https://jumptour.com/tour-dates/
+JUMP Dance Convention | Tour — Anaheim | Anaheim | CA | Anaheim Marriott | 2027-05-07 | 2027-05-09 | https://jumptour.com/2026-2027/anaheim-ca/ | https://jumptour.com/tour-dates/
+JUMP Dance Convention | Tour — Providence | Providence | RI | Rhode Island Convention Center | 2027-05-14 | 2027-05-16 | https://jumptour.com/2026-2027/providence-ri/ | https://jumptour.com/tour-dates/
+JUMP Dance Convention | Tour — Santa Clara | Santa Clara | CA | Hyatt Regency Santa Clara | 2027-05-21 | 2027-05-23 | https://jumptour.com/2026-2027/santa-clara-ca/ | https://jumptour.com/tour-dates/
+JUMP Dance Convention | Tour — Sofia | Sofia |  | Inter Expo Center | 2027-05-28 | 2027-05-30 | https://jumptour.com/2026-2027/sofia-sf/ | https://jumptour.com/tour-dates/
+NUVO Dance Convention | Tour — Anchorage | Anchorage | AK | Egan Center | 2026-10-16 | 2026-10-18 | https://gonuvo.com/2026-2027/anchorage-ak/ | https://gonuvo.com/tour-dates/
+NUVO Dance Convention | Tour — Ottawa | Ottawa | ON | Rogers Centre Ottawa | 2026-11-06 | 2026-11-08 | https://gonuvo.com/2026-2027/ottawa-on/ | https://gonuvo.com/tour-dates/
+NUVO Dance Convention | Tour — Vancouver | Vancouver | BC | Richmond Conference Centre | 2026-11-13 | 2026-11-15 | https://gonuvo.com/2026-2027/vancouver-bc/ | https://gonuvo.com/tour-dates/
+NUVO Dance Convention | Tour — Pittsburgh | Pittsburgh | PA | Wyndham Grand Pittsburgh Downtown | 2026-11-20 | 2026-11-22 | https://gonuvo.com/2026-2027/pittsburgh-pa/ | https://gonuvo.com/tour-dates/
+NUVO Dance Convention | Tour — Dallas | Dallas | TX | Hyatt Regency Dallas | 2026-12-04 | 2026-12-06 | https://gonuvo.com/2026-2027/dallas-tx/ | https://gonuvo.com/tour-dates/
+NUVO Dance Convention | Tour — Telford | Telford | UK | Telford International Centre | 2026-12-11 | 2026-12-13 | https://gonuvo.com/2026-2027/telford-tf/ | https://gonuvo.com/tour-dates/
+NUVO Dance Convention | Tour — Orlando | Orlando | FL | Hyatt Regency Orlando | 2027-01-08 | 2027-01-10 | https://gonuvo.com/2026-2027/orlando-fl/ | https://gonuvo.com/tour-dates/
+NUVO Dance Convention | Tour — Anaheim | Anaheim | CA | Anaheim Convention Center | 2027-01-15 | 2027-01-17 | https://gonuvo.com/2026-2027/anaheim-ca/ | https://gonuvo.com/tour-dates/
+NUVO Dance Convention | Tour — Meadowlands | Meadowlands | NJ | World of Blue Meadowlands | 2027-01-22 | 2027-01-24 | https://gonuvo.com/2026-2027/meadowlands-nj/ | https://gonuvo.com/tour-dates/
+NUVO Dance Convention | Tour — Bellevue | Bellevue | WA | Meydenbauer Center | 2027-01-29 | 2027-01-31 | https://gonuvo.com/2026-2027/bellevue-wa/ | https://gonuvo.com/tour-dates/
+NUVO Dance Convention | Tour — Atlanta | Atlanta | GA | The Westin Peachtree Plaza | 2027-02-05 | 2027-02-07 | https://gonuvo.com/2026-2027/atlanta-ga/ | https://gonuvo.com/tour-dates/
+NUVO Dance Convention | Tour — Santa Clara | Santa Clara | CA | Hyatt Regency Santa Clara | 2027-02-12 | 2027-02-14 | https://gonuvo.com/2026-2027/santa-clara-ca/ | https://gonuvo.com/tour-dates/
+NUVO Dance Convention | Tour — Baltimore | Baltimore | MD | Baltimore Marriott Waterfront | 2027-02-19 | 2027-02-21 | https://gonuvo.com/2026-2027/baltimore-md/ | https://gonuvo.com/tour-dates/
+NUVO Dance Convention | Tour — Chicago | Chicago | IL | Hyatt Regency O'Hare Chicago | 2027-02-26 | 2027-02-28 | https://gonuvo.com/2026-2027/chicago-il/ | https://gonuvo.com/tour-dates/
+NUVO Dance Convention | Tour — Kansas City | Kansas City | MO | Kansas City Marriott Downtown | 2027-03-05 | 2027-03-07 | https://gonuvo.com/2026-2027/kansas-city-mo/ | https://gonuvo.com/tour-dates/
+NUVO Dance Convention | Tour — Murfreesboro | Murfreesboro | TN | Embassy Suites by Hilton Nashville SE Murfreesboro | 2027-03-12 | 2027-03-14 | https://gonuvo.com/2026-2027/murfreesboro-tn/ | https://gonuvo.com/tour-dates/
+NUVO Dance Convention | Tour — Atlantic City | Atlantic City | NJ | Harrah's Atlantic City | 2027-03-19 | 2027-03-21 | https://gonuvo.com/2026-2027/atlantic-city-nj/ | https://gonuvo.com/tour-dates/
+NUVO Dance Convention | Tour — Omaha | Omaha | NE | CHI Health Center Omaha | 2027-04-02 | 2027-04-04 | https://gonuvo.com/2026-2027/omaha-ne/ | https://gonuvo.com/tour-dates/
+NUVO Dance Convention | Tour — Buffalo | Buffalo | NY | Buffalo Niagara Convention Center | 2027-04-09 | 2027-04-11 | https://gonuvo.com/2026-2027/buffalo-ny/ | https://gonuvo.com/tour-dates/
+NUVO Dance Convention | Tour — Boston | Boston | MA | The Westin Boston Seaport District | 2027-04-16 | 2027-04-18 | https://gonuvo.com/2026-2027/boston-ma/ | https://gonuvo.com/tour-dates/
+NUVO Dance Convention | Tour — Houston | Houston | TX | The Westin Galleria Houston | 2027-04-23 | 2027-04-25 | https://gonuvo.com/2026-2027/houston-tx/ | https://gonuvo.com/tour-dates/
+NUVO Dance Convention | Tour — Westminster | Westminster | CO | Westin Westminster | 2027-04-30 | 2027-05-02 | https://gonuvo.com/2026-2027/westminster-co/ | https://gonuvo.com/tour-dates/
+NUVO Dance Convention | Tour — Provo | Provo | UT | Utah Valley Convention Center | 2027-05-06 | 2027-05-08 | https://gonuvo.com/2026-2027/provo-ut/ | https://gonuvo.com/tour-dates/
+NUVO Dance Convention | Tour — Columbus | Columbus | OH | Hyatt Regency Columbus | 2027-05-14 | 2027-05-16 | https://gonuvo.com/2026-2027/columbus-oh/ | https://gonuvo.com/tour-dates/
+NUVO Dance Convention | Tour — Glendale | Glendale | AZ | Renaissance Glendale Hotel and Spa | 2027-05-21 | 2027-05-23 | https://gonuvo.com/2026-2027/glendale-az/ | https://gonuvo.com/tour-dates/
+NUVO Dance Convention | Tour — Miami | Miami | FL | Signia by Hilton Diplomat Beach Resort | 2027-05-28 | 2027-05-30 | https://gonuvo.com/2026-2027/miami-fl/ | https://gonuvo.com/tour-dates/
+RADIX Dance Convention | Tour — Provo | Provo | UT | Utah Valley Convention Center | 2026-10-15 | 2026-10-17 | https://radixdance.com/2026-2027/provo-ut/ | https://radixdance.com/tour-dates/
+RADIX Dance Convention | Tour — San Jose | San Jose | CA | Signia by Hilton San Jose | 2026-11-13 | 2026-11-15 | https://radixdance.com/2026-2027/san-jose-ca/ | https://radixdance.com/tour-dates/
+RADIX Dance Convention | Tour — Mobile | Mobile | AL | Renaissance Mobile Riverview Plaza Hotel | 2026-11-20 | 2026-11-22 | https://radixdance.com/2026-2027/mobile-al/ | https://radixdance.com/tour-dates/
+RADIX Dance Convention | Tour — Meadowlands | Meadowlands | NJ | World of Blue Meadowlands | 2026-12-04 | 2026-12-06 | https://radixdance.com/2026-2027/meadowlands-nj/ | https://radixdance.com/tour-dates/
+RADIX Dance Convention | Tour — Anaheim | Anaheim | CA | Hilton Anaheim | 2026-12-11 | 2026-12-13 | https://radixdance.com/2026-2027/anaheim-ca/ | https://radixdance.com/tour-dates/
+RADIX Dance Convention | Tour — Boston | Boston | MA | The Westin Boston Seaport District | 2027-01-08 | 2027-01-10 | https://radixdance.com/2026-2027/boston-ma/ | https://radixdance.com/tour-dates/
+RADIX Dance Convention | Tour — Las Vegas | Las Vegas | NV | Hilton Lake Las Vegas Resort & Spa | 2027-01-15 | 2027-01-17 | https://radixdance.com/2026-2027/las-vegas-nv/ | https://radixdance.com/tour-dates/
+RADIX Dance Convention | Tour — Glendale | Glendale | AZ | Renaissance Glendale Hotel and Spa | 2027-01-22 | 2027-01-24 | https://radixdance.com/2026-2027/glendale-az/ | https://radixdance.com/tour-dates/
+RADIX Dance Convention | Tour — Kansas City | Kansas City | MO | Kansas City Convention Center | 2027-01-29 | 2027-01-31 | https://radixdance.com/2026-2027/kansas-city-mo/ | https://radixdance.com/tour-dates/
+RADIX Dance Convention | Tour — Chicago | Chicago | IL | Hyatt Regency McCormick Place Chicago | 2027-02-05 | 2027-02-07 | https://radixdance.com/2026-2027/chicago-il/ | https://radixdance.com/tour-dates/
+RADIX Dance Convention | Tour — Houston | Houston | TX | Marriott Marquis Houston | 2027-02-12 | 2027-02-14 | https://radixdance.com/2026-2027/houston-tx/ | https://radixdance.com/tour-dates/
+RADIX Dance Convention | Tour — Minneapolis | Minneapolis | MN | Hyatt Regency Minneapolis | 2027-02-19 | 2027-02-21 | https://radixdance.com/2026-2027/minneapolis-mn/ | https://radixdance.com/tour-dates/
+RADIX Dance Convention | Tour — Atlanta | Atlanta | GA | Atlanta Marriott Marquis | 2027-02-26 | 2027-02-28 | https://radixdance.com/2026-2027/atlanta-ga/ | https://radixdance.com/tour-dates/
+RADIX Dance Convention | Tour — Santa Clara | Santa Clara | CA | Hyatt Regency Santa Clara | 2027-03-05 | 2027-03-07 | https://radixdance.com/2026-2027/santa-clara-ca/ | https://radixdance.com/tour-dates/
+RADIX Dance Convention | Tour — Westminster | Westminster | CO | Westin Westminster | 2027-03-12 | 2027-03-14 | https://radixdance.com/2026-2027/westminster-co/ | https://radixdance.com/tour-dates/
+RADIX Dance Convention | Tour — Baltimore | Baltimore | MD | Hilton Baltimore Inner Harbor | 2027-03-19 | 2027-03-21 | https://radixdance.com/2026-2027/baltimore-md/ | https://radixdance.com/tour-dates/
+RADIX Dance Convention | Tour — Orlando | Orlando | FL | Orlando World Center Marriott | 2027-04-02 | 2027-04-04 | https://radixdance.com/2026-2027/orlando-fl/ | https://radixdance.com/tour-dates/
+RADIX Dance Convention | Tour — Charlotte | Charlotte | NC | Sheraton Charlotte Hotel | 2027-04-09 | 2027-04-11 | https://radixdance.com/2026-2027/charlotte-nc/ | https://radixdance.com/tour-dates/
+RADIX Dance Convention | Tour — Cleveland | Cleveland | OH | Hilton Cleveland Downtown | 2027-04-16 | 2027-04-18 | https://radixdance.com/2026-2027/cleveland-oh/ | https://radixdance.com/tour-dates/
+RADIX Dance Convention | Tour — Frisco | Frisco | TX | Embassy Suites by Hilton Dallas Frisco Hotel Convention Center | 2027-04-23 | 2027-04-25 | https://radixdance.com/2026-2027/frisco-tx/ | https://radixdance.com/tour-dates/
+RADIX Dance Convention | Tour — Portland | Portland | OR | Oregon Convention Center | 2027-04-30 | 2027-05-02 | https://radixdance.com/2026-2027/portland-or/ | https://radixdance.com/tour-dates/
+RADIX Dance Convention | Tour — Indianapolis | Indianapolis | IN | Indianapolis Marriott Downtown | 2027-05-07 | 2027-05-09 | https://radixdance.com/2026-2027/indianapolis-in/ | https://radixdance.com/tour-dates/
+RADIX Dance Convention | Tour — Atlantic City | Atlantic City | NJ | Harrah's Atlantic City | 2027-05-14 | 2027-05-16 | https://radixdance.com/2026-2027/atlantic-city-nj/ | https://radixdance.com/tour-dates/
+24SEVEN Dance Convention | Tour — Knoxville | Knoxville | TN | Knoxville Convention Center | 2026-10-23 | 2026-10-25 | https://24sevendance.com/2026-2027/knoxville-tn/ | https://24sevendance.com/tour-dates/
+24SEVEN Dance Convention | Tour — San Antonio | San Antonio | TX | Henry B Gonzalez Convention Center | 2026-11-06 | 2026-11-08 | https://24sevendance.com/2026-2027/san-antonio-tx/ | https://24sevendance.com/tour-dates/
+24SEVEN Dance Convention | Tour — Daytona Beach | Daytona Beach | FL | Ocean Center | 2026-11-13 | 2026-11-15 | https://24sevendance.com/2026-2027/daytona-beach-fl/ | https://24sevendance.com/tour-dates/
+24SEVEN Dance Convention | Tour — San Diego | San Diego | CA | Gaylord Pacific Resort & Convention Center | 2026-11-20 | 2026-11-22 | https://24sevendance.com/2026-2027/san-diego-ca/ | https://24sevendance.com/tour-dates/
+24SEVEN Dance Convention | Tour — Birmingham | Birmingham | AL | Birmingham Jefferson Convention Complex | 2026-12-04 | 2026-12-06 | https://24sevendance.com/2026-2027/birmingham-al/ | https://24sevendance.com/tour-dates/
+24SEVEN Dance Convention | Tour — Reno | Reno | NV | Reno-Sparks Convention Center | 2026-12-11 | 2026-12-13 | https://24sevendance.com/2026-2027/reno-nv/ | https://24sevendance.com/tour-dates/
+24SEVEN Dance Convention | Tour — Rochester | Rochester | NY | Rochester Riverside Convention Center | 2027-01-08 | 2027-01-10 | https://24sevendance.com/2026-2027/rochester-ny/ | https://24sevendance.com/tour-dates/
+24SEVEN Dance Convention | Tour — Omaha | Omaha | NE | Embassy Suites Omaha La Vista | 2027-01-15 | 2027-01-17 | https://24sevendance.com/2026-2027/omaha-ne/ | https://24sevendance.com/tour-dates/
+24SEVEN Dance Convention | Tour — Tulsa | Tulsa | OK | Renaissance Tulsa Hotel & Convention Center | 2027-01-22 | 2027-01-24 | https://24sevendance.com/2026-2027/tulsa-ok/ | https://24sevendance.com/tour-dates/
+24SEVEN Dance Convention | Tour — Cleveland | Cleveland | OH | Hotel Cleveland | 2027-01-29 | 2027-01-31 | https://24sevendance.com/2026-2027/cleveland-oh/ | https://24sevendance.com/tour-dates/
+24SEVEN Dance Convention | Tour — Boston | Boston | MA | Sheraton Boston | 2027-02-05 | 2027-02-07 | https://24sevendance.com/2026-2027/boston-ma/ | https://24sevendance.com/tour-dates/
+24SEVEN Dance Convention | Tour — Long Beach | Long Beach | CA | Long Beach Convention & Entertainment Center | 2027-02-12 | 2027-02-14 | https://24sevendance.com/2026-2027/long-beach-ca/ | https://24sevendance.com/tour-dates/
+24SEVEN Dance Convention | Tour — New Brunswick | New Brunswick | NJ | Hyatt Regency New Brunswick | 2027-02-19 | 2027-02-21 | https://24sevendance.com/2026-2027/new-brunswick-nj/ | https://24sevendance.com/tour-dates/
+24SEVEN Dance Convention | Tour — Detroit | Detroit | MI | Detroit Marriott at the Renaissance Center | 2027-02-26 | 2027-02-28 | https://24sevendance.com/2026-2027/detroit-mi/ | https://24sevendance.com/tour-dates/
+24SEVEN Dance Convention | Tour — Frisco | Frisco | TX | Embassy Suites by Hilton Dallas Frisco Hotel Convention Center | 2027-03-05 | 2027-03-07 | https://24sevendance.com/2026-2027/frisco-tx/ | https://24sevendance.com/tour-dates/
+24SEVEN Dance Convention | Tour — Atlanta | Atlanta | GA | Atlanta Marriott Marquis | 2027-03-12 | 2027-03-14 | https://24sevendance.com/2026-2027/atlanta-ga/ | https://24sevendance.com/tour-dates/
+24SEVEN Dance Convention | Tour — Santa Clara | Santa Clara | CA | Hyatt Regency Santa Clara | 2027-03-19 | 2027-03-21 | https://24sevendance.com/2026-2027/santa-clara-ca/ | https://24sevendance.com/tour-dates/
+24SEVEN Dance Convention | Tour — New Orleans | New Orleans | LA | Hyatt Regency New Orleans | 2027-04-02 | 2027-04-04 | https://24sevendance.com/2026-2027/new-orleans-la/ | https://24sevendance.com/tour-dates/
+24SEVEN Dance Convention | Tour — Bellevue | Bellevue | WA | Meydenbauer Center | 2027-04-09 | 2027-04-11 | https://24sevendance.com/2026-2027/bellevue-wa/ | https://24sevendance.com/tour-dates/
+24SEVEN Dance Convention | Tour — Glendale | Glendale | AZ | Renaissance Glendale Hotel and Spa | 2027-04-16 | 2027-04-18 | https://24sevendance.com/2026-2027/glendale-az/ | https://24sevendance.com/tour-dates/
+24SEVEN Dance Convention | Tour — Baltimore | Baltimore | MD | Hilton Baltimore Inner Harbor | 2027-04-23 | 2027-04-25 | https://24sevendance.com/2026-2027/baltimore-md/ | https://24sevendance.com/tour-dates/
+24SEVEN Dance Convention | Tour — Orlando | Orlando | FL | Hyatt Regency Orlando | 2027-04-30 | 2027-05-02 | https://24sevendance.com/2026-2027/orlando-fl/ | https://24sevendance.com/tour-dates/
+24SEVEN Dance Convention | Tour — Charlotte | Charlotte | NC | Sheraton Charlotte Hotel | 2027-05-07 | 2027-05-09 | https://24sevendance.com/2026-2027/charlotte-nc/ | https://24sevendance.com/tour-dates/
+24SEVEN Dance Convention | Tour — Honolulu | Honolulu | HI | Hawaii Convention Center | 2027-05-14 | 2027-05-16 | https://24sevendance.com/2026-2027/honolulu-hi/ | https://24sevendance.com/tour-dates/
+24SEVEN Dance Convention | Tour — Chicago | Chicago | IL | The Westin Chicago North Shore | 2027-05-21 | 2027-05-23 | https://24sevendance.com/2026-2027/chicago-il/ | https://24sevendance.com/tour-dates/
+24SEVEN Dance Convention | Tour — Houston | Houston | TX | Marriott Marquis Houston | 2027-05-28 | 2027-05-30 | https://24sevendance.com/2026-2027/houston-tx/ | https://24sevendance.com/tour-dates/
