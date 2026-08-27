@@ -39,7 +39,15 @@
                 <td><strong><%= award.performance_name %></strong> <span class="sub-text"><%= award.performance_number ? '#' + award.performance_number : '' %></span></td>
                 <td><%= award.award_type %></td>
                 <td><span class="badge"><%= formatPlacement(award) %></span></td>
-                <td><%= award.category || '-' %></td>
+                <%# age_division carries the full published section (e.g.
+                    "Mini : Hip-Hop" vs "JUMPstart : Hip-Hop") — without it,
+                    same-styled winners from different age divisions look
+                    like duplicate awards. Show category too only when it
+                    adds information. %>
+                <% const catCell = [award.age_division,
+                     (award.category && !(award.age_division || '').toUpperCase().includes(award.category.toUpperCase())) ? award.category : null
+                   ].filter(Boolean).join(' · ') || award.category || '-'; %>
+                <td><%= catCell %></td>
                 <td>
                   <% if (award.dancers && award.dancers.length > 0) { %>
                     <% award.dancers.forEach(function(d, index) { %>
