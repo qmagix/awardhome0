@@ -120,6 +120,11 @@
     else body += '<h3>' + esc(c.type) + '</h3>';
     if (c.div) body += '<div class="age-division-row"><span class="badge badge-age-division">' + esc(c.div) + '</span></div>';
     if (c.cat) body += '<p class="sub-category">' + esc(c.cat) + '</p>';
+    if (c.studio) {
+      body += '<p class="sub-category card-studio-line">' + (c.studio.uid
+        ? '<a href="/dance/studio/' + esc(c.studio.uid) + '" onclick="event.stopPropagation()">' + esc(c.studio.name) + '</a>'
+        : esc(c.studio.name)) + '</p>';
+    }
     body += '<p class="sub-category event-line">' + esc(c.event) + '</p>';
 
     return '<div class="flip-card"><div class="flip-card-inner">' +

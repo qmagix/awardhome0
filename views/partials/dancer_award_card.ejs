@@ -117,6 +117,18 @@
                                             <%= award.category %>
                                           </p>
                                           <% } %>
+                                            <%# Studio attribution: always shown (it's part of the
+                                                verified record and the studio's presence on every
+                                                shared card); claiming upgrades it to a link to the
+                                                studio page. stopPropagation keeps the tap from
+                                                flipping the card. %>
+                                            <% if (award.studio_name) { %>
+                                              <p class="sub-category card-studio-line">
+                                                <% if (award.studio_claimed && award.studio_unique_id) { %>
+                                                  <a href="/dance/studio/<%= award.studio_unique_id %>" onclick="event.stopPropagation()"><%= award.studio_name %></a>
+                                                <% } else { %><%= award.studio_name %><% } %>
+                                              </p>
+                                            <% } %>
                                             <p class="sub-category event-line">
                                               <%= formatEventTitle(award.event_name, award.org_name, award.event_year) %>
                                             </p>
@@ -137,6 +149,9 @@
         <div class="tcb-name"><%= dancer.name %></div>
         <% if (dancer.vanity_tag) { %>
           <div class="tcb-tag">#<%= dancer.vanity_tag %></div>
+        <% } %>
+        <% if (award.studio_name) { %>
+          <div class="tcb-with tcb-studio">of <%= award.studio_name %></div>
         <% } %>
         <% if (isGroup) { %>
           <div class="tcb-with">together with teammates</div>

@@ -1185,10 +1185,13 @@ router.get('/dancer/:unique_id', profileLimiter, async (req, res) => {
 
   const awards = await db.all(`
     SELECT DISTINCT a.*, e.name as event_name, e.year as event_year, o.name as org_name, o.logo_url, o.custom_icons,
+      s.name as studio_name, s.unique_id as studio_unique_id,
+      CASE WHEN s.owner_id IS NOT NULL THEN 1 ELSE 0 END as studio_claimed,
       (SELECT COUNT(*) FROM award_dancers ad2 WHERE ad2.award_id = a.id) as dancer_count
     FROM awards a
     LEFT JOIN events e ON a.event_id = e.id
     LEFT JOIN organizations o ON e.org_id = o.id
+    LEFT JOIN studios s ON a.studio_id = s.id
     LEFT JOIN award_dancers ad ON a.id = ad.award_id
     WHERE a.dancer_id = ? OR ad.dancer_id = ?
     ORDER BY e.year DESC, a.award_type, a.place
@@ -1343,7 +1346,8 @@ router.get('/dance/event/:id', async (req, res) => {
   try { orgIconsObj = event.custom_icons ? JSON.parse(event.custom_icons) : null; } catch (e) { }
 
   const awards = await db.all(`
-    SELECT a.*, d.name as dancer_name, d.unique_id, s.name as studio_name, s.unique_id as studio_uid
+    SELECT a.*, d.name as dancer_name, d.unique_id, s.name as studio_name, s.unique_id as studio_uid,
+      CASE WHEN s.owner_id IS NOT NULL THEN 1 ELSE 0 END as studio_claimed
     FROM awards a
     LEFT JOIN dancers d ON a.dancer_id = d.id
     LEFT JOIN studios s ON a.studio_id = s.id
@@ -1396,6 +1400,10 @@ router.get('/dance/event/:id', async (req, res) => {
       customIcon: L.getCustomIcon(award, orgIconsObj) || null,
       coin: coin.show ? { url: event.logo_url, vars: coin.vars.join('; ') } : null,
       selfAdded: !!award.is_self_added,
+      // claimed studios get a link (uid present); unclaimed show name only
+      studio: award.studio_name
+        ? { name: award.studio_name, uid: award.studio_claimed ? award.studio_uid : null }
+        : null,
     };
   }
 

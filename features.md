@@ -39,6 +39,18 @@ This document outlines the core features of the Dance Awards Platform.
   "✓ Code" badge. Approval auto-rejects competing pending claims for the same dancer, and every
   decision (either path) emails the claimant — approvals deep-link to the card-extras page.
 
+## 3a-2. Studio Attribution on Award Cards (2026-08-28)
+Every award card carries the studio the routine competed with — front face as a muted identity
+line just above the event line (`.card-studio-line`, cqw-scaled with the rem fallback; hidden in
+mini-mode via its `sub-category` class), and on the certificate back as "of <studio>" under the
+dancer's name. The name always shows (it's part of the verified record and travels with every
+shared screenshot); a **claimed** studio's name upgrades to a link to its public page (dotted
+underline; `stopPropagation` so the tap doesn't flip the card). Design decision: claiming
+enhances, never gates — a nameless card would advertise unclaimed status (the same leak the org
+cards avoid) and would punish the dancer's card to pressure the studio. Wired through the dancer
+page, the card manager, and the event-page lightbox payload (`card.studio {name, uid}` — uid
+present only when claimed). FAQs: dancer §11, studio admin §14.
+
 ## 3b. Award Card Designs (A/B)
 Two selectable card designs render on public dancer pages. The site-wide default is a superadmin
 setting (`card_design` at `/admin/settings`); any visitor can preview a variant per session with

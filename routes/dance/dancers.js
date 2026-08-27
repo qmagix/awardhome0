@@ -119,11 +119,14 @@ router.get('/manage/dancer/:id/card', requireAuth, async (req, res) => {
 
   const awards = await db.all(`
     SELECT a.*, e.name as event_name, e.year as event_year, o.name as org_name, o.logo_url, o.custom_icons,
+      s.name as studio_name, s.unique_id as studio_unique_id,
+      CASE WHEN s.owner_id IS NOT NULL THEN 1 ELSE 0 END as studio_claimed,
       (SELECT COUNT(*) FROM award_dancers ad2 WHERE ad2.award_id = a.id) as dancer_count
     FROM awards a
     JOIN award_dancers ad ON a.id = ad.award_id
     JOIN events e ON a.event_id = e.id
     LEFT JOIN organizations o ON e.org_id = o.id
+    LEFT JOIN studios s ON a.studio_id = s.id
     WHERE ad.dancer_id = ?
     ORDER BY e.year DESC
   `, [dancer.id]);
