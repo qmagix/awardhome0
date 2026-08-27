@@ -1071,3 +1071,65 @@ RADIX Dance Convention | Tour — Atlantic City | Atlantic City | NJ | Harrah's 
 24SEVEN Dance Convention | Tour — Honolulu | Honolulu | HI | Hawaii Convention Center | 2027-05-14 | 2027-05-16 | https://24sevendance.com/2026-2027/honolulu-hi/ | https://24sevendance.com/tour-dates/
 24SEVEN Dance Convention | Tour — Chicago | Chicago | IL | The Westin Chicago North Shore | 2027-05-21 | 2027-05-23 | https://24sevendance.com/2026-2027/chicago-il/ | https://24sevendance.com/tour-dates/
 24SEVEN Dance Convention | Tour — Houston | Houston | TX | Marriott Marquis Houston | 2027-05-28 | 2027-05-30 | https://24sevendance.com/2026-2027/houston-tx/ | https://24sevendance.com/tour-dates/
+
+# --- Added 2026-08-28: Hollywood Vibe 2026-27 tour (hollywoodvibe.com/tour/,
+# city boxes; venues live on city pages), ADC|IBC 2026-27 season (adcibc.com
+# LOCATIONS nav; "Central Florida (Pending)" excluded; registers via their
+# CompGenie portal), UBC 2026-27 semi-finals (universalballetcompetition.com
+# /semi-finals/, read via browser — Cloudflare blocks curl; WAITLIST/SOLD OUT
+# suffixes dropped; 2027 Grand Prix Finals not yet announced).
+Hollywood Vibe | Tour — Stamford | Stamford | CT |  | 2026-11-13 | 2026-11-15 | https://www.hollywoodvibe.com/stamford-ct | https://www.hollywoodvibe.com/tour/
+Hollywood Vibe | Tour — Des Moines | Des Moines | IA |  | 2026-11-20 | 2026-11-22 | https://www.hollywoodvibe.com/des-moines-ia | https://www.hollywoodvibe.com/tour/
+Hollywood Vibe | Tour — St Louis | St Louis | MO |  | 2026-12-04 | 2026-12-06 | https://www.hollywoodvibe.com/st-louis-mo | https://www.hollywoodvibe.com/tour/
+Hollywood Vibe | Tour — Denver | Denver | CO |  | 2027-01-15 | 2027-01-17 | https://www.hollywoodvibe.com/denver-co | https://www.hollywoodvibe.com/tour/
+Hollywood Vibe | Tour — Dallas | Dallas | TX |  | 2027-01-29 | 2027-01-31 | https://www.hollywoodvibe.com/dallas-tx | https://www.hollywoodvibe.com/tour/
+Hollywood Vibe | Tour — Montgomery | Montgomery | AL |  | 2027-01-29 | 2027-01-31 | https://www.hollywoodvibe.com/montgomery-al | https://www.hollywoodvibe.com/tour/
+Hollywood Vibe | Tour — Mobile | Mobile | AL |  | 2027-02-12 | 2027-02-14 | https://www.hollywoodvibe.com/mobile-al | https://www.hollywoodvibe.com/tour/
+Hollywood Vibe | Tour — Charlotte | Charlotte | NC |  | 2027-02-12 | 2027-02-14 | https://www.hollywoodvibe.com/charlotte-nc | https://www.hollywoodvibe.com/tour/
+Hollywood Vibe | Tour — Garden Grove | Garden Grove | CA |  | 2027-02-19 | 2027-02-21 | https://www.hollywoodvibe.com/garden-grove-ca | https://www.hollywoodvibe.com/tour/
+Hollywood Vibe | Tour — Myrtle Beach | Myrtle Beach | SC |  | 2027-03-05 | 2027-03-07 | https://www.hollywoodvibe.com/myrtle-beach-sc | https://www.hollywoodvibe.com/tour/
+Hollywood Vibe | Tour — Cleveland | Cleveland | OH |  | 2027-03-12 | 2027-03-14 | https://www.hollywoodvibe.com/cleveland-oh | https://www.hollywoodvibe.com/tour/
+Hollywood Vibe | Tour — Chicago | Chicago | IL |  | 2027-03-19 | 2027-03-21 | https://www.hollywoodvibe.com/chicago-il | https://www.hollywoodvibe.com/tour/
+Hollywood Vibe | Tour — Phoenix | Phoenix | AZ |  | 2027-04-02 | 2027-04-04 | https://www.hollywoodvibe.com/glendale-az | https://www.hollywoodvibe.com/tour/
+Hollywood Vibe | Tour — Burlingame | Burlingame | CA |  | 2027-04-09 | 2027-04-11 | https://www.hollywoodvibe.com/burlingame-ca | https://www.hollywoodvibe.com/tour/
+Hollywood Vibe | Tour — Norfolk | Norfolk | VA |  | 2027-04-16 | 2027-04-18 | https://www.hollywoodvibe.com/norfolk-va | https://www.hollywoodvibe.com/tour/
+Hollywood Vibe | Tour — Houston | Houston | TX |  | 2027-04-16 | 2027-04-18 | https://www.hollywoodvibe.com/houston-tx | https://www.hollywoodvibe.com/tour/
+Hollywood Vibe | Tour — Vancouver | Vancouver | WA |  | 2027-04-23 | 2027-04-25 | https://www.hollywoodvibe.com/vancouver-wa | https://www.hollywoodvibe.com/tour/
+Hollywood Vibe | Tour — Seattle | Seattle | WA |  | 2027-04-30 | 2027-05-02 | https://www.hollywoodvibe.com/seattle-wa | https://www.hollywoodvibe.com/tour/
+Hollywood Vibe | Tour — Layton | Layton | UT |  | 2027-05-06 | 2027-05-08 | https://www.hollywoodvibe.com/layton-ut | https://www.hollywoodvibe.com/tour/
+Hollywood Vibe | National Finals — Orlando | Orlando | FL |  | 2027-06-24 | 2027-06-29 | https://www.hollywoodvibe.com/tour/ | https://www.hollywoodvibe.com/tour/
+Hollywood Vibe | National Finals — San Diego | San Diego | CA |  | 2027-07-05 | 2027-07-10 | https://www.hollywoodvibe.com/tour/ | https://www.hollywoodvibe.com/tour/
+ADC IBC | Semi-Finals — Seattle | Seattle | WA |  | 2026-11-06 | 2026-11-08 | https://adcibc.dancecompgenie.com/ | https://www.adcibc.com
+ADC IBC | Semi-Finals — Boca Raton | Boca Raton | FL |  | 2026-11-14 | 2026-11-15 | https://adcibc.dancecompgenie.com/ | https://www.adcibc.com
+ADC IBC | Semi-Finals — San Francisco | San Francisco | CA |  | 2026-11-20 | 2026-11-22 | https://adcibc.dancecompgenie.com/ | https://www.adcibc.com
+ADC IBC | Semi-Finals — Berlin | Berlin |  |  | 2026-11-28 | 2026-11-29 | https://adcibc.dancecompgenie.com/ | https://www.adcibc.com
+ADC IBC | Semi-Finals — Kansas City | Kansas City | MO |  | 2027-01-02 | 2027-01-03 | https://adcibc.dancecompgenie.com/ | https://www.adcibc.com
+ADC IBC | Semi-Finals — Phoenix | Phoenix | AZ |  | 2027-01-02 | 2027-01-03 | https://adcibc.dancecompgenie.com/ | https://www.adcibc.com
+ADC IBC | Semi-Finals — Chicago | Chicago | IL |  | 2027-01-08 | 2027-01-10 | https://adcibc.dancecompgenie.com/ | https://www.adcibc.com
+ADC IBC | Semi-Finals — San Diego | San Diego | CA |  | 2027-01-08 | 2027-01-10 | https://adcibc.dancecompgenie.com/ | https://www.adcibc.com
+ADC IBC | Semi-Finals — Atlanta | Atlanta | GA |  | 2027-01-14 | 2027-01-17 | https://adcibc.dancecompgenie.com/ | https://www.adcibc.com
+ADC IBC | Semi-Finals — Los Angeles | Los Angeles | CA |  | 2027-01-15 | 2027-01-17 | https://adcibc.dancecompgenie.com/ | https://www.adcibc.com
+ADC IBC | Semi-Finals — Raleigh | Raleigh | NC |  | 2027-01-22 | 2027-01-24 | https://adcibc.dancecompgenie.com/ | https://www.adcibc.com
+ADC IBC | Semi-Finals — Pittsburgh | Pittsburgh | PA |  | 2027-01-22 | 2027-01-24 | https://adcibc.dancecompgenie.com/ | https://www.adcibc.com
+ADC IBC | Semi-Finals — Dallas | Dallas | TX |  | 2027-01-28 | 2027-01-31 | https://adcibc.dancecompgenie.com/ | https://www.adcibc.com
+ADC IBC | Semi-Finals — Denver | Denver | CO |  | 2027-02-05 | 2027-02-07 | https://adcibc.dancecompgenie.com/ | https://www.adcibc.com
+ADC IBC | Semi-Finals — Toronto | Toronto | ON |  | 2027-02-05 | 2027-02-07 | https://adcibc.dancecompgenie.com/ | https://www.adcibc.com
+ADC IBC | Semi-Finals — Houston | Houston | TX |  | 2027-02-11 | 2027-02-14 | https://adcibc.dancecompgenie.com/ | https://www.adcibc.com
+ADC IBC | Semi-Finals — Summit | Summit | NJ |  | 2027-02-12 | 2027-02-14 | https://adcibc.dancecompgenie.com/ | https://www.adcibc.com
+ADC IBC | Finals — St. Petersburg | St. Petersburg | FL |  | 2027-03-30 | 2027-04-05 | https://adcibc.dancecompgenie.com/ | https://www.adcibc.com
+Universal Ballet Competition | Semi-Finals — San Francisco | San Francisco | CA |  | 2026-10-16 | 2026-10-18 | https://universalballetcompetition.com | https://universalballetcompetition.com/semi-finals/
+Universal Ballet Competition | Semi-Finals — Dayton | Dayton | OH |  | 2026-10-23 | 2026-10-25 | https://universalballetcompetition.com | https://universalballetcompetition.com/semi-finals/
+Universal Ballet Competition | Semi-Finals — Denver | Denver | CO |  | 2027-01-15 | 2027-01-17 | https://universalballetcompetition.com | https://universalballetcompetition.com/semi-finals/
+Universal Ballet Competition | Semi-Finals — Manchester | Manchester | NH |  | 2027-01-29 | 2027-01-31 | https://universalballetcompetition.com | https://universalballetcompetition.com/semi-finals/
+Universal Ballet Competition | Semi-Finals — Bartlett | Bartlett | TN |  | 2027-01-29 | 2027-01-31 | https://universalballetcompetition.com | https://universalballetcompetition.com/semi-finals/
+Universal Ballet Competition | Semi-Finals — Palm Beach Gardens | Palm Beach Gardens | FL |  | 2027-02-12 | 2027-02-14 | https://universalballetcompetition.com | https://universalballetcompetition.com/semi-finals/
+Universal Ballet Competition | Semi-Finals — Austin | Austin | TX |  | 2027-02-12 | 2027-02-14 | https://universalballetcompetition.com | https://universalballetcompetition.com/semi-finals/
+Universal Ballet Competition | Semi-Finals — Pittsburgh | Pittsburgh | PA |  | 2027-02-19 | 2027-02-21 | https://universalballetcompetition.com | https://universalballetcompetition.com/semi-finals/
+Universal Ballet Competition | Semi-Finals — Chicago (February) | Chicago | IL |  | 2027-02-19 | 2027-02-21 | https://universalballetcompetition.com | https://universalballetcompetition.com/semi-finals/
+Universal Ballet Competition | Semi-Finals — Iowa City | Iowa City | IA |  | 2027-03-19 | 2027-03-21 | https://universalballetcompetition.com | https://universalballetcompetition.com/semi-finals/
+Universal Ballet Competition | Semi-Finals — Irvine | Irvine | CA |  | 2027-03-25 | 2027-03-27 | https://universalballetcompetition.com | https://universalballetcompetition.com/semi-finals/
+Universal Ballet Competition | Semi-Finals — Atlanta | Atlanta | GA |  | 2027-04-02 | 2027-04-04 | https://universalballetcompetition.com | https://universalballetcompetition.com/semi-finals/
+Universal Ballet Competition | Semi-Finals — Jacksonville | Jacksonville | FL |  | 2027-04-02 | 2027-04-04 | https://universalballetcompetition.com | https://universalballetcompetition.com/semi-finals/
+Universal Ballet Competition | Semi-Finals — Chicago (April) | Chicago | IL |  | 2027-04-15 | 2027-04-18 | https://universalballetcompetition.com | https://universalballetcompetition.com/semi-finals/
+Universal Ballet Competition | Semi-Finals — Houston | Houston | TX |  | 2027-04-23 | 2027-04-25 | https://universalballetcompetition.com | https://universalballetcompetition.com/semi-finals/
+Universal Ballet Competition | Semi-Finals — Raleigh | Raleigh | NC |  | 2027-04-30 | 2027-05-02 | https://universalballetcompetition.com | https://universalballetcompetition.com/semi-finals/
