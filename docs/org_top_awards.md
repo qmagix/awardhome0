@@ -461,3 +461,9 @@ Senior 16-19. **Sources:** epicdanceinc.com/rules. **Confidence:** high.
 
 ## 24SEVEN Dance Convention (24sevendance.com)
 - Fourth DanceOne sibling — identical anatomy via the shared libs. **Youngest age division: Sidekick** (their JUMPstart/NUbie/Rookie). Top awards: the **"11 O'Clock" awards** per age division (their Best-of-JUMP analogue — the routine good enough to close the 11pm show) plus Studio Showcase; scholarship places WINNER / RUNNER-UP are scholarship outcomes, not placements. Org slug is 'twentyfourseven' (slugs must not start with a digit for URL hygiene).
+
+## Inspire National Dance Competition (inspirendc.com)
+- Southeast-US circuit; results via their DanceComp Genie portal (PDF books + "Title Result" HTML reports). **Top awards: TITLE** ("Title Winner (Miss/Mr./Non-Binary)" per age~level~size section, runner-ups marked) and, at Nationals only, **CRYSTAL SHOWCASE** — invited top-routine showdown rounds ("Crystal Showcase S/D/T", "Group Crystal Showcase"); a Showcase 1ST is the flagship win.
+- Placements ("Overall Awards"): per-section 1ST..12TH incl. blank-cell ties, sections `Size ~ Age ~ Level` (levels Recreational / Competition / Competition Elite / Inspiring Gem / Pro-Am — class levels, not awards). TOP SCORE = per-session high score (11 & Under / 12 & Up). Medal bands (Crystal Diamond, Flawless Gem) are adjudication tiers, never awards.
+- PHOTOGENIC / pageant-day awards (Miss/Mister <City>, N-Year-Old Miss, Natural Beauty, Fresh Face, Best Smile...) name a dancer with no studio — the importer links them through the event's own rosters. STUDIO AWARD = Studio of Excellence per level + Inspirational Studio Award. COSTUME = costume winners by entry number.
+- The ONLY imported org publishing full group rosters (Performers column) — every group award carries its complete dancer list via award_dancers.
