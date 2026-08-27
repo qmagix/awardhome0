@@ -293,11 +293,14 @@ def main():
             continue
         if not (args.yfrom <= int(year_dir) <= args.yto):
             continue
-        for fname in sorted(os.listdir(d)):
+        listing = sorted(os.listdir(d))
+        for fname in listing:
             if not fname.lower().endswith(".pdf"):
                 continue
             if args.file and fname != args.file:
                 continue
+            if fname[:-4] + "_update.pdf" in listing:
+                continue   # a corrected re-upload supersedes this book
             meta = file_meta(fname, year_dir)
             try:
                 event_name, rows, flags = extract(os.path.join(d, fname))
