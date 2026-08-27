@@ -454,3 +454,7 @@ Senior 16-19. **Sources:** epicdanceinc.com/rules. **Confidence:** high.
 - DanceOne sibling of JUMP — identical results anatomy and award vocabulary. **Top awards: SPECIAL AWARDS** — "Best NU Group" per age division (their Best-of-JUMP analogue), plus "Studio Pick"; **NUbie is the youngest age division** (their JUMPstart), not an award.
 - Placements: HIGH SCORE BY AGE / BY PERFORMANCE, 1st..10th, categories "Age : Type". Scholarships: "<Age> NUVO" honors + per-class scholarships (incl. BALLROOM — a class JUMP doesn't run); places are WINNER / RUNNER-UP (scholarship outcomes, not competition placements). Class-scholarship tables add a Faculty column (the presenting teacher — not imported).
 - Shared tooling: scripts/lib/danceone.js + danceone_import.js drive both brands (and future DanceOne siblings like 24SEVEN); per-org scripts are thin configs. Seasons reach 2019-2020 on the site.
+
+## RADIX Dance Convention (radixdance.com)
+- Third DanceOne sibling (JUMP/NUVO) — identical anatomy via the shared libs. **Youngest age division: Rookie** (their JUMPstart/NUbie). Top awards: SPECIAL AWARDS per age division + Studio Pick; scholarships WINNER / RUNNER-UP are scholarship outcomes, not placements.
+- NOTE the DanceOne brands share one results backend — each brand's site will serve ANY event id, so scrapers must only fetch ids listed on that brand's own /past-seasons/ index (the shared loadIndex does this; the three indexes were verified disjoint: 0 id overlap).
