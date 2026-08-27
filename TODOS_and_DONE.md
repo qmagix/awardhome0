@@ -3,6 +3,8 @@
 ## TODO
 
 ### Data quality
+- [ ] Hall of Fame Dance Challenge (halloffamedance.com, east-US): NO public results — researched 2026-08-27. Custom platform (not DanceBug/CompGenie); /CompetitionResults/<id> exists but returns Invalid Request without a studio login; Wayback has zero results-URL captures ever; studios post their own results (e.g. parkfun.com Schaumburg news page). Data only obtainable via partnership ask — good outreach candidate BECAUSE families can't find results anywhere public.
+
 - **Convention (2026-08-27): reviewed txt is the artifact of record.** For org imports, transfer tobeprocessed/<org>/txt/ to prod (scp tarball) and import there — never re-scrape/re-extract on prod (divergence window, double site hits). NUVO was the last org imported via prod re-scrape (verified identical: 138 events / 71,419 rows both sides).
 
 - [x] (DONE 2026-08-25) Ultra + Refresh joined the Monday weekly pipeline: WEB_ORGS entries run scripts/update_txt_org.js (scrape year → txt → import --apply into DB_PATH), so new results flow through the staged validator gate like every other org. Verified against a snapshot: cache-hit scrape + zero-row idempotent import.
