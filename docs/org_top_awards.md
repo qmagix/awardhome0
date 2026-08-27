@@ -435,3 +435,10 @@ Senior 16-19. **Sources:** epicdanceinc.com/rules. **Confidence:** high.
 - Group sections: DUO/TRIO, PDD (Pas de Deux), ENSEMBLE. Ensembles are studio-level (no dancer names published); duo/trio/PDD list every dancer.
 - "Additional Awards" per event: Rising Star / Aspire / Legacy (dancer honors), Outstanding Choreographer / Classical Coach / Contemporary Coach (people-and-school honors, imported at studio level).
 - Data source: the registration backend (api.reg.universalballetcompetition.com/public/results.cfm?event_id=N) publishes EVERY event including regionals — unlike ADC IBC, no outreach ask needed for regional data. Dates come from scripts/seed/ubc_events.json (site + Wayback index snapshots). Archive reaches 2019 (ids 8-28) if we want more history.
+
+## Hollywood Vibe (hollywoodvibe.com)
+- **Top awards: the OVERALL tables** ("1ST OVERALL".."5TH OVERALL") — these rank across styles within an age×size group and outrank a category placement. Imported with award_type='OVERALL'; 1ST OVERALL is marked is_first_place.
+- Category placements ("1st".."10th") sit in very narrow categories (age × style × size, e.g. "MINI CONTEMPORARY SOLO"), and a category awards **1, 3 or 5 places** depending on entry count — so a lone 1st is the norm, not a data error. Some events publish a second table further down for 6th-10th.
+- **SPECIALTY judge awards**: Most Entertaining, Best Costume, Outstanding Choreography, Best Direction, plus per-judge "Specialty Award" (award_type='SPECIALTY').
+- **Scholarships carry dancer names** (award_type='SCHOLARSHIP') — Excellence, Hollywood Vibe, Team Hollywood Vibe, Millennium, Grand Prize, Dancer of the Year, CLI Summer Intensive / Conservatory, LA Agency Finalists, Studio Excellence. These are the only Hollywood Vibe rows with dancers; competition results publish routine + studio only.
+- Levels appear in the category string: INTERMEDIATE / COMPETITIVE are skill levels, NOT awards. Published typos exist in the source (INTERMEDAITE, JUNOIR, DUO/TIRO, PRODUCITON) and are handled at import.
