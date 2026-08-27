@@ -59,6 +59,12 @@ dancer's own acknowledgement line. The card's ack page renders all teammates' li
 with the viewing dancer's pinned first — same award, different page per viewer context.
 Moderation-gated (superadmin approval) because authors are often minors. *Captured
 2026-08-12. Implemented 2026-08-12 (local commit, NOT yet deployed publicly).*
+**Extension 2026-08-27 (NOT built):** composition policy keyed to viewing-context
+TYPE — participant context pins own line; the STUDIO's rendering of the same group
+card aggregates the full roster (team-plaque view, paginating across back-stack
+pages); optional organization-authored "director's note" as aggregate header (new
+(award, organization) annotation granularity). Covered in `provisional_draft_P1_P3.txt`
+¶[0018a], claims 19–20; product sketch in ideas.md §9.
 
 ### A5. Concierge-gated organizer logo "coin" on user-generated share media
 Third-party brand marks appear on shareable award cards only after a platform operator
