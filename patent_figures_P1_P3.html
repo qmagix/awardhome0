@@ -1,0 +1,401 @@
+<!-- CONFIDENTIAL — informal drawings for provisional draft (provisional_draft_P1_P3.txt).
+     Print to PDF (portrait, default margins) to produce the filing attachment. -->
+<style>
+  body { background:#fff; color:#000; font-family:Helvetica,Arial,sans-serif; margin:0; }
+  .fig { text-align:center; padding:28px 0 10px; page-break-after:always; }
+  .fig:last-child { page-break-after:auto; }
+  svg { display:block; margin:0 auto; max-width:96%; height:auto; }
+  .b { fill:#fff; stroke:#000; stroke-width:1.5; }
+  .big { fill:#fff; stroke:#000; stroke-width:2; }
+  .dash { fill:#fff; stroke:#000; stroke-width:1.5; stroke-dasharray:6 4; }
+  .ln { stroke:#000; stroke-width:1.5; fill:none; }
+  .lead { stroke:#000; stroke-width:1; fill:none; }
+  .life { stroke:#000; stroke-width:1; stroke-dasharray:5 4; }
+  text { font-family:Helvetica,Arial,sans-serif; font-size:13px; fill:#000; text-anchor:middle; }
+  .s { font-size:11px; }
+  .hd { font-size:13px; font-weight:bold; letter-spacing:.04em; }
+  .num { font-size:12px; font-style:italic; }
+  .cap { font-size:16px; font-weight:bold; margin:14px 0 0; }
+  .sub { font-size:12px; margin:2px 0 0; color:#000; }
+  @media print { .fig { padding-top:10px; } }
+</style>
+
+<!-- ================================================== FIG 1 -->
+<div class="fig">
+<svg viewBox="0 0 880 720" width="880">
+  <defs><marker id="a1" markerWidth="9" markerHeight="7" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 z"/></marker></defs>
+  <rect class="b" x="20" y="40" width="180" height="70"/><text x="110" y="65">Third-party result sources<tspan x="110" dy="15">(sites, PDFs, exports)</tspan><tspan class="num" x="110" dy="16">102</tspan></text>
+  <rect class="b" x="240" y="40" width="180" height="70"/><text x="330" y="65">Ingestion pipeline<tspan x="330" dy="15">(provenance, idempotency)</tspan><tspan class="num" x="330" dy="16">104</tspan></text>
+  <line class="ln" x1="200" y1="75" x2="240" y2="75" marker-end="url(#a1)"/>
+  <line class="ln" x1="420" y1="75" x2="470" y2="75" marker-end="url(#a1)"/>
+  <rect class="big" x="470" y="20" width="390" height="300"/><text class="hd" x="665" y="42">RECORD STORE <tspan class="num">110</tspan></text>
+  <rect class="b" x="485" y="56" width="180" height="40"/><text class="s" x="575" y="73">achievement records<tspan class="num" x="575" dy="13"> 111</tspan></text>
+  <rect class="b" x="485" y="104" width="180" height="40"/><text class="s" x="575" y="121">award_dancers junction<tspan class="num" x="575" dy="13"> 112</tspan></text>
+  <rect class="b" x="485" y="152" width="180" height="40"/><text class="s" x="575" y="169">dancer_studios<tspan class="num" x="575" dy="13"> 113</tspan></text>
+  <rect class="b" x="485" y="200" width="180" height="40"/><text class="s" x="575" y="217">participants, lifetime unique_id<tspan class="num" x="575" dy="13"> 119</tspan></text>
+  <rect class="b" x="485" y="248" width="180" height="40"/><text class="s" x="575" y="265">organizations, custom_icons<tspan class="num" x="575" dy="13"> 118</tspan></text>
+  <rect class="b" x="675" y="56" width="170" height="40"/><text class="s" x="760" y="73">award_acknowledgements<tspan class="num" x="760" dy="13"> 116</tspan></text>
+  <rect class="b" x="675" y="104" width="170" height="40"/><text class="s" x="760" y="121">award_card_photos<tspan class="num" x="760" dy="13"> 117</tspan></text>
+  <rect class="b" x="675" y="152" width="170" height="40"/><text class="s" x="760" y="169">feature_flags<tspan class="num" x="760" dy="13"> 115</tspan></text>
+  <rect class="b" x="675" y="200" width="170" height="40"/><text class="s" x="760" y="217">prize_pools / prize_reveals<tspan class="num" x="760" dy="13"> 121</tspan></text>
+  <rect class="b" x="675" y="248" width="170" height="40"/><text class="s" x="760" y="265">import lineage / scrape log<tspan class="num" x="760" dy="13"> 122</tspan></text>
+  <rect class="b" x="20" y="180" width="180" height="80"/><text x="110" y="205">Owner / guardian consoles<tspan class="s" x="110" dy="15">(WYSIWYG editor, consent)</tspan><tspan class="num" x="110" dy="16">190</tspan></text>
+  <rect class="b" x="240" y="175" width="180" height="90"/><text x="330" y="202">Moderation subsystem<tspan class="s" x="330" dy="15">tiers 1–3, queue, modes</tspan><tspan class="num" x="330" dy="16">130</tspan></text>
+  <line class="ln" x1="200" y1="220" x2="240" y2="220" marker-end="url(#a1)"/>
+  <line class="ln" x1="420" y1="220" x2="470" y2="220" marker-end="url(#a1)"/>
+  <line class="ln" x1="575" y1="320" x2="575" y2="360" marker-end="url(#a1)"/>
+  <rect class="b" x="470" y="360" width="200" height="66"/><text x="570" y="385">Rendering engine<tspan class="s" x="570" dy="15">conditional materialization</tspan><tspan class="num" x="570" dy="15">140</tspan></text>
+  <rect class="b" x="695" y="360" width="165" height="66"/><text x="777" y="385">Derivative media<tspan class="s" x="777" dy="15">generator (video, images)</tspan><tspan class="num" x="777" dy="15">150</tspan></text>
+  <line class="ln" x1="670" y1="393" x2="695" y2="393" marker-end="url(#a1)"/>
+  <line class="ln" x1="570" y1="426" x2="570" y2="462" marker-end="url(#a1)"/>
+  <rect class="b" x="470" y="462" width="200" height="56"/><text x="570" y="485">Card artifact<tspan class="s" x="570" dy="15">front + conditional page stack</tspan><tspan class="num" x="570" dy="14"> 142</tspan></text>
+  <rect class="b" x="695" y="462" width="165" height="56"/><text x="777" y="485">Reward subsystem<tspan class="s" x="777" dy="15">server-side seeded roll</tspan><tspan class="num" x="777" dy="14"> 160</tspan></text>
+  <line class="ln" x1="670" y1="480" x2="695" y2="480" marker-end="url(#a1)"/><text class="s" x="683" y="472">flip</text>
+  <line class="ln" x1="695" y1="505" x2="670" y2="505" marker-end="url(#a1)"/><text class="s" x="684" y="522">page</text>
+  <line class="ln" x1="570" y1="518" x2="570" y2="554" marker-end="url(#a1)"/>
+  <rect class="b" x="470" y="554" width="200" height="52"/><text x="570" y="576">Public surfaces, sharing<tspan class="num" x="570" dy="15"> 144</tspan></text>
+  <rect class="big" x="20" y="340" width="400" height="230"/><text class="hd" x="220" y="362">IDENTITY &amp; CONSENT SERVICE <tspan class="num">170</tspan></text>
+  <rect class="b" x="35" y="376" width="180" height="46"/><text class="s" x="125" y="394">registration wallet<tspan x="125" dy="13">(owner-entered, never public) <tspan class="num">171</tspan></tspan></text>
+  <rect class="b" x="225" y="376" width="180" height="46"/><text class="s" x="315" y="394">consent grants — id_grants<tspan class="num" x="315" dy="13"> 172</tspan></text>
+  <rect class="b" x="35" y="432" width="180" height="46"/><text class="s" x="125" y="450">verified history attestations<tspan class="num" x="125" dy="13"> 173</tspan></text>
+  <rect class="b" x="225" y="432" width="180" height="46"/><text class="s" x="315" y="450">audit log<tspan class="num" x="315" dy="13"> 174</tspan></text>
+  <rect class="b" x="35" y="494" width="370" height="46"/><text class="s" x="220" y="512">organizer pull API — HMAC-signed expiring tokens<tspan class="num" x="220" dy="13"> 176</tspan></text>
+  <polyline class="ln" points="470,300 350,300 350,340" marker-end="url(#a1)"/><text class="s" x="408" y="292">records → attestations</text>
+  <line class="ln" x1="110" y1="260" x2="110" y2="340" marker-end="url(#a1)"/><text class="s" x="112" y="300" transform="rotate(0)">grants, revocations</text>
+  <line class="ln" x1="110" y1="570" x2="110" y2="606" marker-end="url(#a1)"/>
+  <rect class="b" x="20" y="606" width="180" height="56"/><text x="110" y="628">Organizer systems /<tspan x="110" dy="15">registration forms</tspan><tspan class="num" x="110" dy="15"> 180</tspan></text>
+</svg>
+<p class="cap">FIG. 1</p><p class="sub">System architecture (100)</p>
+</div>
+
+<!-- ================================================== FIG 2 -->
+<div class="fig">
+<svg viewBox="0 0 880 620" width="880">
+  <defs><marker id="a2" markerWidth="9" markerHeight="7" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 z"/></marker></defs>
+  <rect class="big" x="60" y="60" width="230" height="340"/>
+  <circle class="b" cx="252" cy="102" r="24"/><text class="s" x="252" y="106">coin</text>
+  <line class="lead" x1="276" y1="96" x2="320" y2="80"/><text class="num" x="332" y="78">212</text>
+  <text class="hd" x="175" y="160">1st Place</text><line class="lead" x1="120" y1="152" x2="34" y2="140"/><text class="num" x="24" y="138">202</text>
+  <rect class="b" x="82" y="180" width="186" height="22"/><text class="s" x="175" y="196">tier / placement band</text><line class="lead" x1="82" y1="191" x2="34" y2="196"/><text class="num" x="24" y="200">204</text>
+  <text class="s" x="175" y="238">Teen Solo — Contemporary<tspan x="175" dy="15">“Golden Hour”</tspan></text><line class="lead" x1="90" y1="242" x2="34" y2="252"/><text class="num" x="24" y="256">206</text>
+  <text x="175" y="292">Avery P.</text><line class="lead" x1="140" y1="288" x2="34" y2="296"/><text class="num" x="24" y="300">208</text>
+  <text class="s" x="175" y="315">of Starlight Dance Co.</text><line class="lead" x1="110" y1="311" x2="34" y2="330"/><text class="num" x="24" y="334">210</text>
+  <text class="s" x="175" y="372">Spring Classic — 2026</text>
+  <text class="s" x="175" y="424">front face 201</text>
+  <path class="ln" d="M300,230 Q340,200 378,230" marker-end="url(#a2)"/><text class="s" x="340" y="196">flip</text><text class="num" x="340" y="248">214</text>
+  <rect class="b" x="436" y="54" width="230" height="340"/>
+  <rect class="b" x="424" y="66" width="230" height="340"/>
+  <rect class="b" x="412" y="78" width="230" height="340"/>
+  <rect class="big" x="400" y="90" width="230" height="340"/>
+  <text class="hd" x="515" y="130">CERTIFICATE</text>
+  <text class="s" x="515" y="160">Presented to<tspan x="515" dy="16">Avery P.</tspan><tspan x="515" dy="16">of Starlight Dance Co.</tspan></text>
+  <text class="s" x="515" y="240">1st Place — Teen Solo</text>
+  <rect class="b" x="470" y="370" width="90" height="26"/><text class="s" x="515" y="387">share</text><line class="lead" x1="560" y1="383" x2="600" y2="404"/><text class="num" x="612" y="408">221</text>
+  <line class="lead" x1="400" y1="100" x2="360" y2="94"/><text class="num" x="349" y="92">220</text>
+  <line class="lead" x1="642" y1="418" x2="700" y2="440"/><text class="num" x="712" y="444">222</text><text class="s" x="772" y="444">photo page</text>
+  <line class="lead" x1="654" y1="406" x2="720" y2="410"/><text class="num" x="732" y="414">224</text><text class="s" x="782" y="414">ack page</text>
+  <line class="lead" x1="666" y1="394" x2="740" y2="380"/><text class="num" x="752" y="378">226</text><text class="s" x="800" y="378">colophon</text>
+  <text class="s" x="515" y="452">ordered back-stack — pages exist only when</text>
+  <text class="s" x="515" y="467">approved content exists (conditional materialization)</text>
+  <path class="ln" d="M470,500 L455,500" marker-end="url(#a2)"/><path class="ln" d="M560,500 L575,500" marker-end="url(#a2)"/>
+  <circle class="b" cx="500" cy="500" r="5"/><circle cx="515" cy="500" r="5"/><circle class="b" cx="530" cy="500" r="5"/>
+  <text class="s" x="515" y="528">tap / swipe / arrows / dots — wrap-around</text><line class="lead" x1="580" y1="524" x2="640" y2="536"/><text class="num" x="652" y="540">228</text>
+</svg>
+<p class="cap">FIG. 2</p><p class="sub">Card object anatomy (200)</p>
+</div>
+
+<!-- ================================================== FIG 3 -->
+<div class="fig">
+<svg viewBox="0 0 660 790" width="620">
+  <defs><marker id="a3" markerWidth="9" markerHeight="7" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 z"/></marker></defs>
+  <rect class="b" x="130" y="24" width="260" height="44" rx="20"/><text x="260" y="51">for each candidate page <tspan class="num">302</tspan></text>
+  <line class="ln" x1="260" y1="68" x2="260" y2="96" marker-end="url(#a3)"/>
+  <polygon class="b" points="260,96 380,136 260,176 140,136"/><text x="260" y="132">content item</text><text x="260" y="147">exists? <tspan class="num">304</tspan></text>
+  <line class="ln" x1="260" y1="176" x2="260" y2="204" marker-end="url(#a3)"/><text class="s" x="272" y="196">yes</text>
+  <polygon class="b" points="260,204 380,244 260,284 140,244"/><text x="260" y="240">moderation state</text><text x="260" y="255">= approved?</text>
+  <line class="ln" x1="260" y1="284" x2="260" y2="312" marker-end="url(#a3)"/><text class="s" x="272" y="304">yes</text>
+  <polygon class="b" points="260,312 390,352 260,392 130,352"/><text x="260" y="348">feature flag on for viewer?</text><text class="s" x="260" y="363">(absent flag = off)</text>
+  <line class="ln" x1="260" y1="392" x2="260" y2="420" marker-end="url(#a3)"/><text class="s" x="272" y="412">yes</text>
+  <polygon class="b" points="260,420 390,460 260,500 130,460"/><text x="260" y="456">colophon page: mark</text><text x="260" y="471">operator-approved?</text>
+  <line class="ln" x1="260" y1="500" x2="260" y2="528" marker-end="url(#a3)"/><text class="s" x="290" y="520">yes / n.a.</text>
+  <rect class="b" x="140" y="528" width="240" height="44"/><text x="260" y="555">materialize page into stack <tspan class="num">310</tspan></text>
+  <rect class="b" x="470" y="270" width="160" height="66"/><text x="550" y="294">page omitted —<tspan x="550" dy="15">no placeholder, no</tspan><tspan x="550" dy="15">empty state <tspan class="num">306</tspan></tspan></text>
+  <polyline class="ln" points="380,136 550,136 550,270" marker-end="url(#a3)"/><text class="s" x="398" y="130">no</text>
+  <polyline class="ln" points="380,244 550,244 550,270" marker-end="url(#a3)"/><text class="s" x="398" y="238">no</text>
+  <polyline class="ln" points="390,352 550,352 550,336" marker-end="url(#a3)"/><text class="s" x="408" y="346">no</text>
+  <polyline class="ln" points="390,460 550,460 550,340" marker-end="url(#a3)"/><text class="s" x="408" y="454">no</text>
+  <line class="ln" x1="260" y1="572" x2="260" y2="598" marker-end="url(#a3)"/>
+  <polygon class="b" points="260,598 360,633 260,668 160,633"/><text x="260" y="638">more pages?</text>
+  <polyline class="ln" points="160,633 60,633 60,46 130,46" marker-end="url(#a3)"/><text class="s" x="140" y="627">yes</text>
+  <line class="ln" x1="260" y1="668" x2="260" y2="694" marker-end="url(#a3)"/><text class="s" x="272" y="688">no</text>
+  <rect class="b" x="90" y="694" width="340" height="60"/><text x="260" y="716">compose back-stack; pagination adapts;<tspan x="260" dy="16">first flip always lands on complete page <tspan class="num">312</tspan></tspan></text>
+</svg>
+<p class="cap">FIG. 3</p><p class="sub">Conditional page materialization (300)</p>
+</div>
+
+<!-- ================================================== FIG 4 -->
+<div class="fig">
+<svg viewBox="0 0 880 560" width="880">
+  <defs><marker id="a4" markerWidth="9" markerHeight="7" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 z"/></marker></defs>
+  <rect class="big" x="40" y="50" width="230" height="56"/><text x="155" y="73">group achievement record<tspan class="s" x="155" dy="15">one award, one routine <tspan class="num">402</tspan></tspan></text>
+  <line class="ln" x1="155" y1="106" x2="155" y2="134" marker-end="url(#a4)"/><text class="s" x="230" y="124">award_dancers junction rows</text>
+  <rect class="b" x="40" y="134" width="230" height="56"/><text class="s" x="155" y="156">dancer A — “Thanks, Coach!”<tspan x="155" dy="15">status: approved <tspan class="num">404</tspan></tspan></text>
+  <rect class="b" x="40" y="200" width="230" height="56"/><text class="s" x="155" y="222">dancer B — “Love my team”<tspan x="155" dy="15">status: approved <tspan class="num">406</tspan></tspan></text>
+  <rect class="b" x="40" y="266" width="230" height="56"/><text class="s" x="155" y="288">dancer C — “Best season ever”<tspan x="155" dy="15">status: PENDING <tspan class="num">408</tspan></tspan></text>
+  <polyline class="ln" points="270,228 330,228 330,150 360,150" marker-end="url(#a4)"/>
+  <polyline class="ln" points="330,228 330,310 360,310" marker-end="url(#a4)"/>
+  <rect class="big" x="360" y="70" width="230" height="180"/><text class="hd s" x="475" y="92">ACK PAGE — viewed on A’s page</text>
+  <text class="s" x="475" y="120">1. A: “Thanks, Coach!”  ← pinned</text>
+  <text class="s" x="475" y="145">2. B: “Love my team”</text>
+  <text class="s" x="475" y="176">(C omitted — pending)</text>
+  <text class="num" x="475" y="230">410</text>
+  <rect class="big" x="360" y="270" width="230" height="180"/><text class="hd s" x="475" y="292">ACK PAGE — viewed on B’s page</text>
+  <text class="s" x="475" y="320">1. B: “Love my team”  ← pinned</text>
+  <text class="s" x="475" y="345">2. A: “Thanks, Coach!”</text>
+  <text class="s" x="475" y="376">(C omitted — pending)</text>
+  <text class="num" x="475" y="430">412</text>
+  <rect class="b" x="630" y="70" width="220" height="380"/>
+  <text x="740" y="110">same artifact,</text><text x="740" y="128">per-viewer composition</text>
+  <text class="s" x="740" y="170">• one physical trophy,</text><text class="s" x="740" y="186">N personal inscriptions</text>
+  <text class="s" x="740" y="216">• viewing member’s line</text><text class="s" x="740" y="232">always ordered first</text>
+  <text class="s" x="740" y="262">• only approved lines render</text>
+  <text class="s" x="740" y="292">• solo fronts carry the name;</text><text class="s" x="740" y="308">group fronts stay roster-free</text><text class="s" x="740" y="324">(“together with teammates”)</text>
+  <text class="num" x="740" y="430">414</text>
+</svg>
+<p class="cap">FIG. 4</p><p class="sub">Per-viewer composition of a shared group artifact (400)</p>
+</div>
+
+<!-- ================================================== FIG 5 -->
+<div class="fig">
+<svg viewBox="0 0 880 560" width="880">
+  <defs><marker id="a5" markerWidth="9" markerHeight="7" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 z"/></marker></defs>
+  <rect class="big" x="330" y="24" width="220" height="50"/><text x="440" y="45">same card object<tspan class="num" x="440" dy="16"> 502</tspan></text>
+  <polyline class="ln" points="380,74 220,74 220,110" marker-end="url(#a5)"/><text class="s" x="284" y="66">edit-mode flag ON</text>
+  <polyline class="ln" points="500,74 660,74 660,110" marker-end="url(#a5)"/><text class="s" x="592" y="66">public render</text>
+  <rect class="big" x="70" y="110" width="300" height="380"/><text class="hd" x="220" y="134">EDIT MODE (owner console) <tspan class="num">504</tspan></text>
+  <rect class="dash" x="100" y="152" width="240" height="66"/><text class="s" x="220" y="180">placeholder: “Upload this</text><text class="s" x="220" y="196">routine’s photo” <tspan class="num">508</tspan></text>
+  <rect class="dash" x="100" y="230" width="240" height="66"/><text class="s" x="220" y="258">placeholder: “Write your</text><text class="s" x="220" y="274">thank-you note” <tspan class="num">510</tspan></text>
+  <rect class="b" x="100" y="310" width="110" height="26"/><text class="s" x="155" y="327">chip: partial</text><line class="lead" x1="210" y1="323" x2="250" y2="323"/><text class="num" x="262" y="327">512</text>
+  <text class="s" x="220" y="366">inline saves (JSON endpoints),</text><text class="s" x="220" y="382">propagation toasts <tspan class="num">514</tspan></text>
+  <text class="s" x="220" y="412">incomplete-first ordering, filters</text>
+  <text class="s" x="220" y="444">one-time consent affirmation</text><text class="s" x="220" y="460">before photo content <tspan class="num">516</tspan></text>
+  <rect class="big" x="510" y="110" width="300" height="380"/><text class="hd" x="660" y="134">PUBLIC MODE <tspan class="num">506</tspan></text>
+  <rect class="b" x="540" y="152" width="240" height="66"/><text class="s" x="660" y="180">certificate page</text><text class="s" x="660" y="196">(always complete)</text>
+  <rect class="b" x="540" y="230" width="240" height="66"/><text class="s" x="660" y="258">approved photo page</text><text class="s" x="660" y="274">(exists only if approved)</text>
+  <text class="s" x="660" y="330">pending / absent content ⇒</text>
+  <text class="s" x="660" y="346">page absent entirely</text>
+  <text x="660" y="392">placeholders NEVER</text><text x="660" y="410">materialize publicly</text><text class="num" x="660" y="432">518</text>
+</svg>
+<p class="cap">FIG. 5</p><p class="sub">Single-surface WYSIWYG editing vs. public rendering (500)</p>
+</div>
+
+<!-- ================================================== FIG 6 -->
+<div class="fig">
+<svg viewBox="0 0 720 830" width="700">
+  <defs><marker id="a6" markerWidth="9" markerHeight="7" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 z"/></marker></defs>
+  <rect class="b" x="180" y="20" width="300" height="46"/><text x="330" y="40">owner submits note / photo<tspan class="s" x="330" dy="15">(consent recorded) <tspan class="num">602</tspan></tspan></text>
+  <line class="ln" x1="330" y1="66" x2="330" y2="90" marker-end="url(#a6)"/>
+  <rect class="b" x="230" y="90" width="200" height="36"/><text x="330" y="113">status = pending <tspan class="num">604</tspan></text>
+  <line class="ln" x1="330" y1="126" x2="330" y2="150" marker-end="url(#a6)"/>
+  <rect class="b" x="140" y="150" width="380" height="46"/><text x="330" y="169">TIER 1 — deterministic rules: links, e-mail, phone,<tspan x="330" dy="16">social handles, profanity (minor-PII + spam) <tspan class="num">606</tspan></tspan></text>
+  <polygon class="b" points="330,220 420,254 330,288 240,254"/><text x="330" y="259">violation?</text>
+  <line class="ln" x1="330" y1="196" x2="330" y2="220" marker-end="url(#a6)"/>
+  <polyline class="ln" points="420,254 580,254 580,286" marker-end="url(#a6)"/><text class="s" x="438" y="248">yes</text>
+  <rect class="b" x="500" y="286" width="160" height="44"/><text class="s" x="580" y="304">queue with reasons<tspan class="num" x="580" dy="15"> 608</tspan></text>
+  <line class="ln" x1="330" y1="288" x2="330" y2="312" marker-end="url(#a6)"/><text class="s" x="344" y="306">no</text>
+  <polygon class="b" points="330,312 450,348 330,384 210,348"/><text x="330" y="344">trusted author?</text><text class="s" x="330" y="359">(≥ K approved) <tspan class="num">610</tspan></text>
+  <polyline class="ln" points="450,348 640,348 640,470 336,470" marker-end="url(#a6)"/><text class="s" x="470" y="342">yes — skip machine tier</text>
+  <line class="ln" x1="330" y1="384" x2="330" y2="408" marker-end="url(#a6)"/><text class="s" x="344" y="402">no</text>
+  <rect class="b" x="140" y="408" width="380" height="50"/><text x="330" y="428">TIER 3 — ML moderation classifier <tspan class="num">612</tspan><tspan class="s" x="330" dy="17">classifier failure ⇒ fail closed (never auto-approve)</tspan></text>
+  <line class="ln" x1="330" y1="458" x2="330" y2="486" marker-end="url(#a6)"/>
+  <polygon class="b" points="330,486 460,530 330,574 200,530"/><text x="330" y="526">moderation mode?</text><text class="num" x="330" y="541">614</text>
+  <polyline class="ln" points="200,530 80,530 80,610" marker-end="url(#a6)"/><text class="s" x="130" y="522">manual</text>
+  <rect class="b" x="20" y="610" width="140" height="46"/><text class="s" x="90" y="629">queue everything<tspan class="num" x="90" dy="15"> 616</tspan></text>
+  <line class="ln" x1="330" y1="574" x2="330" y2="610" marker-end="url(#a6)"/><text class="s" x="360" y="596">assisted</text>
+  <rect class="b" x="250" y="610" width="160" height="46"/><text class="s" x="330" y="629">queue with machine<tspan x="330" dy="15">verdict hints <tspan class="num">618</tspan></tspan></text>
+  <polyline class="ln" points="460,530 560,530 560,610" marker-end="url(#a6)"/><text class="s" x="500" y="522">auto</text>
+  <rect class="b" x="470" y="610" width="190" height="56"/><text class="s" x="565" y="630">machine-clean → live instantly;<tspan x="565" dy="15">flagged → queue <tspan class="num">620</tspan></tspan></text>
+  <line class="ln" x1="565" y1="666" x2="565" y2="690" marker-end="url(#a6)"/>
+  <rect class="b" x="470" y="690" width="190" height="46"/><text class="s" x="565" y="709">trust-but-verify feed,<tspan x="565" dy="15">one-click revoke <tspan class="num">622</tspan></tspan></text>
+  <rect class="big" x="20" y="756" width="640" height="60"/>
+  <text class="s" x="340" y="780">SAME-ROUTINE PROPAGATION: content auto-fills sibling awards (same event_id + performance_name,</text>
+  <text class="s" x="340" y="796">INSERT OR IGNORE); one approve/reject settles every identical pending copy by the same author <tspan class="num">624</tspan></text>
+</svg>
+<p class="cap">FIG. 6</p><p class="sub">Tiered moderation with content and verdict propagation (600)</p>
+</div>
+
+<!-- ================================================== FIG 7 -->
+<div class="fig">
+<svg viewBox="0 0 880 560" width="880">
+  <defs><marker id="a7" markerWidth="9" markerHeight="7" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 z"/></marker></defs>
+  <rect class="b" x="30" y="80" width="180" height="60"/><text x="120" y="104">organizer uploads<tspan x="120" dy="15">brand mark <tspan class="num">702</tspan></tspan></text>
+  <line class="ln" x1="210" y1="110" x2="250" y2="110" marker-end="url(#a7)"/>
+  <rect class="big" x="250" y="30" width="300" height="330"/><text class="hd" x="400" y="54">FITTING STATION</text>
+  <circle class="big" cx="400" cy="150" r="70"/>
+  <rect class="b" x="362" y="122" width="76" height="56" transform="rotate(-14 400 150)"/><text class="s" x="400" y="154" transform="rotate(-14 400 150)">mark</text>
+  <path class="ln" d="M480,96 Q500,150 480,204" marker-end="url(#a7)"/><text class="s" x="512" y="152">rotate</text>
+  <line class="ln" x1="400" y1="236" x2="400" y2="258" marker-end="url(#a7)"/><line class="ln" x1="352" y1="247" x2="330" y2="247" marker-end="url(#a7)"/><text class="s" x="382" y="272">position x / y</text>
+  <text class="s" x="400" y="300">fixed circular silhouette —</text><text class="s" x="400" y="316">uniform across mixed-org grids</text>
+  <text class="s" x="400" y="344">operator-only: position, rotation, fine scale <tspan class="num">704</tspan></text>
+  <rect class="b" x="250" y="380" width="300" height="44"/><text class="s" x="400" y="398">owner-adjustable only: size (bounded), opacity<tspan class="num" x="400" dy="15"> 706</tspan></text>
+  <line class="ln" x1="550" y1="180" x2="596" y2="180" marker-end="url(#a7)"/>
+  <polygon class="b" points="686,140 776,180 686,220 596,180"/><text class="s" x="686" y="176">approval bit set?</text><text class="s" x="686" y="191">(default OFF) <tspan class="num">708</tspan></text>
+  <polyline class="ln" points="686,220 686,260" marker-end="url(#a7)"/><text class="s" x="700" y="248">no</text>
+  <rect class="b" x="596" y="260" width="180" height="44"/><text class="s" x="686" y="278">mark never renders<tspan x="686" dy="15">publicly <tspan class="num">710</tspan></tspan></text>
+  <polyline class="ln" points="776,180 820,180 820,340 736,340" marker-end="url(#a7)"/><text class="s" x="800" y="172">yes</text>
+  <rect class="b" x="556" y="318" width="180" height="44"/><text class="s" x="646" y="336">coin renders on every card<tspan class="num" x="646" dy="15"> 712</tspan></text>
+  <line class="ln" x1="646" y1="362" x2="646" y2="386" marker-end="url(#a7)"/>
+  <rect class="b" x="556" y="386" width="180" height="44"/><text class="s" x="646" y="404">colophon page “Presented by”<tspan x="646" dy="15">+ organizer tagline <tspan class="num">714</tspan></tspan></text>
+  <rect class="b" x="30" y="460" width="790" height="44"/><text class="s" x="425" y="478">owner edits to owner-controlled parameters ride the SAME approval gate — no owner action alters public</text>
+  <text class="s" x="425" y="494">rendering without operator approval <tspan class="num">716</tspan></text>
+</svg>
+<p class="cap">FIG. 7</p><p class="sub">Role-partitioned brand-mark fitting and approval gate (700)</p>
+</div>
+
+<!-- ================================================== FIG 8 -->
+<div class="fig">
+<svg viewBox="0 0 660 760" width="620">
+  <defs><marker id="a8" markerWidth="9" markerHeight="7" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 z"/></marker></defs>
+  <rect class="b" x="170" y="24" width="280" height="44"/><text x="310" y="51">enumerate artifact’s pages <tspan class="num">802</tspan></text>
+  <line class="ln" x1="310" y1="68" x2="310" y2="94" marker-end="url(#a8)"/>
+  <polygon class="b" points="310,94 460,140 310,186 160,140"/><text x="310" y="130">moderation predicate</text><text x="310" y="145">approved AT GENERATION</text><text x="310" y="160">TIME? <tspan class="num">804</tspan></text>
+  <polyline class="ln" points="460,140 580,140 580,172" marker-end="url(#a8)"/><text class="s" x="478" y="134">no</text>
+  <rect class="b" x="510" y="172" width="140" height="40"/><text class="s" x="580" y="196">page skipped <tspan class="num">806</tspan></text>
+  <line class="ln" x1="310" y1="186" x2="310" y2="212" marker-end="url(#a8)"/><text class="s" x="324" y="206">yes</text>
+  <rect class="b" x="150" y="212" width="320" height="50"/><text x="310" y="232">rasterize page composition<tspan class="s" x="310" dy="16">(container-relative layout at chosen width) <tspan class="num">808</tspan></tspan></text>
+  <line class="ln" x1="310" y1="262" x2="310" y2="288" marker-end="url(#a8)"/>
+  <rect class="b" x="150" y="288" width="320" height="50"/><text x="310" y="308">sequence frames — flip / page<tspan x="310" dy="16">transitions + audio cues <tspan class="num">810</tspan></tspan></text>
+  <line class="ln" x1="310" y1="338" x2="310" y2="364" marker-end="url(#a8)"/>
+  <rect class="b" x="150" y="364" width="320" height="50"/><text x="310" y="384">append operator-approved organizer<tspan x="310" dy="16">colophon as terminal end-card <tspan class="num">812</tspan></tspan></text>
+  <line class="ln" x1="310" y1="414" x2="310" y2="440" marker-end="url(#a8)"/>
+  <rect class="big" x="130" y="440" width="360" height="60"/><text x="310" y="464">PUBLISH-SAFE MEDIA ASSET<tspan class="s" x="310" dy="17">no per-asset human review required <tspan class="num">814</tspan></tspan></text>
+  <line class="ln" x1="310" y1="500" x2="310" y2="526" marker-end="url(#a8)"/>
+  <rect class="b" x="110" y="526" width="400" height="60"/><text class="s" x="310" y="548">per-viewer variants (group awards): re-order acknowledgement</text><text class="s" x="310" y="564">lines per member per FIG. 4, one video per member <tspan class="num">816</tspan></text>
+  <rect class="b" x="110" y="614" width="400" height="86"/>
+  <text class="s" x="310" y="638">rendering embodiments: server-side headless-browser capture of the</text>
+  <text class="s" x="310" y="654">same layout templates + media pipeline composition; or client-side</text>
+  <text class="s" x="310" y="670">canvas / WebCodecs; share images may add re-acquisition</text>
+  <text class="s" x="310" y="686">(QR) overlay <tspan class="num">818</tspan></text>
+</svg>
+<p class="cap">FIG. 8</p><p class="sub">Derivative media generation from pre-moderated compositions (800)</p>
+</div>
+
+<!-- ================================================== FIG 9 -->
+<div class="fig">
+<svg viewBox="0 0 660 780" width="620">
+  <defs><marker id="a9" markerWidth="9" markerHeight="7" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 z"/></marker></defs>
+  <rect class="b" x="160" y="24" width="300" height="44"/><text x="310" y="45">flip interaction on artifact bound to<tspan x="310" dy="15">a VERIFIED achievement record <tspan class="num">902</tspan></tspan></text>
+  <line class="ln" x1="310" y1="68" x2="310" y2="94" marker-end="url(#a9)"/>
+  <rect class="b" x="160" y="94" width="300" height="44"/><text x="310" y="115">server-side roll — client never rolls<tspan class="num" x="310" dy="15"> 904</tspan></text>
+  <line class="ln" x1="310" y1="138" x2="310" y2="164" marker-end="url(#a9)"/>
+  <rect class="b" x="130" y="164" width="360" height="50"/><text class="s" x="310" y="184">seed = (user, time period), rate-limited ⇒ repeat flips within the</text><text class="s" x="310" y="200">period reproduce the SAME outcome (no farming) <tspan class="num">906</tspan></text>
+  <line class="ln" x1="310" y1="214" x2="310" y2="240" marker-end="url(#a9)"/>
+  <rect class="b" x="130" y="240" width="360" height="50"/><text class="s" x="310" y="260">filter reward pools by the record’s provenance — source organization /</text><text class="s" x="310" y="276">event lineage (e.g., free entry to that organizer’s next event) <tspan class="num">908</tspan></text>
+  <line class="ln" x1="310" y1="290" x2="310" y2="316" marker-end="url(#a9)"/>
+  <polygon class="b" points="310,316 400,352 310,388 220,352"/><text x="310" y="357">win?</text>
+  <polyline class="ln" points="400,352 560,352 560,384" marker-end="url(#a9)"/><text class="s" x="418" y="346">no</text>
+  <rect class="b" x="480" y="384" width="160" height="44"/><text class="s" x="560" y="402">normal back-stack<tspan x="560" dy="15">renders <tspan class="num">910</tspan></tspan></text>
+  <line class="ln" x1="310" y1="388" x2="310" y2="414" marker-end="url(#a9)"/><text class="s" x="324" y="408">yes</text>
+  <rect class="b" x="150" y="414" width="320" height="46"/><text x="310" y="434">transient “golden ticket” page<tspan class="s" x="310" dy="16">materialized in the stack <tspan class="num">912</tspan></tspan></text>
+  <line class="ln" x1="310" y1="460" x2="310" y2="486" marker-end="url(#a9)"/>
+  <polygon class="b" points="310,486 420,524 310,562 200,524"/><text x="310" y="521">participant is</text><text x="310" y="536">a minor?</text>
+  <polyline class="ln" points="420,524 560,524 560,556" marker-end="url(#a9)"/><text class="s" x="438" y="518">no</text>
+  <rect class="b" x="480" y="556" width="160" height="50"/><text class="s" x="560" y="576">redemption code to<tspan x="560" dy="15">account holder <tspan class="num">914</tspan></tspan></text>
+  <line class="ln" x1="310" y1="562" x2="310" y2="588" marker-end="url(#a9)"/><text class="s" x="324" y="582">yes</text>
+  <rect class="b" x="130" y="588" width="360" height="50"/><text class="s" x="310" y="608">single-use, expiring redemption token transmitted to the</text><text class="s" x="310" y="624">GUARDIAN contact of record <tspan class="num">916</tspan></text>
+  <line class="ln" x1="310" y1="638" x2="310" y2="664" marker-end="url(#a9)"/>
+  <rect class="b" x="150" y="664" width="320" height="46"/><text x="310" y="684">reveal + redemption logged<tspan class="s" x="310" dy="16">(prize_reveals: revealed_at, redeemed_at) <tspan class="num">918</tspan></tspan></text>
+</svg>
+<p class="cap">FIG. 9</p><p class="sub">Provenance-scoped reward with guardian-routed redemption (900)</p>
+</div>
+
+<!-- ================================================== FIG 10 -->
+<div class="fig">
+<svg viewBox="0 0 880 580" width="880">
+  <defs><marker id="a10" markerWidth="9" markerHeight="7" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 z"/></marker></defs>
+  <rect class="b" x="30" y="60" width="200" height="66"/><text x="130" y="84">verified guardian account<tspan class="s" x="130" dy="15">(owner of minor’s profile)</tspan><tspan class="num" x="130" dy="15"> 1002</tspan></text>
+  <line class="ln" x1="230" y1="93" x2="270" y2="93" marker-end="url(#a10)"/>
+  <rect class="big" x="270" y="30" width="320" height="290"/><text class="hd" x="430" y="54">GRANT FORM <tspan class="num">1004</tspan></text>
+  <rect class="b" x="292" y="70" width="276" height="40"/><text class="s" x="430" y="94">grantee: ONE organizer <tspan class="num">1005</tspan></text>
+  <rect class="b" x="292" y="120" width="276" height="120"/>
+  <text class="s" x="310" y="141" text-anchor="start">☑ date of birth</text>
+  <text class="s" x="310" y="161" text-anchor="start">☑ guardian contact</text>
+  <text class="s" x="310" y="181" text-anchor="start">☑ waiver: liability-2027</text>
+  <text class="s" x="310" y="201" text-anchor="start">☑ history attestations (level/division)</text>
+  <text class="s" x="310" y="221" text-anchor="start">☐ address   ☐ medical</text>
+  <text class="num" x="546" y="228">1006</text>
+  <rect class="b" x="292" y="250" width="276" height="40"/><text class="s" x="430" y="274">expiry: 2027-06-30 <tspan class="num">1007</tspan></text>
+  <line class="ln" x1="430" y1="320" x2="430" y2="352" marker-end="url(#a10)"/>
+  <rect class="b" x="240" y="352" width="380" height="50"/><text class="s" x="430" y="372">affirmative consent capture — authenticated session + per-grant</text><text class="s" x="430" y="388">confirmation; optional step-up verification <tspan class="num">1008</tspan></text>
+  <line class="ln" x1="430" y1="402" x2="430" y2="434" marker-end="url(#a10)"/>
+  <rect class="big" x="200" y="434" width="460" height="54"/><text class="s" x="430" y="456">id_grants row: dancer_id, grantee_org_id, scope JSON, granted_by_user_id,</text><text class="s" x="430" y="472">expires_at, revoked_at <tspan class="num">1010</tspan></text>
+  <line class="ln" x1="660" y1="461" x2="700" y2="461" marker-end="url(#a10)"/>
+  <rect class="b" x="700" y="420" width="160" height="82"/><text class="s" x="780" y="448">guardian console:<tspan x="780" dy="15">all grants + disclosures</tspan><tspan x="780" dy="15">listed, revocable</tspan><tspan class="num" x="780" dy="15"> 1012</tspan></text>
+  <rect class="b" x="640" y="60" width="220" height="120"/><text class="s" x="750" y="86">profile sources:</text>
+  <text class="s" x="750" y="110">registration wallet — owner-</text><text class="s" x="750" y="126">entered, never scraped, never public</text>
+  <text class="s" x="750" y="150">attestations — computed from</text><text class="s" x="750" y="166">verified records <tspan class="num">1014</tspan></text>
+</svg>
+<p class="cap">FIG. 10</p><p class="sub">Guardian-mediated grant creation with field-level scoping (1000)</p>
+</div>
+
+<!-- ================================================== FIG 11 -->
+<div class="fig">
+<svg viewBox="0 0 880 640" width="880">
+  <defs><marker id="a11" markerWidth="9" markerHeight="7" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 z"/></marker></defs>
+  <rect class="b" x="40" y="30" width="150" height="44"/><text class="s" x="115" y="49">participant / guardian<tspan class="num" x="115" dy="15"> 1102</tspan></text>
+  <rect class="b" x="280" y="30" width="150" height="44"/><text class="s" x="355" y="49">organizer system<tspan class="num" x="355" dy="15"> 1104</tspan></text>
+  <rect class="b" x="530" y="30" width="150" height="44"/><text class="s" x="605" y="49">identity service<tspan class="num" x="605" dy="15"> 1106</tspan></text>
+  <rect class="b" x="730" y="30" width="120" height="44"/><text class="s" x="790" y="49">audit log<tspan class="num" x="790" dy="15"> 1108</tspan></text>
+  <line class="life" x1="115" y1="74" x2="115" y2="590"/>
+  <line class="life" x1="355" y1="74" x2="355" y2="590"/>
+  <line class="life" x1="605" y1="74" x2="605" y2="590"/>
+  <line class="life" x1="790" y1="74" x2="790" y2="590"/>
+  <line class="ln" x1="115" y1="130" x2="355" y2="130" marker-end="url(#a11)"/>
+  <text class="s" x="235" y="120">presents DancerID / consent link or QR <tspan class="num">1110</tspan></text>
+  <line class="ln" x1="355" y1="190" x2="605" y2="190" marker-end="url(#a11)"/>
+  <text class="s" x="480" y="168">GET /api/id/&lt;unique_id&gt;/profile</text>
+  <text class="s" x="480" y="182">+ HMAC-signed organizer token <tspan class="num">1112</tspan></text>
+  <rect class="b" x="555" y="220" width="100" height="34"/><text class="s" x="605" y="241">validate token</text>
+  <rect class="b" x="530" y="270" width="150" height="46"/><text class="s" x="605" y="288">find LIVE grant —<tspan x="605" dy="14">unexpired, unrevoked <tspan class="num">1114</tspan></tspan></text>
+  <rect class="b" x="530" y="332" width="150" height="46"/><text class="s" x="605" y="350">intersect request with<tspan x="605" dy="14">grant scope <tspan class="num">1116</tspan></tspan></text>
+  <line class="ln" x1="605" y1="410" x2="355" y2="410" marker-end="url(#a11)"/>
+  <text class="s" x="480" y="388">granted fields ONLY;</text>
+  <text class="s" x="480" y="402">no live grant ⇒ opaque not-found <tspan class="num">1118</tspan></text>
+  <line class="ln" x1="605" y1="460" x2="790" y2="460" marker-end="url(#a11)"/>
+  <text class="s" x="697" y="448">disclosure record: grant, grantee,</text>
+  <text class="s" x="697" y="476">fields served, timestamp <tspan class="num">1120</tspan></text>
+  <rect class="b" x="270" y="500" width="170" height="60"/><text class="s" x="355" y="522">registration form pre-fills;<tspan x="355" dy="15">division verified via</tspan><tspan x="355" dy="15">attestations <tspan class="num">1122</tspan></tspan></text>
+</svg>
+<p class="cap">FIG. 11</p><p class="sub">Organizer pull sequence with scope filtering (1100)</p>
+</div>
+
+<!-- ================================================== FIG 12 -->
+<div class="fig">
+<svg viewBox="0 0 880 600" width="880">
+  <defs><marker id="a12" markerWidth="9" markerHeight="7" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 z"/></marker></defs>
+  <rect class="big" x="40" y="40" width="280" height="200"/><text class="hd" x="180" y="64">GUARDIAN CONSOLE <tspan class="num">1202</tspan></text>
+  <rect class="b" x="60" y="80" width="240" height="60"/><text class="s" x="180" y="102">grant: Spring Classic Events<tspan x="180" dy="15">scope: dob, waiver • expires 2027-06</tspan></text>
+  <rect class="b" x="60" y="150" width="240" height="70"/><text class="s" x="180" y="170">disclosure log per grant:<tspan x="180" dy="15">2026-09-02 dob, waiver</tspan><tspan x="180" dy="15">2026-10-14 dob</tspan></text>
+  <line class="ln" x1="320" y1="110" x2="380" y2="110" marker-end="url(#a12)"/><text class="s" x="350" y="100">revoke</text>
+  <rect class="b" x="380" y="88" width="160" height="44"/><text class="s" x="460" y="106">revoke action<tspan class="num" x="460" dy="15"> 1204</tspan></text>
+  <line class="ln" x1="540" y1="110" x2="600" y2="110" marker-end="url(#a12)"/>
+  <rect class="b" x="600" y="88" width="180" height="44"/><text class="s" x="690" y="106">revoked_at stamped<tspan class="num" x="690" dy="15"> 1206</tspan></text>
+  <rect class="b" x="380" y="180" width="160" height="44"/><text class="s" x="460" y="198">expires_at passes<tspan class="num" x="460" dy="15"> 1208</tspan></text>
+  <line class="ln" x1="690" y1="132" x2="690" y2="280" marker-end="url(#a12)"/>
+  <polyline class="ln" points="460,224 460,318 580,318" marker-end="url(#a12)"/>
+  <polygon class="b" points="690,280 800,318 690,356 580,318"/><text class="s" x="690" y="314">next access</text><text class="s" x="690" y="329">attempt <tspan class="num">1210</tspan></text>
+  <line class="ln" x1="690" y1="356" x2="690" y2="392" marker-end="url(#a12)"/>
+  <rect class="b" x="590" y="392" width="200" height="50"/><text class="s" x="690" y="412">DENIED — opaque response;<tspan x="690" dy="15">nothing disclosed <tspan class="num">1212</tspan></tspan></text>
+  <rect class="b" x="40" y="300" width="280" height="130"/><text class="s" x="180" y="324">audit entry fields:</text>
+  <text class="s" x="180" y="348">grant id • grantee org • token identity</text>
+  <text class="s" x="180" y="368">fields served • timestamp</text>
+  <text class="s" x="180" y="396">attestations served as computed claims</text>
+  <text class="s" x="180" y="412">with provenance references <tspan class="num">1214</tspan></text>
+  <rect class="b" x="40" y="470" width="750" height="60"/>
+  <text class="s" x="415" y="494">data minimization by construction: grantees integrate against the scope-filtered API — never a profile</text>
+  <text class="s" x="415" y="512">export — so a grantee holds at most the last-pulled granted field set <tspan class="num">1216</tspan></text>
+</svg>
+<p class="cap">FIG. 12</p><p class="sub">Revocation, expiry, and audit handling (1200)</p>
+</div>
+</body>
+</html>

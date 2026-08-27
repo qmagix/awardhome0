@@ -572,7 +572,9 @@ calls, enabling error-free registration prefill and division verification for
 minors without uncontrolled data sharing.
 
 ================================================================================
-END OF DRAFT — attach FIGS. 1-12 (screenshots + informal flowcharts) at filing.
+END OF DRAFT — FIGS. 1-12 are drawn in patent_figures_P1_P3.html (open in a
+browser, print to PDF, portrait, default margins — one figure per page); optionally
+supplement with UI screenshots of the implemented card/editor at filing.
 Attorney to verify: micro-entity status; inventor/assignee; disclosure-date
 characterization (site online but no invitations sent and no material
 third-party access as of 2026-08-27 per inventor); cover sheet SB/16.
