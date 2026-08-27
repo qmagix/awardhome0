@@ -74,7 +74,10 @@ SUMMARY
 
 [0006] Part I discloses an achievement-artifact system in which an imported,
 provenance-bearing achievement record is rendered as a card object having a
-front face and, upon a flip interaction, an ordered stack of back pages. Each
+front face and an ordered plurality of additional pages reached through flip
+interactions — presented either as a swipeable back-stack behind a single flip,
+or as a continuous multi-face flip cycle in which each successive flip rotates
+the artifact to the next face with wrap-around (paragraph [0014a]). Each
 back page is CONDITIONALLY MATERIALIZED: the page exists in the rendered
 artifact only when its underlying content item exists and satisfies a
 moderation-state condition. Because absent or unapproved content yields an
@@ -134,6 +137,9 @@ FIG. 10 — Identity service: grant creation with guardian verification and
 FIG. 11 — Organizer pull sequence with token authentication and scope
           filtering.
 FIG. 12 — Revocation, expiry, and audit-trail handling.
+FIG. 13 — Multi-face continuous-flip presentation mode: ordered face cycle
+          with wrap-around, varying rotation axis, and adaptive cycle length
+          under conditional materialization.
 
 --------------------------------------------------------------------------------
 DETAILED DESCRIPTION
@@ -221,6 +227,30 @@ and keyboard arrows, with wrap-around:
            organization's fitted brand coin at large scale plus an optional
            organizer-authored tagline; exists only when the brand mark has
            passed the operator approval gate of section I.E.
+
+[0014a] MULTI-FACE CONTINUOUS-FLIP EMBODIMENT. In a further presentation mode
+(the "multi-face" or "carousel" design), the flip interaction itself is the
+pagination: the artifact behaves as a virtual multi-faced solid whose ordered
+cycle of faces is (front → certificate → photo → acknowledgements → colophon →
+front), and each successive flip interaction rotates the artifact to the NEXT
+materialized face, wrapping around to the front face after the last (loop-
+around). The flip animation renders each transition as rotation of a
+multi-faced solid (e.g., a prism or cube) about an axis; in embodiments the
+rotation axis varies per transition (e.g., alternating horizontal and vertical
+rotations), presenting the artifact as a multi-dimensional surface traversed by
+repeated flips. Conditional materialization per section I.C applies identically:
+faces whose content is absent or unapproved are excluded from the cycle, so the
+cycle length adapts per artifact and per viewer; with only two eligible faces
+the design degenerates gracefully to the classic two-sided card. The flip-book
+back-stack of paragraph [0014] and the multi-face cycle of this paragraph are
+alternative presentation modes of the SAME materialized page set — the mode is
+a rendering parameter selected in a card-design registry (site-wide default
+plus per-session override), and all downstream consumers (per-viewer
+composition, derivative media generation, reward-page insertion) operate
+unchanged on either mode. In the multi-face mode, the reward page of section
+I.I materializes as a transient extra face in the cycle, and the derivative
+video generator of section I.F may render the multi-face rotation animation
+itself as the transition between frames.
 
 [0015] All internal dimensions of the card and its pages are expressed in
 container-relative units (CSS container queries; cqw units calibrated to a
@@ -456,7 +486,9 @@ results, academic honors, esports placements, certifications, or employment
 credentials; "studio" generalizes to team/school/employer; "organizer" to any
 credentialing or event-running entity. The artifact need not be a card:
 certificates, badges, plaques, and 3D presentations may carry the same
-conditionally-materialized page structure. Rendering may be client-side or
+conditionally-materialized page structure, and the page set may be presented
+as a back-stack, a multi-face flip cycle (paragraph [0014a]), or any ordered
+traversal of a virtual solid's faces. Rendering may be client-side or
 server-side; storage may use any relational or document store; moderation
 tiers may use any rule set or classifier; the identifier may be embodied as a
 QR code, NFC credential, or verifiable-credential (W3C VC) wrapper around the
@@ -473,8 +505,9 @@ CLAIMS (SAMPLE — provisional applications require none; included to frame scop
 from a third-party source with one or more participant identities via junction
 records, at least one junction record having associated content having a
 moderation state; and a rendering engine configured to render the record as an
-artifact having a front face and an ordered stack of back pages reachable
-through a flip interaction, wherein each back page is materialized only when
+artifact having a front face and an ordered plurality of additional pages
+reachable through one or more flip interactions, wherein each page is
+materialized only when
 its associated content exists and its moderation state satisfies an approval
 condition, such that no rendered artifact contains an empty or unapproved page.
 
@@ -550,13 +583,30 @@ the redeemed grant being short-lived and scoped to registration-prefill fields.
 locators are non-enumerable lifetime identifiers, and numeric-key resource
 locators return a not-found response without redirection.
 
+16. The system of claim 1, wherein the ordered plurality of pages is presented
+as an ordered cycle of faces of a virtual multi-faced solid, each successive
+flip interaction rotating the artifact to the next materialized face and the
+cycle wrapping around to the front face, wherein faces whose content fails the
+moderation-state condition are excluded such that the cycle length adapts per
+artifact and per viewer.
+
+17. The system of claim 16, wherein an axis of rotation of the flip animation
+varies between successive transitions of the cycle.
+
+18. The system of claim 16, wherein the back-stack presentation and the
+multi-face cycle presentation are alternative rendering modes of the same
+materialized page set, selected by a design-registry parameter comprising a
+site-wide default and a per-session override.
+
 --------------------------------------------------------------------------------
 ABSTRACT
 --------------------------------------------------------------------------------
 
 [0033] An achievement record imported from third-party sources renders as a
-flip-card artifact whose back is an ordered stack of pages — certificate,
-photograph, acknowledgements, organizer colophon — each materialized only when
+flip-card artifact carrying an ordered set of pages — certificate,
+photograph, acknowledgements, organizer colophon — presented as a swipeable
+back-stack or as a continuously-flipping multi-face cycle with wrap-around —
+each page materialized only when
 its content has passed a moderation gate, so every public rendering and every
 automatically generated derivative (share image, short-form video) is
 publish-safe by construction. Group awards compose per viewer from
@@ -572,7 +622,7 @@ calls, enabling error-free registration prefill and division verification for
 minors without uncontrolled data sharing.
 
 ================================================================================
-END OF DRAFT — FIGS. 1-12 are drawn in patent_figures_P1_P3.html (open in a
+END OF DRAFT — FIGS. 1-13 are drawn in patent_figures_P1_P3.html (open in a
 browser, print to PDF, portrait, default margins — one figure per page); optionally
 supplement with UI screenshots of the implemented card/editor at filing.
 Attorney to verify: micro-entity status; inventor/assignee; disclosure-date

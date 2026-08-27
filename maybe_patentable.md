@@ -47,7 +47,11 @@ card object with the gated pages materialized as inline-editable placeholders,
 edit-mode-only (public render never materializes empty pages); one editing surface
 = the display artifact. *Captured 2026-08-12. Implemented 2026-08-12/13 (local
 commits, NOT yet deployed publicly) — file provisional before deploying if we're
-serious.*
+serious.* **Variant added 2026-08-27 (NOT built):** multi-face continuous-flip
+presentation — each flip advances to the next materialized face of a virtual
+multi-faced solid with wrap-around and per-transition rotation-axis variation;
+same conditional-materialization page set, presentation mode as a design-registry
+parameter. Covered in `provisional_draft_P1_P3.txt` ¶[0014a], claims 16–18, FIG. 13.
 
 ### A4. Per-dancer acknowledgement lines on a shared group award ("yearbook back")
 One physical group award, N dancers via `award_dancers`; each junction row carries that
