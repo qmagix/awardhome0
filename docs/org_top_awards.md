@@ -442,3 +442,10 @@ Senior 16-19. **Sources:** epicdanceinc.com/rules. **Confidence:** high.
 - **SPECIALTY judge awards**: Most Entertaining, Best Costume, Outstanding Choreography, Best Direction, plus per-judge "Specialty Award" (award_type='SPECIALTY').
 - **Scholarships carry dancer names** (award_type='SCHOLARSHIP') — Excellence, Hollywood Vibe, Team Hollywood Vibe, Millennium, Grand Prize, Dancer of the Year, CLI Summer Intensive / Conservatory, LA Agency Finalists, Studio Excellence. These are the only Hollywood Vibe rows with dancers; competition results publish routine + studio only.
 - Levels appear in the category string: INTERMEDIATE / COMPETITIVE are skill levels, NOT awards. Published typos exist in the source (INTERMEDAITE, JUNOIR, DUO/TIRO, PRODUCITON) and are handled at import.
+
+## JUMP Dance Convention (jumptour.com)
+- JUMP is a **convention**, so its published results mix competition placements with a very large scholarship programme — and roughly three quarters of its rows name a dancer, which is unusually rich for us.
+- **Top awards: SPECIAL AWARDS** — "Best of JUMP" (per age division) is the headline honour, alongside "Best in Studio". Imported with award_type='SPECIAL', the award name in `place`.
+- **Placements**: HIGH SCORE BY AGE and HIGH SCORE BY PERFORMANCE, 1st..10th, in categories shaped "Age : Type" (e.g. "Teen : Solo", "JUMPstart : Jazz"). Solo rows name the dancer; group rows are studio-level. JUMPstart is JUMP's youngest division, not an award.
+- **Scholarships** (award_type='SCHOLARSHIP'): "<Age> JUMP VIP" plus per-class scholarships (TAP / BALLET / HIP-HOP & JAZZ FUNK / JAZZ, CONTEMP. & LYRICAL). Places are **WINNER** and **RUNNER-UP** — these are scholarship outcomes, NOT competition placements, so they should not be ranked against 1st/2nd/3rd.
+- Source is clean HTML tables at jumptour.com/results/?id=N; the event index at /past-seasons/ lists every season at once (its ?season= parameter is ignored server-side). Seasons reach back to 2019-2020 if we ever want more history.
