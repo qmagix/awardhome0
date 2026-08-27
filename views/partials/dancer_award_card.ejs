@@ -7,30 +7,9 @@
     placeClass = 'award-place award-place-medium';
   }
 
-  let tier = 'tier-star';
-  let icon = '⭐';
-  const pLower = placeText.toLowerCase();
-  const typeLower = (award.award_type || '').toLowerCase();
-
-  if (isPremiumAward(award)) {
-    tier = 'tier-gold'; icon = getPremiumDetails(award).icon;
-  } else if (pLower.includes('1st') || pLower === 'winner' || pLower.includes('first') || pLower === 'champion') {
-    tier = 'tier-gold'; icon = '🏆';
-  } else if (pLower.includes('2nd') || pLower.includes('second')) {
-    tier = 'tier-silver'; icon = '🥈';
-  } else if (pLower.includes('3rd') || pLower.includes('third')) {
-    tier = 'tier-bronze'; icon = '🥉';
-  } else if (pLower.includes('4th') || pLower.includes('5th') || pLower.includes('6th') ||
-    pLower.includes('7th') || pLower.includes('8th') || pLower.includes('9th') ||
-    pLower.includes('10th')) {
-    // keep as star
-  } else if (pLower.includes('miss') || typeLower.includes('miss') || pLower.includes('mr ') ||
-    typeLower.includes('mr ')) {
-    tier = 'tier-gold'; icon = '🏆';
-  }
-
-  if (pLower.includes('1st runner')) { tier = 'tier-silver'; icon = '🥈'; }
-  else if (pLower.includes('2nd runner')) { tier = 'tier-bronze'; icon = '🥉'; }
+  // tier/icon come from the shared helper (server.js app.locals.cardTier)
+  // so the event-page lightbox and this partial can never disagree
+  const { tier, icon } = cardTier(award, placeText);
 
   const isGroup = typeof isGroupAward !== 'undefined' && isGroupAward;
   const design = (typeof cardDesign !== 'undefined' && cardDesign) ? cardDesign : 'classic';
@@ -41,17 +20,9 @@
   // vars (styles.css has the defaults). Values are numbers sanitized at
   // save time (routes/dance/orgs.js). Shared by the front coin and the
   // flipbook colophon page.
-  const lci = award.customIconsObj || {};
-  const showOrgLogo = !!(award.logo_url && lci.logo_approved && !lci.hide_logo);
-  const logoVars = [];
-  if (showOrgLogo) {
-    if (lci.logo_opacity !== undefined) logoVars.push('--org-logo-opacity: ' + lci.logo_opacity);
-    const logoTf = [];
-    if (lci.logo_offset_x || lci.logo_offset_y) logoTf.push('translate(' + (lci.logo_offset_x || 0) + 'px, ' + (lci.logo_offset_y || 0) + 'px)');
-    if (lci.logo_rotation) logoTf.push('rotate(' + lci.logo_rotation + 'deg)');
-    if (lci.logo_size && lci.logo_size !== 24) logoTf.push('scale(' + (lci.logo_size / 24) + ')');
-    if (logoTf.length) logoVars.push('--org-logo-transform: ' + logoTf.join(' '));
-  }
+  const coin = cardCoin(award);            // shared helper (server.js)
+  const showOrgLogo = coin.show;
+  const logoVars = coin.vars;
 
   // WYSIWYG editor (manage card page): pages that would only materialize
   // with content instead materialize as inline-editable placeholders.

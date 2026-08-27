@@ -121,6 +121,55 @@ app.locals.isPremiumAward = function (award) {
   return app.locals.getPremiumDetails(award).isPremium;
 };
 
+// Tier + emoji for a card face. Single source of truth — used by the
+// dancer_award_card partial AND the event-page lightbox payload, so the
+// two can never drift.
+app.locals.cardTier = function (award, placeText) {
+  let tier = 'tier-star';
+  let icon = '⭐';
+  const pLower = String(placeText || '').toLowerCase();
+  const typeLower = (award.award_type || '').toLowerCase();
+
+  if (app.locals.isPremiumAward(award)) {
+    tier = 'tier-gold'; icon = app.locals.getPremiumDetails(award).icon;
+  } else if (pLower.includes('1st') || pLower === 'winner' || pLower.includes('first') || pLower === 'champion') {
+    tier = 'tier-gold'; icon = '🏆';
+  } else if (pLower.includes('2nd') || pLower.includes('second')) {
+    tier = 'tier-silver'; icon = '🥈';
+  } else if (pLower.includes('3rd') || pLower.includes('third')) {
+    tier = 'tier-bronze'; icon = '🥉';
+  } else if (pLower.includes('4th') || pLower.includes('5th') || pLower.includes('6th') ||
+    pLower.includes('7th') || pLower.includes('8th') || pLower.includes('9th') ||
+    pLower.includes('10th')) {
+    // keep as star
+  } else if (pLower.includes('miss') || typeLower.includes('miss') || pLower.includes('mr ') ||
+    typeLower.includes('mr ')) {
+    tier = 'tier-gold'; icon = '🏆';
+  }
+
+  if (pLower.includes('1st runner')) { tier = 'tier-silver'; icon = '🥈'; }
+  else if (pLower.includes('2nd runner')) { tier = 'tier-bronze'; icon = '🥉'; }
+  return { tier, icon };
+};
+
+// Org coin visibility + fit CSS vars (concierge logo approval rules) —
+// same contract as the partial's inline block; kept together with
+// cardTier so every card surface resolves branding identically.
+app.locals.cardCoin = function (award) {
+  const lci = award.customIconsObj || {};
+  const show = !!(award.logo_url && lci.logo_approved && !lci.hide_logo);
+  const vars = [];
+  if (show) {
+    if (lci.logo_opacity !== undefined) vars.push('--org-logo-opacity: ' + lci.logo_opacity);
+    const tf = [];
+    if (lci.logo_offset_x || lci.logo_offset_y) tf.push('translate(' + (lci.logo_offset_x || 0) + 'px, ' + (lci.logo_offset_y || 0) + 'px)');
+    if (lci.logo_rotation) tf.push('rotate(' + lci.logo_rotation + 'deg)');
+    if (lci.logo_size && lci.logo_size !== 24) tf.push('scale(' + (lci.logo_size / 24) + ')');
+    if (tf.length) vars.push('--org-logo-transform: ' + tf.join(' '));
+  }
+  return { show, vars };
+};
+
 app.locals.getCustomIcon = function (award, customIcons) {
   if (!customIcons || typeof customIcons !== 'object') return null;
   const pLower = String(award.place || '').toLowerCase();

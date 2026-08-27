@@ -1332,13 +1332,15 @@ router.get('/dance/event/:id', async (req, res) => {
 
   const db = await openDb();
   const event = await db.get(`
-    SELECT e.*, o.name as org_name 
+    SELECT e.*, o.name as org_name, o.logo_url, o.custom_icons
     FROM events e
     JOIN organizations o ON e.org_id = o.id
     WHERE e.id = ?
   `, [req.params.id]);
 
   if (!event) return res.status(404).send('Event not found');
+  let orgIconsObj = null;
+  try { orgIconsObj = event.custom_icons ? JSON.parse(event.custom_icons) : null; } catch (e) { }
 
   const awards = await db.all(`
     SELECT a.*, d.name as dancer_name, d.unique_id, s.name as studio_name, s.unique_id as studio_uid
@@ -1362,6 +1364,7 @@ router.get('/dance/event/:id', async (req, res) => {
     awardDancersMap[ad.award_id].push({ name: ad.name, unique_id: ad.unique_id });
   }
 
+  const L = req.app.locals;
   for (const award of awards) {
     if (awardDancersMap[award.id]) {
       award.dancers = awardDancersMap[award.id];
@@ -1370,6 +1373,30 @@ router.get('/dance/event/:id', async (req, res) => {
     } else {
       award.dancers = [];
     }
+
+    // Lightbox payload: everything the client-side card builder needs,
+    // resolved server-side with the SAME helpers the card partial uses
+    // (cardTier/cardCoin/getCustomIcon/formatPlacement) so the lightbox
+    // face can never drift from real cards. Bytes per row, not markup —
+    // the card DOM is built in the browser from preloaded CSS.
+    award.org_name = event.org_name;
+    award.logo_url = event.logo_url;
+    award.customIconsObj = orgIconsObj;
+    const placeText = L.formatPlacement(award);
+    const { tier, icon } = L.cardTier(award, placeText);
+    const coin = L.cardCoin(award);
+    award.card = {
+      place: placeText,
+      type: award.award_type || '',
+      cat: award.category || '',
+      div: award.age_division || '',
+      routine: award.performance_name || '',
+      event: L.formatEventTitle(event.name, event.org_name, event.year),
+      tier, icon,
+      customIcon: L.getCustomIcon(award, orgIconsObj) || null,
+      coin: coin.show ? { url: event.logo_url, vars: coin.vars.join('; ') } : null,
+      selfAdded: !!award.is_self_added,
+    };
   }
 
   // Group by studio

@@ -36,7 +36,11 @@
           <tbody>
             <% group.eventAwards.forEach(function(award) { %>
               <tr>
-                <td><strong><%= award.performance_name %></strong> <span class="sub-text"><%= award.performance_number ? '#' + award.performance_number : '' %></span></td>
+                <td>
+                  <button type="button" class="card-peek-btn" title="View award card"
+                          data-card="<%= JSON.stringify(award.card || {}) %>">&#127183;</button>
+                  <strong><%= award.performance_name %></strong> <span class="sub-text"><%= award.performance_number ? '#' + award.performance_number : '' %></span>
+                </td>
                 <td><%= award.award_type %></td>
                 <td><span class="badge"><%= formatPlacement(award) %></span></td>
                 <%# age_division carries the full published section (e.g.
@@ -70,4 +74,73 @@
     <% } %>
   </div>
 </div>
+
+<%# Award-card lightbox: the card face is built CLIENT-SIDE from the
+    per-row data-card payload (place/tier/coin resolved server-side by the
+    same helpers the real card partial uses) with the flip-card CSS that
+    styles.css already ships — no per-click fetch, no hidden card DOM
+    bloating the page. Flip-book extras (photos, thank-you notes) would be
+    the one thing needing an on-demand fetch and are not part of this
+    quick-view. %>
+<style>
+  .card-peek-btn { background: none; border: 1px solid rgba(255,255,255,0.18); border-radius: 6px; cursor: pointer; font-size: 0.9rem; padding: 0.1rem 0.35rem; margin-right: 0.45rem; vertical-align: middle; }
+  .card-peek-btn:hover { border-color: var(--primary); }
+  .card-lightbox { position: fixed; inset: 0; z-index: 1000; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.72); backdrop-filter: blur(4px); }
+  .card-lightbox.open { display: flex; }
+  .card-lightbox-stage { width: min(320px, 88vw); position: relative; }
+  .card-lightbox-stage .flip-card { width: 100%; cursor: default; }
+  .card-lightbox-close { position: absolute; top: -2.4rem; right: 0; background: none; border: none; color: #fff; font-size: 1.6rem; cursor: pointer; line-height: 1; }
+</style>
+<div class="card-lightbox" id="cardLightbox" role="dialog" aria-modal="true" aria-label="Award card">
+  <div class="card-lightbox-stage">
+    <button type="button" class="card-lightbox-close" aria-label="Close">&times;</button>
+    <div id="cardLightboxCard"></div>
+  </div>
+</div>
+<script>
+(function () {
+  var box = document.getElementById('cardLightbox');
+  var slot = document.getElementById('cardLightboxCard');
+  var esc = function (s) { var d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; };
+
+  function buildCard(c) {
+    var placeClass = 'award-place award-place-large';
+    if ((c.place || '').length > 25) placeClass = 'award-place award-place-small';
+    else if ((c.place || '').length > 12) placeClass = 'award-place award-place-medium';
+
+    var iconHtml = c.customIcon
+      ? '<img src="' + esc(c.customIcon) + '" alt="Icon" class="trophy-custom-icon">'
+      : esc(c.icon || '&#11088;');
+    var coinHtml = c.coin
+      ? '<span class="card-org-coin"' + (c.coin.vars ? ' style="' + esc(c.coin.vars) + '"' : '') + '><img src="' + esc(c.coin.url) + '" title="' + esc(c.type) + '"></span>'
+      : '';
+    var body = '<div class="' + placeClass + '">' + esc(c.place) + '</div>';
+    if (c.selfAdded) body += '<span class="badge badge-self-reported" title="Unverified manually reported award">Self-Reported</span>';
+    if (c.routine) body += '<p class="category">' + esc(c.type) + '</p><h3>' + esc(c.routine) + '</h3>';
+    else body += '<h3>' + esc(c.type) + '</h3>';
+    if (c.div) body += '<div class="age-division-row"><span class="badge badge-age-division">' + esc(c.div) + '</span></div>';
+    if (c.cat) body += '<p class="sub-category">' + esc(c.cat) + '</p>';
+    body += '<p class="sub-category event-line">' + esc(c.event) + '</p>';
+
+    return '<div class="flip-card"><div class="flip-card-inner">' +
+      '<div class="premium-trophy-card flip-front">' +
+      (c.selfAdded ? '' : '<div class="verified-badge" title="Official Verified Award"><svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" width="14" height="14"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>') +
+      '<div class="content-wrapper ' + esc(c.tier || 'tier-star') + '">' +
+      '<div class="trophy-icon">' + iconHtml + '</div>' + coinHtml +
+      '<div class="card-body">' + body + '</div>' +
+      '</div></div></div></div>';
+  }
+
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.card-peek-btn');
+    if (btn) {
+      try { slot.innerHTML = buildCard(JSON.parse(btn.getAttribute('data-card'))); } catch (err) { return; }
+      box.classList.add('open');
+      return;
+    }
+    if (e.target.closest('.card-lightbox-close') || e.target === box) box.classList.remove('open');
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') box.classList.remove('open'); });
+})();
+</script>
 <%- include('partials/footer') %>
