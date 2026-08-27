@@ -49,7 +49,7 @@ underline; `stopPropagation` so the tap doesn't flip the card). Design decision:
 enhances, never gates — a nameless card would advertise unclaimed status (the same leak the org
 cards avoid) and would punish the dancer's card to pressure the studio. Wired through the dancer
 page, the card manager, and the event-page lightbox payload (`card.studio {name, uid}` — uid
-present only when claimed). FAQs: dancer §11, studio admin §14.
+present only when claimed). FAQ: studio admin §14 (dancer FAQ intentionally untouched — the studio line is self-explanatory to dancers).
 
 ## 3b. Award Card Designs (A/B)
 Two selectable card designs render on public dancer pages. The site-wide default is a superadmin
