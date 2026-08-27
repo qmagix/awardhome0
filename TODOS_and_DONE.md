@@ -3,6 +3,8 @@
 ## TODO
 
 ### Data quality
+- **Convention (2026-08-27): reviewed txt is the artifact of record.** For org imports, transfer tobeprocessed/<org>/txt/ to prod (scp tarball) and import there — never re-scrape/re-extract on prod (divergence window, double site hits). NUVO was the last org imported via prod re-scrape (verified identical: 138 events / 71,419 rows both sides).
+
 - [x] (DONE 2026-08-25) Ultra + Refresh joined the Monday weekly pipeline: WEB_ORGS entries run scripts/update_txt_org.js (scrape year → txt → import --apply into DB_PATH), so new results flow through the staged validator gate like every other org. Verified against a snapshot: cache-hit scrape + zero-row idempotent import.
 - [x] (DONE 2026-08-25) Refresh Dance Competition import: new KAR-family org (started 2026), scraped refreshdance.com/competition/results/2026 via scripts/scrape_refresh_to_txt.js (adapted from Ultra; same DanceBug platform) — 9 events / 2,644 awards imported identically local+prod via import_refresh_txt.js; 9 new studios, ~256 new dancers; idempotent.
 - [x] (DONE 2026-08-25, imported local+prod: 91 events / 31,365 awards / 4,465 firsts / 98 new studios / ~2.76k new dancers; idempotent; parity verified) Ultra Dance Tour import: KAR-family org (like Rainbow); scripts/scrape_ultra_to_txt.js scraped ultradancetour.com/competition/results/2022..2026 → 91 events / 31,408 rows (16,232 with dancer names) in tobeprocessed/ultra/txt/ for review; pages cached in raw/ultra/. Import via scripts/import_ultra_txt.js --apply (dry-run verified: 91 events, 98 new studios; creates dancers by name+studio for solos). Play Video stripped at scrape.
