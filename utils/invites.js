@@ -44,7 +44,7 @@ function buildStudioInvite({ studio, totalAwards, firstPlaces, rank }) {
 
     ${BETA_MODE ? '<p style="background: #faf6e8; border: 1px solid #d4af37; border-radius: 8px; padding: 10px 14px;"><strong>You\'re invited to our private beta.</strong> The link below is your early-access pass — AwardHome opens to the public soon, and beta studios get a head start.</p>' : ''}
     <p>Congratulations on a great season. Your competition results are already live on
-    <strong>AwardHome</strong> — we aggregate results from 26 competitions (YAGP, KAR, Starpower,
+    <strong>AwardHome</strong> — we aggregate results from 27 competitions (YAGP, KAR, Starpower,
     NYCDA, Showstopper, Rainbow, and more) into a single digital trophy case: over 1.5 million awards
     from 20,000+ studios since 2021.</p>
 

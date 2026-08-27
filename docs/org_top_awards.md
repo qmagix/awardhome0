@@ -473,3 +473,8 @@ Senior 16-19. **Sources:** epicdanceinc.com/rules. **Confidence:** high.
 - Semis placements: 1ST–4TH per Age (PT/JR/TN/SR) ~ Category (Solo/Duo-Trio/Group/Line/Production) ~ Style; per-division HIGH SCORE and JUDGES' OVATION (pre-2020: BEST SHOWMANSHIP); "Nationals Qualifier" rows + '**'-starred placing routines = finals invites (award_type NATIONALS QUALIFIER); Faculty Show Invitee and I.D.A. Winner are honors, not placements.
 - No group rosters published; dancer names only for independents ("Independent - <name>") and D.O.T.Y. titles.
 - 49 events (COVID-era 2020-21 + parts of 2021-22/2022-23 winters) are permanently lost (deleted, never archived) — partnership ask material.
+
+## The Dance Awards (thedanceawards.com)
+- Break The Floor's season-ending championship (family of JUMP/NUVO/24SEVEN — many competitors share profiles with those imports). **Top award: BEST DANCER** — the industry's flagship title, per Age ~ Gender: 1ST = the titleholder, 2ND/3RD runners-up, Top 10/11/12/20-style rows are finalist tiers (real honors, not placements-in-disguise). STUDIO OF THE YEAR is the flagship studio title (hall-of-fame.json caches winner photos).
+- BEST PERFORMANCE = routine placements per age; HIGH SCORE BY AGE / BY PERFORMANCE mirror the DanceOne vocabulary; SPECIALTY rows carry their real award name in age_division (Best Performance by Genre + genre, Outstanding Technical Achievement, Best <style> Studio, People's Choice; choreographer/director credits live in the txt notes only); SCHOLARSHIP = named class scholarships.
+- Source is static JSON behind their Angular SPA (content/json/all-results.json) — full 2011–2026 history, refresh with scrape_thedanceawards_to_txt.js --refresh after each summer finale.
