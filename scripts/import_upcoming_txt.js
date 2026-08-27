@@ -26,6 +26,20 @@ const FILE = fileArg
 
 const ISO = /^\d{4}-\d{2}-\d{2}$/;
 
+// Orgs whose upcoming events are maintained by the weekly scraper
+// (scripts/scrape_upcoming_events.js SOURCES). Their seed rows are a
+// snapshot that goes stale — re-importing them once resurrected rows the
+// scraper had superseded (venue-spelling drift defeats the idempotency
+// key), creating duplicates (found 2026-08-28). The scraper is
+// authoritative for these orgs; the seed importer skips them.
+const SCRAPER_ORGS = new Set([
+  'kar dance competition', 'rainbow national dance competition',
+  'refresh dance competition', 'ultra dance tour',
+  'starpower talent competition', 'revolution talent competition',
+  'believe talent competition', 'imagine dance challenge',
+  'nexstar national dance competition', 'dreammaker dance competition',
+].map(s => s.toLowerCase()));
+
 async function main() {
   const db = await openDb();
   await ensureUpcomingTable(db);
@@ -34,7 +48,7 @@ async function main() {
   const orgs = await db.all('SELECT id, name FROM organizations');
   const orgByName = new Map(orgs.map(o => [o.name.toLowerCase(), o.id]));
 
-  let inserted = 0, updated = 0, unchanged = 0, skippedOwner = 0;
+  let inserted = 0, updated = 0, unchanged = 0, skippedOwner = 0, skippedScraper = 0;
   const problems = [];
 
   for (let i = 0; i < lines.length; i++) {
@@ -44,6 +58,7 @@ async function main() {
     if (parts.length < 6) { problems.push(`line ${i + 1}: expected ≥6 fields, got ${parts.length}`); continue; }
     const [orgName, name, city, state, venue, start, end = '', regUrl = '', sourceUrl = ''] = parts;
 
+    if (SCRAPER_ORGS.has(orgName.toLowerCase())) { skippedScraper++; continue; }
     const orgId = orgByName.get(orgName.toLowerCase());
     if (!orgId) { problems.push(`line ${i + 1}: unknown org "${orgName}"`); continue; }
     if (!name) { problems.push(`line ${i + 1}: missing event name`); continue; }
@@ -89,7 +104,7 @@ async function main() {
   }
 
   console.log(`${APPLY ? 'APPLIED' : 'DRY RUN'} — ${path.basename(FILE)}`);
-  console.log(`  insert: ${inserted}  update: ${updated}  unchanged: ${unchanged}  owner-protected: ${skippedOwner}`);
+  console.log(`  insert: ${inserted}  update: ${updated}  unchanged: ${unchanged}  owner-protected: ${skippedOwner}  scraper-org lines skipped: ${skippedScraper}`);
   if (problems.length) {
     console.log(`  problems (${problems.length}):`);
     problems.forEach(p => console.log(`    - ${p}`));

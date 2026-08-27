@@ -885,3 +885,83 @@ Encore National Dance Competition | Nationals — Round Rock | Round Rock | TX |
 # Epic Dance: EXCLUDED pending identity verification — epicdanceinc.com and
 # epicdanceshowcase.com are different companies; confirm which org AwardHome's
 # "Epic Dance" row is before listing tour dates under its name.
+
+# --- Added 2026-08-28: the three orgs imported this week (org results now on
+# the platform). Sources: tremainedance.com/winter-2026-27/ (22 stops w/
+# venues), inspirendc.com/regionals/ + /nationals/ (2027 schedule w/ venues;
+# site typo Ablemarle->Albemarle fixed, duplicate Montgomery #2 row dropped,
+# Charlotte venue still "Coming Soon"), thedanceawards.com js/app.json
+# nextSeason block (2027 cities w/ venues).
+Tremaine Dance Conventions & Competitions | Winter Tour — Atlanta | Atlanta | GA | Crowne Plaza Hotel Atlanta Perimeter at Ravinia | 2026-10-24 | 2026-10-25 | https://www.tremainedance.com/registration/ | https://www.tremainedance.com/winter-2026-27/
+Tremaine Dance Conventions & Competitions | Winter Tour — Lansing | Lansing | MI | Lansing Center & Doubletree by Hilton Lansing | 2026-11-07 | 2026-11-08 | https://www.tremainedance.com/registration/ | https://www.tremainedance.com/winter-2026-27/
+Tremaine Dance Conventions & Competitions | Winter Tour — Houston | Houston | TX | The Westin Galleria Houston | 2026-11-14 | 2026-11-15 | https://www.tremainedance.com/registration/ | https://www.tremainedance.com/winter-2026-27/
+Tremaine Dance Conventions & Competitions | Winter Tour — Orlando | Orlando | FL | Renaissance Orlando at SeaWorld | 2026-11-21 | 2026-11-22 | https://www.tremainedance.com/registration/ | https://www.tremainedance.com/winter-2026-27/
+Tremaine Dance Conventions & Competitions | Winter Tour — Austin | Austin | TX | Hyatt Regency Lost Pines Resort & Spa | 2026-12-05 | 2026-12-06 | https://www.tremainedance.com/registration/ | https://www.tremainedance.com/winter-2026-27/
+Tremaine Dance Conventions & Competitions | Winter Tour — Mobile | Mobile | AL | Mobile Convention Center | 2026-12-12 | 2026-12-13 | https://www.tremainedance.com/registration/ | https://www.tremainedance.com/winter-2026-27/
+Tremaine Dance Conventions & Competitions | Winter Tour — Boston | Boston | MA | The Westin Copley Place | 2027-01-09 | 2027-01-10 | https://www.tremainedance.com/registration/ | https://www.tremainedance.com/winter-2026-27/
+Tremaine Dance Conventions & Competitions | Winter Tour — Washington D.C. | Washington | DC | The Westin Washington DC Downtown | 2027-01-16 | 2027-01-17 | https://www.tremainedance.com/registration/ | https://www.tremainedance.com/winter-2026-27/
+Tremaine Dance Conventions & Competitions | Winter Tour — New York | New York | NY | Sheraton New York Times Square Hotel | 2027-01-23 | 2027-01-24 | https://www.tremainedance.com/registration/ | https://www.tremainedance.com/winter-2026-27/
+Tremaine Dance Conventions & Competitions | Winter Tour — Kansas City | Kansas City | MO | Sheraton Kansas City Hotel at Crown Center | 2027-01-30 | 2027-01-31 | https://www.tremainedance.com/registration/ | https://www.tremainedance.com/winter-2026-27/
+Tremaine Dance Conventions & Competitions | Winter Tour — Indianapolis | Indianapolis | IN | Indianapolis Marriott Downtown | 2027-02-06 | 2027-02-07 | https://www.tremainedance.com/registration/ | https://www.tremainedance.com/winter-2026-27/
+Tremaine Dance Conventions & Competitions | Winter Tour — Vancouver | Vancouver | WA | Hilton Vancouver Washington | 2027-02-13 | 2027-02-14 | https://www.tremainedance.com/registration/ | https://www.tremainedance.com/winter-2026-27/
+Tremaine Dance Conventions & Competitions | Winter Tour — Pittsburgh | Pittsburgh | PA | Wyndham Grand Pittsburgh Downtown | 2027-02-20 | 2027-02-21 | https://www.tremainedance.com/registration/ | https://www.tremainedance.com/winter-2026-27/
+Tremaine Dance Conventions & Competitions | Winter Tour — St. Louis | St. Louis | MO | Hyatt Regency St. Louis Arch | 2027-02-27 | 2027-02-28 | https://www.tremainedance.com/registration/ | https://www.tremainedance.com/winter-2026-27/
+Tremaine Dance Conventions & Competitions | Winter Tour — Dallas | Dallas | TX | Gaylord Texan Resort & Convention Center | 2027-03-06 | 2027-03-07 | https://www.tremainedance.com/registration/ | https://www.tremainedance.com/winter-2026-27/
+Tremaine Dance Conventions & Competitions | Winter Tour — Chicago | Chicago | IL | Renaissance Schaumburg Hotel & Convention Center | 2027-03-13 | 2027-03-14 | https://www.tremainedance.com/registration/ | https://www.tremainedance.com/winter-2026-27/
+Tremaine Dance Conventions & Competitions | Winter Tour — Tulsa | Tulsa | OK | Renaissance Tulsa Hotel & Convention Center | 2027-03-20 | 2027-03-21 | https://www.tremainedance.com/registration/ | https://www.tremainedance.com/winter-2026-27/
+Tremaine Dance Conventions & Competitions | Winter Tour — Greensboro | Greensboro | NC | Sheraton Greensboro at Four Seasons | 2027-04-03 | 2027-04-04 | https://www.tremainedance.com/registration/ | https://www.tremainedance.com/winter-2026-27/
+Tremaine Dance Conventions & Competitions | Winter Tour — Anaheim | Anaheim | CA | Hyatt Regency Orange County | 2027-04-10 | 2027-04-11 | https://www.tremainedance.com/registration/ | https://www.tremainedance.com/winter-2026-27/
+Tremaine Dance Conventions & Competitions | Winter Tour — Santa Clara | Santa Clara | CA | Hyatt Regency Santa Clara | 2027-04-17 | 2027-04-18 | https://www.tremainedance.com/registration/ | https://www.tremainedance.com/winter-2026-27/
+Tremaine Dance Conventions & Competitions | Winter Tour — Nashville | Nashville | TN | Embassy Suites by Hilton Nashville SE Murfreesboro | 2027-04-24 | 2027-04-25 | https://www.tremainedance.com/registration/ | https://www.tremainedance.com/winter-2026-27/
+Tremaine Dance Conventions & Competitions | Winter Tour — Daytona Beach | Daytona Beach | FL | Hilton Daytona Beach Oceanfront Resort | 2027-05-01 | 2027-05-02 | https://www.tremainedance.com/registration/ | https://www.tremainedance.com/winter-2026-27/
+The Dance Awards | Orlando | Orlando | FL | Hyatt Regency Orlando | 2027-06-26 | 2027-07-03 | https://thedanceawards.com | https://thedanceawards.com
+The Dance Awards | Las Vegas | Las Vegas | NV | The Palazzo | 2027-07-12 | 2027-07-18 | https://thedanceawards.com | https://thedanceawards.com
+Inspire National Dance Competition | Regionals — Orlando | Orlando | FL | Lake Brantley High School | 2027-02-05 | 2027-02-07 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Columbia #1 | Columbia | SC | Lexington 4 Performing Arts Center | 2027-02-05 | 2027-02-07 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Lenoir | Lenoir | NC | JE Broyhill Civic Center | 2027-02-05 | 2027-02-07 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Valdosta | Valdosta | GA | Valdosta High School PAC | 2027-02-12 | 2027-02-14 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Tampa | Tampa | FL | Chamberlain High School PAC | 2027-02-12 | 2027-02-14 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Louisville | Louisville | KY | Louisville Memorial Auditorium | 2027-02-19 | 2027-02-21 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Knoxville | Knoxville | TN | Clayton Center for the Arts | 2027-02-19 | 2027-02-21 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Mooresville #1 | Mooresville | NC | Mooresville PAC | 2027-02-26 | 2027-02-28 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — West Memphis | West Memphis | AR | West Memphis Civic Auditorium | 2027-02-26 | 2027-02-28 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Columbia #2 | Columbia | SC | Columbia-Metropolitan Convention Center | 2027-02-26 | 2027-02-28 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Columbus | Columbus | GA | Columbus Civic Center | 2027-02-26 | 2027-02-28 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Rocky Mount #1 | Rocky Mount | NC | The Dunn Center | 2027-03-05 | 2027-03-07 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Raleigh | Raleigh | NC | Martin Marietta Center for the Performing Arts | 2027-03-05 | 2027-03-07 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Greenville | Greenville | SC | Mcalister Auditorium | 2027-03-05 | 2027-03-07 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Daphne #1 | Daphne | AL | Daphne Civic Center | 2027-03-05 | 2027-03-07 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Huntsville | Huntsville | AL | VonBraun Center | 2027-03-05 | 2027-03-07 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Rocky Mount #2 | Rocky Mount | NC | The Dunn Center | 2027-03-12 | 2027-03-14 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Montgomery #1 | Montgomery | AL | Montgomery Performing Arts Center | 2027-03-12 | 2027-03-14 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — St. Augustine #1 | St. Augustine | FL | World Golf Village Renaissance | 2027-03-19 | 2027-03-21 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Rocky Mount #3 | Rocky Mount | NC | The Dunn Center | 2027-03-19 | 2027-03-21 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Statesboro #1 | Statesboro | GA | Georgia Southern University PAC | 2027-03-19 | 2027-03-21 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Hattiesburg | Hattiesburg | MS | Petal High School | 2027-03-19 | 2027-03-21 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Daphne #2 | Daphne | AL | Daphne Civic Center | 2027-04-02 | 2027-04-04 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Albemarle | Albemarle | NC | Stanly County Agri-Civic Center | 2027-04-02 | 2027-04-04 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Dayton | Dayton | OH | Dayton Masonic Center | 2027-04-02 | 2027-04-04 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Charlotte | Charlotte | NC |  | 2027-04-09 | 2027-04-11 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Jacksonville #1 | Jacksonville | FL | Thrasher- Horne Center | 2027-04-09 | 2027-04-11 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Jacksonville #2 | Jacksonville | FL | Southbank Hotel Jacksonville Riverwalk | 2027-04-09 | 2027-04-11 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Montgomery #2 | Montgomery | AL | Montgomery Performing Arts Center | 2027-04-09 | 2027-04-11 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Hampton | Hampton | VA | Hampton Roads Convention Center | 2027-04-09 | 2027-04-11 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Charleston | Charleston | SC | North Charleston Coliseum & Convention Center | 2027-04-16 | 2027-04-18 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Ocala | Ocala | FL | World Equestrian Center | 2027-04-16 | 2027-04-18 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Lynchburg | Lynchburg | VA | E. C. Glass Civic Auditorium | 2027-04-16 | 2027-04-18 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Statesboro #2 | Statesboro | GA | Georgia Southern University PAC | 2027-04-16 | 2027-04-18 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Asheville | Asheville | NC | Harrah's Cherokee Center | 2027-04-23 | 2027-04-25 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Mooresville #2 | Mooresville | NC | Mooresville PAC | 2027-04-23 | 2027-04-25 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Harrisburg | Harrisburg | PA | Scottish Rite Masonic Temple | 2027-04-23 | 2027-04-25 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Macon | Macon | GA | Macon City Auditorium | 2027-04-23 | 2027-04-25 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Dalton #1 | Dalton | GA | Dalton Convention Center | 2027-04-30 | 2027-05-02 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Avon Park | Avon Park | FL | Alan Jay Wildstein Center for the Performing Arts | 2027-04-30 | 2027-05-02 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Myrtle Beach | Myrtle Beach | SC | Myrtle Beach High School | 2027-04-30 | 2027-05-02 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Princeton | Princeton | WV | Chuck Mathena Center | 2027-04-30 | 2027-05-02 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Enterprise | Enterprise | AL | Enterprise Performing Arts Center | 2027-04-30 | 2027-05-02 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Dalton #2 | Dalton | GA | Dalton Convention Center | 2027-05-07 | 2027-05-09 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Columbia #3 | Columbia | SC | Richland Performing Arts Center | 2027-05-07 | 2027-05-09 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — West Monroe | West Monroe | LA | West Monroe Sports and Events Center | 2027-05-07 | 2027-05-09 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — Fort Mill | Fort Mill | SC | The River Place | 2027-05-14 | 2027-05-16 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Regionals — St. Augustine #2 | St. Augustine | FL | World Golf Village Renaissance | 2027-05-14 | 2027-05-16 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/regionals/
+Inspire National Dance Competition | Nationals — Orlando | Orlando | FL | Lake Brantley High School | 2027-06-27 | 2027-07-02 | https://inspirendc.dancecompgenie.com | https://inspirendc.com/nationals/
