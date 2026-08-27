@@ -8,6 +8,15 @@ of public repos, outreach emails, and demos until filings land.*
 
 ## 1. Executive recommendation
 
+> **Decision update (2026-08-27):** P1 and P3 are being filed as ONE combined
+> provisional — the DancerID design matured enough during drafting (grant schema,
+> pull API, audit/revocation, FIGS. 10-12) to satisfy the "paper design first"
+> condition, and a provisional has no unity requirement, so combining costs nothing
+> and locks both priority dates at once. Draft: `provisional_draft_P1_P3.txt`
+> (spec + 21 sample claims) + `patent_figures_P1_P3.html` (FIGS. 1-14) +
+> `patent_screenshots/` (SUPP. FIGS. A-G). P2 remains a separate future filing
+> per the schedule below.
+
 File **two provisional applications now**, hold a third until its design matures:
 
 | Filing | Covers | Why now | Foreign rights |

@@ -9,10 +9,9 @@ Filing note: Single provisional covering two related inventions (Part I: the
              achievement-artifact system; Part II: the guardian-mediated
              portable identity service). Provisional applications have no
              restriction/unity requirement; one or more non-provisional
-             applications may later claim priority to this filing. Screenshots
-             of the implemented user interfaces and informal flow diagrams
-             corresponding to FIGS. 1-12 should be attached as drawings at
-             filing time.
+             applications may later claim priority to this filing. Attach at
+             filing: FIGS. 1-14 (informal drawings, patent_figures_P1_P3.html)
+             and SUPP. FIGS. A-G (UI screenshots, patent_screenshots/).
 
 --------------------------------------------------------------------------------
 TITLE OF THE INVENTION
@@ -231,7 +230,7 @@ and keyboard arrows, with wrap-around:
            organizer-authored tagline; exists only when the brand mark has
            passed the operator approval gate of section I.E.
 
-[0014a] MULTI-FACE CONTINUOUS-FLIP EMBODIMENT. In a further presentation mode
+[0014a] MULTI-FACE CONTINUOUS-FLIP EMBODIMENT (FIG. 13). In a further presentation mode
 (the "multi-face" or "carousel" design), the flip interaction itself is the
 pagination: the artifact behaves as a virtual multi-faced solid whose ordered
 cycle of faces is (front → certificate → photo → acknowledgements → colophon →
@@ -291,7 +290,8 @@ award_dancers. Each participant may author one acknowledgement line stored on
 their own (award_id, dancer_id) row of award_acknowledgements — the "yearbook
 back": one physical trophy, N personal inscriptions. When the acknowledgements
 page renders on a given participant's public page, the composition pins that
-participant's approved line first, followed by teammates' approved lines. The
+participant's approved line (annotation) first, followed by teammates' approved
+lines. The
 same artifact therefore lawfully renders differently per viewing context while
 remaining a single record — including in derivative media, where each member's
 video variant (section I.F) pins their own line.
@@ -412,8 +412,8 @@ terms are operator-configured records (prize_pools; reveals logged in
 prize_reveals with revealed_at/redeemed_at). In an editorial embodiment, the
 same page mechanics deliver merit-selected (non-probabilistic) awards.
 
-I.J. Guardian consent workflow for minor content (B2)
------------------------------------------------------
+I.J. Guardian consent workflow for minor content
+------------------------------------------------
 
 [0026] Photo and text enrichment concerning a minor is accepted only from an
 authenticated owner (participant owner, or studio owner of an actively
@@ -433,7 +433,7 @@ II.A. The portable identifier
 [0027] Each participant carries the lifetime identifier of paragraph [0013]:
 globally unique, never recycled, never re-derived upon rename or record merge
 (a stability contract), non-enumerable, and presentable by the participant at
-any registration context ("her DancerID"). The identifier resolves within the
+any registration context (a "DancerID"). The identifier resolves within the
 identity service to (a) a registration profile — an opt-in "registration
 wallet" of fields the platform does not otherwise hold (date of birth, address,
 guardian contacts, waiver signatures, emergency/medical fields), entered only
@@ -530,9 +530,9 @@ records, at least one junction record having associated content having a
 moderation state; and a rendering engine configured to render the record as an
 artifact having a front face and an ordered plurality of additional pages
 reachable through one or more flip interactions, wherein each page is
-materialized only when
-its associated content exists and its moderation state satisfies an approval
-condition, such that no rendered artifact contains an empty or unapproved page.
+materialized only when its associated content exists and its moderation state
+satisfies an approval condition, such that no rendered artifact contains an
+empty or unapproved page.
 
 2. The system of claim 1, wherein a page renders per-participant annotation
 content of a multi-participant record, the rendering engine composing the page
@@ -582,7 +582,8 @@ identical copies from the same author.
 10. An identity-disclosure method comprising: maintaining, for a participant, a
 lifetime non-recycled public identifier and a profile comprising registration
 fields and achievement attestations computed from provenance-bearing records;
-receiving, from a verified guardian account, a grant record scoping a set of
+receiving, from a verified guardian account or verified adult-participant
+account, a grant record scoping a set of
 permitted fields to one grantee organization with an expiry; receiving an
 authenticated request presenting the identifier and a grantee credential;
 intersecting the request with unexpired, unrevoked grant scope; returning only
@@ -645,8 +646,8 @@ ABSTRACT
 flip-card artifact carrying an ordered set of pages — certificate,
 photograph, acknowledgements, organizer colophon — presented as a swipeable
 back-stack or as a continuously-flipping multi-face cycle with wrap-around —
-each page materialized only when
-its content has passed a moderation gate, so every public rendering and every
+each page materialized only when its content has passed a moderation gate, so
+every public rendering and every
 automatically generated derivative (share image, short-form video) is
 publish-safe by construction. Group awards compose per viewer from
 junction-record annotations; owners edit the artifact itself in a WYSIWYG mode
