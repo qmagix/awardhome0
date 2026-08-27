@@ -20,3 +20,4 @@ staging_import.sqlite*
 reports/
 dance_awards.sqlite
 mdfilesbk/
+__pycache__/
