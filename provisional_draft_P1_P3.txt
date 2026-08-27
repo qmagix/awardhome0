@@ -140,6 +140,9 @@ FIG. 12 — Revocation, expiry, and audit-trail handling.
 FIG. 13 — Multi-face continuous-flip presentation mode: ordered face cycle
           with wrap-around, varying rotation axis, and adaptive cycle length
           under conditional materialization.
+FIG. 14 — Studio-aggregated acknowledgement view: affiliated-organization
+          composition with director's-note header face and one inscription
+          per face in chronological order.
 
 --------------------------------------------------------------------------------
 DETAILED DESCRIPTION
@@ -293,7 +296,7 @@ same artifact therefore lawfully renders differently per viewing context while
 remaining a single record — including in derivative media, where each member's
 video variant (section I.F) pins their own line.
 
-[0018a] More generally, composition is governed by a policy keyed to the TYPE
+[0018a] (FIG. 14) More generally, composition is governed by a policy keyed to the TYPE
 of the viewing context, not merely the viewer's identity: (a) in a participant
 context (a member's own page), the member's line is pinned first as above;
 (b) in an AFFILIATED-ORGANIZATION context (the studio's rendering of the same
@@ -658,7 +661,7 @@ calls, enabling error-free registration prefill and division verification for
 minors without uncontrolled data sharing.
 
 ================================================================================
-END OF DRAFT — FIGS. 1-13 are drawn in patent_figures_P1_P3.html (open in a
+END OF DRAFT — FIGS. 1-14 are drawn in patent_figures_P1_P3.html (open in a
 browser, print to PDF, portrait, default margins — one figure per page); optionally
 supplement with UI screenshots of the implemented card/editor at filing.
 Attorney to verify: micro-entity status; inventor/assignee; disclosure-date
