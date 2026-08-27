@@ -2,6 +2,9 @@
 
 ## TODO
 
+### Release
+- [x] (SHIPPED 2026-08-27) **Flip-book card rollout, phase 1 (beta):** prod card_design default -> flipbook (everyone sees the paged back; public back = always-complete certificate); thank_you_notes + award_photos flags -> beta (admins + early_access see photo/ack pages); auto_moderation stays off, moderation_mode manual — all submissions queue at /admin/card-content. Footer now carries "Award card system patent pending" (provisional 64/142,611). Verified live: real dancer page renders 45 flipbook cards w/ tcb pages. NEXT: recruit early_access families → watch queue + mobile layout → flip both flags to 'on' (or set flip_at) when baked.
+
 ### IP / Legal
 - [x] (DONE 2026-08-27) **U.S. Provisional Application No. 64/142,611 FILED** (P1+P3 combined: flip-book/multi-face card system + DancerID; spec w/ claims 1-21, FIGS. 1-14, SUPP. FIGS. A-G). "Patent Pending" now usable in marketing/outreach. Freeze list LIFTED (flip-book rollout, demos, outreach OK). See provisional_patent_plan.md banner.
 - [ ] **2027-06-27 checkpoint (calendar it!):** convert / PCT / refile decision. HARD deadline 2027-08-27 (non-extendable).
