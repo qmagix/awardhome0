@@ -1404,6 +1404,10 @@ router.get('/dance/event/:id', async (req, res) => {
       studio: award.studio_name
         ? { name: award.studio_name, uid: award.studio_claimed ? award.studio_uid : null }
         : null,
+      // solo cards carry the dancer on the front (groups stay roster-free)
+      dancer: award.dancers.length === 1
+        ? { name: award.dancers[0].name, uid: award.dancers[0].unique_id || null }
+        : null,
     };
   }
 

@@ -39,8 +39,11 @@ This document outlines the core features of the Dance Awards Platform.
   "✓ Code" badge. Approval auto-rejects competing pending claims for the same dancer, and every
   decision (either path) emails the claimant — approvals deep-link to the card-extras page.
 
-## 3a-2. Studio Attribution on Award Cards (2026-08-28)
-Every award card carries the studio the routine competed with — front face as a muted identity
+## 3a-2. Dancer & Studio Attribution on Award Cards (2026-08-28)
+Solo cards carry the dancer's name on the front (`.card-dancer-line`, the strongest line of the
+identity block; group fronts stay roster-free — the certificate back says "together with
+teammates"). On the event-page lightbox the solo dancer's name links to their profile when
+claimed. Every award card also carries the studio the routine competed with — a muted identity
 line just above the event line (`.card-studio-line`, cqw-scaled with the rem fallback; hidden in
 mini-mode via its `sub-category` class), and on the certificate back as "of <studio>" under the
 dancer's name. The name always shows (it's part of the verified record and travels with every

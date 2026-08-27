@@ -934,9 +934,17 @@ a:hover {
   padding: 2px 6px;
 }
 
-/* Studio attribution: identity, so a notch brighter than the event
-   metadata below it. Claimed studios render it as a link to their page
-   (dotted underline = tappable without shouting on a trophy face). */
+/* Identity block above the event line: dancer (solo cards, strongest),
+   then studio — a notch brighter than the event metadata below. Claimed
+   studios render as a link to their page (dotted underline = tappable
+   without shouting on a trophy face). */
+.flip-card .card-dancer-line {
+  color: #fff;
+  font-weight: 700;
+  margin-top: 0.5rem;
+  margin-bottom: -0.3rem;
+}
+
 .flip-card .card-studio-line {
   color: rgba(255, 255, 255, 0.92);
   font-weight: 600;
@@ -944,13 +952,19 @@ a:hover {
   margin-bottom: -0.3rem;
 }
 
-.flip-card .card-studio-line a {
+.flip-card .card-dancer-line + .card-studio-line {
+  margin-top: 0.15rem;
+}
+
+.flip-card .card-studio-line a,
+.flip-card .card-dancer-line a {
   color: inherit;
   text-decoration: none;
   border-bottom: 1px dotted rgba(255, 255, 255, 0.45);
 }
 
-.flip-card .card-studio-line a:hover {
+.flip-card .card-studio-line a:hover,
+.flip-card .card-dancer-line a:hover {
   border-bottom-color: #f3e5ab;
   color: #f3e5ab;
 }
@@ -1176,9 +1190,18 @@ a:hover {
     padding: 0.7cqw 2cqw;
   }
 
+  .flip-card .card-dancer-line {
+    margin-top: 2.7cqw;
+    margin-bottom: -1.6cqw;
+  }
+
   .flip-card .card-studio-line {
     margin-top: 2.7cqw;
     margin-bottom: -1.6cqw;
+  }
+
+  .flip-card .card-dancer-line + .card-studio-line {
+    margin-top: 0.5cqw;
   }
 
   .flip-card .event-line {

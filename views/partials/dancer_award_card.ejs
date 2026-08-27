@@ -117,6 +117,13 @@
                                             <%= award.category %>
                                           </p>
                                           <% } %>
+                                            <%# Identity block, strongest first: the dancer (solo
+                                                cards only — group fronts stay roster-free, the
+                                                back says "together with teammates"), then the
+                                                studio, then the event line below. %>
+                                            <% if (!isGroup && dancer && dancer.name) { %>
+                                              <p class="sub-category card-dancer-line"><%= dancer.name %></p>
+                                            <% } %>
                                             <%# Studio attribution: always shown (it's part of the
                                                 verified record and the studio's presence on every
                                                 shared card); claiming upgrades it to a link to the
