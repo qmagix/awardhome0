@@ -36,6 +36,14 @@ tether alone won't carry §101).
 Dates control everything: US grace period = 12 months from first public disclosure;
 most foreign rights die at first disclosure.
 
+> **Correction (2026-08-27, per inventor):** although the site is online, no studio or
+> organizer invitations have been sent and, to the inventor's knowledge, no material
+> third party has viewed the beta-gated site — only the inventor and dev team. This
+> substantially strengthens the "no enabling public disclosure yet" position for ALL
+> items below (including A5), and likely preserves foreign rights across the board.
+> The table's conservative readings stand as the attorney's worst case; the freeze
+> list still applies until filings land. Draft spec: `provisional_draft_P1_P3.txt`.
+
 | Item | Status | Assessment |
 |---|---|---|
 | A5 logo coin | Live on prod ~2026-08 | US clock running (file by ~2027-08); foreign rights for A5-alone claims presumed lost. Still claimable abroad *in combination* with unshipped elements (new combination = new disclosure analysis). |

@@ -1,0 +1,579 @@
+================================================================================
+PROVISIONAL APPLICATION FOR PATENT — SPECIFICATION (DRAFT)
+================================================================================
+
+Status:      ATTORNEY-REVIEW DRAFT v1 (2026-08-27). NOT FILED. CONFIDENTIAL.
+             Do not publish, demo, or circulate outside inventor/counsel.
+Inventor:    Q Huang
+Filing note: Single provisional covering two related inventions (Part I: the
+             achievement-artifact system; Part II: the guardian-mediated
+             portable identity service). Provisional applications have no
+             restriction/unity requirement; one or more non-provisional
+             applications may later claim priority to this filing. Screenshots
+             of the implemented user interfaces and informal flow diagrams
+             corresponding to FIGS. 1-12 should be attached as drawings at
+             filing time.
+
+--------------------------------------------------------------------------------
+TITLE OF THE INVENTION
+--------------------------------------------------------------------------------
+
+SYSTEMS AND METHODS FOR MODERATION-GATED MULTI-PAGE ACHIEVEMENT ARTIFACTS,
+DERIVATIVE PUBLICATION THEREOF, AND GUARDIAN-MEDIATED SELECTIVE DISCLOSURE OF
+PORTABLE PARTICIPANT IDENTITY PROFILES
+
+--------------------------------------------------------------------------------
+FIELD OF THE INVENTION
+--------------------------------------------------------------------------------
+
+[0001] The invention relates to computer-implemented systems for representing
+verified achievement records as interactive, shareable digital artifacts; to
+content-moderation architectures that make automated derivative publication of
+such artifacts safe by construction; and to consent-mediated identity services
+through which a participant (or the guardian of a minor participant) selectively
+discloses profile and achievement data to third-party event organizers.
+
+--------------------------------------------------------------------------------
+BACKGROUND
+--------------------------------------------------------------------------------
+
+[0002] Competitive youth activities (competitive dance being the exemplary
+domain herein) generate large volumes of achievement results across many
+independent event organizers. Results are published inconsistently, attach to
+ambiguous participant names, and are rarely aggregated. Participants — most of
+whom are minors — have no durable digital representation of their achievements;
+organizers have no reliable way to verify a registrant's identity or competitive
+history; and any user-generated enrichment of achievement records (photographs,
+messages) raises acute child-safety and moderation problems.
+
+[0003] Existing digital "cards" or share graphics are static compositions: they
+are either generated without user content (safe but impersonal) or accept user
+content without structural guarantees that unmoderated content cannot reach a
+public or derivative surface (personal but unsafe). Automated derivative media
+generation (e.g., automatic highlight videos) conventionally requires either
+human review of each generated asset or acceptance of publication risk.
+
+[0004] Separately, event registration requires re-entry of the same participant
+data (identity, date of birth, guardian contacts, waivers, competitive level)
+for every event of every organizer, producing transcription errors, division
+misplacement (including deliberate "sandbagging"), and repeated collection of a
+minor's personal data by many parties. Generic identity providers do not hold
+verifiable competitive-history data and provide no guardian-scoped, field-level
+disclosure control suitable for minors.
+
+[0005] There is a need for (a) an achievement artifact whose enriched content is
+publish-safe by construction, whose composition adapts per viewer, and which can
+serve as the sole trusted frame source for automated derivative media; and (b) a
+portable participant identifier through which registration data and verified
+history flow to organizers only under revocable, field-scoped, guardian-mediated
+consent.
+
+--------------------------------------------------------------------------------
+SUMMARY
+--------------------------------------------------------------------------------
+
+[0006] Part I discloses an achievement-artifact system in which an imported,
+provenance-bearing achievement record is rendered as a card object having a
+front face and, upon a flip interaction, an ordered stack of back pages. Each
+back page is CONDITIONALLY MATERIALIZED: the page exists in the rendered
+artifact only when its underlying content item exists and satisfies a
+moderation-state condition. Because absent or unapproved content yields an
+absent page (never an empty or placeholder page on a public surface), every
+public rendering of the artifact is complete and publish-safe by construction.
+
+[0007] Further aspects of Part I include: per-viewer composition of a shared
+group artifact from junction-record annotations (each group member's
+acknowledgement line stored on the member's own junction row, with the viewing
+member's line pinned first); a single-surface WYSIWYG editor in which the same
+artifact object renders with gated pages materialized as inline-editable
+placeholders only in edit mode; propagation of content and moderation verdicts
+across awards derived from the same underlying routine; a role-partitioned
+brand-mark fitting workflow in which a third-party organizer's mark enters a
+fixed silhouette with operator-only geometric controls and an operator-only
+public-display approval bit; automated generation of derivative media (vertical
+short-form video, share images) whose every frame source is an
+already-moderated page composition, rendering the derivative publish-safe
+without per-asset human review; and a server-side, provenance-scoped,
+seeded probabilistic reward page occasionally materialized within the artifact's
+page stack, with guardian-routed redemption.
+
+[0008] Part II discloses a portable participant identity service in which each
+participant holds a lifetime, non-recycled public identifier; a guardian (or
+adult participant) creates field-scoped, time-bounded, revocable disclosure
+grants to specific organizer grantees; organizers pull only granted fields via
+authenticated API calls; every disclosure is audit-logged; and the disclosed
+profile may include platform-verified competitive-history attestations (e.g.,
+division/level placement evidence) that the identity service derives from its
+achievement-record corpus. The artifact system of Part I and the identity
+service of Part II interoperate: the verified records underlying artifacts are
+the source of the attestations disclosed under Part II grants.
+
+--------------------------------------------------------------------------------
+BRIEF DESCRIPTION OF THE DRAWINGS
+--------------------------------------------------------------------------------
+
+[0009]
+FIG. 1  — System architecture: ingestion pipeline, record store with junction
+          tables, moderation subsystem, rendering engine, derivative media
+          generator, reward subsystem, identity/consent service, organizer API.
+FIG. 2  — Card object anatomy: front face; flip transition; ordered back-stack
+          (certificate page, photo page, acknowledgements page, organizer
+          colophon page); navigation affordances.
+FIG. 3  — Conditional page materialization decision flow.
+FIG. 4  — Per-viewer composition of the acknowledgements page of a shared
+          group artifact.
+FIG. 5  — WYSIWYG editing mode versus public rendering of the same artifact.
+FIG. 6  — Tiered moderation pipeline with same-routine content propagation and
+          verdict propagation.
+FIG. 7  — Brand-coin fitting workflow with role-partitioned controls and
+          approval gate.
+FIG. 8  — Derivative video generation from pre-moderated page compositions.
+FIG. 9  — Provenance-scoped reward roll and guardian-routed redemption.
+FIG. 10 — Identity service: grant creation with guardian verification and
+          field-level scoping.
+FIG. 11 — Organizer pull sequence with token authentication and scope
+          filtering.
+FIG. 12 — Revocation, expiry, and audit-trail handling.
+
+--------------------------------------------------------------------------------
+DETAILED DESCRIPTION
+--------------------------------------------------------------------------------
+
+Terminology
+-----------
+
+[0010] "Achievement record" means a data record representing a result earned at
+an event (exemplarily: award name, placement, category, performance name, event,
+season/year, source organization), imported from a third-party source with
+provenance metadata (source identifier, scrape/import lineage). "Participant"
+means the person(s) credited; in the exemplary embodiment, dancers, many of whom
+are minors. "Operator" means the platform administrator (exemplarily a
+"superadmin" role). "Owner" means an authenticated user with a verified
+ownership claim over a participant profile or organization. "Moderation state"
+means a per-content-item status taking values including at least {pending,
+approved, rejected}.
+
+PART I — THE MODERATION-GATED MULTI-PAGE ACHIEVEMENT ARTIFACT
+=============================================================
+
+I.A. Underlying data model (FIG. 1)
+-----------------------------------
+
+[0011] Achievement records are stored in a record store in which multi-member
+credits are represented through junction records rather than a single foreign
+key: a table award_dancers associates one award with N participant identities,
+and a table dancer_studios associates participants with affiliated organizations
+(studios). Cross-studio collaborations are represented as distinct pseudo-studio
+rows whose members bridge affiliations via dancer_studios. This junction
+architecture is load-bearing for the per-viewer composition of section I.D.
+
+[0012] Enrichment content attaches at specific granularities, each row carrying
+its own moderation state:
+
+  award_acknowledgements(id, award_id, dancer_id, message TEXT,
+      status DEFAULT 'pending', created_by, created_at, updated_at)
+      — one acknowledgement line (exemplarily <= 280 characters) per
+      (award, participant) pair;
+
+  award_card_photos(id, award_id, dancer_id, photo_url,
+      status DEFAULT 'pending', uploaded_by, created_at, updated_at)
+      — a per-(award, participant) photograph, so that on a group award each
+      family controls only its own member's rendering;
+
+  a per-participant default photograph (dancers.card_photo_*) usable as a
+      fallback when a specific award has no approved photo;
+
+  organizations.custom_icons — a JSON field carrying the organizer brand-mark
+      configuration of section I.E (logo asset reference, logo_size,
+      logo_opacity, logo_x/logo_y position, logo_rotation, colophon_message,
+      logo_approved boolean).
+
+[0013] Participant identities carry a lifetime public identifier (a
+non-recycled, non-guessable unique_id such as "DNC-<random>-<name-slug>") used
+in all public URLs in place of enumerable numeric keys; numeric-key public URLs
+intentionally return "not found" without redirect so that the identifier space
+cannot be enumerated. The same identifier is the portable identifier of Part II.
+
+I.B. The card object and its back-stack (FIG. 2)
+------------------------------------------------
+
+[0014] The rendering engine renders an achievement record as a card object
+having a front face (award identity: award name, placement/tier styling,
+category, performance name, participant and studio attribution lines, event and
+season) and a back reached by a flip interaction (tap/click; CSS 3D transform in
+the exemplary web embodiment). In a first ("classic") design the back is a
+single certificate face. In the flip-book design disclosed here, the back is an
+ordered stack of pages navigated by tap, swipe, arrow controls, pagination dots,
+and keyboard arrows, with wrap-around:
+
+  Page 1 — CERTIFICATE: a formal "Presented to <participant>" composition
+           derived entirely from the verified record; always present, so the
+           first flip always lands on a complete page. A share control lives on
+           the back across all pages.
+  Page 2 — PHOTO: the (award, participant) photograph if one is approved;
+           otherwise the participant's approved default photograph in an
+           alternative (medallion) composition; otherwise the page does not
+           exist.
+  Page 3 — ACKNOWLEDGEMENTS: approved acknowledgement line(s) for the award;
+           on group awards, composed per viewer as in section I.D; absent if no
+           approved lines exist.
+  Page 4 — ORGANIZER COLOPHON: "Presented by" composition showing the source
+           organization's fitted brand coin at large scale plus an optional
+           organizer-authored tagline; exists only when the brand mark has
+           passed the operator approval gate of section I.E.
+
+[0015] All internal dimensions of the card and its pages are expressed in
+container-relative units (CSS container queries; cqw units calibrated to a
+design width), so the artifact scales like an image across surfaces (full page,
+grids, lightboxes, mini modes) without per-surface layout code — a property
+relied upon by the derivative-media generator of section I.F, which rasterizes
+the same compositions at chosen resolutions.
+
+I.C. Conditional materialization (FIG. 3)
+-----------------------------------------
+
+[0016] For each candidate page, the renderer evaluates: (a) does the underlying
+content item exist; (b) is its moderation state 'approved'; (c) is the
+governing feature flag enabled for this viewer (flags take states off/beta/on,
+with a beta cohort and an optional scheduled lazy flip-to-on); and (d) for the
+colophon, is the organizer mark operator-approved. Only if all conditions hold
+is the page materialized into the artifact; otherwise the page is entirely
+absent from the rendered object (no placeholder, no empty state) and the
+pagination adapts. Surfaces must pass flags explicitly to the card renderer;
+an absent flag is treated as off, so a forgotten integration cannot leak gated
+content ("dark by default" wiring).
+
+[0017] Consequences of this construction: (i) every public rendering is
+complete — there is no state in which a viewer sees missing, pending, or
+rejected content; (ii) any consumer that composes from pages (screenshots,
+share images, the video generator) inherits publish-safety without independent
+checks; (iii) deployment is decoupled from release — code ships dark and
+content-bearing pages appear per audience cohort.
+
+I.D. Per-viewer composition of shared group artifacts (FIG. 4)
+--------------------------------------------------------------
+
+[0018] A group award is one record credited to N participants via
+award_dancers. Each participant may author one acknowledgement line stored on
+their own (award_id, dancer_id) row of award_acknowledgements — the "yearbook
+back": one physical trophy, N personal inscriptions. When the acknowledgements
+page renders on a given participant's public page, the composition pins that
+participant's approved line first, followed by teammates' approved lines. The
+same artifact therefore lawfully renders differently per viewing context while
+remaining a single record — including in derivative media, where each member's
+video variant (section I.F) pins their own line.
+
+[0019] Attribution asymmetry: solo card fronts carry the participant's name;
+group card fronts remain roster-free (the certificate back reads "together with
+teammates"), so that a shared screenshot never discloses a full minor roster on
+the most-shared face.
+
+I.E. Role-partitioned brand-mark fitting ("the coin") (FIG. 7)
+--------------------------------------------------------------
+
+[0020] Organizer brand marks appear on artifacts only inside a fixed circular
+silhouette (the coin), preserving visual uniformity across mixed-organizer
+grids. Control of the fit is partitioned by role: geometric controls that could
+break the silhouette (position x/y, rotation, and fine scale) are
+operator-only; the organizer owner controls only size within bounds and
+opacity; and a public-display approval bit (logo_approved) is operator-only and
+defaults OFF. Owner edits to owner-controlled parameters ride the same approval
+gate, so no owner action can alter public rendering without operator approval.
+The colophon page of section I.B and the organizer tagline ride this same gate.
+
+I.F. Derivative media generation from pre-moderated compositions (FIG. 8)
+-------------------------------------------------------------------------
+
+[0021] A derivative-media generator produces share images and short-form
+vertical video for an artifact by sequencing rasterizations of the artifact's
+OWN pages — front face, certificate, photo, acknowledgements, colophon — with
+flip/page transitions and audio cues. Frame-source eligibility is exactly the
+materialization predicate of section I.C evaluated at generation time: a page
+enters the frame sequence only if its content is currently approved. The
+generator therefore requires no human review of any generated asset: every
+pixel source has already passed moderation, and publish-safety is inherited
+structurally ("safe by construction"). In embodiments, the organizer colophon
+is the enforced terminal frame (end-card), making organizer branding a
+structural property of every derivative asset; and per-viewer variants of a
+group award's video are generated by applying the pinning rule of section I.D.
+Rendering embodiments include server-side rasterization of the same layout
+templates (e.g., headless-browser capture at fixed container width) composed by
+a media pipeline, and client-side canvas/WebCodecs composition; a re-acquisition
+overlay (QR/sticker) may be composited onto share images.
+
+I.G. Single-surface WYSIWYG editing (FIG. 5)
+--------------------------------------------
+
+[0022] The owner's editing surface renders the participant's actual artifacts
+with an edit-mode flag. In edit mode ONLY, pages that would materialize if
+content existed are materialized as inline-editable placeholders ("Upload this
+routine's photo", "Write your thank-you note here"); public rendering never
+materializes an empty page. Edits save inline (JSON variants of the same
+endpoints); the front face carries a completeness chip (waiting/partial/done);
+incomplete-first ordering and filter chips guide completion. The display
+artifact and the editing surface are the same object rendered under different
+mode flags — eliminating any divergence between what is edited and what is
+published. Consent capture (a one-time guardian/owner consent affirmation) is
+collected on this surface before photo content is accepted.
+
+I.H. Tiered moderation and propagation (FIG. 6)
+-----------------------------------------------
+
+[0023] All owner-supplied text/photo content defaults to 'pending' and reaches
+public rendering only at 'approved' (operator queue at an admin console). Text
+moderation runs tiered: tier 1 deterministic rules (links, e-mail addresses,
+phone numbers, social handles — spam and minor-PII protection — plus
+profanity); tier 2 trusted-author bypass (authors with >= K approved items skip
+the machine tier); tier 3 a machine-learning moderation classifier. An
+operator-selectable moderation mode {manual, assisted, auto} controls whether
+machine verdicts queue as hints or auto-approve clean items; classifier failure
+never auto-approves (fail-closed). Auto-approved items enter a
+trust-but-verify review feed with one-click revocation.
+
+[0024] Same-routine propagation: one routine commonly wins several awards at
+one event. Saving a note or photo on one award auto-fills sibling awards
+matched on (event_id, performance_name) using insert-or-ignore semantics
+(already-filled siblings keep their content; later edits and clears affect only
+the edited award). Moderation verdicts propagate identically: one
+approve/reject settles every pending copy with identical content from the same
+participant. Propagation thus multiplies both authoring effort and moderation
+effort by the routine's award count without multiplying risk.
+
+I.I. Provenance-scoped surprise reward page (FIG. 9)
+----------------------------------------------------
+
+[0025] In embodiments, a reward subsystem occasionally materializes a
+transient additional page ("golden ticket") in an artifact's back-stack upon a
+flip interaction. Characteristics: (a) the roll is executed SERVER-side in
+response to the flip event on a specific verified achievement record — never
+client-side; (b) eligibility and pool selection derive from the record's
+provenance (exemplarily: pools funded by the organizer whose event produced the
+award, e.g., free entry to that organizer's next event; or sponsor pools scoped
+by category/season); (c) the roll is seeded per (user, period) with rate
+limits, so repeated flipping within a period deterministically reproduces the
+same outcome and cannot farm rewards; (d) redemption for a minor participant is
+routed to the guardian via a single-use, expiring redemption token delivered to
+the guardian contact (reusing the claim-token pattern of Part II
+infrastructure); (e) pool inventory, odds, pacing windows, and redemption
+terms are operator-configured records (prize_pools; reveals logged in
+prize_reveals with revealed_at/redeemed_at). In an editorial embodiment, the
+same page mechanics deliver merit-selected (non-probabilistic) awards.
+
+I.J. Guardian consent workflow for minor content (B2)
+-----------------------------------------------------
+
+[0026] Photo and text enrichment concerning a minor is accepted only from an
+authenticated owner (participant owner, or studio owner of an actively
+affiliated studio), only with an explicit recorded consent affirmation, and
+only becomes publicly renderable at operator approval per section I.H. Upload
+provenance (uploaded_by/created_by) is retained per item. This workflow,
+combined with conditional materialization, means no surface — original or
+derivative — can display minor-related content that lacks recorded consent and
+approval.
+
+PART II — GUARDIAN-MEDIATED SELECTIVE-DISCLOSURE PORTABLE IDENTITY
+==================================================================
+
+II.A. The portable identifier
+-----------------------------
+
+[0027] Each participant carries the lifetime identifier of paragraph [0013]:
+globally unique, never recycled, never re-derived upon rename or record merge
+(a stability contract), non-enumerable, and presentable by the participant at
+any registration context ("her DancerID"). The identifier resolves within the
+identity service to (a) a registration profile — an opt-in "registration
+wallet" of fields the platform does not otherwise hold (date of birth, address,
+guardian contacts, waiver signatures, emergency/medical fields), entered only
+by the authenticated owner, never scraped, never public; and (b) verified
+competitive-history attestations computed from the achievement-record corpus of
+Part I (e.g., "N first-place solo results at level X in seasons Y–Z"),
+usable by organizers for division placement and anti-sandbagging verification.
+
+II.B. Consent grants (FIG. 10)
+------------------------------
+
+[0028] Disclosure is governed by grant records:
+
+  id_grants(id, dancer_id, grantee_org_id, scope JSON, granted_by_user_id,
+            expires_at, revoked_at, created_at)
+
+where scope enumerates permitted fields (field-level granularity, e.g.
+{"dob": true, "guardian_contact": true, "waivers": ["liability-2027"],
+"history_attestations": true}), grantee_org_id names one specific organizer,
+and expires_at bounds the grant in time. For a minor participant, only a
+verified guardian account (the participant-profile owner) may create a grant;
+grant creation captures a verifiable consent event (authenticated session plus
+affirmative per-grant confirmation; embodiments add step-up verification
+consistent with children's-privacy regulation). Grants are revocable at any
+time (revoked_at); revocation and expiry take effect on the next access
+attempt.
+
+II.C. Organizer access (FIG. 11)
+--------------------------------
+
+[0029] An organizer accesses granted data via an authenticated pull API
+(exemplarily GET /api/id/<unique_id>/profile) presenting an organizer API
+token (HMAC-signed, single-purpose, expiring — following the platform's
+existing signed-token patterns for claim links and unsubscribe links). The
+service intersects the request with the grant scope and returns ONLY granted
+fields; absent a live grant the response discloses nothing, including whether
+the identifier exists. In a registration-prefill embodiment, the participant
+initiates disclosure by presenting a consent link/QR at the organizer's
+registration form, which redeems into a short-lived grant; the organizer's
+form pre-fills from the response, eliminating re-keying and transcription
+error.
+
+II.D. Audit, revocation, minimization (FIG. 12)
+-----------------------------------------------
+
+[0030] Every disclosure is audit-logged (grant id, grantee, fields served,
+timestamp, token identity); the guardian's console lists all grants and
+disclosures with one-tap revocation. The service enforces data minimization
+structurally: organizers integrate against the scope-filtered API rather than
+receiving profile exports, so a grantee can never hold more than the granted
+field set as of the last pull. Attestations of paragraph [0027](b) may be
+served as computed claims (booleans/counts with provenance references) rather
+than raw records, further minimizing disclosure while preserving verifiability.
+
+II.E. Interoperation with Part I
+--------------------------------
+
+[0031] The identity service and the artifact system share the record corpus and
+the identifier space: attestations derive from the same provenance-bearing
+records that artifacts render; the guardian roles, ownership claims, consent
+capture, moderation queues, and signed-token infrastructure of Part I are the
+trust substrate of Part II. In embodiments, a redeemed reward of section I.I
+routes through the Part II guardian-contact channel; an organizer that
+integrates Part II registration prefill receives Part I colophon branding on
+the artifacts its events produce, coupling the two inventions commercially and
+technically.
+
+ALTERNATIVE EMBODIMENTS (both parts)
+------------------------------------
+
+[0032] The dance domain is exemplary. Achievement records may be sports
+results, academic honors, esports placements, certifications, or employment
+credentials; "studio" generalizes to team/school/employer; "organizer" to any
+credentialing or event-running entity. The artifact need not be a card:
+certificates, badges, plaques, and 3D presentations may carry the same
+conditionally-materialized page structure. Rendering may be client-side or
+server-side; storage may use any relational or document store; moderation
+tiers may use any rule set or classifier; the identifier may be embodied as a
+QR code, NFC credential, or verifiable-credential (W3C VC) wrapper around the
+same grant semantics; grants may be represented as signed capability tokens
+carried by the participant rather than server-side rows. Numeric parameters
+(280 characters, coin circularity, page order, grace thresholds) are
+exemplary, not limiting.
+
+--------------------------------------------------------------------------------
+CLAIMS (SAMPLE — provisional applications require none; included to frame scope)
+--------------------------------------------------------------------------------
+
+1. A system comprising: a datastore associating an achievement record imported
+from a third-party source with one or more participant identities via junction
+records, at least one junction record having associated content having a
+moderation state; and a rendering engine configured to render the record as an
+artifact having a front face and an ordered stack of back pages reachable
+through a flip interaction, wherein each back page is materialized only when
+its associated content exists and its moderation state satisfies an approval
+condition, such that no rendered artifact contains an empty or unapproved page.
+
+2. The system of claim 1, wherein a page renders per-participant annotation
+content of a multi-participant record, the rendering engine composing the page
+responsive to the identity of a viewing context by ordering the viewing
+participant's annotation first.
+
+3. The system of claim 1, wherein an editing mode renders the same artifact
+with non-materialized pages materialized as inline-editable placeholders, and
+wherein a public rendering mode never materializes said placeholders.
+
+4. The system of claim 1, further comprising a brand-mark subsystem wherein a
+third-party mark is rendered only within a fixed silhouette, geometric fitting
+parameters of the mark are modifiable only by an operator role, appearance
+parameters are modifiable by an owner role, and public display is conditioned
+on an operator-set approval flag defaulting to disabled.
+
+5. A method of generating derivative media for an achievement artifact,
+comprising: enumerating the artifact's pages; evaluating, at generation time,
+a moderation-state condition for each page's content; rasterizing only pages
+satisfying the condition; and sequencing the rasterizations into a media asset
+without human review of the asset, whereby the asset is publish-safe by
+construction.
+
+6. The method of claim 5, further comprising appending, as a terminal frame, a
+composition derived from an organization branding record having an
+operator-approval flag.
+
+7. The method of claim 5, further comprising generating, for a
+multi-participant record, a per-participant variant of the media asset by
+reordering annotation content per participant.
+
+8. A method comprising: receiving a flip interaction on an artifact bound to a
+verified achievement record; executing, at a server, a probabilistic selection
+over reward pools filtered by provenance metadata of the record; seeding the
+selection per user and time period such that repeated interactions within the
+period yield an identical outcome; and, when the selection yields a reward for
+a minor participant, transmitting a single-use expiring redemption token to a
+guardian contact associated with the participant.
+
+9. A method of content propagation comprising: receiving enrichment content
+for a first achievement record; identifying sibling records sharing an event
+identifier and a performance identifier with the first record; attaching the
+content to sibling records lacking content using insert-or-ignore semantics;
+and propagating a subsequent moderation verdict on said content to all pending
+identical copies from the same author.
+
+10. An identity-disclosure method comprising: maintaining, for a participant, a
+lifetime non-recycled public identifier and a profile comprising registration
+fields and achievement attestations computed from provenance-bearing records;
+receiving, from a verified guardian account, a grant record scoping a set of
+permitted fields to one grantee organization with an expiry; receiving an
+authenticated request presenting the identifier and a grantee credential;
+intersecting the request with unexpired, unrevoked grant scope; returning only
+fields within the intersection; and recording each disclosure in an audit log.
+
+11. The method of claim 10, wherein absent a live grant the response does not
+disclose existence of the identifier.
+
+12. The method of claim 10, wherein the attestations are served as computed
+claims referencing record provenance rather than as the underlying records.
+
+13. The method of claim 10, further comprising revoking the grant upon guardian
+action, the revocation effective at the next access attempt, and presenting the
+guardian a log of all grants and disclosures.
+
+14. The method of claim 10, wherein the grant is created by redemption of a
+participant-presented consent link or code at a grantee registration surface,
+the redeemed grant being short-lived and scoped to registration-prefill fields.
+
+15. The system of claim 1, wherein participant identifiers in public resource
+locators are non-enumerable lifetime identifiers, and numeric-key resource
+locators return a not-found response without redirection.
+
+--------------------------------------------------------------------------------
+ABSTRACT
+--------------------------------------------------------------------------------
+
+[0033] An achievement record imported from third-party sources renders as a
+flip-card artifact whose back is an ordered stack of pages — certificate,
+photograph, acknowledgements, organizer colophon — each materialized only when
+its content has passed a moderation gate, so every public rendering and every
+automatically generated derivative (share image, short-form video) is
+publish-safe by construction. Group awards compose per viewer from
+junction-record annotations; owners edit the artifact itself in a WYSIWYG mode
+whose placeholders never reach public surfaces; organizer branding enters only
+through an operator-fitted, approval-gated coin; and a server-seeded,
+provenance-scoped reward page may transiently appear with guardian-routed
+redemption. A companion identity service gives each participant a lifetime
+identifier through which a guardian creates field-scoped, expiring, revocable
+disclosure grants; organizers pull only granted registration fields and
+verified competitive-history attestations via authenticated, audit-logged API
+calls, enabling error-free registration prefill and division verification for
+minors without uncontrolled data sharing.
+
+================================================================================
+END OF DRAFT — attach FIGS. 1-12 (screenshots + informal flowcharts) at filing.
+Attorney to verify: micro-entity status; inventor/assignee; disclosure-date
+characterization (site online but no invitations sent and no material
+third-party access as of 2026-08-27 per inventor); cover sheet SB/16.
+================================================================================
