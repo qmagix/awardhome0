@@ -24,6 +24,8 @@
 - [ ] Launch-day SEO: sitemap.xml for studio/dancer pages (replaces the public directory as the crawl path once BETA_MODE=false).
 
 ### Features
+- [x] (DONE 2026-08-27, imported local+prod: 128 events / 76,369 awards / 6,124 dancers / 155 studios; idempotent) 24SEVEN Dance Convention import, 2022-2026 — fourth DanceOne brand, pure config over the shared libs. Youngest division "Sidekick"; slug 'twentyfourseven'. Prod via reviewed-txt scp (the convention). 56,575 dancer-named rows. All four DanceOne brand indexes verified mutually disjoint.
+
 - [x] (DONE 2026-08-27, imported local+prod: 114 events / 62,234 awards / 6,615 dancers / 149 studios; idempotent) RADIX Dance Convention import, 2022-2026 — third DanceOne brand, pure config over the shared libs (scrape_radix_to_txt.js + import_radix_txt.js, ~12 lines each). Youngest division "Rookie". Brand indexes verified disjoint (the shared backend serves any id from any brand site — only own-index ids are fetched). First org shipped to prod via the reviewed-txt scp convention (no prod re-scrape). 45,061 dancer-named rows.
 
 - [x] (DONE 2026-08-27, imported local+prod: 138 events / 71,415 awards / 8,918 dancers / 330 studios; idempotent) NUVO Dance Convention import, 2022-2026 — DanceOne sibling of JUMP with identical page anatomy, so the JUMP scraper/importer were refactored into shared libs (scripts/lib/danceone.js + danceone_import.js; per-org scripts are thin configs; JUMP regression-checked byte-identical txt + 0-insert re-import). NUVO adds the NUbie age division, BALLROOM class scholarships, and a Faculty column on class-scholarship tables (ignored). 51,412 dancer-named rows. 24SEVEN (also DanceOne) would now be a ~10-line config if wanted.

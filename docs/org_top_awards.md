@@ -458,3 +458,6 @@ Senior 16-19. **Sources:** epicdanceinc.com/rules. **Confidence:** high.
 ## RADIX Dance Convention (radixdance.com)
 - Third DanceOne sibling (JUMP/NUVO) — identical anatomy via the shared libs. **Youngest age division: Rookie** (their JUMPstart/NUbie). Top awards: SPECIAL AWARDS per age division + Studio Pick; scholarships WINNER / RUNNER-UP are scholarship outcomes, not placements.
 - NOTE the DanceOne brands share one results backend — each brand's site will serve ANY event id, so scrapers must only fetch ids listed on that brand's own /past-seasons/ index (the shared loadIndex does this; the three indexes were verified disjoint: 0 id overlap).
+
+## 24SEVEN Dance Convention (24sevendance.com)
+- Fourth DanceOne sibling — identical anatomy via the shared libs. **Youngest age division: Sidekick** (their JUMPstart/NUbie/Rookie). Top awards: "Best of 24SEVEN"-style SPECIAL AWARDS per age division; scholarship places WINNER / RUNNER-UP are scholarship outcomes, not placements. Org slug is 'twentyfourseven' (slugs must not start with a digit for URL hygiene).
