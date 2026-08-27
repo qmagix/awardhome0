@@ -194,8 +194,11 @@
         <p class="v2-kicker">On Tour</p>
         <h2 id="v2o-tour-h">Where <%= org.name %> is headed next</h2>
         <p class="v2-lede">Upcoming stops from the official schedule &mdash; confirm dates with the organizer before booking travel.</p>
+        <%# Long circuits run 70+ stops a season — the page shows the next
+            few and hands off to the directory for the full schedule. %>
+        <% const tourStops = upcomingEvents.slice(0, 8); %>
         <div style="max-width: 46rem; margin: 0 auto;">
-          <% upcomingEvents.forEach(function(ev) { %>
+          <% tourStops.forEach(function(ev) { %>
             <div style="display: grid; grid-template-columns: 8.5rem 1fr auto; gap: 1rem; align-items: center; padding: 0.85rem 1rem; border: 1px solid var(--v2-hairline); border-radius: 8px; background: linear-gradient(145deg, var(--v2-curtain) 0%, var(--v2-stage) 100%); margin-bottom: 0.6rem;">
               <div style="font-family: var(--v2-display); color: var(--v2-gold); font-size: 0.85rem; letter-spacing: 0.05em;">
                 <%= ev.start_date.slice(5).replace('-', '/') %><%= ev.end_date ? ' – ' + ev.end_date.slice(5).replace('-', '/') : '' %>
@@ -218,6 +221,11 @@
               </div>
             </div>
           <% }); %>
+          <% if (upcomingEvents.length > tourStops.length) { %>
+            <div style="text-align: center; margin-top: 1.1rem;">
+              <a class="v2-ghost-btn" href="/dance/events?org=<%= org.id %>">All <%= upcomingEvents.length %> tour stops &rarr;</a>
+            </div>
+          <% } %>
         </div>
       </section>
     <% } %>
@@ -337,7 +345,11 @@
         else if (el.classList.contains('v2-num')) countUp(el);
         else el.classList.add('v2-in');
       });
-    }, { threshold: 0.25 });
+    }, /* threshold-0 + bottom rootMargin: a fixed ratio starves sections
+       taller than ~4 viewports (a 76-stop On Tour list can never show 25%
+       at once), leaving them at opacity 0 — a multi-page blank. Any pixel
+       crossing the lower 88% of the viewport now reveals. */
+    { rootMargin: '0px 0px -12% 0px', threshold: 0 });
     bars.forEach(function (b) { io.observe(b); });
     document.querySelectorAll('.v2-reveal').forEach(function (el) { io.observe(el); });
     document.querySelectorAll('.v2-num[data-count]').forEach(function (el) { io.observe(el); });

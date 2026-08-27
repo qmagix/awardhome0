@@ -337,7 +337,11 @@ function setLeaderboardView(viewMode) {
       if (en.target.classList.contains('v2-num')) countUp(en.target);
       else en.target.classList.add('v2-in');
     });
-  }, { threshold: 0.25 });
+  }, /* threshold-0 + bottom rootMargin: a fixed ratio starves sections
+       taller than ~4 viewports (a 76-stop On Tour list can never show 25%
+       at once), leaving them at opacity 0 — a multi-page blank. Any pixel
+       crossing the lower 88% of the viewport now reveals. */
+    { rootMargin: '0px 0px -12% 0px', threshold: 0 });
   document.querySelectorAll('.v2-reveal').forEach(function (el) { io.observe(el); });
   document.querySelectorAll('.v2-num[data-count]').forEach(function (el) { io.observe(el); });
 })();
