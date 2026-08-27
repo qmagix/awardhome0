@@ -68,6 +68,10 @@ function buildStudioInvite({ studio, totalAwards, firstPlaces, rank }) {
     from your studio, star the events you're considering into a shortlist, and export it straight into
     your calendar. The season-planning spreadsheet, retired.</p>
 
+    <p>And if a competition you attend isn't on AwardHome yet, tell us — the <strong>Send
+    Feedback</strong> button is right in the header once you're in. Name the event and we'll work on
+    adding its results and tour dates, so your whole season lives in one place.</p>
+
     <p>Our homepage <strong>Featured Studios</strong> section is selected automatically from claimed
     studios with complete profiles — no payment, no favoritism. Claim early and you're eligible
     from day one.</p>
