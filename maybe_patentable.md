@@ -152,6 +152,11 @@ Heavy prior art (Spotify Wrapped et al.). Keep only as dependent claim material.
 
 ## Next steps
 
+**✅ FILED 2026-08-27: U.S. Provisional No. 64/142,611** covers A3, A4 (+studio-aggregate
+extension), A5, A6, A7, A8 and B2/B4/B5 as embodiments (spec ¶ map in
+`provisional_draft_P1_P3.txt`). Conversion/PCT deadline 2027-08-27. A1/A2 (P2)
+still unfiled. Post-filing features need follow-on provisionals to be covered.
+
 **Filing strategy now lives in `provisional_patent_plan.md` (2026-08-27):** three
 provisionals — P1 omnibus card-artifact system (A3–A7 + B2/B4/B5, urgent: `?card_design=`
 preview is publicly reachable on prod), P2 staged-import pipeline (A1, A2 as embodiment

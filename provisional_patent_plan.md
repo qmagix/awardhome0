@@ -1,5 +1,19 @@
 # Provisional Patent Plan — filing strategy for AwardHome IP
 
+> ## ✅ FILED — U.S. Provisional Application No. 64/142,611
+> **Filed 2026-08-27 (confirm official ET date on the electronic filing receipt) (P1+P3 combined: spec w/ claims 1-21, FIGS. 1-14, SUPP. FIGS. A-G).**
+> - **Conversion/PCT deadline: 2027-08-27** (non-extendable — non-provisional and/or PCT
+>   claiming priority must be filed by this date; A5's independent US grace bar also
+>   rides inside this window).
+> - **Month-10 checkpoint: 2027-06-27** — decide convert / PCT / refile / abandon
+>   (P2 trade-secret fork decision at the same checkpoint if P2 filed by then).
+> - **New features shipped after the filing date are NOT covered** — anything beyond what the
+>   spec enables needs a follow-on provisional (daisy-chain; a later non-provisional can
+>   claim all provisionals from its trailing 12 months).
+> - **Freeze list (§2) is LIFTED**: flip-book rollout, demos, and outreach may proceed;
+>   "Patent Pending" may be used in marketing and org-invite letters.
+> - P2 (staged-import pipeline) remains unfiled — see schedule below.
+
 *Drafted 2026-08-27 from `maybe_patentable.md` inventory + codebase disclosure audit.
 Working proposal to hand a patent attorney — NOT legal advice. Confidential: keep out
 of public repos, outreach emails, and demos until filings land.*

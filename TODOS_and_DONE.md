@@ -2,6 +2,12 @@
 
 ## TODO
 
+### IP / Legal
+- [x] (DONE 2026-08-27) **U.S. Provisional Application No. 64/142,611 FILED** (P1+P3 combined: flip-book/multi-face card system + DancerID; spec w/ claims 1-21, FIGS. 1-14, SUPP. FIGS. A-G). "Patent Pending" now usable in marketing/outreach. Freeze list LIFTED (flip-book rollout, demos, outreach OK). See provisional_patent_plan.md banner.
+- [ ] **2027-06-27 checkpoint (calendar it!):** convert / PCT / refile decision. HARD deadline 2027-08-27 (non-extendable).
+- [ ] P2 provisional (staged-import pipeline A1/A2) — self-draft from docs/db_operations.md per plan §4; decide by the month-10 checkpoint.
+- [ ] Post-filing features beyond the spec need follow-on provisionals before public ship — check maybe_patentable.md before releasing anything novel.
+
 ### Data quality
 - [x] (DONE 2026-08-28) **Upcoming directory: 2026-27 tours for all 10 result-orgs added this week** — 230 events (Tremaine 22, Inspire 50, TDA 2, JUMP 27 / NUVO 26 / RADIX 23 / 24SEVEN 26 via tour-dates season-container, Hollywood Vibe 21, ADC|IBC 18 incl. Berlin+Toronto, UBC 16 read via browser past Cloudflare). All geocoded (intl centroids hand-cached, key format city|st); free gold on each org's opener; local+prod parity 1,056 active / 26 golds. Importer hardened: seed lines for the 10 weekly-scraper orgs now SKIPPED (stale-seed re-import had resurrected 56 superseded rows → duplicates; cleaned). Watch: UBC 2027 Grand Prix Finals + ADC "Central Florida (Pending)" not yet announced — add when posted.
 
