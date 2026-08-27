@@ -298,10 +298,15 @@ of the viewing context, not merely the viewer's identity: (a) in a participant
 context (a member's own page), the member's line is pinned first as above;
 (b) in an AFFILIATED-ORGANIZATION context (the studio's rendering of the same
 group artifact), the acknowledgements page AGGREGATES the full roster of
-approved lines — the team-plaque composition — optionally paginating across
-multiple pages of the back-stack (or faces of the multi-face cycle of
-paragraph [0014a]) when the roster exceeds one page's capacity; (c) in a
-neutral/public context, lines render in a default order (e.g., alphabetical).
+approved lines — the team-plaque composition. In the preferred aggregated
+presentation, EACH annotation occupies its own face of the multi-face cycle of
+paragraph [0014a] — the viewer flips through the roster one inscription at a
+time, the cycle length growing with the roster — solving the capacity problem
+structurally; back-stack embodiments instead paginate multiple lines per page.
+Aggregated annotations are ordered chronologically by creation time (the
+plaque accretes in the order the inscriptions arrived); alphabetical and other
+orderings are alternative embodiments. (c) In a neutral/public context, lines
+render in a default order.
 In embodiments, an organization-authored annotation (a "director's note"
 composed by the verified organization owner, subject to the same moderation
 gate) renders as a header of the aggregated composition — an annotation
@@ -623,6 +628,11 @@ a plurality of pages when exceeding a single page's capacity.
 20. The system of claim 19, wherein an annotation authored by a verified owner
 of the affiliated organization and satisfying the moderation-state condition
 is rendered as a header of the aggregated composition.
+
+21. The system of claim 19, wherein each aggregated annotation is rendered on
+its own face of an ordered cycle of faces traversed by successive flip
+interactions, the annotations ordered chronologically by creation time, the
+cycle length adapting to the number of approved annotations.
 
 --------------------------------------------------------------------------------
 ABSTRACT
