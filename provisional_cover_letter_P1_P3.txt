@@ -1,27 +1,21 @@
 ================================================================================
-PROVISIONAL APPLICATION COVER LETTER  (37 CFR 1.51(c)(1))  — DRAFT
+PROVISIONAL APPLICATION COVER LETTER  (37 CFR 1.51(c)(1)) 
 ================================================================================
 Prepared 2026-08-27 to accompany provisional_draft_P1_P3.txt. CONFIDENTIAL.
-Items in [BRACKETS] must be completed before filing. The letter below satisfies
-the cover-sheet requirement of 37 CFR 1.51(c)(1) in lieu of form PTO/SB/16;
-you may instead transcribe the same data onto PTO/SB/16 in Patent Center —
-either is acceptable, but one of them MUST accompany the filing or the
-application will be treated as a non-provisional under 37 CFR 1.53(b).
 
 --------------------------------------------------------------------------------
-                                                     [STREET ADDRESS]
-                                                     [CITY, STATE ZIP]
-                                                     [EMAIL]
-                                                     [PHONE]
-                                                     August [__], 2026
+                                                     6064 Countess Dr
+                                                     San Jose, CA 95129
+                                                     huangq@gmail.com
+                                                     408-219-3562
+                                                     August 27, 2026
 
 Commissioner for Patents
 P.O. Box 1450
 Alexandria, VA 22313-1450
 
-     Re:  PROVISIONAL APPLICATION FOR PATENT UNDER 35 U.S.C. § 111(b)
+     Re:  PROVISIONAL APPLICATION FOR PATENT UNDER 35 U.S.C. Section 111(b)
           AND 37 CFR 1.53(c)
-          Applicant docket no.: AWDH-2026-P1P3
 
 Dear Commissioner:
 
@@ -34,7 +28,7 @@ required. The following information is provided as required by
 1.  IDENTIFICATION AS A PROVISIONAL APPLICATION
 
     The enclosed application is a PROVISIONAL application for patent under
-    35 U.S.C. § 111(b).
+    35 U.S.C. Section 111(b).
 
 2.  TITLE OF THE INVENTION
 
@@ -44,42 +38,35 @@ required. The following information is provided as required by
 
 3.  INVENTOR(S)
 
-    Sole inventor:  Q Huang
-    Residence:      [CITY], [STATE], United States
-    Citizenship:    [COUNTRY — optional but customary]
+    Sole inventor:  Qingfeng Huang
+    Residence:      San Jose, CA 95129, United States
+    Citizenship:    U.S. Lawful Permanent Resident
 
 4.  CORRESPONDENCE ADDRESS
 
     All correspondence should be directed to:
 
-    Q Huang
-    [STREET ADDRESS]
-    [CITY, STATE ZIP]
-    Telephone: [PHONE]
-    E-mail:    [EMAIL]
+    Qingfeng Huang
+    6064 Countess Dr
+    San Jose, CA 95129
+    Telephone: 408-219-3562
+    E-mail:    huangq@gmail.com
 
-    [If an attorney is engaged before filing, replace with the attorney's
-    name, USPTO registration number, firm, and customer number.]
 
-5.  ATTORNEY/AGENT AND DOCKET NUMBER
+5.  ATTORNEY/AGENT
 
-    Attorney/Agent: None at filing (pro se).  [Or: name / Reg. No.]
-    Applicant docket number: AWDH-2026-P1P3
+    Attorney/Agent: None at filing (pro se).
 
 6.  ENCLOSURES
 
-    (a) Specification ("Provisional Application for Patent —
-        Specification"), [__] pages, including a sample claim set
+    (a) Specification ("Provisional Application for Patent -
+        Specification"), including a sample claim set
         (claims 1-21, included voluntarily; claims are not required in a
         provisional application) and an abstract;
-    (b) Drawings: FIGS. 1-14, [14] sheets (informal drawings);
+    (b) Drawings: FIGS. 1-14, 14 sheets (informal drawings);
     (c) Supplementary drawings: SUPP. FIGS. A-G (screenshots of an
-        implemented embodiment), [7] sheets;
-    (d) Filing fee of $[___] as a [micro / small / large] entity
-        (fee code [3005 micro / 2005 small / 1005 large — verify current
-        amounts at uspto.gov/fees before filing]);
-    (e) [If micro entity:] Certification of Micro Entity Status
-        (Gross Income Basis), form PTO/SB/15A, executed by the inventor.
+        implemented embodiment), 7 sheets;
+
 
 7.  GOVERNMENT INTEREST
 
@@ -90,41 +77,18 @@ required. The following information is provided as required by
 
 8.  ENTITY STATUS
 
-    Applicant asserts [micro entity status under 37 CFR 1.29 (certification
-    enclosed) / small entity status under 37 CFR 1.27].
+    Applicant will assert the applicable entity status (micro entity under
+    37 CFR 1.29 or small entity under 37 CFR 1.27) through the appropriate
+    certification in Patent Center at the time of fee payment.
 
 The Director is hereby authorized to charge any deficiency in the filing
-fee, or credit any overpayment, to deposit account no. [N/A — or account
-number], or to the credit/debit instrument provided through Patent Center.
+fee, or credit any overpayment, to the credit/debit payment instrument
+provided through Patent Center with this filing.
 
 Respectfully submitted,
 
 
+/Qingfeng Huang/
 _______________________________
-Q Huang, sole inventor (pro se)
-Date: August [__], 2026
-
---------------------------------------------------------------------------------
-FILING-DAY CHECKLIST (not part of the letter — do not file this section)
---------------------------------------------------------------------------------
-1. Print the specification (provisional_draft_P1_P3.txt) to PDF; strip the
-   "Status / Filing note" header block and the "END OF DRAFT / Attorney to
-   verify" footer block — file only TITLE through ABSTRACT.
-2. Print patent_figures_P1_P3.html to PDF (portrait) = drawing sheets 1-14;
-   print patent_screenshots/index.html to PDF = SUPP. sheets A-G.
-3. Complete every [BRACKETED] item above; fill in the page/sheet counts.
-4. Verify the CURRENT provisional filing fee and micro-entity income limit
-   at uspto.gov/fees; if micro, complete and attach PTO/SB/15A (income <
-   3x median household income, fewer than 5 prior nonprovisional filings,
-   no obligation to assign to a non-micro entity — all three must hold).
-5. File via Patent Center (patentcenter.uspto.gov) > "New submission" >
-   "Utility — Provisional": upload this cover letter (or fill the web ADS
-   with the same data), the specification PDF, and both drawing PDFs; pay
-   the fee. Save the electronic acknowledgement receipt (EFS receipt) —
-   it carries the official filing date and application number.
-6. Calendar immediately: 12-month conversion/PCT deadline (the day before
-   the same date next year); month-10 decision checkpoint per
-   provisional_patent_plan.md §6.
-7. After the receipt arrives: "Patent Pending" may be used; resume the
-   flip-book rollout and outreach per the plan's freeze-list release.
-================================================================================
+Qingfeng Huang, sole inventor (pro se)
+Date: August 27, 2026
