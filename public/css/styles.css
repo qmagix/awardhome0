@@ -4,6 +4,16 @@
   /* Alias used widely by FAQ/admin/manage views; was referenced for months
      without a definition, silently rendering as inherited text color. */
   --accent-gold: #d4af37;
+  /* Backfilled 2026-08-28 from the site-wide var audit (scripts/audit_css_vars.py):
+     these five were referenced by admin/manage/studio views but never defined —
+     gradient buttons rendered background-less, admin links gray, hover shadows
+     vanished. Values chosen to match each usage's evident intent. */
+  --accent-blue: #3b82f6;
+  --accent-purple: #8b5cf6;
+  --text-light: #f8fafc;
+  --text-main: #e8e4da;
+  --secondary: #f3e5ab;
+  --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
   --primary-hover: #f3e5ab;
   --gold-light: #f3e5ab;
   --gold-dark: #aa8529;
