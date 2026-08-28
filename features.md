@@ -309,8 +309,7 @@ categories ("Grand Lines") in `award_type`/`category` — this surface is the cl
 ## Partners page (2026-08-27)
 Public `/partners` (routes/partners.js + views/partners.ejs; footer link) — inbound
 mini media-kit for sponsors/press/organizers arriving through the front door:
-live platform stats (10-min `partner-stats` cache), three placement cards (card
-coin, colophon page, season-planning gold button), inquiry form (name/company/
+live platform stats (10-min `partner-stats` cache), inquiry form (name/company/
 email/category/message) with honeypot + 5-per-hour-per-IP rate limit + global
 CSRF; rows land in `partner_inquiries` (schema in database.js, defensively
 created by the route), reviewers emailed per inquiry (getReviewerEmails chain),
@@ -319,4 +318,8 @@ PRG redirect to `?sent=1` thank-you banner. Deliberately OUTSIDE the beta gate
 (2026-08-27): no public investor page (industry norm — public investor forms
 attract ~100% spam; quiet hello@ line + private one-pager on request instead)
 and no AI-assisted intake (simple form wins at this volume; AI assists in the
-founder's inbox, not on the site).
+founder's inbox, not on the site). Placement details REMOVED from the public
+page (2026-08-27): don't anchor prospects to a short menu, don't signal "that's
+all", and public brand-placement talk on a minors-first platform risks reading
+as exploitation to families — the placement deck lives in docs/partner_pitch.md
+(PRIVATE, per-prospect replies only; sponsor-credit-page item is IP-gated).
