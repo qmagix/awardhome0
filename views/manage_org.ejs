@@ -441,7 +441,7 @@
                                         <form action="/manage/org/<%= org.id %>/upcoming/<%= ev.id %>/gold" method="POST" style="display: inline;">
                                             <input type="hidden" name="action" value="free">
                                             <button type="submit" class="btn btn-outline" style="padding: 0.2rem 0.45rem; font-size: 0.72rem;"
-                                                title="Place (or move) your one free gold button on this event">Use free gold</button>
+                                                title="Place your free gold button on this event — it stays with the event through show day, then you can place it on your next one">Use free gold</button>
                                         </form>
                                     <% } %>
                                     <% if (user && ['admin', 'superadmin'].includes(user.role)) { %>

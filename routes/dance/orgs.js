@@ -366,9 +366,13 @@ router.post('/manage/org/:id/upcoming/:eventId/delete', requireAuth, requireOrgO
 });
 
 // Gold Register buttons (revenue model): every organizer gets ONE free
-// gold button to place on an event of their choice (moving it is fine);
-// additional buttons are per-event purchases (opens mid-Oct 2026 —
-// handled off-platform for now, superadmin marks 'paid').
+// gold button to place on an event of their choice. The free button STAYS
+// with its event until that event has taken place (Q, 2026-08-28): a freely
+// movable button is a rotation exploit — one button riding city to city
+// substitutes for buying. After the host event passes it's placeable again;
+// SIMULTANEOUS highlighting is what's sold: additional buttons are per-event
+// purchases (opens mid-Oct 2026 — off-platform for now, superadmin marks
+// 'paid'). Admins can always relocate/clear for support.
 router.post('/manage/org/:id/upcoming/:eventId/gold', requireAuth, requireOrgOwner(), async (req, res) => {
   const db = await openDb();
   await ensureUpcomingTable(db);
@@ -378,12 +382,24 @@ router.post('/manage/org/:id/upcoming/:eventId/gold', requireAuth, requireOrgOwn
   const isAdmin = ['admin', 'superadmin'].includes(req.session.user.role);
 
   if (action === 'free') {
-    // one free per organization — placing it elsewhere moves it
+    if (!isAdmin) {
+      const held = await db.get(`
+        SELECT name FROM org_upcoming_events
+        WHERE org_id = ? AND gold = 'free' AND id != ?
+          AND date(COALESCE(NULLIF(end_date, ''), start_date)) >= date('now')`,
+        [req.org.id, ev.id]);
+      if (held) {
+        return res.status(400).type('text/plain').send(
+          'Your free gold button is with "' + held.name + '" until that event takes place. ' +
+          'Want several events highlighted at once? Each can carry its own gold button - email hello@awardhome.com.');
+      }
+    }
+    // one free per organization; past-event placements release automatically
     await db.run(`UPDATE org_upcoming_events SET gold = NULL WHERE org_id = ? AND gold = 'free'`, [req.org.id]);
     await db.run(`UPDATE org_upcoming_events SET gold = 'free', updated_at = CURRENT_TIMESTAMP WHERE id = ?`, [ev.id]);
   } else if (action === 'paid' && isAdmin) {
     await db.run(`UPDATE org_upcoming_events SET gold = 'paid', updated_at = CURRENT_TIMESTAMP WHERE id = ?`, [ev.id]);
-  } else if (action === 'clear' && (isAdmin || ev.gold === 'free')) {
+  } else if (action === 'clear' && isAdmin) {
     await db.run(`UPDATE org_upcoming_events SET gold = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?`, [ev.id]);
   } else {
     return res.status(400).send('Bad action');
