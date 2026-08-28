@@ -1191,7 +1191,10 @@ router.get('/dancer/:unique_id', profileLimiter, async (req, res) => {
   // Attach studios to the dancer object for the view
   dancer.studios = studios;
 
-  const awards = await db.all(`
+  // Owner-hidden cards are filtered via dancer_card_hidden; on a pre-migrate
+  // DB (fresh clone, stale snapshot) fall back to the unfiltered query
+  // rather than 500 the whole dancer page.
+  const awardsSelect = `
     SELECT DISTINCT a.*, e.name as event_name, e.year as event_year, o.name as org_name, o.logo_url, o.custom_icons,
       s.name as studio_name, s.unique_id as studio_unique_id,
       CASE WHEN s.owner_id IS NOT NULL THEN 1 ELSE 0 END as studio_claimed,
@@ -1201,11 +1204,17 @@ router.get('/dancer/:unique_id', profileLimiter, async (req, res) => {
     LEFT JOIN organizations o ON e.org_id = o.id
     LEFT JOIN studios s ON a.studio_id = s.id
     LEFT JOIN award_dancers ad ON a.id = ad.award_id
-    WHERE (a.dancer_id = ? OR ad.dancer_id = ?)
+    WHERE (a.dancer_id = ? OR ad.dancer_id = ?)`;
+  const awardsOrder = ` ORDER BY e.year DESC, a.award_type, a.place`;
+  let awards;
+  try {
+    awards = await db.all(awardsSelect + `
       AND NOT EXISTS (SELECT 1 FROM dancer_card_hidden h
-                      WHERE h.award_id = a.id AND h.dancer_id = ?)
-    ORDER BY e.year DESC, a.award_type, a.place
-  `, [dancer.id, dancer.id, dancer.id]);
+                      WHERE h.award_id = a.id AND h.dancer_id = ?)` + awardsOrder,
+      [dancer.id, dancer.id, dancer.id]);
+  } catch (e) {
+    awards = await db.all(awardsSelect + awardsOrder, [dancer.id, dancer.id]);
+  }
 
   awards.forEach(a => {
     if (a.custom_icons) {

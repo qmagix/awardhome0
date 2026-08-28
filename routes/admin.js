@@ -330,12 +330,28 @@ router.post('/api/admin/flag-resolve', requireSuperadmin, express.json(), async 
   if (!['ack', 'award_photo', 'default_photo'].includes(content_type) || !parseInt(content_id)) {
     return res.status(400).json({ error: 'Bad request' });
   }
+  // Remove propagates to identical same-dancer copies (the platform's
+  // one-decision-settles-every-copy convention), and flags across the
+  // whole copy group resolve together so none are stranded open.
+  let groupIds = [parseInt(content_id)];
   if (!keep) {
-    if (content_type === 'ack') await db.run("UPDATE award_acknowledgements SET status = 'rejected', updated_at = CURRENT_TIMESTAMP WHERE id = ?", [content_id]);
-    if (content_type === 'award_photo') await db.run("UPDATE award_card_photos SET status = 'rejected', updated_at = CURRENT_TIMESTAMP WHERE id = ?", [content_id]);
+    if (content_type === 'ack') {
+      const row = await db.get('SELECT dancer_id, message FROM award_acknowledgements WHERE id = ?', [content_id]);
+      if (row) {
+        groupIds = (await db.all('SELECT id FROM award_acknowledgements WHERE dancer_id = ? AND message = ?', [row.dancer_id, row.message])).map(r => r.id);
+        await db.run("UPDATE award_acknowledgements SET status = 'rejected', updated_at = CURRENT_TIMESTAMP WHERE dancer_id = ? AND message = ? AND status != 'rejected'", [row.dancer_id, row.message]);
+      }
+    }
+    if (content_type === 'award_photo') {
+      const row = await db.get('SELECT dancer_id, photo_url FROM award_card_photos WHERE id = ?', [content_id]);
+      if (row) {
+        groupIds = (await db.all('SELECT id FROM award_card_photos WHERE dancer_id = ? AND photo_url = ?', [row.dancer_id, row.photo_url])).map(r => r.id);
+        await db.run("UPDATE award_card_photos SET status = 'rejected', updated_at = CURRENT_TIMESTAMP WHERE dancer_id = ? AND photo_url = ? AND status != 'rejected'", [row.dancer_id, row.photo_url]);
+      }
+    }
     if (content_type === 'default_photo') await db.run("UPDATE dancers SET card_photo_status = 'rejected' WHERE id = ?", [content_id]);
   }
-  await resolveFlags(db, content_type, parseInt(content_id), keep);
+  for (const gid of groupIds) await resolveFlags(db, content_type, gid, keep);
   res.json({ success: true });
 });
 

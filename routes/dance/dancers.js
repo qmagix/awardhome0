@@ -129,13 +129,13 @@ router.get('/manage/dancer/:id/card', requireAuth, async (req, res) => {
       CASE WHEN s.owner_id IS NOT NULL THEN 1 ELSE 0 END as studio_claimed,
       (SELECT COUNT(*) FROM award_dancers ad2 WHERE ad2.award_id = a.id) as dancer_count
     FROM awards a
-    JOIN award_dancers ad ON a.id = ad.award_id
+    LEFT JOIN award_dancers ad ON a.id = ad.award_id AND ad.dancer_id = ?
     JOIN events e ON a.event_id = e.id
     LEFT JOIN organizations o ON e.org_id = o.id
     LEFT JOIN studios s ON a.studio_id = s.id
-    WHERE ad.dancer_id = ?
+    WHERE ad.dancer_id = ? OR a.dancer_id = ?
     ORDER BY e.year DESC
-  `, [dancer.id]);
+  `, [dancer.id, dancer.id, dancer.id]);
 
   const ackRows = await db.all(
     'SELECT award_id, message, status FROM award_acknowledgements WHERE dancer_id = ?', [dancer.id]);
@@ -220,7 +220,8 @@ router.post('/manage/dancer/:id/card/award-photo', requireAuth, cardPhotoUpload.
   if (consentErr) return fail(consentErr);
 
   const linked = await db.get(
-    'SELECT 1 FROM award_dancers WHERE award_id = ? AND dancer_id = ?', [awardId, dancer.id]);
+    'SELECT 1 FROM award_dancers WHERE award_id = ? AND dancer_id = ? UNION SELECT 1 FROM awards WHERE id = ? AND dancer_id = ?',
+    [awardId, dancer.id, awardId, dancer.id]);
   if (!linked) return fail('That award is not linked to this dancer.');
 
   // Any replacement goes back to pending — every public photo was reviewed
@@ -318,7 +319,8 @@ router.post('/manage/dancer/:id/card/ack', requireAuth, async (req, res) => {
 
   // The line must belong to an award this dancer is actually linked to
   const linked = await db.get(
-    'SELECT 1 FROM award_dancers WHERE award_id = ? AND dancer_id = ?', [awardId, dancer.id]);
+    'SELECT 1 FROM award_dancers WHERE award_id = ? AND dancer_id = ? UNION SELECT 1 FROM awards WHERE id = ? AND dancer_id = ?',
+    [awardId, dancer.id, awardId, dancer.id]);
   if (!linked) return fail('That award is not linked to this dancer.');
 
   let propagated = 0;
