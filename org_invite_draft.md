@@ -53,7 +53,7 @@ specific event of theirs.)*
 
 Hi [Name or "Competition Director"],
 
-I'm Q, founder of **AwardHome** — the digital trophy case for competitive
+I'm Sam, founder of **AwardHome** — the digital trophy case for competitive
 dance. We aggregate results from events nationwide into beautiful, shareable
 award pages for dancers and studios: today that's over 900,000 awards from
 2,700+ events across 14 competitions, including YAGP, Starpower, KAR, NYCDA,
@@ -101,7 +101,7 @@ Thank you for everything you do for the dance community.
 
 Best regards,
 
-Q
+Sam
 Founder, AwardHome
 https://awardhome.com
 hello@awardhome.com
@@ -150,7 +150,7 @@ set everything up from there.
 
 Best regards,
 
-Q
+Sam
 
 ---
 
@@ -253,11 +253,12 @@ and issues un-scoped expectation debt ("founding" = permanent standing).
 Season-scoped naming keeps the pledge mechanics, attaches privileges to a
 defined period with renewal as the natural next conversation, and is
 dance-native. Rejected: "Special Partner" (vague), "sister organizations"
-(implies corporate affiliation). CAMPAIGN TIMING (Q's launch-date hook, 2026-08-27): the letter
-invites orgs to be featured AT the Sept 15 launch, so the send wave is
-PRE-launch — public /dance/* links in pre-launch sends MUST carry ?beta=KEY
-(beta gate lifts on launch day); after Sept 15, drop the hook sentence's
-"when we launch" phrasing for stragglers.
+(implies corporate affiliation). CAMPAIGN TIMING (confirmed 2026-08-27): invitations go out
+ONE BY ONE (personalized), finishing ~Sept 8 — one week before the Sept 15
+launch. Pre-launch /dance/* links carry ?beta=KEY automatically
+(buildOrgInviteTemplate). After Sept 15, drop "when we launch" phrasing for
+stragglers. PUBLIC-FACING NAME: all outreach signs "Sam" (confirmed; "Q" is
+reserved for people who already know the founder — or Star Trek).
 LAUNCH DATE CONFIRMED (Q, 2026-08-27): **September 15, 2026** — {LAUNCH_DATE}
 resolves to "September 15"; consistent with features.md gold-button market
 open Oct 15 (~1 month post-launch).)*
