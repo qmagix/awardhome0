@@ -67,9 +67,9 @@
                                 One event or your entire history at once — any format, even a zipped archive or a database export. We parse, verify, and publish, usually within a few days.
                             </p>
                             <% if (!onboarding.hasData && !onboarding.hasUpload) { %>
-                                <button class="btn btn-primary" style="padding: 0.45rem 1rem; font-size: 0.85rem;" onclick="showTab('upload-section')">Upload results</button>
+                                <button class="btn btn-primary" style="padding: 0.45rem 1rem; font-size: 0.85rem;" onclick="openUploadModal()">Upload results</button>
                             <% } else if (!onboarding.hasData) { %>
-                                <button class="btn btn-outline" style="padding: 0.45rem 1rem; font-size: 0.85rem;" onclick="showTab('upload-section')">Upload another event</button>
+                                <button class="btn btn-outline" style="padding: 0.45rem 1rem; font-size: 0.85rem;" onclick="openUploadModal()">Upload another event</button>
                             <% } %>
                         </div>
 
@@ -180,7 +180,7 @@
                             Zip your entire results archive (any folder structure, any mix of formats) and upload it
                             as a single file — put something like <em>"Full archive 2019&ndash;2025"</em> as the event name.
                             Or skip the form entirely: email <a href="mailto:hello@awardhome.com?subject=Results archive" style="color: var(--accent-gold);">hello@awardhome.com</a>
-                            a Google Drive or Dropbox link. Our team and parsing scripts handle the splitting,
+                            a Google Drive or Dropbox link. Our team handles the splitting,
                             matching, and publishing — that's the whole point of the concierge model.
                         </p>
                     </div>
@@ -194,7 +194,7 @@
                         </p>
                         <p style="margin: 0 0 1rem 0; font-size: 0.9rem; color: var(--text-muted);">
                             <strong>Great to have:</strong> Award Type (Overall / Adjudicated / Special / Title), Entry Number, Scores.
-                            Full dancer names (not initials) and consistent studio spellings help us match records correctly the first time.
+                            Full dancer names (not initials) and consistent studio spellings help us match every record to the right dancer and studio.
                         </p>
                         <!-- Data-URI template so we don't need a static file -->
                         <a href="data:text/csv;charset=utf-8,Event Name,Event Date,Routine Name,Placement,Award Type,Category/Style,Age Division,Dancers,Studio,Entry Number%0ABaltimore Nationals,May 10-12 2026,Jazz Hands,1st Overall,Overall,Jazz,Junior,%22John Doe, Jane Smith%22,Starlight Dance Academy,112" download="template_org_results.csv" class="btn" style="background: transparent; border: 1px solid #eab308; color: #eab308; padding: 0.5rem 1rem; text-decoration: none; font-size: 0.9rem;">Download CSV Template</a>
@@ -502,7 +502,49 @@
         </main>
     </div>
 
+    
+    <!-- Upload modal: the onboarding CTA opens the real #upload-section in a
+         popup (the node moves in and back — one form, no duplicate ids). -->
+    <div id="upload-modal" style="display: none; position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.72); overflow-y: auto; padding: 4vh 1rem;"
+         onclick="if (event.target === this) closeUploadModal();">
+        <div style="max-width: 780px; margin: 0 auto;">
+            <div style="display: flex; justify-content: flex-end; margin-bottom: 0.4rem;">
+                <button type="button" onclick="closeUploadModal()" aria-label="Close"
+                    style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.25); color: white; border-radius: 999px; width: 34px; height: 34px; font-size: 1rem; cursor: pointer;">✕</button>
+            </div>
+            <div id="upload-modal-body"></div>
+        </div>
+    </div>
+
     <script>
+        let uploadHome = null;
+        function openUploadModal() {
+            const section = document.getElementById('upload-section');
+            if (!section) return;
+            uploadHome = { parent: section.parentNode, next: section.nextSibling };
+            document.getElementById('upload-modal-body').appendChild(section);
+            section.style.display = 'block';
+            section.style.marginTop = '0';
+            document.getElementById('upload-modal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+        function closeUploadModal() {
+            const modal = document.getElementById('upload-modal');
+            const section = document.getElementById('upload-section');
+            if (uploadHome && section) {
+                uploadHome.parent.insertBefore(section, uploadHome.next);
+                section.style.display = 'none';
+                section.style.marginTop = '';
+            }
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && document.getElementById('upload-modal').style.display === 'block') closeUploadModal();
+        });
+    </script>
+
+<script>
         function showTab(tabId) {
             // Hide all tabs
             document.querySelectorAll('.dashboard-tab').forEach(el => el.style.display = 'none');
@@ -510,6 +552,9 @@
             const target = document.getElementById(tabId);
             if (target) {
                 target.style.display = 'block';
+                // The sections sit below the onboarding card — without this,
+                // revealing one looks like nothing happened.
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
             
             // Update active state in sidebar
