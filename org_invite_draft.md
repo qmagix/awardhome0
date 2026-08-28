@@ -24,7 +24,7 @@ reciprocity needs the gift to land first, and every extra ask in a cold touch
 cuts reply rate. So we run a ladder:
 
 1. **First touch** (below): near-zero friction CTA (claim link / reply with a
-   file), unchanged — plus a short **Founding Partner tease**: the pledge is
+   file), unchanged — plus a short **Season One Partner tease**: the pledge is
    introduced as a limited-status opportunity, not a condition. Planting it
    early makes the later ask feel consistent, not like a bait-and-switch.
 2. **The wow:** their events live, branding concierge done, demo page built.
@@ -44,7 +44,7 @@ we can start doing immediately.
 **Subject options** (no "!", no "Free" — deliverability):
 - [Competition Name]'s results are already live on AwardHome  *(strongest when we have their data — lead with this)*
 - Featuring [Competition Name] on AwardHome
-- A founding-partner idea for [Competition Name]
+- A Season One partner idea for [Competition Name]
 
 *(The code template in `utils/invites.js` `buildOrgInviteTemplate` mirrors
 this letter and pre-fills the live event/award counts + claim link; the
@@ -91,15 +91,15 @@ complete, current listings are what turn browsers into bookings.
    they attend each year — so you can spot loyal studios and understand
    your market.
 
-**One more thing, while it's early:** we're inviting a limited group of
-**Founding Partner** organizations this season. Founding Partners pledge a
+**One more thing, while it's early:** we're inviting a small group of
+**Season One Partners** for the 2026-27 season. Season One Partners pledge a
 handful of free entries to their own events — we award them to standout
 dancers on the platform as surprise rewards, each one credited *"provided by
 [Competition Name]"* — and in return get first access to premium placement
 and organizer features as the platform grows. A pledged entry costs you an
 empty slot; it returns a proven competitive dancer to your ballroom. If that
 sounds interesting, mention it when you reply and I'll hold [Competition
-Name] a founding slot.
+Name] a Season One slot.
 
 Claiming your free organizer account takes about two minutes with your
 private access link:
@@ -123,21 +123,21 @@ hello@awardhome.com
 
 ---
 
-## Letter 2 — Founding Partner follow-up (send 3–10 days after claim/demo)
+## Letter 2 — Season One Partner follow-up (send 3–10 days after claim/demo)
 
-**Subject:** A Founding Partner slot for [Competition Name]
+**Subject:** A Season One Partner slot for [Competition Name]
 
 Hi [Name],
 
 Glad to see [Competition Name]'s page live — [one personal line: their logo
 on the cards / a stat from their demo page / a studio that just claimed].
 
-I'd like to hold [Competition Name] one of our **Founding Partner** slots.
+I'd like to hold [Competition Name] one of our **Season One Partner** slots.
 The whole arrangement, plainly:
 
-**You pledge [3] free entries** (or convention passes) for the [2027]
-season. That's the entire cost — no fees, now or later, for founding
-partners.
+**You pledge [3] free entries** (or convention passes) for the [2026-27]
+season. That's the entire cost — no fees, now or later, for Season One
+Partners.
 
 **We put them to work for you:**
 
@@ -155,10 +155,10 @@ with a stake treat the platform as theirs, and it tells us who'll actually
 use the branding and analytics we build. The entry costs you an empty slot;
 it returns a converted attendee.
 
-**Founding Partners also get:** permanent Founding Partner recognition on
-your organization page, first access to new organizer features (attendance
-analytics, priority logo concierge), and a direct line on what we build
-next.
+**Season One Partners also get:** a "Season One Partner, 2026-27" mark on
+your organization page (a fact of history — you were here first), first
+access to the organizer features we ship this season (attendance analytics,
+priority logo concierge), and a direct line on what we build next.
 
 Reply "we're in" with the number of entries you'd like to pledge, and I'll
 set everything up from there.
@@ -255,9 +255,14 @@ framing, a concrete day count, the open door.
 *(v5: numbers refreshed to 1.5M awards / 4,200+ events / 27 competitions —
 all verified against the live DB, incl. the YAGP/Starpower/KAR/NYCDA/Rainbow
 name-drops; #4 attendance-analytics claim time-stamped honestly (feature is
-planned, not shipped); "Founding Partner" naming KEPT after review (time-anchored
-scarcity; "Special Partner" too vague, "sister organizations" implies corporate
-affiliation). PRE-SEND BLOCKERS: (1) beta gate — public /dance/* links in this
+planned, not shipped); Partner-program naming REVISED to "Season One Partner"
+(Q's call 2026-08-27, reversing the earlier keep): "Founding Partner" both
+devalues when offered in a cold email (cheap-to-grant title reads as a low bar)
+and issues un-scoped expectation debt ("founding" = permanent standing).
+Season-scoped naming keeps the pledge mechanics, attaches privileges to a
+defined period with renewal as the natural next conversation, and is
+dance-native. Rejected: "Special Partner" (vague), "sister organizations"
+(implies corporate affiliation). PRE-SEND BLOCKERS: (1) beta gate — public /dance/* links in this
 letter dead-end for outsiders until BETA_MODE lifts or links carry ?beta=KEY —
 natural lift date is launch day.
 LAUNCH DATE CONFIRMED (Q, 2026-08-27): **September 15, 2026** — {LAUNCH_DATE}
@@ -304,14 +309,14 @@ What {ORG_NAME} gets:
    which studios attend your events and where they travel from — are rolling
    out this fall, and partner organizations get them first.
 
-One more thing, while it's early: we're inviting a limited group of **Founding
-Partner** organizations this season. Founding Partners pledge a handful of free
+One more thing, while it's early: we're inviting a small group of **Season One
+Partners** for the 2026-27 season. Season One Partners pledge a handful of free
 entries to their own events — we award them to standout dancers on the platform
 as surprise rewards, each one credited "provided by {ORG_NAME}" — and in return
-get first access to premium organizer features as the platform grows. A pledged
-entry costs you an empty slot; it returns a proven competitive dancer to your
-stage. If that sounds interesting, mention it when you reply and I'll hold
-{ORG_NAME} a founding slot.
+get first access to the premium organizer features we ship this season. A
+pledged entry costs you an empty slot; it returns a proven competitive dancer
+to your stage. If that sounds interesting, mention it when you reply and I'll
+hold {ORG_NAME} a Season One slot.
 
 Claiming your free organizer account takes about two minutes with your private
 access link — and your dashboard walks you through the whole setup in three

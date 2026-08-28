@@ -179,7 +179,7 @@ What ${n} gets:
 
 4. Attendance insights. An organizer account unlocks analytics on the studios attending your events — including how many other competitions they attend each year — so you can spot loyal studios and understand your market.
 
-One more thing, while it's early: we're inviting a limited group of Founding Partner organizations this season. Founding Partners pledge a handful of free entries to their own events — we award them to standout dancers on the platform as surprise rewards, each one credited "provided by ${n}" — and in return get first access to premium placement and organizer features as the platform grows. A pledged entry costs you an empty slot; it returns a proven competitive dancer to your ballroom. If that sounds interesting, mention it when you reply and I'll hold ${n} a founding slot.
+One more thing, while it's early: we're inviting a small group of Season One Partners for the 2026-27 season. Season One Partners pledge a handful of free entries to their own events — we award them to standout dancers on the platform as surprise rewards, each one credited "provided by ${n}" — and in return get first access to the premium placement and organizer features we ship this season. A pledged entry costs you an empty slot; it returns a proven competitive dancer to your ballroom. If that sounds interesting, mention it when you reply and I'll hold ${n} a Season One slot.
 
 Ready to get started? Claiming your free organizer account takes about two minutes with your private access link — and your dashboard walks you through the whole setup in three steps (upload results, add your profile, send us your logo):
 
