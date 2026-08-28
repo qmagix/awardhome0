@@ -56,26 +56,27 @@
                     <p class="text-muted" style="margin: 0 0 1.25rem; font-size: 0.9rem;">
                         Everything here is concierge — you send, our team does the rest.
                     </p>
+                    <% const dataFirst = !!onboarding.hasData; /* org already live: branding first, upload-more last */ %>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1rem;">
 
-                        <div style="border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1.1rem 1.2rem; <%= (onboarding.hasData || onboarding.hasUpload) ? 'opacity: 0.75;' : 'border-color: rgba(212, 175, 55, 0.5);' %>">
-                            <div style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; color: <%= (onboarding.hasData || onboarding.hasUpload) ? '#10b981' : 'var(--accent-gold)' %>; margin-bottom: 0.4rem;">
-                                <%= onboarding.hasData ? '✓ RESULTS LIVE' : (onboarding.hasUpload ? '✓ UPLOADED — WE\'RE ON IT' : 'STEP 1 · START HERE' ) %>
+                        <div style="order: <%= dataFirst ? 3 : 1 %>; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1.1rem 1.2rem; <%= onboarding.hasUpload ? 'opacity: 0.75;' : (dataFirst ? '' : 'border-color: rgba(212, 175, 55, 0.5);') %>">
+                            <div style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; color: <%= onboarding.hasUpload ? '#10b981' : (dataFirst ? 'var(--text-muted)' : 'var(--accent-gold)') %>; margin-bottom: 0.4rem;">
+                                <%= onboarding.hasUpload ? '✓ UPLOADED — WE\'RE ON IT' : (dataFirst ? 'STEP 3' : 'STEP 1 · START HERE') %>
                             </div>
-                            <h3 style="margin: 0 0 0.4rem; font-size: 1rem;">Upload your results</h3>
+                            <h3 style="margin: 0 0 0.4rem; font-size: 1rem;"><%= dataFirst ? 'Add missing events' : 'Upload your results' %></h3>
                             <p class="text-muted" style="margin: 0 0 0.8rem; font-size: 0.85rem; line-height: 1.5;">
-                                One event or your entire history at once — any format, even a zipped archive or a database export. We parse, verify, and publish, usually within a few days.
+                                <%= dataFirst
+                                  ? 'Your results are already live. Spot a missing event or season? Send it over — any format — and we fold it into your archive.'
+                                  : 'One event or your entire history at once — any format, even a zipped archive or a database export. We parse, verify, and publish, usually within a few days.' %>
                             </p>
-                            <% if (!onboarding.hasData && !onboarding.hasUpload) { %>
-                                <button class="btn btn-primary" style="padding: 0.45rem 1rem; font-size: 0.85rem;" onclick="openUploadModal()">Upload results</button>
-                            <% } else if (!onboarding.hasData) { %>
-                                <button class="btn btn-outline" style="padding: 0.45rem 1rem; font-size: 0.85rem;" onclick="openUploadModal()">Upload another event</button>
+                            <% if (!onboarding.hasUpload) { %>
+                                <button class="btn <%= dataFirst ? 'btn-outline' : 'btn-primary' %>" style="padding: 0.45rem 1rem; font-size: 0.85rem;" onclick="openUploadModal()"><%= dataFirst ? 'Upload more results' : 'Upload results' %></button>
                             <% } %>
                         </div>
 
-                        <div style="border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1.1rem 1.2rem; <%= onboarding.hasProfile ? 'opacity: 0.75;' : '' %>">
-                            <div style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; color: <%= onboarding.hasProfile ? '#10b981' : 'var(--text-muted)' %>; margin-bottom: 0.4rem;">
-                                <%= onboarding.hasProfile ? '✓ DONE' : 'STEP 2' %>
+                        <div style="order: <%= dataFirst ? 1 : 2 %>; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1.1rem 1.2rem; <%= onboarding.hasProfile ? 'opacity: 0.75;' : (dataFirst ? 'border-color: rgba(212, 175, 55, 0.5);' : '') %>">
+                            <div style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; color: <%= onboarding.hasProfile ? '#10b981' : (dataFirst ? 'var(--accent-gold)' : 'var(--text-muted)') %>; margin-bottom: 0.4rem;">
+                                <%= onboarding.hasProfile ? '✓ DONE' : (dataFirst ? 'STEP 1 · START HERE' : 'STEP 2') %>
                             </div>
                             <h3 style="margin: 0 0 0.4rem; font-size: 1rem;">Tell studios who you are</h3>
                             <p class="text-muted" style="margin: 0 0 0.8rem; font-size: 0.85rem; line-height: 1.5;">
@@ -86,9 +87,9 @@
                             <% } %>
                         </div>
 
-                        <div style="border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1.1rem 1.2rem; <%= onboarding.hasLogo ? 'opacity: 0.75;' : '' %>">
+                        <div style="order: <%= dataFirst ? 2 : 3 %>; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1.1rem 1.2rem; <%= onboarding.hasLogo ? 'opacity: 0.75;' : '' %>">
                             <div style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; color: <%= onboarding.hasLogo ? '#10b981' : 'var(--text-muted)' %>; margin-bottom: 0.4rem;">
-                                <%= onboarding.hasLogo ? (onboarding.logoApproved ? '✓ LIVE ON CARDS' : '✓ UPLOADED — BEING FITTED') : 'STEP 3' %>
+                                <%= onboarding.hasLogo ? (onboarding.logoApproved ? '✓ LIVE ON CARDS' : '✓ UPLOADED — BEING FITTED') : (dataFirst ? 'STEP 2' : 'STEP 3') %>
                             </div>
                             <h3 style="margin: 0 0 0.4rem; font-size: 1rem;">Your brand on every card</h3>
                             <p class="text-muted" style="margin: 0 0 0.8rem; font-size: 0.85rem; line-height: 1.5;">
