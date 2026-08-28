@@ -2898,3 +2898,43 @@ footer {
   content: ' \2197';
   font-size: 0.8em;
 }
+
+/* Site footer — the landing page's footer design (public3), ported for all
+   app pages via partials/footer.ejs. Values inlined from the landing palette
+   so this block is self-contained. */
+.site-footer {
+  border-top: 1px solid rgba(212, 175, 55, 0.16);
+  padding: 2.2rem 1.5rem 2.6rem;
+  text-align: center;
+  margin-top: 3rem;
+}
+.site-footer .footer-brandmark {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 1.15rem;
+  letter-spacing: 0.02em;
+  color: white;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.site-footer .footer-brandmark span { color: var(--primary); }
+.site-footer .foot-links {
+  margin-top: 1rem;
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.site-footer .foot-links a {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: #a89e88;
+  text-decoration: none;
+}
+.site-footer .foot-links a:hover { color: #f3c545; }
+.site-footer .copyright {
+  font-size: 0.72rem;
+  color: #7a7259;
+  margin-top: 1.2rem;
+}

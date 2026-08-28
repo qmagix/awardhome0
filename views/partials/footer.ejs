@@ -1,13 +1,15 @@
   </main>
-  <footer>
-    <div style="text-align: center; margin-bottom: 0.5rem;">
-      <a href="/faq/admin" style="margin-right: 15px; color: var(--primary); text-decoration: none;">Studio Admin FAQ</a>
-      <a href="/faq/dancer" style="margin-right: 15px; color: var(--primary); text-decoration: none;">Dancer FAQ</a>
-      <a href="/faq/organizer" style="margin-right: 15px; color: var(--primary); text-decoration: none;">Organizer FAQ</a>
-      <a href="/partners" style="margin-right: 15px; color: var(--primary); text-decoration: none;">Partners</a>
-      <a href="/news" style="color: var(--primary); text-decoration: none;">News</a>
+  <footer class="site-footer">
+    <a class="footer-brandmark" href="/">Award<span>Home</span></a>
+    <div class="foot-links">
+      <a href="/faq/dancer">Dancer FAQ</a>
+      <a href="/faq/admin">Studio Admin FAQ</a>
+      <a href="/faq/organizer">Organizer FAQ</a>
+      <a href="/partners">Partners</a>
+      <a href="/news">News</a>
+      <% if (typeof user === 'undefined' || !user) { %><a href="/login">Sign in</a><% } %>
     </div>
-    <p style="text-align: center; color: var(--text-muted);">&copy; 2026 AwardHome · Award card system patent pending</p>
+    <p class="copyright">&copy; 2026 AwardHome &middot; Award card system patent pending</p>
   </footer>
   <script src="/js/sortable.js"></script>
   <script src="/js/ui.js?v=3"></script>
