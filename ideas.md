@@ -114,3 +114,32 @@ news_posts table + tiny admin CRUD once volume justifies it.
 mandatory, same dignity principles as docs/partner_pitch.md (credit lines not ads,
 nothing that reads as exploiting kids' moments), editorial standards doc BEFORE the
 first sold post. Not mentioned publicly until real (same lesson as the partner page).
+
+## 11. Teacher & Choreographer Accounts (brainstormed 2026-08-28, post-launch)
+**Concept:** a third constituency: teachers/choreographers get claimable profiles;
+dancers (or studio directors) link them to award cards — "Choreography: Marina
+Petrova" as a structured credit, not just a thank-you-note mention. A teacher's
+profile becomes a career portfolio: every routine they taught/choreographed and
+what it won, across studios and seasons — a resume for guest-teaching,
+convention faculty, and adjudication gigs.
+
+**Why it's strong:** (a) teachers share too — every credited card is reach into
+their networks; (b) the data half-exists (ack notes name teachers; The Dance
+Awards import carries choreographer names in notes); (c) completes the graph:
+dancer ↔ studio ↔ organizer ↔ teacher; (d) teacher pride is a claim driver for
+studios ("your staff's work, credited").
+
+**Design guards (from the flagging/credit-dispute lessons):**
+- Credits are ADDED by dancer/studio owner but display only after the teacher
+  ACCEPTS (two-sided confirmation) — prevents false-credit griefing and
+  choreography-attribution beefs; same moderation spirit as card content.
+- Junction: award_credits(award_id, teacher_id, role 'teacher'|'choreographer',
+  added_by, status pending/accepted/declined) — same-routine propagation applies.
+- Teachers are usually adults → lighter consent path than dancers, but staff
+  churn means credits outlive employment: credit binds to the PERSON, not the
+  studio.
+- IP note: structured per-role credits on cards = new annotation granularity
+  beyond the filed spec's (award, participant) + (award, organization) — add to
+  the follow-on provisional queue BEFORE building (provisional_patent_plan.md).
+
+**Sequencing:** post-launch, behind a flag; needs studio staff roster UI first.

@@ -315,3 +315,10 @@ the P2 filing. Running list:
    transparency labeling appropriate to minors' surfaces; coexistence and
    conflict rules when organizer and sponsor are both present. Product ref:
    /partners placements + trophy_plan.md sponsor tiers.
+
+2. **Teacher/choreographer card credits** (captured 2026-08-28, NOT built): a
+   third annotation granularity — (award, credited-person, role) with two-sided
+   acceptance before display — beyond the filed spec's (award, participant)
+   acks and (award, organization) director's note. Cover: credit junction +
+   accept/decline flow, role taxonomy, propagation across same-routine awards,
+   credited-person portfolio pages aggregating accepted credits. See ideas.md §11.
