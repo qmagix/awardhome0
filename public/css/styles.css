@@ -369,6 +369,23 @@ a:hover {
   -webkit-backface-visibility: hidden;
 }
 
+/* Firefox (Gecko) only: backface culling on the un-transformed front face is
+   unreliable — the back's hover lift transitions `transform`, and each
+   re-layerization can make Gecko repaint the mirrored front through the
+   resting back (bleed after mouse-off, flicker on re-hover). Chrome/Safari
+   are untouched by this block. Cure: give the front its own 3D transform
+   (own layer → culled correctly) and hard-hide it once the flip completes —
+   the 0.33s delay keeps the front visible through the first half of the
+   0.65s flip, and unflipping restores it instantly (the delayed transition
+   lives only on the .flipped state). */
+@supports (-moz-appearance: none) {
+  .flip-card .flip-front { transform: rotateY(0deg); }
+  .flip-card.flipped .flip-front {
+    visibility: hidden;
+    transition: visibility 0s 0.33s;
+  }
+}
+
 .trophy-card-back {
   position: absolute;
   inset: 0;

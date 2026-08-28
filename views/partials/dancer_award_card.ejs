@@ -23,6 +23,10 @@
   const coin = cardCoin(award);            // shared helper (server.js)
   const showOrgLogo = coin.show;
   const logoVars = coin.vars;
+  // Raw org custom_icons — the colophon page reads colophon_message from it.
+  // (Restored: the cardCoin() refactor dropped this local but the colophon
+  // block still reads it; without it every approved-coin card 500s.)
+  const lci = award.customIconsObj || {};
 
   // WYSIWYG editor (manage card page): pages that would only materialize
   // with content instead materialize as inline-editable placeholders.
