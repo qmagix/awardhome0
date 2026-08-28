@@ -323,3 +323,12 @@ page (2026-08-27): don't anchor prospects to a short menu, don't signal "that's
 all", and public brand-placement talk on a minors-first platform risks reading
 as exploitation to families — the placement deck lives in docs/partner_pitch.md
 (PRIVATE, per-prospect replies only; sponsor-credit-page item is IP-gated).
+
+## News (2026-08-27)
+Public `/news` + `/news/:slug` (routes/news.js; OUTSIDE the beta gate so the launch
+announcement is shareable pre-launch). Articles = EJS partials in views/news/ +
+registry array in the route — git-versioned, publish = add partial + registry entry +
+deploy; local/prod parity automatic; no CMS by design until contributors exist
+(phases 2-3 in ideas.md §10). Seeded: "Why AwardHome exists" (founder origin story)
++ "AwardHome opens to the public on September 15". Links in all THREE footers
+(partials/footer.ejs + public3 + public2 static landings). Byline: Sam.

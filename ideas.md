@@ -98,3 +98,19 @@ Patent-candidate details tracked in `maybe_patentable.md` (A7).
 **Value Proposition:** completes the metaphor (dancer card = personal yearbook page, studio card = team plaque) and creates a studio-side engagement loop: a dashboard nudge ("8 of 12 dancers have added their line") makes studio owners the distribution channel pushing families to fill cards — a claiming carrot that costs nothing.
 
 **Reality check:** zero schema change for the aggregate itself (all lines already live per (award, dancer)); the real lift is that studio pages don't render flipbook cards at all yet — the feature rides on bringing the card partial to studio group-award surfaces. **Space (decided 2026-08-27): the multi-face cycle solves it structurally — each ack gets its own face, the viewer flips through the roster one inscription at a time, cycle length grows with the roster.** No scrolling inside pages (would break the cards-scale-like-images property). **Ordering (decided): chronological by creation time** — the plaque accretes as inscriptions arrive. Privacy: no new content (every line already shows on all members' public cards, post-moderation), only concentration; moderation gates unchanged. Sequence after flipbook beta AND after P1 provisional filing (freeze list) — spec coverage 2026-08-27 (¶[0018a], claims 19–21).
+
+## 10. News / Community Stories — contribution & sponsorship phases (brainstormed 2026-08-27)
+**Shipped (phase 1):** public /news, founder-authored, articles as git-versioned EJS
+partials + registry in routes/news.js (publish = commit + deploy; no CMS until
+contributors are real). Seeded with the origin story + the Sept 15 launch announcement.
+
+**Phase 2 (post-launch, drawer):** community stories — parents/studios/organizers
+contribute (studio anniversaries, comeback stories, teacher tributes). Needs: submission
+flow (reuse partner_inquiries pattern or email), editorial review (all-minors rules:
+guardian consent for named minors, same moderation spirit as card content), a
+news_posts table + tiny admin CRUD once volume justifies it.
+
+**Phase 3 (revenue, drawer):** sponsored articles — FTC-compliant "Sponsored" labeling
+mandatory, same dignity principles as docs/partner_pitch.md (credit lines not ads,
+nothing that reads as exploiting kids' moments), editorial standards doc BEFORE the
+first sold post. Not mentioned publicly until real (same lesson as the partner page).

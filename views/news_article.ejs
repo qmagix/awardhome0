@@ -1,0 +1,23 @@
+<%- include('partials/header', { pageTitle: article.title, pageDesc: article.summary }) %>
+
+<style>
+  .article-wrap { max-width: 700px; margin: 3rem auto 4rem; padding: 0 1.5rem; }
+  .article-wrap .news-date { color: var(--primary); font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700; }
+  .article-wrap h1 { font-size: 2.1rem; line-height: 1.25; margin: 0.5rem 0 1.75rem; }
+  .article-body p { color: var(--text-main, #e8e4da); line-height: 1.75; margin: 1.1rem 0; }
+  .article-body p.lede { color: white; font-size: 1.08rem; }
+  .article-byline { color: var(--text-muted); margin-top: 2.5rem; border-top: 1px solid var(--border-color); padding-top: 1.25rem; }
+  .article-back { display: inline-block; margin-top: 1rem; color: var(--primary); text-decoration: none; }
+</style>
+
+<div class="article-wrap">
+  <span class="news-date"><%= new Date(article.date + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %></span>
+  <h1><%= article.title %></h1>
+  <div class="article-body">
+    <%- include('news/' + article.slug) %>
+  </div>
+  <p class="article-byline">— Sam, Founder, AwardHome</p>
+  <a class="article-back" href="/news">&larr; All news</a>
+</div>
+
+<%- include('partials/footer') %>
