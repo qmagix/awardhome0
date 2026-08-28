@@ -105,6 +105,11 @@
             <span>Keep this dancer off public leaderboards and top-dancer lists<br>
             <small style="color: var(--text-muted);">The profile stays reachable by search and direct link — it just won't be featured in rankings.</small></span>
           </label>
+          <label style="display: flex; gap: 0.6rem; align-items: flex-start; margin: 0 0 0.5rem; cursor: pointer;">
+            <input type="checkbox" name="hide_from_search" <%= dancer.hide_from_search ? 'checked' : '' %> style="margin-top: 0.2rem;">
+            <span>Also keep this dancer out of public name search<br>
+            <small style="color: var(--text-muted);">The strongest setting: not searchable by name and never in rankings. The page stays reachable only by direct link, and your studio still sees everything.</small></span>
+          </label>
           <button type="submit" class="btn btn-primary" style="align-self: flex-start;">Save Changes</button>
         </form>
       </div>

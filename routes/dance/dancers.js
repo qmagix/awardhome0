@@ -487,6 +487,7 @@ router.post('/manage/dancer/:id/update', requireAuth, async (req, res) => {
 
   const { name, birthday, headshot_url, graduation_year, instagram_handle, tiktok_handle, vanity_tag } = req.body;
   const hideFromRankings = req.body.hide_from_rankings === 'on' ? 1 : 0;
+  const hideFromSearch = req.body.hide_from_search === 'on' ? 1 : 0;
 
   const vanity = validateVanityTag(vanity_tag);
   if (!vanity.ok) {
@@ -495,9 +496,9 @@ router.post('/manage/dancer/:id/update', requireAuth, async (req, res) => {
 
   await db.run(`
     UPDATE dancers
-    SET name = ?, birthday = ?, headshot_url = ?, graduation_year = ?, instagram_handle = ?, tiktok_handle = ?, vanity_tag = ?, hide_from_rankings = ?
+    SET name = ?, birthday = ?, headshot_url = ?, graduation_year = ?, instagram_handle = ?, tiktok_handle = ?, vanity_tag = ?, hide_from_rankings = ?, hide_from_search = ?
     WHERE id = ?
-  `, [name, birthday || null, headshot_url || null, graduation_year || null, instagram_handle || null, tiktok_handle || null, vanity.tag, hideFromRankings, req.params.id]);
+  `, [name, birthday || null, headshot_url || null, graduation_year || null, instagram_handle || null, tiktok_handle || null, vanity.tag, hideFromRankings, hideFromSearch, req.params.id]);
 
   res.redirect(`/manage/dancer/${req.params.id}`);
 });

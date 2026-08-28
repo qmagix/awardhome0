@@ -345,6 +345,12 @@ Two owner controls, both claimed-profile-only (privacy concern -> claim funnel):
 - **Rankings opt-out** — `dancers.hide_from_rankings` checkbox on Manage Profile;
   filters the three topDancers* queries (all-time / this-year / first-places). Profile
   stays reachable by search + direct link; it's exclusion from curated prominence only.
+- **Search opt-out (strongest)** — `dancers.hide_from_search`, second checkbox:
+  excluded from public name search (`/dance/api/search`) AND rankings (coupled by
+  design — leaderboards are a name index, so search-hiding without ranking-hiding
+  would be self-defeating). Page opens by direct link only; the owner's
+  find-missing-awards tool and all studio surfaces unaffected. Separate checkboxes,
+  not bundled: different families calibrate differently.
 Copy doctrine (3rd application, 2026-08-28): moderation described as MECHANISM
 ("goes live once approved"), never as promise ("our team reviews") — FAQ §6/§9 +
 launch article aligned. Sweep/gate/sentinel gained hidden-card + optout strata.

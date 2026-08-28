@@ -250,7 +250,7 @@ async function loadHomepageData() {
     FROM dancers d
     JOIN award_dancers ad ON d.id = ad.dancer_id
     JOIN awards a ON ad.award_id = a.id
-    WHERE COALESCE(d.hide_from_rankings, 0) = 0
+    WHERE COALESCE(d.hide_from_rankings, 0) = 0 AND COALESCE(d.hide_from_search, 0) = 0
     GROUP BY d.id
     ORDER BY total_awards DESC
     LIMIT 500
@@ -263,7 +263,7 @@ async function loadHomepageData() {
     JOIN awards a ON ad.award_id = a.id
     JOIN events e ON a.event_id = e.id
     WHERE e.year = (SELECT MAX(year) FROM events)
-      AND COALESCE(d.hide_from_rankings, 0) = 0
+      AND COALESCE(d.hide_from_rankings, 0) = 0 AND COALESCE(d.hide_from_search, 0) = 0
     GROUP BY d.id
     ORDER BY total_awards DESC
     LIMIT 500
@@ -276,7 +276,7 @@ async function loadHomepageData() {
     JOIN awards a ON ad.award_id = a.id
     JOIN events e ON a.event_id = e.id
     WHERE a.is_first_place = 1 AND e.year = (SELECT MAX(year) FROM events)
-      AND COALESCE(d.hide_from_rankings, 0) = 0
+      AND COALESCE(d.hide_from_rankings, 0) = 0 AND COALESCE(d.hide_from_search, 0) = 0
     GROUP BY d.id
     ORDER BY total_awards DESC
     LIMIT 500
@@ -716,7 +716,7 @@ router.get('/dance/api/search', searchLimiter, async (req, res) => {
       (SELECT GROUP_CONCAT(s2.name, ', ') FROM dancer_studios ds
         JOIN studios s2 ON s2.id = ds.studio_id WHERE ds.dancer_id = d.id) AS studios
     FROM dancers d
-    WHERE d.name LIKE ?
+    WHERE d.name LIKE ? AND COALESCE(d.hide_from_search, 0) = 0
     ORDER BY awards DESC LIMIT 6
   `, [like]);
 
