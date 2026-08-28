@@ -253,9 +253,11 @@ and issues un-scoped expectation debt ("founding" = permanent standing).
 Season-scoped naming keeps the pledge mechanics, attaches privileges to a
 defined period with renewal as the natural next conversation, and is
 dance-native. Rejected: "Special Partner" (vague), "sister organizations"
-(implies corporate affiliation). PRE-SEND BLOCKERS: (1) beta gate — public /dance/* links in this
-letter dead-end for outsiders until BETA_MODE lifts or links carry ?beta=KEY —
-natural lift date is launch day.
+(implies corporate affiliation). CAMPAIGN TIMING (Q's launch-date hook, 2026-08-27): the letter
+invites orgs to be featured AT the Sept 15 launch, so the send wave is
+PRE-launch — public /dance/* links in pre-launch sends MUST carry ?beta=KEY
+(beta gate lifts on launch day); after Sept 15, drop the hook sentence's
+"when we launch" phrasing for stragglers.
 LAUNCH DATE CONFIRMED (Q, 2026-08-27): **September 15, 2026** — {LAUNCH_DATE}
 resolves to "September 15"; consistent with features.md gold-button market
 open Oct 15 (~1 month post-launch).)*
@@ -268,13 +270,13 @@ award pages for dancers and studios: today that's over 1.5 million awards from
 4,200+ events across 27 competitions, including YAGP, Starpower, KAR, NYCDA,
 and Rainbow.
 
-We'd love to feature {ORG_NAME} alongside them.
+We'd love to feature {ORG_NAME} alongside them when we launch on
+September 15.
 
 The offer, plainly: send us your results in whatever format you have — CSV,
 Excel, PDFs, database exports, anything, one event or your entire history in a
 single zip or Drive link — and we handle 100% of the processing. Zero technical
-work on your end, free during our beta period (formal launch planned for
-September 15).
+work on your end, free during our beta period.
 
 What {ORG_NAME} gets:
 

@@ -669,7 +669,12 @@ router.get('/admin/orgs/:id/invite-template', requireSuperadmin, async (req, res
   const lastInvite = await db.get(
     'SELECT email, sent_at FROM org_invites WHERE org_id = ? ORDER BY sent_at DESC, id DESC LIMIT 1', [org.id]);
 
-  const { subject, body } = buildOrgInviteTemplate({ org, eventCount: ev.c, awardCount: aw.c });
+  const totals = {
+    awards: (await db.get('SELECT COUNT(*) c FROM awards')).c,
+    events: (await db.get('SELECT COUNT(*) c FROM events')).c,
+    orgs: (await db.get('SELECT COUNT(*) c FROM organizations WHERE slug IS NOT NULL')).c,
+  };
+  const { subject, body } = buildOrgInviteTemplate({ org, eventCount: ev.c, awardCount: aw.c, totals });
   res.json({ orgName: org.name, subject, body, lastInvite: lastInvite || null });
 });
 

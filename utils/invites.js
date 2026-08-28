@@ -152,8 +152,13 @@ async function sendStudioInvite(studioId, { sentBy = null, overrideEmail = null 
 // letter is recorded in org_invites for future review. Content follows
 // org_invite_draft.md.
 
-function buildOrgInviteTemplate({ org, eventCount = 0, awardCount = 0 }) {
+function buildOrgInviteTemplate({ org, eventCount = 0, awardCount = 0, totals = {} }) {
   const n = org.name;
+  // Platform totals are computed live by the caller so the letter can never
+  // go stale; the fallbacks match the last hand-verified numbers.
+  const tAwards = totals.awards ? `over ${(totals.awards / 1e6).toFixed(1)} million` : 'over 1.5 million';
+  const tEvents = totals.events ? `${(Math.floor(totals.events / 100) * 100).toLocaleString()}+` : '4,200+';
+  const tOrgs = totals.orgs || 27;
   const orgPageUrl = `${BASE_URL}/dance/org/${org.slug}` +
     (BETA_MODE && BETA_KEY ? `?beta=${BETA_KEY}` : '');
   const alreadyLive = eventCount > 0
@@ -163,34 +168,33 @@ function buildOrgInviteTemplate({ org, eventCount = 0, awardCount = 0 }) {
   const subject = `Featuring ${n} on AwardHome`;
   const body = `Hi Competition Director,
 
-I'm Q, founder of AwardHome — the digital trophy case for competitive dance. We aggregate results from events nationwide into beautiful, shareable award pages for dancers and studios: today that's over 1.5 million awards from 3,970+ events across 24 competitions, including YAGP, Starpower, KAR, NYCDA, and Rainbow.
+I'm Sam, founder of AwardHome — the award curation platform for competitive dance. We aggregate results from events nationwide into beautiful, shareable award pages for dancers and studios: today that's ${tAwards} awards from ${tEvents} events across ${tOrgs} competitions, including YAGP, Starpower, KAR, NYCDA, and Rainbow.
 
-We'd love to feature ${n} alongside them.
+We'd love to feature ${n} alongside them when we launch on September 15.
 
-${alreadyLive}The offer, plainly: send us your results in whatever format you have — CSV, Excel, PDFs, database exports, anything, one event or your entire history in a single zip or Drive link — and we handle 100% of the processing. Zero technical work on your end, at no cost.
+${alreadyLive}The offer, plainly: send us your results in whatever format you have — CSV, Excel, PDFs, database exports, anything, one event or your entire history in a single zip or Drive link — and we handle 100% of the processing. Zero technical work on your end, free during our beta period.
 
 What ${n} gets:
 
-1. Your brand on every card dancers share. Organizers get a free branding dashboard — your logo and custom trophy icons, hand-fitted onto the award cards by our design team — so your brand stays visible on social media long after the event ends. It's the kind of placement sponsors notice.
+1. Your brand on every award card dancers share. Organizers get a free branding dashboard — your logo and custom trophy icons, hand-fitted onto our patent-pending award cards by our design team — so your brand stays visible on social media long after the event ends.
 
 2. Permanent, searchable results. Dancers and parents constantly search for old placements. We host them forever, interactively — no more fielding "where can I find 2023 results?" emails, and your events sit beside the biggest names in the industry for every studio browsing the platform.
 
-3. Your tour dates, where studios plan their season. Our Upcoming Events directory gathers every circuit's published dates in one place — studios and parents browse it when deciding which competitions to attend, sorted by distance from their studio, and they can shortlist your events and export them straight into their family calendars, with your registration one click away. You control your dates from your dashboard; complete, current listings are what turn browsers into bookings.
+3. Your tour dates, where studios plan their season. Our Upcoming Events directory gathers every circuit's published dates in one place — studios and parents browse it when deciding which competitions to attend, sorted by distance, and they can shortlist your events and export them straight into their family calendars, with your registration one click away. You control your dates from your dashboard; complete, current listings are what turn browsing into bookings.
 
-
-Ready to get started? Claiming your free organizer account takes about two minutes with your private access link — and your dashboard walks you through the whole setup in three steps (upload results, add your profile, send us your logo):
+Claiming your free organizer account takes about two minutes with your private access link — and your dashboard walks you through the whole setup in three steps (upload results, add your profile, send us your logo):
 
 {CLAIM_LINK}
 
-Or if you have a recent results file handy, just reply with it attached — or with a Google Drive or Dropbox link — and we'll build a live demo page for ${n}, usually within a few days. And if you'd rather talk first, I'm happy to do a quick 15-minute call.
+Or if you have a recent results file or links handy, just reply with it attached — or with a Google Drive or Dropbox link — and we'll build a live demo page for ${n}, usually within a few days. And if you'd rather talk first, I'm happy to do a quick 15-minute call.
 
-However this lands, one thing is true either way: we'd welcome ${n} as a partner, not just a name in our archive. And if anything on AwardHome could serve you better — how your events are presented, a feature you wish existed, anything at all — just tell us. We're building this for the people who actually run competitions, so your thoughts and needs genuinely shape what we build next.
+However this lands, one thing is true either way: we'd welcome ${n} as a partner, not just a name in our archive. And if anything on AwardHome could serve you better — how your events are presented, a feature you wish existed, anything at all — just tell us. We're building this for the people who actually run competitions and for the dancers preserving those memories, so your thoughts and needs genuinely shape what we build next.
 
 Thank you for everything you do for the dance community.
 
 Best regards,
 
-Q
+Sam
 Founder, AwardHome
 https://awardhome.com
 hello@awardhome.com`;
