@@ -298,7 +298,7 @@ What {ORG_NAME} gets:
    distance, and they can shortlist your events and export them straight into
    their family calendars, with your registration one click away. You control
    your dates from your dashboard; complete, current listings are what turn
-   browsers into bookings.
+   browsing into bookings.
 
 4. **Attendance insights, partners first.** Our first organizer analytics —
    which studios attend your events and where they travel from — are rolling
