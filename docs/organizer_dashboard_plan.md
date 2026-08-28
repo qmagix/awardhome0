@@ -43,3 +43,17 @@ More thoughts from Gemini
 
 ---
 **Add your thoughts and iterations below:**
+
+## Data-sensitivity principle (Q, 2026-08-27)
+
+Results are effectively an organizer's customer list. Any analytics we build on
+"who attends whose events" cuts both ways — an organizer seeing their own
+attendance data implies competitors could see it too, and that fear is an
+argument against sharing results with us at all. Rules going forward:
+1. Analytics are NEVER mentioned in outreach/onboarding copy (removed from all
+   invite letters 2026-08-27). Introduce only post-onboarding, if built.
+2. If built: strictly organizer-private (each org sees only its own events'
+   data), no cross-org comparisons that expose another org's client studios,
+   and be precise that our data covers award-WINNING studios, not attendance.
+3. Cross-org "benchmarking" features (plan §3) need a re-think under this
+   principle before any build.

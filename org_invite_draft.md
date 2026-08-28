@@ -86,11 +86,6 @@ and export them straight into their family calendars, with your
 registration one click away. You control your dates from your dashboard;
 complete, current listings are what turn browsers into bookings.
 
-4. **Attendance insights.** An organizer account unlocks analytics on the
-   studios attending your events — including how many other competitions
-   they attend each year — so you can spot loyal studios and understand
-   your market.
-
 Claiming your free organizer account takes about two minutes with your
 private access link:
 
@@ -142,13 +137,13 @@ Partners.
 
 Why we ask for a pledge instead of just giving everything away: partners
 with a stake treat the platform as theirs, and it tells us who'll actually
-use the branding and analytics we build. The entry costs you an empty slot;
+use what we build for partners. The entry costs you an empty slot;
 it returns a converted attendee.
 
 **Season One Partners also get:** a "Season One Partner, 2026-27" mark on
 your organization page (a fact of history — you were here first), first
-access to the organizer features we ship this season (attendance analytics,
-priority logo concierge), and a direct line on what we build next.
+access to the organizer features we ship this season (priority logo
+concierge among the first), and a direct line on what we build next.
 
 Reply "we're in" with the number of entries you'd like to pledge, and I'll
 set everything up from there.
@@ -202,9 +197,8 @@ Everything shown for [Competition Name] comes from your own published results,
 presented with your name simply as the factual source — but how your brand
 appears there should absolutely be in your control. That's what the free
 organizer account is for: your logo (hand-fitted by our design team) on every
-award card families share, authority to correct any record, your registration
-link in front of every family browsing results, and analytics on the studios
-attending your events. Here's your page as it stands, and a private claim
+award card families share, authority to correct any record, and your
+registration link in front of every family browsing results. Here's your page as it stands, and a private claim
 link: [org page link] / [claim link].
 
 If after seeing that you'd still prefer not to have a public presence on
@@ -244,8 +238,12 @@ framing, a concrete day count, the open door.
 
 *(v5: numbers refreshed to 1.5M awards / 4,200+ events / 27 competitions —
 all verified against the live DB, incl. the YAGP/Starpower/KAR/NYCDA/Rainbow
-name-drops; #4 attendance-analytics claim time-stamped honestly (feature is
-planned, not shipped); Partner-program paragraph REMOVED from the first-touch letter
+name-drops; attendance-analytics item REMOVED from all letters (Q, 2026-08-27):
+(a) mentioning attendance analytics primes the exact fear that blocks the core
+ask — "results expose my client list to competitors" — and (b) we hold
+award-WINNING studios, not attendance, so the claim overpromised. Analytics
+stay unmentioned in outreach; if/when built, scope organizer-private and
+introduce post-onboarding. Partner-program paragraph REMOVED from the first-touch letter
 entirely (Q, 2026-08-27): the pledge is proposed only via Letter 2 after
 demonstrated value, once reward infra + legal review are ready. Program naming
 (for Letter 2, held in the drawer) REVISED to "Season One Partner"
@@ -297,10 +295,6 @@ What {ORG_NAME} gets:
    their family calendars, with your registration one click away. You control
    your dates from your dashboard; complete, current listings are what turn
    browsing into bookings.
-
-4. **Attendance insights, partners first.** Our first organizer analytics —
-   which studios attend your events and where they travel from — are rolling
-   out this fall, and partner organizations get them first.
 
 Claiming your free organizer account takes about two minutes with your private
 access link — and your dashboard walks you through the whole setup in three
