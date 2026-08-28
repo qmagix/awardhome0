@@ -126,6 +126,10 @@ tether is the only novel hook; "LLM writes marketing copy" alone is unpatentable
 *Captured pre-2026-08 in ideas.md. NOT built.*
 
 ### B4. Sponsor attribution that travels with shared award media (trophy_plan.md Tier 2/3)
+**⚠️ NOT in filed provisional 64/142,611** (checked 2026-08-27: spec teaches the
+ORGANIZER colophon only; generic claims 1/4 give arguable-but-weak cover). The
+"sponsor credit page" ("made possible by X") is item 1 on the follow-on queue in
+provisional_patent_plan.md — file before shipping any sponsor-page feature.
 "1st Place Solo sponsored by Capezio" baked into the card and persisting through
 social-share image rendering, with organizer-tier gating. Advertising method — weak
 alone; possibly claimable as part of the A3 page system (colophon page).

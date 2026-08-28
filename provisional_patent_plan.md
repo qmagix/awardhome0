@@ -290,3 +290,28 @@ with an organizer (that pitch is a disclosure unless NDA'd).
 *Cross-refs: `maybe_patentable.md` (inventory + capture dates), `ideas.md` §3–§8,
 `features.md` §3b–3c, `docs/db_operations.md`. Keep both patent files updated when
 any Tier A/B feature's shipped status changes — the dates are the whole game.*
+
+---
+
+## New matter since 64/142,611 — follow-on provisional queue
+
+A filed provisional cannot be amended; new inventions since 2026-08-27 get a
+follow-on provisional (daisy-chain — the non-provisional claims priority from
+all of them). **File before any listed item ships publicly**, or bundle with
+the P2 filing. Running list:
+
+1. **Sponsor credit page** (captured 2026-08-27, NOT in 64/142,611 — the filed
+   spec teaches only the *organizer* colophon; "sponsor" appears once, re:
+   prize pools). A distinct conditionally-materialized page/face crediting a
+   third-party sponsor who is NOT the award's source organizer ("This card is
+   made possible by X") — sold placement inventory. Cover in the follow-on:
+   scoping tiers (per-award / per-event / per-season / per-category);
+   provenance-scoped eligibility (sponsor page appears only on awards from
+   sponsored events, mirroring the A7 mechanics); operator fitting + approval
+   gate extended to sponsor marks (same silhouette/role-partition rules as the
+   coin); ordering relative to the organizer colophon (sponsor page precedes,
+   colophon keeps the terminal slot); carry-through into derivative media
+   (sponsor frame before the organizer end-card) and share images;
+   transparency labeling appropriate to minors' surfaces; coexistence and
+   conflict rules when organizer and sponsor are both present. Product ref:
+   /partners placements + trophy_plan.md sponsor tiers.
