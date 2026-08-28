@@ -183,6 +183,21 @@ async function initDb() {
     );
 
 
+    -- Inbound inquiries from the public /partners page (sponsors, press,
+    -- organizers arriving through the front door). No user_id: senders are
+    -- outsiders by definition. Also defensively created by routes/partners.js.
+    CREATE TABLE IF NOT EXISTS partner_inquiries (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      company TEXT,
+      email TEXT NOT NULL,
+      category TEXT NOT NULL,
+      message TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'new',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+
     CREATE TABLE IF NOT EXISTS org_uploads (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       org_id INTEGER REFERENCES organizations(id),

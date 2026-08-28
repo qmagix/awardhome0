@@ -305,3 +305,18 @@ categories ("Grand Lines") in `award_type`/`category` — this surface is the cl
 - **Model:** in the Upcoming Events directory and org-page "On Tour" sections, Register buttons default to the ghost style; featured events render in gold. Gold = `organizations.is_sponsor` (org-wide partner tier, superadmin "Sponsor" toggle on /admin/orgs) OR `org_upcoming_events.gold` ('free' | 'paid', per event). **Emphasis only — listing order, dates, and results are never sponsored**; that neutrality is the product being sold.
 - **Launch mechanics:** every organizer gets ONE free gold button, placed/moved from the dashboard's Upcoming Events tab (`POST /manage/org/:id/upcoming/:eventId/gold`, action 'free' relocates it; admins may mark 'paid' or clear). Free golds were seeded onto each org's earliest upcoming event, so the directory shows gold from day one. Additional buttons are per-event purchases opening **October 15, 2026** (~1 month post-launch) — a synchronized market open, so no organizer can watch an empty early window and conclude nobody's buying. Purchases handled off-platform (email) for now; superadmin marks paid.
 - **Disclosure doubles as marketing:** directory footnote — "Gold Register buttons are featured placements from partner organizers — one of the ways AwardHome stays free… Listing order is never sponsored." Organizer FAQ "What does this cost?" explains the model openly (core free forever; first gold free; extras from Oct 15).
+
+## Partners page (2026-08-27)
+Public `/partners` (routes/partners.js + views/partners.ejs; footer link) — inbound
+mini media-kit for sponsors/press/organizers arriving through the front door:
+live platform stats (10-min `partner-stats` cache), three placement cards (card
+coin, colophon page, season-planning gold button), inquiry form (name/company/
+email/category/message) with honeypot + 5-per-hour-per-IP rate limit + global
+CSRF; rows land in `partner_inquiries` (schema in database.js, defensively
+created by the route), reviewers emailed per inquiry (getReviewerEmails chain),
+PRG redirect to `?sent=1` thank-you banner. Deliberately OUTSIDE the beta gate
+(must work for outsiders during the pre-launch invite window). Deliberate NOs
+(2026-08-27): no public investor page (industry norm — public investor forms
+attract ~100% spam; quiet hello@ line + private one-pager on request instead)
+and no AI-assisted intake (simple form wins at this volume; AI assists in the
+founder's inbox, not on the site).

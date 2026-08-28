@@ -273,6 +273,7 @@ app.use(require('./routes/dance/studios'));
 app.use(require('./routes/dance/dancers'));
 app.use(require('./routes/admin'));
 app.use(require('./routes/feedback'));
+app.use(require('./routes/partners'));
 app.use(require('./routes/dance/public'));
 
 // Sentry error handler must come after routers, before our own handler

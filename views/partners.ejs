@@ -1,0 +1,110 @@
+<%
+  const fmt = (v) => v >= 1e6 ? (Math.floor(v / 1e5) / 10) + 'M+'
+             : v >= 1e5 ? Math.floor(v / 1e3) + 'K+'
+             : v >= 1e3 ? (Math.floor(v / 100) * 100).toLocaleString() + '+'
+             : String(v);
+%>
+<%- include('partials/header', { pageTitle: 'Partner with AwardHome', pageDesc: 'Put your brand inside the moments dance families share — sponsorship and partnership opportunities on AwardHome.' }) %>
+
+<style>
+  .partners-wrap { max-width: 900px; margin: 3rem auto 4rem; padding: 0 1.5rem; }
+  .partners-hero h1 { font-size: 2.2rem; margin-bottom: 0.75rem; }
+  .partners-hero p { color: var(--text-muted); max-width: 46rem; line-height: 1.6; }
+  .partner-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin: 2.5rem 0; }
+  .pstat { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem 1rem; text-align: center; }
+  .pstat b { display: block; font-size: 1.7rem; color: var(--primary); font-weight: 800; }
+  .pstat span { color: var(--text-muted); font-size: 0.85rem; letter-spacing: 0.04em; text-transform: uppercase; }
+  .placements { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin: 1.5rem 0 2.5rem; }
+  .placement { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.4rem; }
+  .placement h3 { margin: 0.6rem 0 0.5rem; font-size: 1.05rem; }
+  .placement p { color: var(--text-muted); font-size: 0.92rem; line-height: 1.55; margin: 0; }
+  .pv-coin { width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--primary); display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: var(--primary); letter-spacing: 0.05em; }
+  .pv-page { width: 44px; height: 44px; border-radius: 6px; background: linear-gradient(160deg, #f9f0d8, #e3c98f); border: 1px solid #c9a961; display: flex; align-items: center; justify-content: center; font-size: 0.55rem; color: #6d5626; text-align: center; }
+  .pv-gold { display: inline-block; padding: 0.45rem 1rem; border-radius: 999px; background: linear-gradient(135deg, #f5d061, #d4af37); color: #2a2005; font-weight: 700; font-size: 0.8rem; }
+  .partner-form { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.75rem; margin-top: 1rem; }
+  .partner-form label { display: block; margin: 0.9rem 0 0.3rem; font-weight: 600; font-size: 0.9rem; }
+  .partner-form input, .partner-form select, .partner-form textarea {
+    width: 100%; padding: 0.7rem; border-radius: 8px; border: 1px solid var(--border-color);
+    background: rgba(0,0,0,0.25); color: white; font: inherit; box-sizing: border-box;
+  }
+  .partner-form textarea { min-height: 130px; resize: vertical; }
+  .partner-submit { margin-top: 1.25rem; padding: 0.8rem 2rem; border: none; border-radius: 999px; background: var(--primary); color: #1a1405; font-weight: 700; font-size: 1rem; cursor: pointer; }
+  .sent-banner { background: rgba(74, 222, 128, 0.12); border: 1px solid rgba(74, 222, 128, 0.4); color: #86efac; border-radius: 12px; padding: 1rem 1.25rem; margin: 1.5rem 0; }
+  .quiet-line { color: var(--text-muted); font-size: 0.9rem; margin-top: 2rem; }
+  .hp-field { position: absolute; left: -9999px; opacity: 0; height: 0; overflow: hidden; }
+  .section-eyebrow { color: var(--primary); font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700; margin: 2.25rem 0 0.25rem; }
+</style>
+
+<div class="partners-wrap">
+  <div class="partners-hero">
+    <h1>Partner with AwardHome</h1>
+    <p>AwardHome is where competitive-dance families relive and share their proudest
+    moments — a permanent, beautiful archive of results from events nationwide.
+    Brands that support dancers belong inside those moments, and our patent-pending
+    award cards were designed to carry them.</p>
+  </div>
+
+  <% if (sent) { %>
+    <div class="sent-banner">Thank you — your message is on its way. We read every
+    inquiry and typically reply within a couple of business days.</div>
+  <% } %>
+
+  <div class="partner-stats">
+    <div class="pstat"><b><%= fmt(stats.awards) %></b><span>awards archived</span></div>
+    <div class="pstat"><b><%= fmt(stats.events) %></b><span>events</span></div>
+    <div class="pstat"><b><%= stats.orgs %></b><span>competitions</span></div>
+    <div class="pstat"><b><%= fmt(stats.dancers) %></b><span>dancer profiles</span></div>
+  </div>
+
+  <div class="section-eyebrow">Where your brand lives</div>
+  <div class="placements">
+    <div class="placement">
+      <div class="pv-coin">LOGO</div>
+      <h3>The card coin</h3>
+      <p>Your mark, hand-fitted by our design team onto the award cards dancers and
+      parents share on social media — placement that travels with every screenshot.</p>
+    </div>
+    <div class="placement">
+      <div class="pv-page">Presented<br>by</div>
+      <h3>The colophon page</h3>
+      <p>Award cards flip into a mini-book; the closing page credits the presenter.
+      A natural home for event sponsors and title partners.</p>
+    </div>
+    <div class="placement">
+      <span class="pv-gold">Register</span>
+      <h3>Season-planning placements</h3>
+      <p>Studios browse our Upcoming Events directory when they book their season.
+      Highlighted placement puts your event's registration one click away.</p>
+    </div>
+  </div>
+
+  <div class="section-eyebrow">Get in touch</div>
+  <form class="partner-form" method="POST" action="/partners">
+    <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+    <div class="hp-field" aria-hidden="true">
+      <label>Website</label>
+      <input type="text" name="website" tabindex="-1" autocomplete="off">
+    </div>
+    <label for="p-name">Your name</label>
+    <input id="p-name" name="name" required maxlength="200">
+    <label for="p-company">Company or organization</label>
+    <input id="p-company" name="company" maxlength="200">
+    <label for="p-email">Email</label>
+    <input id="p-email" name="email" type="email" required maxlength="200">
+    <label for="p-category">I'm reaching out as a…</label>
+    <select id="p-category" name="category" required>
+      <option value="sponsor">Brand / sponsor</option>
+      <option value="press">Press / media</option>
+      <option value="organizer">Competition organizer</option>
+      <option value="other">Other</option>
+    </select>
+    <label for="p-message">Message</label>
+    <textarea id="p-message" name="message" required maxlength="4000"
+      placeholder="Tell us a little about your brand and what you have in mind."></textarea>
+    <button class="partner-submit" type="submit">Send</button>
+  </form>
+
+  <p class="quiet-line">Other inquiries: <a href="mailto:hello@awardhome.com" style="color: var(--primary);">hello@awardhome.com</a></p>
+</div>
+
+<%- include('partials/footer') %>
