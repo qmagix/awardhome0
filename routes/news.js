@@ -15,7 +15,7 @@ const ARTICLES = [
     slug: 'awardhome-launches-september-15',
     title: 'AwardHome opens to the public on September 15',
     date: '2026-08-15',
-    summary: 'The digital trophy case for competitive dance — 1.5 million awards, 27 competitions, one home — opens to everyone on September 15.',
+    summary: 'The digital curated trophy case for competitive dance — over a million awards from dozens of competitions, one home — opens to everyone on September 15.',
   },
   {
     slug: 'why-awardhome-exists',
