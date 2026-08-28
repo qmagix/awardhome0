@@ -1,6 +1,9 @@
 :root {
   /* AwardHome black & gold system — shared with the landing page */
   --primary: #d4af37;
+  /* Alias used widely by FAQ/admin/manage views; was referenced for months
+     without a definition, silently rendering as inherited text color. */
+  --accent-gold: #d4af37;
   --primary-hover: #f3e5ab;
   --gold-light: #f3e5ab;
   --gold-dark: #aa8529;
@@ -2870,4 +2873,18 @@ footer {
 @supports not (width: 1cqw) {
   .tcb-flag { right: 8px; bottom: 8px; width: 22px; height: 22px; font-size: 10px; }
   .tcb-flag-inline { font-size: 9px; margin-left: 3px; }
+}
+
+/* Links inside FAQ answers and news articles must LOOK like links — the
+   gold alone reads as emphasis (same color as .faq-highlight). Dotted
+   underline + arrow glyph, solid on hover. */
+.faq-answer a, .article-body a {
+  color: var(--accent-gold, #d4af37);
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+.faq-answer a:hover, .article-body a:hover { text-decoration: underline solid; }
+.faq-answer a::after, .article-body a::after {
+  content: ' \2197';
+  font-size: 0.8em;
 }
