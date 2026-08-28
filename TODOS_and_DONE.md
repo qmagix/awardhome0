@@ -13,6 +13,7 @@
 
 ### IP / Legal
 - [x] (DONE 2026-08-27) **U.S. Provisional Application No. 64/142,611 FILED** (P1+P3 combined: flip-book/multi-face card system + DancerID; spec w/ claims 1-21, FIGS. 1-14, SUPP. FIGS. A-G). "Patent Pending" now usable in marketing/outreach. Freeze list LIFTED (flip-book rollout, demos, outreach OK). See provisional_patent_plan.md banner.
+- [ ] **On the SECOND filing (P2 or sponsor-page follow-on): flip footers to "Patents pending"** (plural becomes true then; today's unscoped singular "Patent pending" is deliberate — maximal legitimate ambiguity, provisionals are unpublished so scope is unknowable to copycats; NEVER mark plural/scope beyond actual filings — 35 USC 292).
 - [ ] **2027-06-27 checkpoint (calendar it!):** convert / PCT / refile decision. HARD deadline 2027-08-27 (non-extendable).
 - [ ] P2 provisional (staged-import pipeline A1/A2) — self-draft from docs/db_operations.md per plan §4; decide by the month-10 checkpoint.
 - [ ] Post-filing features beyond the spec need follow-on provisionals before public ship — check maybe_patentable.md before releasing anything novel. **Queue so far: sponsor credit page ("made possible by X" — NOT in 64/142,611; see plan's "New matter" section). Bundle with P2 filing or file standalone before the feature ships.**
