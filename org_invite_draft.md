@@ -247,3 +247,92 @@ it's one email. The door stays open.
 **Never say:** "scrape", "we're legally allowed", "public data" as a retort,
 anything about other organizers' arrangements. **Always:** family-first
 framing, a concrete day count, the open door.
+
+---
+
+## v5 first-touch letter (reviewed + fact-checked 2026-08-27)
+
+*(v5: numbers refreshed to 1.5M awards / 4,200+ events / 27 competitions —
+all verified against the live DB, incl. the YAGP/Starpower/KAR/NYCDA/Rainbow
+name-drops; #4 attendance-analytics claim time-stamped honestly (feature is
+planned, not shipped); "Founding Partner" naming KEPT after review (time-anchored
+scarcity; "Special Partner" too vague, "sister organizations" implies corporate
+affiliation). PRE-SEND BLOCKERS: (1) beta gate — public /dance/* links in this
+letter dead-end for outsiders until BETA_MODE lifts or links carry ?beta=KEY;
+(2) reconcile launch date: letter says Oct 1, features.md gold-button pricing
+says "Oct 15, ~1 month post-launch" ⇒ ~Sept 15.)*
+
+Hi {FIRST_NAME},
+
+I'm Sam, founder of AwardHome — the award curation platform for competitive
+dance. We aggregate results from events nationwide into beautiful, shareable
+award pages for dancers and studios: today that's over 1.5 million awards from
+4,200+ events across 27 competitions, including YAGP, Starpower, KAR, NYCDA,
+and Rainbow.
+
+We'd love to feature {ORG_NAME} alongside them.
+
+The offer, plainly: send us your results in whatever format you have — CSV,
+Excel, PDFs, database exports, anything, one event or your entire history in a
+single zip or Drive link — and we handle 100% of the processing. Zero technical
+work on your end, free during our beta period (formal launch planned for
+{LAUNCH_DATE}).
+
+What {ORG_NAME} gets:
+
+1. **Your brand on every award card dancers share.** Organizers get a free
+   branding dashboard — your logo and custom trophy icons, hand-fitted onto our
+   patent-pending award cards by our design team — so your brand stays visible
+   on social media long after the event ends.
+
+2. **Permanent, searchable results.** Dancers and parents constantly search for
+   old placements. We host them forever, interactively — no more fielding
+   "where can I find 2023 results?" emails, and your events sit beside the
+   biggest names in the industry for every studio browsing the platform.
+
+3. **Your tour dates, where studios plan their season.** Our Upcoming Events
+   directory gathers every circuit's published dates in one place — studios and
+   parents browse it when deciding which competitions to attend, sorted by
+   distance, and they can shortlist your events and export them straight into
+   their family calendars, with your registration one click away. You control
+   your dates from your dashboard; complete, current listings are what turn
+   browsers into bookings.
+
+4. **Attendance insights, partners first.** Our first organizer analytics —
+   which studios attend your events and where they travel from — are rolling
+   out this fall, and partner organizations get them first.
+
+One more thing, while it's early: we're inviting a limited group of **Founding
+Partner** organizations this season. Founding Partners pledge a handful of free
+entries to their own events — we award them to standout dancers on the platform
+as surprise rewards, each one credited "provided by {ORG_NAME}" — and in return
+get first access to premium organizer features as the platform grows. A pledged
+entry costs you an empty slot; it returns a proven competitive dancer to your
+stage. If that sounds interesting, mention it when you reply and I'll hold
+{ORG_NAME} a founding slot.
+
+Claiming your free organizer account takes about two minutes with your private
+access link — and your dashboard walks you through the whole setup in three
+steps (upload results, add your profile, send us your logo):
+
+{CLAIM_LINK}
+
+Or if you have a recent results file or links handy, just reply with it
+attached — or with a Google Drive or Dropbox link — and we'll build a live demo
+page for {ORG_NAME}, usually within a few days.
+
+However this lands, one thing is true either way: we'd welcome {ORG_NAME} as a
+partner, not just a name in our archive. And if anything on AwardHome could
+serve you better — how your events are presented, a feature you wish existed,
+anything at all — just tell us. We're building this for the people who actually
+run competitions and for the dancers preserving those memories, so your
+thoughts and needs genuinely shape what we build next.
+
+Thank you for everything you do for the dance community.
+
+Best regards,
+
+Sam
+Founder, AwardHome
+https://awardhome.com
+hello@awardhome.com
