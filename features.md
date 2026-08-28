@@ -368,3 +368,15 @@ flags `resolved_reinstated`), later flags only queue (⚑ "Viewer Flags on Live 
 section, Keep/Remove via `/api/admin/flag-resolve`) — one auto-dark per content per
 human decision, verified end-to-end incl. second-flagger case. Approve/reject/revoke
 handlers resolve open flags. `content_flags` table in database.js.
+
+## Demo award card (2026-08-28)
+`views/partials/demo_card.ejs` — a live, playable flip-book card with fictional
+data (Peacock Cup / Angela Ng / Swanlake Dance; peacock-crest coin as inline SVG
+data URI) for "show, don't tell" embeds. Include with `{ demo: {...} }` overrides;
+all fields optional. Inert by construction: no flag buttons (no ack_id), no studio
+link, share button hidden (.demo-card-wrap .tcb-share). Embedded in organizer FAQ
+Q1 (colophon-slanted: "the closing page is yours") and dancer FAQ §9 (ack-slanted).
+REMEMBER: any new surface rendering flip-cards must join the container-type list
+in styles.css (~line 1133) or cqw falls back to viewport units and the card
+renders 3x oversized (the lightbox bug, rediscovered by this feature).
+flipbook.js is now double-load-safe (swipe listeners bind once).

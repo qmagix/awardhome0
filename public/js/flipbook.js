@@ -35,6 +35,10 @@ function tcbNavKey(card, dir) {
 // dataset.swiped tells the card's click handler to swallow the click some
 // browsers still fire after a swipe.
 (function () {
+  // Idempotency: the demo-card partial loads this file on pages that may
+  // load it again elsewhere; bind document listeners once.
+  if (window.__fbSwipeBound) return;
+  window.__fbSwipeBound = true;
   let tcbTouch = null;
   document.addEventListener('touchstart', function (e) {
     const card = e.target.closest('.flip-card.flipbook.flipped');

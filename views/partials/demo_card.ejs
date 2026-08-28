@@ -1,0 +1,48 @@
+<%#
+  Reusable DEMO award card: a live, playable flip-book card with fictional
+  data, for FAQs and marketing surfaces (show, don't tell). Include with
+  locals { demo: {...} } — all fields optional; defaults are the fictional
+  Peacock Cup / Angela Ng / Swanlake Dance trio. Content is inert: no flag
+  buttons (no ack_id), no studio link (unclaimed), award.id 0. See the
+  organizer FAQ for a usage example.
+#%>
+<%
+  const d = (typeof demo !== 'undefined' && demo) || {};
+  const demoDancer = {
+    id: 1,
+    name: d.dancerName || 'Angela Ng',
+    vanity_tag: d.vanityTag || null,
+    card_photo_url: null,
+  };
+  const demoAward = {
+    id: 0,
+    place: d.place || '1st',
+    award_class: 'adjudication',
+    is_first_place: 1,
+    award_type: d.awardType || 'Top Junior Solo',
+    performance_name: d.performanceName || 'Feathers of Gold',
+    category: d.category || 'Lyrical',
+    age_division: d.ageDivision || null,
+    event_name: d.eventName || 'Peacock Cup - Grand Finale',
+    event_year: d.eventYear || 2026,
+    org_name: d.orgName || 'Peacock Cup',
+    studio_name: d.studioName || 'Swanlake Dance',
+    studio_unique_id: null,
+    studio_claimed: 0,
+    is_self_added: 0,
+    dancer_count: 1,
+    logo_url: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%2314110c' stroke='%23d4af37' stroke-width='2.5'/%3E%3Cg stroke='%23d4af37' stroke-width='2' fill='none' stroke-linecap='round'%3E%3Cpath d='M32 50 V26'/%3E%3Cpath d='M32 34 C22 30 18 22 19 14'/%3E%3Cpath d='M32 34 C42 30 46 22 45 14'/%3E%3Cpath d='M32 30 C26 24 25 18 26 12'/%3E%3Cpath d='M32 30 C38 24 39 18 38 12'/%3E%3C/g%3E%3Ccircle cx='32' cy='20' r='5' fill='%2314110c' stroke='%23d4af37' stroke-width='2'/%3E%3Ccircle cx='32' cy='20' r='1.8' fill='%23f3c545'/%3E%3C/svg%3E",
+    customIconsObj: { logo_approved: true, colophon_message: d.colophonMessage || 'Every feather earned on stage.' },
+    acks: [{ dancer_id: 1, dancer_name: d.dancerName || 'Angela Ng',
+             message: d.ackMessage || "Thank you Coach Marina and my Swanlake family - this one's for all of us!" }],
+    award_photo_url: null,
+  };
+%>
+<div class="demo-card-wrap">
+  <%- include('dancer_award_card', {
+        award: demoAward, dancer: demoDancer, isGroupAward: false,
+        cardDesign: 'flipbook', featureNotes: true, featurePhotos: false,
+        featureReactions: false, cardEditMode: false }) %>
+  <p class="demo-card-hint">A sample card with fictional data &mdash; tap it to flip, then use the arrows to turn the pages.</p>
+</div>
+<script src="/js/flipbook.js"></script>

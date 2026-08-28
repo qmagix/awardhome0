@@ -1131,7 +1131,8 @@ a:hover {
      lightbox-on-desktop overflow bug). Both have definite widths — the
      grid track or the explicit lightbox width — so containment is safe. */
   .awards-grid .flip-card,
-  .card-lightbox .flip-card {
+  .card-lightbox .flip-card,
+  .demo-card-wrap .flip-card {
     container-type: inline-size;
   }
 
@@ -2938,3 +2939,16 @@ footer {
   color: #7a7259;
   margin-top: 1.2rem;
 }
+
+/* Demo card embeds (FAQs, marketing): a single playable card, centered. */
+.demo-card-wrap { max-width: 300px; margin: 1.75rem auto; }
+.demo-card-wrap .flip-card { width: 100%; }
+.demo-card-hint {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  margin-top: 0.75rem;
+}
+
+/* Demo cards are inert: no share (no real page behind them). */
+.demo-card-wrap .tcb-share { display: none; }
