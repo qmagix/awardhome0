@@ -275,6 +275,7 @@ app.use(require('./routes/admin'));
 app.use(require('./routes/feedback'));
 app.use(require('./routes/partners'));
 app.use(require('./routes/news'));
+app.use(require('./routes/flags'));
 app.use(require('./routes/dance/public'));
 
 // Sentry error handler must come after routers, before our own handler

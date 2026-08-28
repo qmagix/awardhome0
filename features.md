@@ -354,3 +354,17 @@ Two owner controls, both claimed-profile-only (privacy concern -> claim funnel):
 Copy doctrine (3rd application, 2026-08-28): moderation described as MECHANISM
 ("goes live once approved"), never as promise ("our team reviews") — FAQ §6/§9 +
 launch article aligned. Sweep/gate/sentinel gained hidden-card + optout strata.
+
+## Community flagging (2026-08-28)
+Viewers flag USER-ADDED card content only — photos (`award_photo`/`default_photo`)
+and thank-you notes (`ack`) — NEVER award facts (confirmed scope; official results
+cannot be mobbed off the archive). Mechanics: quiet ⚑ buttons on the flipbook photo
+page + per ack line (public render only) → `POST /api/flag-card-content` (10/hr/IP,
+CSRF, one flag per content per flagger via UNIQUE, unknown-content probes get generic
+success). First open flag on APPROVED content demotes it to `pending` — conditional
+materialization unpublishes instantly, zero new render logic — and it reappears in
+/admin/card-content. **Griefing guard:** once a human reinstates (approve resolves
+flags `resolved_reinstated`), later flags only queue (⚑ "Viewer Flags on Live Content"
+section, Keep/Remove via `/api/admin/flag-resolve`) — one auto-dark per content per
+human decision, verified end-to-end incl. second-flagger case. Approve/reject/revoke
+handlers resolve open flags. `content_flags` table in database.js.

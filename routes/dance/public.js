@@ -1271,7 +1271,7 @@ router.get('/dancer/:unique_id', profileLimiter, async (req, res) => {
     try {
       const ids = awards.map(a => a.id);
       const acks = await db.all(`
-        SELECT aa.award_id, aa.dancer_id, aa.message, d.name as dancer_name
+        SELECT aa.id as ack_id, aa.award_id, aa.dancer_id, aa.message, d.name as dancer_name
         FROM award_acknowledgements aa
         JOIN dancers d ON aa.dancer_id = d.id
         WHERE aa.status = 'approved' AND aa.award_id IN (${ids.map(() => '?').join(',')})
@@ -1294,12 +1294,14 @@ router.get('/dancer/:unique_id', profileLimiter, async (req, res) => {
     try {
       const ids = awards.map(a => a.id);
       const photos = await db.all(`
-        SELECT award_id, photo_url FROM award_card_photos
+        SELECT id, award_id, photo_url FROM award_card_photos
         WHERE dancer_id = ? AND status = 'approved' AND award_id IN (${ids.map(() => '?').join(',')})
       `, [dancer.id, ...ids]);
       const photoMap = {};
+      const photoIdMap = {};
+      photos.forEach(ph => { photoIdMap[ph.award_id] = ph.id; });
       photos.forEach(p => { photoMap[p.award_id] = p.photo_url; });
-      awards.forEach(a => { a.award_photo_url = photoMap[a.id] || null; });
+      awards.forEach(a => { a.award_photo_url = photoMap[a.id] || null; a.award_photo_id = photoIdMap[a.id] || null; });
     } catch (e) { /* table missing before first migrate — fallback photo still shows */ }
   }
 

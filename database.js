@@ -195,6 +195,25 @@ async function initDb() {
     );
 
 
+    -- Community flags on USER-ADDED card content (never award facts).
+    -- First open flag on approved content demotes it to 'pending' (so
+    -- conditional materialization unpublishes it instantly) UNLESS a prior
+    -- flag on the same content was resolved 'reinstated' — then new flags
+    -- only queue for review (griefing guard: one auto-dark per content
+    -- until a human reinstates; after that, humans decide).
+    CREATE TABLE IF NOT EXISTS content_flags (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      content_type TEXT NOT NULL,
+      content_id INTEGER NOT NULL,
+      flagger_user_id INTEGER REFERENCES users(id),
+      flagger_key TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'open',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      resolved_at DATETIME,
+      UNIQUE(content_type, content_id, flagger_key)
+    );
+
+
     -- Inbound inquiries from the public /partners page (sponsors, press,
     -- organizers arriving through the front door). No user_id: senders are
     -- outsiders by definition. Also defensively created by routes/partners.js.

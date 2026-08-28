@@ -7,6 +7,28 @@
   </div>
 
   <div class="card glass-card" style="margin-bottom: 2rem;">
+    <% if (flaggedLive && flaggedLive.length) { %>
+    <div class="card glass-card" style="margin-bottom: 1.5rem; border-color: rgba(224, 179, 87, 0.5);">
+      <h2 style="color: var(--primary); margin-bottom: 0.5rem;">⚑ Viewer Flags on Live Content (<%= flaggedLive.length %>)</h2>
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+        This content was previously reinstated after review, so new flags no longer take it down
+        automatically — you decide. <strong>Keep</strong> dismisses the flags; <strong>Remove</strong> unpublishes.</p>
+      <% flaggedLive.forEach(function(f) { %>
+        <div style="display: flex; align-items: center; gap: 1rem; padding: 0.6rem 0; border-top: 1px solid var(--border-color);" data-flag-row>
+          <span style="color: var(--text-muted); font-size: 0.8rem; min-width: 90px;"><%= f.content_type %> · <%= f.flag_count %> flag<%= f.flag_count > 1 ? 's' : '' %></span>
+          <% if (f.content_type === 'ack') { %>
+            <span style="flex: 1;">&ldquo;<%= f.content_preview %>&rdquo;</span>
+          <% } else { %>
+            <img src="<%= f.content_preview %>" style="height: 48px; border-radius: 6px;" alt="flagged photo">
+            <span style="flex: 1;"></span>
+          <% } %>
+          <button class="btn btn-primary" onclick="resolveFlag(this, '<%= f.content_type %>', <%= f.content_id %>, 'keep')">Keep</button>
+          <button class="btn" style="border: 1px solid #c0392b; color: #e57368;" onclick="resolveFlag(this, '<%= f.content_type %>', <%= f.content_id %>, 'remove')">Remove</button>
+        </div>
+      <% }); %>
+    </div>
+    <% } %>
+
     <h2 style="color: var(--primary); margin-bottom: 1rem;">📸 Pending Default Card Photos (<%= pendingPhotos.length %>)</h2>
     <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">One per dancer — the fallback shown on cards without their own award photo.</p>
     <% if (pendingPhotos.length === 0) { %>
@@ -163,3 +185,16 @@
 </script>
 
 <%- include('partials/footer') %>
+
+<script>
+  async function resolveFlag(btn, type, id, action) {
+    btn.disabled = true;
+    const res = await fetch('/api/admin/flag-resolve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content_type: type, content_id: id, action: action }),
+    });
+    if (res.ok) btn.closest('[data-flag-row]').style.opacity = '0.35';
+    else { btn.disabled = false; alert('Failed — try again'); }
+  }
+</script>

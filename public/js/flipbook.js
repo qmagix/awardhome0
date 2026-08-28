@@ -56,3 +56,21 @@ function tcbNavKey(card, dir) {
     }
   }, { passive: true });
 })();
+
+// Community flag on user-added card content (photos, notes). One click,
+// no free text; csrf.js adds the token header. The server may take the
+// content off public display pending another review.
+window.flagCardContent = async function (ev, btn, type, id) {
+  ev.stopPropagation();
+  if (btn.dataset.done) return;
+  btn.dataset.done = '1';
+  try {
+    await fetch('/api/flag-card-content', {
+      method: 'POST',
+      body: new URLSearchParams({ content_type: type, content_id: id }),
+    });
+  } catch (e) { /* best effort */ }
+  btn.textContent = '\u2713';
+  btn.title = 'Reported \u2014 thank you. Our team will take a look.';
+  btn.classList.add('tcb-flag-done');
+};

@@ -224,6 +224,13 @@
             <% if (awardPhoto && award.performance_name) { %>
               <div class="tcb-photo-caption">&ldquo;<%= award.performance_name %>&rdquo;</div>
             <% } %>
+            <% if (awardPhoto && award.award_photo_id) { %>
+              <button type="button" class="tcb-flag" title="Report this photo"
+                onclick="flagCardContent(event, this, 'award_photo', <%= award.award_photo_id %>)">&#9873;</button>
+            <% } else if (!awardPhoto && defaultPhoto) { %>
+              <button type="button" class="tcb-flag" title="Report this photo"
+                onclick="flagCardContent(event, this, 'default_photo', <%= dancer.id %>)">&#9873;</button>
+            <% } %>
           <% } %>
         </div>
       <% } %>
@@ -249,6 +256,8 @@
                   <div class="tcb-ack-line">
                     <span class="tcb-ack-msg">&ldquo;<%= ack.message %>&rdquo;</span>
                     <span class="tcb-ack-author">&mdash; <%= ack.dancer_name %></span>
+                    <% if (ack.ack_id) { %><button type="button" class="tcb-flag tcb-flag-inline" title="Report this note"
+                      onclick="flagCardContent(event, this, 'ack', <%= ack.ack_id %>)">&#9873;</button><% } %>
                   </div>
                 <% }); %>
               </div>
@@ -259,6 +268,8 @@
                 <div class="tcb-ack-line <%= ack.dancer_id === dancer.id ? 'tcb-ack-mine' : '' %>">
                   <span class="tcb-ack-msg">&ldquo;<%= ack.message %>&rdquo;</span>
                   <span class="tcb-ack-author">&mdash; <%= ack.dancer_name %></span>
+                  <% if (ack.ack_id) { %><button type="button" class="tcb-flag tcb-flag-inline" title="Report this note"
+                    onclick="flagCardContent(event, this, 'ack', <%= ack.ack_id %>)">&#9873;</button><% } %>
                 </div>
               <% }); %>
             </div>

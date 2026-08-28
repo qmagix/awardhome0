@@ -166,6 +166,16 @@ router.post('/api/admin/features', requireSuperadmin, express.json(), async (req
 // Concierge gate, same philosophy as logo-coin approval: nothing owner-
 // submitted reaches a public card until a superadmin has seen it (authors
 // are often minors; group acks surface on teammates' pages too).
+
+// Resolve open community flags when a moderation decision lands.
+async function resolveFlags(db, contentType, contentId, approved) {
+  try {
+    await db.run(
+      "UPDATE content_flags SET status = ?, resolved_at = CURRENT_TIMESTAMP WHERE content_type = ? AND content_id = ? AND status = 'open'",
+      [approved ? 'resolved_reinstated' : 'resolved_removed', contentType, contentId]);
+  } catch (e) { /* table missing until migrate */ }
+}
+
 router.get('/admin/card-content', requireSuperadmin, async (req, res) => {
   const db = await openDb();
 
@@ -227,7 +237,27 @@ router.get('/admin/card-content', requireSuperadmin, async (req, res) => {
     `);
   } catch (e) { /* table missing until `node database.js` runs */ }
 
-  res.render('admin_card_content', { user: req.session.user, pendingPhotos, pendingAcks, pendingAwardPhotos, autoApproved });
+  // Community flags on content that is still LIVE (previously human-
+  // reinstated, so new flags no longer auto-dark — a human decides here).
+  let flaggedLive = [];
+  try {
+    flaggedLive = await db.all(`
+      SELECT cf.id as flag_id, cf.content_type, cf.content_id, cf.created_at,
+             COUNT(*) OVER (PARTITION BY cf.content_type, cf.content_id) as flag_count,
+             CASE cf.content_type
+               WHEN 'ack' THEN (SELECT aa.message FROM award_acknowledgements aa WHERE aa.id = cf.content_id AND aa.status = 'approved')
+               WHEN 'award_photo' THEN (SELECT ap.photo_url FROM award_card_photos ap WHERE ap.id = cf.content_id AND ap.status = 'approved')
+               WHEN 'default_photo' THEN (SELECT d2.card_photo_url FROM dancers d2 WHERE d2.id = cf.content_id AND d2.card_photo_status = 'approved')
+             END as content_preview
+      FROM content_flags cf
+      WHERE cf.status = 'open'
+      GROUP BY cf.content_type, cf.content_id
+      HAVING content_preview IS NOT NULL
+      ORDER BY cf.created_at DESC LIMIT 50
+    `);
+  } catch (e) { /* table missing until migrate */ }
+
+  res.render('admin_card_content', { user: req.session.user, pendingPhotos, pendingAcks, pendingAwardPhotos, autoApproved, flaggedLive });
 });
 
 
@@ -237,6 +267,7 @@ router.post('/api/admin/card-ack/:id/revoke', requireSuperadmin, express.json(),
   const db = await openDb();
   const row = await db.get("SELECT dancer_id, message FROM award_acknowledgements WHERE id = ? AND status = 'approved'", [req.params.id]);
   if (row) {
+    await resolveFlags(db, 'ack', parseInt(req.params.id), false);
     await db.run(`
       UPDATE award_acknowledgements SET status = 'rejected', updated_at = CURRENT_TIMESTAMP
       WHERE dancer_id = ? AND message = ? AND status = 'approved'
@@ -258,6 +289,7 @@ router.post('/api/admin/card-award-photo/:id', requireSuperadmin, express.json()
       UPDATE award_card_photos SET status = ?, updated_at = CURRENT_TIMESTAMP
       WHERE dancer_id = ? AND photo_url = ? AND status = 'pending'
     `, [status, row.dancer_id, row.photo_url]);
+    await resolveFlags(db, 'award_photo', parseInt(req.params.id), status === 'approved');
   }
   res.json({ success: true });
 });
@@ -268,6 +300,7 @@ router.post('/api/admin/card-photo/:dancerId', requireSuperadmin, express.json()
   const status = req.body.action === 'approve' ? 'approved' : 'rejected';
   await db.run("UPDATE dancers SET card_photo_status = ? WHERE id = ? AND card_photo_status = 'pending'",
     [status, req.params.dancerId]);
+  await resolveFlags(db, 'default_photo', parseInt(req.params.dancerId), status === 'approved');
   res.json({ success: true });
 });
 
@@ -283,10 +316,28 @@ router.post('/api/admin/card-ack/:id', requireSuperadmin, express.json(), async 
       UPDATE award_acknowledgements SET status = ?, updated_at = CURRENT_TIMESTAMP
       WHERE dancer_id = ? AND message = ? AND status = 'pending'
     `, [status, row.dancer_id, row.message]);
+    await resolveFlags(db, 'ack', parseInt(req.params.id), status === 'approved');
   }
   res.json({ success: true });
 });
 
+
+// Decide a flag on still-live content: keep (dismiss flags) or remove.
+router.post('/api/admin/flag-resolve', requireSuperadmin, express.json(), async (req, res) => {
+  const db = await openDb();
+  const { content_type, content_id, action } = req.body || {};
+  const keep = action === 'keep';
+  if (!['ack', 'award_photo', 'default_photo'].includes(content_type) || !parseInt(content_id)) {
+    return res.status(400).json({ error: 'Bad request' });
+  }
+  if (!keep) {
+    if (content_type === 'ack') await db.run("UPDATE award_acknowledgements SET status = 'rejected', updated_at = CURRENT_TIMESTAMP WHERE id = ?", [content_id]);
+    if (content_type === 'award_photo') await db.run("UPDATE award_card_photos SET status = 'rejected', updated_at = CURRENT_TIMESTAMP WHERE id = ?", [content_id]);
+    if (content_type === 'default_photo') await db.run("UPDATE dancers SET card_photo_status = 'rejected' WHERE id = ?", [content_id]);
+  }
+  await resolveFlags(db, content_type, parseInt(content_id), keep);
+  res.json({ success: true });
+});
 
 router.get('/admin', requireAdmin, async (req, res) => {
   const db = await openDb();
