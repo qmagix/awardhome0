@@ -195,7 +195,7 @@ What ${n} gets:
 
 2. Permanent, searchable results. Dancers and parents constantly search for old placements. We host them forever, interactively — no more fielding "where can I find 2023 results?" emails, and your events sit beside the biggest names in the industry for every studio browsing the platform.
 
-3. Your tour dates, where studios plan their season. Our Upcoming Events directory (see it live: ${upcomingUrl}) gathers every circuit's published dates in one place — studios and parents browse it when deciding which competitions to attend, sorted by distance, and they can shortlist your events and export them straight into their family calendars, with your registration one click away. You control your dates from your dashboard; complete, current listings are what turn browsing into bookings.
+3. Your tour dates, where studios plan their season. Our Upcoming Events directory gathers every circuit's published dates in one place — studios and parents browse it when deciding which competitions to attend, sorted by distance, and they can shortlist your events and export them straight into their family calendars, with your registration one click away. You control your dates from your dashboard; complete, current listings are what turn browsing into bookings. See it live: ${upcomingUrl}
 
 Curious how it all works? Our organizer FAQ covers the common questions — data formats, branding, what it costs — and includes a sample award card you can actually flip: ${BASE_URL}/faq/organizer
 
