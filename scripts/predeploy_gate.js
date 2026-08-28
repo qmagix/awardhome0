@@ -49,6 +49,10 @@ async function main() {
       WHERE logo_url IS NOT NULL AND id IN (
         SELECT o.id FROM organizations o JOIN events e ON e.org_id=o.id
         JOIN awards a ON a.event_id=e.id GROUP BY o.id ORDER BY COUNT(*) DESC LIMIT 3);
+    INSERT OR IGNORE INTO dancer_card_hidden (dancer_id, award_id)
+      SELECT dancer_id, award_id FROM award_dancers LIMIT 200;
+    UPDATE dancers SET hide_from_rankings = 1
+      WHERE id IN (SELECT dancer_id FROM award_dancers LIMIT 50);
     UPDATE organizations SET custom_icons = '{corrupt json'
       WHERE id = (SELECT o.id FROM organizations o JOIN events e ON e.org_id=o.id
         JOIN awards a ON a.event_id=e.id GROUP BY o.id ORDER BY COUNT(*) DESC LIMIT 1 OFFSET 3);

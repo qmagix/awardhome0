@@ -250,6 +250,7 @@ async function loadHomepageData() {
     FROM dancers d
     JOIN award_dancers ad ON d.id = ad.dancer_id
     JOIN awards a ON ad.award_id = a.id
+    WHERE COALESCE(d.hide_from_rankings, 0) = 0
     GROUP BY d.id
     ORDER BY total_awards DESC
     LIMIT 500
@@ -262,6 +263,7 @@ async function loadHomepageData() {
     JOIN awards a ON ad.award_id = a.id
     JOIN events e ON a.event_id = e.id
     WHERE e.year = (SELECT MAX(year) FROM events)
+      AND COALESCE(d.hide_from_rankings, 0) = 0
     GROUP BY d.id
     ORDER BY total_awards DESC
     LIMIT 500
@@ -274,6 +276,7 @@ async function loadHomepageData() {
     JOIN awards a ON ad.award_id = a.id
     JOIN events e ON a.event_id = e.id
     WHERE a.is_first_place = 1 AND e.year = (SELECT MAX(year) FROM events)
+      AND COALESCE(d.hide_from_rankings, 0) = 0
     GROUP BY d.id
     ORDER BY total_awards DESC
     LIMIT 500
@@ -1198,9 +1201,11 @@ router.get('/dancer/:unique_id', profileLimiter, async (req, res) => {
     LEFT JOIN organizations o ON e.org_id = o.id
     LEFT JOIN studios s ON a.studio_id = s.id
     LEFT JOIN award_dancers ad ON a.id = ad.award_id
-    WHERE a.dancer_id = ? OR ad.dancer_id = ?
+    WHERE (a.dancer_id = ? OR ad.dancer_id = ?)
+      AND NOT EXISTS (SELECT 1 FROM dancer_card_hidden h
+                      WHERE h.award_id = a.id AND h.dancer_id = ?)
     ORDER BY e.year DESC, a.award_type, a.place
-  `, [dancer.id, dancer.id]);
+  `, [dancer.id, dancer.id, dancer.id]);
 
   awards.forEach(a => {
     if (a.custom_icons) {

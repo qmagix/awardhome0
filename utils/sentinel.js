@@ -41,6 +41,10 @@ const STRATA = [
       JOIN dancers d ON d.id = p.dancer_id
       WHERE p.status = 'approved' LIMIT 1`,
     path: v => `/dancer/${v}` },
+  { name: 'dancer:hidden-card', sql: `
+      SELECT d.unique_id FROM dancer_card_hidden h
+      JOIN dancers d ON d.id = h.dancer_id LIMIT 1`,
+    path: v => `/dancer/${v}` },
   { name: 'dancer:default-photo', sql: `
       SELECT unique_id FROM dancers
       WHERE card_photo_url IS NOT NULL AND card_photo_status = 'approved' LIMIT 1`,

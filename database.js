@@ -183,6 +183,18 @@ async function initDb() {
     );
 
 
+    -- Owner display preference: hide a specific card from the dancer's
+    -- PUBLIC page only (record stays in the archive, the owner's editor,
+    -- and studio surfaces). Separate table, not an award_dancers column:
+    -- hiding is an overlay preference, not a property of the link.
+    CREATE TABLE IF NOT EXISTS dancer_card_hidden (
+      dancer_id INTEGER NOT NULL REFERENCES dancers(id),
+      award_id INTEGER NOT NULL REFERENCES awards(id),
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (dancer_id, award_id)
+    );
+
+
     -- Inbound inquiries from the public /partners page (sponsors, press,
     -- organizers arriving through the front door). No user_id: senders are
     -- outsiders by definition. Also defensively created by routes/partners.js.
@@ -575,6 +587,7 @@ async function initDb() {
   try { await db.exec("ALTER TABLE studios ADD COLUMN auto_feature_cooldown_until DATETIME"); } catch(e) {}
   try { await db.exec("ALTER TABLE studios ADD COLUMN onboarding_dismissed INTEGER DEFAULT 0"); } catch(e) {}
   try { await db.exec("ALTER TABLE dancers ADD COLUMN vanity_tag TEXT"); } catch(e) {}
+  try { await db.exec("ALTER TABLE dancers ADD COLUMN hide_from_rankings INTEGER DEFAULT 0"); } catch(e) {}
   try {
     // Importers leave created_at NULL; weekly_update.js stamps NULLs after
     // each run, which is also how it detects "events added by this run".

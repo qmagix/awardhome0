@@ -63,6 +63,12 @@
   onkeydown="if(event.target===this&&(event.key==='Enter'||event.key===' ')){event.preventDefault();this.classList.toggle('flipped');}else if(event.target===this&&this.classList.contains('flipped')&&(event.key==='ArrowRight'||event.key==='ArrowLeft')&&window.tcbNavKey){event.preventDefault();tcbNavKey(this,event.key==='ArrowRight'?1:-1);}">
   <div class="flip-card-inner">
             <div class="premium-trophy-card flip-front <%= isPremiumAward(award) ? 'premium-award-border' : '' %>">
+              <% if (editMode) { %>
+                <button type="button" class="card-vis-toggle <%= award.isHidden ? 'card-vis-hidden' : '' %>"
+                  onclick="event.stopPropagation(); editToggleVisibility(this, <%= award.id %>);"
+                  title="<%= award.isHidden ? 'Hidden from your public page — click to show' : 'Shown on your public page — click to hide' %>">
+                  <%= award.isHidden ? 'Hidden' : 'Public' %></button>
+              <% } %>
               <% if (!award.is_self_added) { %>
                 <div class="verified-badge" title="Official Verified Award">
                   <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" width="14"

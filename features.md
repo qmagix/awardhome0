@@ -332,3 +332,19 @@ deploy; local/prod parity automatic; no CMS by design until contributors exist
 (phases 2-3 in ideas.md §10). Seeded: "Why AwardHome exists" (founder origin story)
 + "AwardHome opens to the public on September 15". Links in all THREE footers
 (partials/footer.ejs + public3 + public2 static landings). Byline: Sam.
+
+## Dancer privacy controls (2026-08-28)
+Two owner controls, both claimed-profile-only (privacy concern -> claim funnel):
+- **Per-card hide** — `dancer_card_hidden(dancer_id, award_id)` overlay table (NOT an
+  award_dancers column: preference, not link property). Public dancer page query
+  excludes via NOT EXISTS; the record stays in the archive, the owner's card editor
+  (Public/Hidden toggle, top-left of each card, `POST /manage/dancer/:id/card/visibility`,
+  NOT flag-gated — privacy controls don't wait for release cohorts), and all studio
+  surfaces. One hidden award removes N rendered instances (page pre-renders portrait +
+  landscape grids — expected).
+- **Rankings opt-out** — `dancers.hide_from_rankings` checkbox on Manage Profile;
+  filters the three topDancers* queries (all-time / this-year / first-places). Profile
+  stays reachable by search + direct link; it's exclusion from curated prominence only.
+Copy doctrine (3rd application, 2026-08-28): moderation described as MECHANISM
+("goes live once approved"), never as promise ("our team reviews") — FAQ §6/§9 +
+launch article aligned. Sweep/gate/sentinel gained hidden-card + optout strata.

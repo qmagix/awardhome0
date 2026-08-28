@@ -97,6 +97,34 @@
 
 <div id="edit-toast"></div>
 
+<style>
+  .card-vis-toggle { position: absolute; top: 8px; left: 8px; z-index: 6; padding: 3px 10px;
+    border-radius: 999px; border: 1px solid rgba(255,255,255,0.35); background: rgba(0,0,0,0.55);
+    color: #ddd; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.04em; cursor: pointer; }
+  .card-vis-toggle.card-vis-hidden { border-color: #e0b357; color: #e0b357; background: rgba(40,30,0,0.75); }
+  .flip-card:has(.card-vis-hidden) { opacity: 0.55; }
+</style>
+<script>
+  // Hide/show a card on the dancer's PUBLIC page (owner display preference —
+  // the record stays here and on studio surfaces). csrf.js adds the token.
+  async function editToggleVisibility(btn, awardId) {
+    const hide = !btn.classList.contains('card-vis-hidden');
+    try {
+      const res = await fetch(`/manage/dancer/${DANCER_ID}/card/visibility?json=1`, {
+        method: 'POST',
+        body: new URLSearchParams({ award_id: awardId, hidden: hide ? '1' : '0' }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Save failed');
+      btn.classList.toggle('card-vis-hidden', data.hidden);
+      btn.textContent = data.hidden ? 'Hidden' : 'Public';
+      btn.title = data.hidden ? 'Hidden from your public page — click to show'
+                              : 'Shown on your public page — click to hide';
+      editToast(data.hidden ? 'Hidden from the public page (still yours, still in studio records)'
+                            : 'Shown on the public page again');
+    } catch (e) { editToast(e.message || 'Could not save — try again'); }
+  }
+</script>
 <script src="/js/flipbook.js"></script>
 <script>
   const DANCER_ID = <%= dancer.id %>;

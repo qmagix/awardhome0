@@ -52,6 +52,11 @@ const q = async (db, sql) => (await db.all(sql)).map(r => Object.values(r)[0]);
     'dancer:zero-awards', u => `/dancer/${u}`);
   add(await q(db, `SELECT unique_id FROM dancers WHERE is_claimed=1 LIMIT 10`),
     'dancer:claimed', u => `/dancer/${u}`);
+  add(await q(db, `SELECT DISTINCT d.unique_id FROM dancers d
+    JOIN dancer_card_hidden h ON h.dancer_id = d.id LIMIT 10`),
+    'dancer:hidden-cards', u => `/dancer/${u}`);
+  add(await q(db, `SELECT unique_id FROM dancers WHERE COALESCE(hide_from_rankings,0)=1 LIMIT 5`),
+    'dancer:rankings-optout', u => `/dancer/${u}`);
   add(await q(db, `SELECT unique_id FROM dancers ORDER BY RANDOM() LIMIT 60`),
     'dancer:random', u => `/dancer/${u}`);
   // group-award-heavy dancers

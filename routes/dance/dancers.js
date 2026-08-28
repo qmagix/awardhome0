@@ -61,6 +61,12 @@ async function sameRoutineAwards(db, awardId, dancerId) {
 // has been re-run (same pattern as some admin routes).
 async function ensureCardTables(db) {
   await db.exec(`
+    CREATE TABLE IF NOT EXISTS dancer_card_hidden (
+      dancer_id INTEGER NOT NULL REFERENCES dancers(id),
+      award_id INTEGER NOT NULL REFERENCES awards(id),
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (dancer_id, award_id)
+    );
     CREATE TABLE IF NOT EXISTS award_acknowledgements (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       award_id INTEGER NOT NULL REFERENCES awards(id),
@@ -140,6 +146,11 @@ router.get('/manage/dancer/:id/card', requireAuth, async (req, res) => {
     'SELECT award_id, photo_url, status FROM award_card_photos WHERE dancer_id = ?', [dancer.id]);
   const photoMap = {};
   photoRows.forEach(r => { photoMap[r.award_id] = r; });
+
+  const hiddenRows = await db.all(
+    'SELECT award_id FROM dancer_card_hidden WHERE dancer_id = ?', [dancer.id]);
+  const hiddenSet = new Set(hiddenRows.map(r => r.award_id));
+  awards.forEach(a => { a.isHidden = hiddenSet.has(a.id); });
 
   // Teammates' approved lines, shown read-only on group cards' ack page
   const mateMap = {};
@@ -355,6 +366,30 @@ router.post('/manage/dancer/:id/card/ack', requireAuth, async (req, res) => {
 });
 
 // Legacy single-dancer entry point → the dashboard
+// Card visibility: the owner may hide any card from the dancer's PUBLIC
+// page. The record stays in the archive, in this editor, and on studio
+// surfaces — a display preference, not record removal. Deliberately NOT
+// feature-flag-gated: privacy controls don't wait for release cohorts.
+router.post('/manage/dancer/:id/card/visibility', requireAuth, async (req, res) => {
+  const db = await openDb();
+  const dancer = await getDancerIfCardManager(db, req.session.user, req.params.id);
+  if (!dancer) return res.status(403).send('Forbidden');
+  await ensureCardTables(db);
+  const awardId = parseInt(req.body.award_id);
+  const hidden = String(req.body.hidden) === '1';
+  if (!awardId) return res.status(400).json({ error: 'Missing award' });
+  const linked = await db.get(
+    'SELECT 1 FROM award_dancers WHERE award_id = ? AND dancer_id = ? UNION SELECT 1 FROM awards WHERE id = ? AND dancer_id = ?',
+    [awardId, dancer.id, awardId, dancer.id]);
+  if (!linked) return res.status(400).json({ error: 'That award is not linked to this dancer.' });
+  if (hidden) {
+    await db.run('INSERT OR IGNORE INTO dancer_card_hidden (dancer_id, award_id) VALUES (?, ?)', [dancer.id, awardId]);
+  } else {
+    await db.run('DELETE FROM dancer_card_hidden WHERE dancer_id = ? AND award_id = ?', [dancer.id, awardId]);
+  }
+  res.json({ success: true, hidden });
+});
+
 router.get('/my-dancer', requireAuth, (req, res) => res.redirect('/my-dancers'));
 
 
@@ -451,6 +486,7 @@ router.post('/manage/dancer/:id/update', requireAuth, async (req, res) => {
   }
 
   const { name, birthday, headshot_url, graduation_year, instagram_handle, tiktok_handle, vanity_tag } = req.body;
+  const hideFromRankings = req.body.hide_from_rankings === 'on' ? 1 : 0;
 
   const vanity = validateVanityTag(vanity_tag);
   if (!vanity.ok) {
@@ -459,9 +495,9 @@ router.post('/manage/dancer/:id/update', requireAuth, async (req, res) => {
 
   await db.run(`
     UPDATE dancers
-    SET name = ?, birthday = ?, headshot_url = ?, graduation_year = ?, instagram_handle = ?, tiktok_handle = ?, vanity_tag = ?
+    SET name = ?, birthday = ?, headshot_url = ?, graduation_year = ?, instagram_handle = ?, tiktok_handle = ?, vanity_tag = ?, hide_from_rankings = ?
     WHERE id = ?
-  `, [name, birthday || null, headshot_url || null, graduation_year || null, instagram_handle || null, tiktok_handle || null, vanity.tag, req.params.id]);
+  `, [name, birthday || null, headshot_url || null, graduation_year || null, instagram_handle || null, tiktok_handle || null, vanity.tag, hideFromRankings, req.params.id]);
 
   res.redirect(`/manage/dancer/${req.params.id}`);
 });

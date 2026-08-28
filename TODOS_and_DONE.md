@@ -3,6 +3,8 @@
 ## TODO
 
 ### Release
+- [x] (SHIPPED 2026-08-28) **Dancer privacy controls**: per-card Public/Hidden toggle (card editor) + rankings opt-out checkbox (Manage Profile). See features.md "Dancer privacy controls".
+- [ ] **Community flagging (proposed 2026-08-28, design pending)**: viewers flag a card -> review queue. GRIEFING GUARD required before build: flags on USER-ADDED content (photos/notes) may auto-unpublish pending re-review (content was optional); flags on OFFICIAL award records queue WITHOUT auto-effect (flag-bombing a rival must not dark their real results). Threshold/trust rules for authenticated vs anon flaggers TBD.
 - [x] (SHIPPED 2026-08-27) **/partners page** — sponsor/press inbound media-kit + inquiry form (see features.md "Partners page"). Investor strategy: NO public page; TODO below.
 - [ ] Draft the private investor one-pager (traction, moat: patent 64/142,611 + 1.5M-award archive + weekly pipeline, revenue ladder: placements -> sponsors -> organizer tiers) — hold in drawer, send on request only.
 - [ ] **LAUNCH: September 15, 2026 (confirmed by Q 2026-08-27).** Runway: org invites go out ONE BY ONE starting now, finishing ~Sept 8 (letter: org_invite_draft.md v5; template pre-fills live totals + beta-keyed links; signs "Sam" — confirmed public-facing name). Launch day: lift BETA_MODE. Oct 15: gold-button market opens. Before launch: recruit early_access families for flipbook beta; decide flags beta->on timing.
