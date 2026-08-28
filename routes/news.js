@@ -20,7 +20,7 @@ const ARTICLES = [
   {
     slug: 'why-awardhome-exists',
     title: 'Why AwardHome exists',
-    date: '2026-08-27',
+    date: '2026-05-20',
     summary: "Years before a line of code, there was a studio, a box of trophies, and a domain name bought on a promise. Sam's founding story.",
   },
 ];
