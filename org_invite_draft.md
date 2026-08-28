@@ -258,9 +258,11 @@ name-drops; #4 attendance-analytics claim time-stamped honestly (feature is
 planned, not shipped); "Founding Partner" naming KEPT after review (time-anchored
 scarcity; "Special Partner" too vague, "sister organizations" implies corporate
 affiliation). PRE-SEND BLOCKERS: (1) beta gate — public /dance/* links in this
-letter dead-end for outsiders until BETA_MODE lifts or links carry ?beta=KEY;
-(2) reconcile launch date: letter says Oct 1, features.md gold-button pricing
-says "Oct 15, ~1 month post-launch" ⇒ ~Sept 15.)*
+letter dead-end for outsiders until BETA_MODE lifts or links carry ?beta=KEY —
+natural lift date is launch day.
+LAUNCH DATE CONFIRMED (Q, 2026-08-27): **September 15, 2026** — {LAUNCH_DATE}
+resolves to "September 15"; consistent with features.md gold-button market
+open Oct 15 (~1 month post-launch).)*
 
 Hi {FIRST_NAME},
 
@@ -276,7 +278,7 @@ The offer, plainly: send us your results in whatever format you have — CSV,
 Excel, PDFs, database exports, anything, one event or your entire history in a
 single zip or Drive link — and we handle 100% of the processing. Zero technical
 work on your end, free during our beta period (formal launch planned for
-{LAUNCH_DATE}).
+September 15).
 
 What {ORG_NAME} gets:
 
