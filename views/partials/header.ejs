@@ -13,7 +13,7 @@
 <body>
   <nav class="glass-nav">
     <div class="nav-content" style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
-      <a href="/dance" class="brand">Award<span>Home</span><span class="brand-tag">Dance</span></a>
+      <span class="brand"><a href="/" style="color: inherit; text-decoration: none;" title="AwardHome home">Award<span>Home</span></a><a href="/dance" style="text-decoration: none;" title="Dance home"><span class="brand-tag">Dance</span></a></span>
       <button class="nav-toggle" aria-label="Menu" aria-expanded="false" onclick="var l=document.getElementById('nav-links');var open=l.classList.toggle('open');this.setAttribute('aria-expanded',open);">☰</button>
       <div class="nav-links" id="nav-links">
         <% if (typeof user !== 'undefined' && user) { %>

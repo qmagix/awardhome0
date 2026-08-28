@@ -175,7 +175,12 @@ router.get('/', (req, res) => {
   if (req.query.design === 'v0') {
     return res.sendFile(path.join(__dirname, '..', '..', 'landing', 'index.html'));
   }
-  if (req.session.user) return res.redirect('/dance');
+  // Logged-in users typing the bare domain still land on their working home,
+  // but EXPLICIT in-app navigation to "/" (the navbar wordmark) shows the
+  // landing — same-site referers bypass the redirect, else the wordmark
+  // would bounce logged-in users straight back to /dance.
+  const sameSite = (req.get('referer') || '').includes('://' + req.get('host'));
+  if (req.session.user && !sameSite) return res.redirect('/dance');
   res.sendFile(path.join(__dirname, '..', '..', 'public3', 'index.html'));
 });
 
