@@ -24,9 +24,10 @@ reciprocity needs the gift to land first, and every extra ask in a cold touch
 cuts reply rate. So we run a ladder:
 
 1. **First touch** (below): near-zero friction CTA (claim link / reply with a
-   file), unchanged — plus a short **Season One Partner tease**: the pledge is
-   introduced as a limited-status opportunity, not a condition. Planting it
-   early makes the later ask feel consistent, not like a bait-and-switch.
+   file) and NOTHING else — no partner-program tease (decided 2026-08-27: the
+   pledge machinery — reward infra, legal review — isn't ready to receive
+   commitments, a second ask cuts cold reply rates, and the proposal lands far
+   better from a known collaborator than a stranger).
 2. **The wow:** their events live, branding concierge done, demo page built.
 3. **Follow-up letter** (below, 3–10 days after they claim or see the demo):
    the direct pledge ask, framed as joining, not paying.
@@ -44,7 +45,6 @@ we can start doing immediately.
 **Subject options** (no "!", no "Free" — deliverability):
 - [Competition Name]'s results are already live on AwardHome  *(strongest when we have their data — lead with this)*
 - Featuring [Competition Name] on AwardHome
-- A Season One partner idea for [Competition Name]
 
 *(The code template in `utils/invites.js` `buildOrgInviteTemplate` mirrors
 this letter and pre-fills the live event/award counts + claim link; the
@@ -90,16 +90,6 @@ complete, current listings are what turn browsers into bookings.
    studios attending your events — including how many other competitions
    they attend each year — so you can spot loyal studios and understand
    your market.
-
-**One more thing, while it's early:** we're inviting a small group of
-**Season One Partners** for the 2026-27 season. Season One Partners pledge a
-handful of free entries to their own events — we award them to standout
-dancers on the platform as surprise rewards, each one credited *"provided by
-[Competition Name]"* — and in return get first access to premium placement
-and organizer features as the platform grows. A pledged entry costs you an
-empty slot; it returns a proven competitive dancer to your ballroom. If that
-sounds interesting, mention it when you reply and I'll hold [Competition
-Name] a Season One slot.
 
 Claiming your free organizer account takes about two minutes with your
 private access link:
@@ -255,7 +245,10 @@ framing, a concrete day count, the open door.
 *(v5: numbers refreshed to 1.5M awards / 4,200+ events / 27 competitions —
 all verified against the live DB, incl. the YAGP/Starpower/KAR/NYCDA/Rainbow
 name-drops; #4 attendance-analytics claim time-stamped honestly (feature is
-planned, not shipped); Partner-program naming REVISED to "Season One Partner"
+planned, not shipped); Partner-program paragraph REMOVED from the first-touch letter
+entirely (Q, 2026-08-27): the pledge is proposed only via Letter 2 after
+demonstrated value, once reward infra + legal review are ready. Program naming
+(for Letter 2, held in the drawer) REVISED to "Season One Partner"
 (Q's call 2026-08-27, reversing the earlier keep): "Founding Partner" both
 devalues when offered in a cold email (cheap-to-grant title reads as a low bar)
 and issues un-scoped expectation debt ("founding" = permanent standing).
@@ -308,15 +301,6 @@ What {ORG_NAME} gets:
 4. **Attendance insights, partners first.** Our first organizer analytics —
    which studios attend your events and where they travel from — are rolling
    out this fall, and partner organizations get them first.
-
-One more thing, while it's early: we're inviting a small group of **Season One
-Partners** for the 2026-27 season. Season One Partners pledge a handful of free
-entries to their own events — we award them to standout dancers on the platform
-as surprise rewards, each one credited "provided by {ORG_NAME}" — and in return
-get first access to the premium organizer features we ship this season. A
-pledged entry costs you an empty slot; it returns a proven competitive dancer
-to your stage. If that sounds interesting, mention it when you reply and I'll
-hold {ORG_NAME} a Season One slot.
 
 Claiming your free organizer account takes about two minutes with your private
 access link — and your dashboard walks you through the whole setup in three
