@@ -109,5 +109,5 @@ const q = async (db, sql) => (await db.all(sql)).map(r => Object.values(r)[0]);
   } else {
     console.log('NO 5xx — all strata render clean.');
   }
-  process.exit(0);
+  process.exit(results.s5xx.length ? 1 : 0);
 })().catch(e => { console.error(e); process.exit(1); });

@@ -10,7 +10,8 @@
     "start": "node server.js",
     "dev": "node --watch server.js",
     "smoke": "node test/smoke.js",
-    "test": "node test/smoke.js"
+    "test": "node test/smoke.js",
+    "gate": "node scripts/predeploy_gate.js"
   },
   "keywords": [],
   "author": "",

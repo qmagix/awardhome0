@@ -1,10 +1,8 @@
 ================================================================================
-PROVISIONAL APPLICATION FOR PATENT — SPECIFICATION (DRAFT)
+PROVISIONAL APPLICATION FOR PATENT — SPECIFICATION
 ================================================================================
 
-Status:      ATTORNEY-REVIEW DRAFT v1 (2026-08-27). NOT FILED. CONFIDENTIAL.
-             Do not publish, demo, or circulate outside inventor/counsel.
-Inventor:    Q Huang
+Inventor:    Qingfeng Huang
 Filing note: Single provisional covering two related inventions (Part I: the
              achievement-artifact system; Part II: the guardian-mediated
              portable identity service). Provisional applications have no
@@ -661,14 +659,4 @@ verified competitive-history attestations via authenticated, audit-logged API
 calls, enabling error-free registration prefill and division verification for
 minors without uncontrolled data sharing.
 
-================================================================================
-END OF DRAFT — FIGS. 1-14 are drawn in patent_figures_P1_P3.html (open in a
-browser, print to PDF, portrait, default margins — one figure per page).
-SUPP. FIGS. A-G (UI screenshots of the implemented system, fictional demo
-tenant, captured 2026-08-27) are in patent_screenshots/index.html — print to
-PDF the same way and attach as supplementary drawings evidencing reduction to
-practice of ¶[0014]-[0023].
-Attorney to verify: micro-entity status; inventor/assignee; disclosure-date
-characterization (site online but no invitations sent and no material
-third-party access as of 2026-08-27 per inventor); cover sheet SB/16.
-================================================================================
+

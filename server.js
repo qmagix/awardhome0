@@ -373,6 +373,20 @@ if (process.env.ENABLE_WEEKLY_SCRAPE === 'true') {
   });
 }
 
+// Hourly public-page sentinel (utils/sentinel.js): probes one REAL entity
+// per data stratum against this instance and emails reviewers + Sentry when
+// a render path 5xxes. Strata are live queries, so coverage tracks the data
+// (first approved org coin => coin pages guarded automatically). Prod only.
+if (process.env.ENABLE_SENTINEL === 'true') {
+  cron.schedule('7 * * * *', async () => {
+    try {
+      await require('./utils/sentinel').runSentinel();
+    } catch (err) {
+      console.error('Sentinel run failed:', err);
+    }
+  });
+}
+
 // Setup automated nightly backups at 3:00 AM
 if (process.env.ENABLE_NIGHTLY_BACKUPS === 'true') {
   cron.schedule('0 3 * * *', () => {
