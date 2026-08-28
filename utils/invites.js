@@ -197,6 +197,8 @@ What ${n} gets:
 
 3. Your tour dates, where studios plan their season. Our Upcoming Events directory (see it live: ${upcomingUrl}) gathers every circuit's published dates in one place — studios and parents browse it when deciding which competitions to attend, sorted by distance, and they can shortlist your events and export them straight into their family calendars, with your registration one click away. You control your dates from your dashboard; complete, current listings are what turn browsing into bookings.
 
+Curious how it all works? Our organizer FAQ covers the common questions — data formats, branding, what it costs — and includes a sample award card you can actually flip: ${BASE_URL}/faq/organizer
+
 Claiming your free organizer account takes about two minutes with your private access link — and your dashboard walks you through the whole setup in three steps (upload results, add your profile, send us your logo):
 
 {CLAIM_LINK}

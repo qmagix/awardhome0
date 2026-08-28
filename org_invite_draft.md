@@ -300,6 +300,10 @@ What {ORG_NAME} gets:
    your dates from your dashboard; complete, current listings are what turn
    browsing into bookings.
 
+Curious how it all works? Our organizer FAQ covers the common questions — data
+formats, branding, what it costs — and includes a sample award card you can
+actually flip: https://awardhome.com/faq/organizer
+
 Claiming your free organizer account takes about two minutes with your private
 access link — and your dashboard walks you through the whole setup in three
 steps (upload results, add your profile, send us your logo):
