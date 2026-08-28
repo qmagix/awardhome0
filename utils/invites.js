@@ -34,6 +34,8 @@ function buildStudioInvite({ studio, totalAwards, firstPlaces, rank, totals = {}
   const tOrgs = totals.orgs || 27;
   const profileUrl = `${BASE_URL}/dance/studio/${studio.unique_id}` +
     (BETA_MODE && BETA_KEY ? `?beta=${BETA_KEY}` : '');
+  const upcomingUrl = `${BASE_URL}/dance/events` +
+    (BETA_MODE && BETA_KEY ? `?beta=${BETA_KEY}` : '');
   const subject = `${studio.name}: ${totalAwards.toLocaleString()} awards, all in one place`;
 
   let rankHtml = '';
@@ -68,7 +70,7 @@ function buildStudioInvite({ studio, totalAwards, firstPlaces, rank, totals = {}
       <li><strong>Put it on your own website.</strong> Claimed studios get an embeddable awards widget, in your colors — and you control which stats are public.</li>
     </ol>
 
-    <p>Your login also makes next season easier: our <strong>Upcoming Events</strong> directory gathers
+    <p>Your login also makes next season easier: our <a href="${upcomingUrl}" style="color: #aa8529;"><strong>Upcoming Events</strong> directory</a> gathers
     every circuit's published tour dates in one place — tap <strong>"Near me"</strong> to sort by distance
     from your studio, star the events you're considering into a shortlist, and export it straight into
     your calendar. The season-planning spreadsheet, retired.</p>
@@ -172,6 +174,8 @@ function buildOrgInviteTemplate({ org, eventCount = 0, awardCount = 0, totals = 
   const tOrgs = totals.orgs || 27;
   const orgPageUrl = `${BASE_URL}/dance/org/${org.slug}` +
     (BETA_MODE && BETA_KEY ? `?beta=${BETA_KEY}` : '');
+  const upcomingUrl = `${BASE_URL}/dance/events` +
+    (BETA_MODE && BETA_KEY ? `?beta=${BETA_KEY}` : '');
   const alreadyLive = eventCount > 0
     ? `In fact, ${n} is already there: ${eventCount.toLocaleString()} of your events, with ${awardCount.toLocaleString()} awards, are live on AwardHome today — see ${orgPageUrl}\nClaiming your organizer profile puts your branding on every one of those award cards.\n\n`
     : '';
@@ -191,7 +195,7 @@ What ${n} gets:
 
 2. Permanent, searchable results. Dancers and parents constantly search for old placements. We host them forever, interactively — no more fielding "where can I find 2023 results?" emails, and your events sit beside the biggest names in the industry for every studio browsing the platform.
 
-3. Your tour dates, where studios plan their season. Our Upcoming Events directory gathers every circuit's published dates in one place — studios and parents browse it when deciding which competitions to attend, sorted by distance, and they can shortlist your events and export them straight into their family calendars, with your registration one click away. You control your dates from your dashboard; complete, current listings are what turn browsing into bookings.
+3. Your tour dates, where studios plan their season. Our Upcoming Events directory (see it live: ${upcomingUrl}) gathers every circuit's published dates in one place — studios and parents browse it when deciding which competitions to attend, sorted by distance, and they can shortlist your events and export them straight into their family calendars, with your registration one click away. You control your dates from your dashboard; complete, current listings are what turn browsing into bookings.
 
 Claiming your free organizer account takes about two minutes with your private access link — and your dashboard walks you through the whole setup in three steps (upload results, add your profile, send us your logo):
 

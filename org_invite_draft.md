@@ -292,7 +292,8 @@ What {ORG_NAME} gets:
    biggest names in the industry for every studio browsing the platform.
 
 3. **Your tour dates, where studios plan their season.** Our Upcoming Events
-   directory gathers every circuit's published dates in one place — studios and
+   directory (see it live: {UPCOMING_LINK} — the template fills this with a
+   beta-keyed URL pre-launch) gathers every circuit's published dates in one place — studios and
    parents browse it when deciding which competitions to attend, sorted by
    distance, and they can shortlist your events and export them straight into
    their family calendars, with your registration one click away. You control
