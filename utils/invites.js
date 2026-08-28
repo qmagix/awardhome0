@@ -25,8 +25,13 @@ function escapeHtml(s) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-function buildStudioInvite({ studio, totalAwards, firstPlaces, rank }) {
+function buildStudioInvite({ studio, totalAwards, firstPlaces, rank, totals = {} }) {
   const name = escapeHtml(studio.name);
+  // Platform totals computed live by the caller (sendStudioInvite) so the
+  // letter never goes stale; fallbacks = last hand-verified numbers.
+  const tAwards = totals.awards ? `over ${(totals.awards / 1e6).toFixed(1)} million` : 'over 1.5 million';
+  const tStudios = totals.studios ? `${Math.floor(totals.studios / 1e3).toLocaleString()},000+` : '24,000+';
+  const tOrgs = totals.orgs || 27;
   const profileUrl = `${BASE_URL}/dance/studio/${studio.unique_id}` +
     (BETA_MODE && BETA_KEY ? `?beta=${BETA_KEY}` : '');
   const subject = `${studio.name}: ${totalAwards.toLocaleString()} awards, all in one place`;
@@ -42,11 +47,11 @@ function buildStudioInvite({ studio, totalAwards, firstPlaces, rank }) {
   <div style="font-family: Arial, Helvetica, sans-serif; color: #222; max-width: 560px; margin: 0 auto; line-height: 1.55;">
     <p>Hi ${name} team,</p>
 
-    ${BETA_MODE ? '<p style="background: #faf6e8; border: 1px solid #d4af37; border-radius: 8px; padding: 10px 14px;"><strong>You\'re invited to our private beta.</strong> The link below is your early-access pass — AwardHome opens to the public soon, and beta studios get a head start.</p>' : ''}
+    ${BETA_MODE ? '<p style="background: #faf6e8; border: 1px solid #d4af37; border-radius: 8px; padding: 10px 14px;"><strong>You\'re invited to our private beta.</strong> The link below is your early-access pass — AwardHome opens to the public on September 15, and beta studios get a head start.</p>' : ''}
     <p>Congratulations on a great season. Your competition results are already live on
-    <strong>AwardHome</strong> — we aggregate results from 27 competitions (YAGP, KAR, Starpower,
-    NYCDA, Showstopper, Rainbow, and more) into a single digital trophy case: over 1.5 million awards
-    from 20,000+ studios since 2021.</p>
+    <strong>AwardHome</strong> — we aggregate results from ${tOrgs} competitions (YAGP, KAR, Starpower,
+    NYCDA, Showstopper, Rainbow, and more) into a single digital trophy case: ${tAwards} awards
+    from ${tStudios} studios, going back to 2011.</p>
 
     <p>${name}'s page — with <strong>${totalAwards.toLocaleString()} awards</strong>${firstPlaces ? ` and <strong>${firstPlaces.toLocaleString()} first-place finishes</strong>` : ''} — is here:</p>
 
@@ -79,7 +84,7 @@ function buildStudioInvite({ studio, totalAwards, firstPlaces, rank }) {
     <p>Click <strong>"Claim Studio"</strong> on your page above. If your email matches your studio's
     website domain, approval is instant.</p>
 
-    <p>— ${'Q'}<br>Founder, AwardHome<br><a href="${BASE_URL}" style="color: #aa8529;">awardhome.com</a></p>
+    <p>— Sam<br>Founder, AwardHome<br><a href="${BASE_URL}" style="color: #aa8529;">awardhome.com</a></p>
 
     <p style="font-size: 12px; color: #888; border-top: 1px solid #ddd; padding-top: 12px; margin-top: 28px;">
       You're receiving this one-time note because your studio's public competition results appear on AwardHome.
@@ -120,7 +125,13 @@ async function sendStudioInvite(studioId, { sentBy = null, overrideEmail = null 
       GROUP BY a.studio_id HAVING c > ?
     )`, [stats.totalAwards]);
 
+  const totals = {
+    awards: (await db.get('SELECT COUNT(*) c FROM awards')).c,
+    studios: (await db.get("SELECT COUNT(*) c FROM studios WHERE status = 'active'")).c,
+    orgs: (await db.get('SELECT COUNT(*) c FROM organizations WHERE slug IS NOT NULL')).c,
+  };
   const { subject, html } = buildStudioInvite({
+    totals,
     studio,
     totalAwards: stats.totalAwards || 0,
     firstPlaces: stats.firstPlaces || 0,

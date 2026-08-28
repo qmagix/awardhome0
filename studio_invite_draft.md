@@ -87,3 +87,19 @@ automatically, RFC 8058 compliant)*
 - Once ≥25 studios have claimed, add a social-proof line ("join the N
   studios already managing their trophy case") — update the code template
   when the number is real.
+
+---
+
+## Update 2026-08-27 (live template = utils/invites.js buildStudioInvite, source of truth)
+
+Same fact-check pass as the org letter (org_invite_draft.md v5):
+- **"since 2021" was underselling by a decade** — archive now reaches back to
+  2011 (The Dance Awards full history); letter says "going back to 2011".
+- **Platform totals now DYNAMIC** (computed at send time: awards, active
+  studios, orgs) — the letter can never go stale; "20,000+" was already stale
+  vs 24,528 active studios.
+- **Beta banner names the date**: "opens to the public on September 15".
+- **Signs "Sam"** (confirmed public-facing name), matching all org outreach.
+- All claims verified shipped: widget ✓, Near me/shortlist/calendar export ✓,
+  featured-no-payment ✓, domain-match instant approval ✓ (claims.js). Single
+  ask (claim), no analytics promises, unsubscribe honored — already compliant.
