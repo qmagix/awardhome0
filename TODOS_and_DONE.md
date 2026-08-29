@@ -16,6 +16,13 @@
 - [ ] Teacher & choreographer accounts + card credits (two-sided accept; see ideas.md §11). IP: add credit-granularity embodiment to the follow-on provisional queue before building.
 
 ### IP / Legal
+- [x] (DONE 2026-08-29) **AwardHome LLC — Articles of Organization filed** (California, via bizfileonline; entity name matches the brand, so no FBN/dba needed; ComputerMagix sole-prop FBN stays separate, untouched by this project). Terms/Privacy intro + footer copyright now name "AwardHome LLC".
+- [ ] **LLC formation follow-ups** (start once SOS approval arrives):
+  - [ ] Statement of Information (Form LLC-12, $20) — due within 90 days of filing, so by ~2026-11-27; biennial after.
+  - [ ] First $800 franchise tax (FTB Form 3522) — due 15th day of the 4th month after filing (~Dec 15, 2026); Form 568 annually.
+  - [ ] EIN (free, irs.gov) → business bank account in the LLC's name; run AwardHome money/contracts through it only (no commingling — the liability shield depends on it).
+  - [ ] DMCA designated-agent registration with the Copyright Office under AwardHome LLC ($6) — completes the safe-harbor story the Terms rely on.
+  - [ ] Assign the provisional (64/142,611) + awardhome.com domain to the LLC at conversion time (fold into the 2027-06-27 checkpoint below).
 - [x] (DONE 2026-08-27) **U.S. Provisional Application No. 64/142,611 FILED** (P1+P3 combined: flip-book/multi-face card system + DancerID; spec w/ claims 1-21, FIGS. 1-14, SUPP. FIGS. A-G). "Patent Pending" now usable in marketing/outreach. Freeze list LIFTED (flip-book rollout, demos, outreach OK). See provisional_patent_plan.md banner.
 - [ ] **On the SECOND filing (P2 or sponsor-page follow-on): flip footers to "Patents pending"** (plural becomes true then; today's unscoped singular "Patent pending" is deliberate — maximal legitimate ambiguity, provisionals are unpublished so scope is unknowable to copycats; NEVER mark plural/scope beyond actual filings — 35 USC 292).
 - [ ] **2027-06-27 checkpoint (calendar it!):** convert / PCT / refile decision. HARD deadline 2027-08-27 (non-extendable).
