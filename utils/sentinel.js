@@ -108,6 +108,27 @@ async function runSentinel() {
     }
   }
 
+  // Abuse watch: mass roster/award attachment by a single studio account
+  // (a rogue owner could scrape public dancer IDs and bulk-attach). Pure
+  // queries over existing provenance — alert-first, humans decide freezes
+  // (legit bulk flows like group-dancers paste-a-list make auto-suspend
+  // too trigger-happy).
+  try {
+    const linkBursts = await db.all(`
+      SELECT s.name, s.id, COUNT(*) AS n FROM award_dancers ad
+      JOIN awards a ON a.id = ad.award_id
+      JOIN studios s ON s.id = a.studio_id
+      WHERE ad.source = 'studio_owner' AND ad.created_at >= datetime('now', '-1 day')
+      GROUP BY s.id HAVING n > 200`);
+    const rosterBursts = await db.all(`
+      SELECT s.name, s.id, COUNT(*) AS n FROM dancer_studios ds
+      JOIN studios s ON s.id = ds.studio_id
+      WHERE ds.created_at >= datetime('now', '-1 day') AND s.is_claimed = 1
+      GROUP BY s.id HAVING n > 100`);
+    for (const b of linkBursts) failures.push(`ABUSE-WATCH award-links ${b.n}/24h by studio #${b.id} "${b.name}"`);
+    for (const b of rosterBursts) failures.push(`ABUSE-WATCH roster-adds ${b.n}/24h at studio #${b.id} "${b.name}"`);
+  } catch (e) { console.error('[sentinel] abuse-watch query failed:', e.message); }
+
   const failKey = failures.slice().sort().join('|');
   const changed = failKey !== lastFailKey;
   console.log(`[sentinel] ${targets.length} probed, ${failures.length} failing, ${skipped} rate-limited${failures.length ? ':\n  ' + failures.join('\n  ') : ''}`);
