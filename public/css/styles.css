@@ -2940,8 +2940,20 @@ footer {
   margin-top: 1.2rem;
 }
 
-/* Demo card embeds (FAQs, marketing): a single playable card, centered. */
-.demo-card-wrap { max-width: 300px; margin: 1.75rem auto; }
+/* Demo card embeds (FAQs, marketing): a single playable card, centered.
+   The card front is translucent glass calibrated for dark surfaces, so the
+   wrap carries its own dark stage — light host pages (dancer/admin FAQ
+   sections are white) would otherwise wash the front face out. */
+.demo-card-wrap {
+  max-width: calc(300px + 3rem);
+  margin: 1.75rem auto;
+  padding: 1.5rem 1.5rem 1rem;
+  background:
+    radial-gradient(at 20% 0%, rgba(212, 175, 55, 0.10) 0px, transparent 55%),
+    var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+}
 .demo-card-wrap .flip-card { width: 100%; }
 .demo-card-hint {
   text-align: center;
