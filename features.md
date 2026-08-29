@@ -419,6 +419,6 @@ footer links). Both tailored to the product, not boilerplate: published-results
 archive framing (children's names as competitions announced them; competition
 records stay authoritative), claim rules, UGC license + photo-consent, family
 controls enumerated, sponsored-placement disclosure, patent-pending IP, no sale
-of data, "Near me" never stored, first-party-only analytics. NOT YET DEPLOYED:
-Terms §17 governing-law state is a marked placeholder pending Q + attorney
-review — fill before deploying.
+of data, "Near me" never stored, first-party-only analytics. Governing law:
+California (Q's choice, 2026-08-29). Attorney review still recommended
+(children's data / COPPA, liability cap tuning).
