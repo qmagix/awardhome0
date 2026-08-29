@@ -18,6 +18,12 @@ const ARTICLES = [
     summary: 'The digital curated trophy case for competitive dance — over a million awards from dozens of competitions, one home — opens to everyone on September 15.',
   },
   {
+    slug: 'a-small-plant-growing-from-a-seed',
+    title: 'A small plant, growing from a seed',
+    date: '2026-06-18',
+    summary: 'The seed was a curated award space to make families\' and studio owners\' lives easier. Then award cards grew pages — photos, thank-you notes — and started keeping memories, not just records.',
+  },
+  {
     slug: 'why-awardhome-exists',
     title: 'Why AwardHome exists',
     date: '2026-05-20',
