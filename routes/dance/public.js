@@ -649,6 +649,93 @@ router.get('/dance/events.ics', async (req, res) => {
   res.send(lines.filter(Boolean).join('\r\n') + '\r\n');
 });
 
+// "Peacock Cup" — a fictitious sample org page for outreach demos. Renders
+// org_v2 entirely from this in-memory object: zero DB rows, so platform
+// totals, search, rankings, and the sentinel never see it. demoMode strips
+// content links (fictional studios/events would 404) except the Upcoming
+// Events directory, and banners the page as a sample. Must stay registered
+// above the :slug route.
+const PEACOCK_DEMO = (() => {
+  const org = {
+    id: 0,
+    name: 'Peacock Cup Dance Competition',
+    slug: 'peacock',
+    website: null,
+    slogan: 'Where every dancer earns their plumes',
+    description: null,
+    logo_url: '/img/demo/peacock_logo.svg',
+    custom_icons: '{"logo_approved":true}',
+    owner_id: -1, // claimed presentation (partner badge, branded coin); matches no real user
+    is_sponsor: 0,
+  };
+  const yearlySeries = [
+    { year: '2022', events: 12, total: 6120, firsts: 1010 },
+    { year: '2023', events: 14, total: 7480, firsts: 1205 },
+    { year: '2024', events: 16, total: 8930, firsts: 1420 },
+    { year: '2025', events: 18, total: 10240, firsts: 1633 },
+    { year: '2026', events: 19, total: 11180, firsts: 1801 },
+  ];
+  const cities = ['Sacramento, CA', 'Anaheim, CA', 'Portland, OR', 'Phoenix, AZ', 'Denver, CO',
+    'Salt Lake City, UT', 'San Jose, CA', 'Las Vegas, NV', 'Boise, ID', 'Spokane, WA',
+    'Reno, NV', 'Fresno, CA', 'Tucson, AZ', 'Colorado Springs, CO', 'Tacoma, WA',
+    'Bakersfield, CA', 'Albuquerque, NM', 'Ontario, CA'];
+  const groupedData = yearlySeries.slice().reverse().map((y) => {
+    const regionals = cities.slice(0, y.events - 1).map((city, i) => ({
+      id: 0,
+      name: `${city.split(',')[0]} Regional`,
+      award_count: Math.round((y.total * 0.82) / (y.events - 1) / 5) * 5,
+    }));
+    return {
+      year: y.year,
+      events: [{ id: 0, name: 'Nationals — Orlando, FL', award_count: Math.round(y.total * 0.18) }, ...regionals],
+    };
+  });
+  const topStudios = [
+    { name: 'Golden Plume Dance Academy', unique_id: null, award_count: 1284 },
+    { name: 'Iridescent Motion', unique_id: null, award_count: 1102 },
+    { name: 'Blue Feather Studios', unique_id: null, award_count: 987 },
+    { name: 'Fan & Flourish Dance Co.', unique_id: null, award_count: 861 },
+    { name: 'Royal Crest Dance Center', unique_id: null, award_count: 793 },
+    { name: 'Prism Pointe Academy', unique_id: null, award_count: 740 },
+  ];
+  const upcomingEvents = [
+    { name: 'Peacock Cup — Sacramento', start_date: '2026-10-17', end_date: '2026-10-18', city: 'Sacramento', state: 'CA' },
+    { name: 'Peacock Cup — Portland', start_date: '2026-11-14', end_date: '2026-11-15', city: 'Portland', state: 'OR' },
+    { name: 'Peacock Cup — Boise', start_date: '2026-12-05', end_date: '2026-12-06', city: 'Boise', state: 'ID' },
+    { name: 'Peacock Cup — Anaheim', start_date: '2027-01-16', end_date: '2027-01-17', city: 'Anaheim', state: 'CA' },
+    { name: 'Peacock Cup — Phoenix', start_date: '2027-02-06', end_date: '2027-02-07', city: 'Phoenix', state: 'AZ' },
+    { name: 'Peacock Cup — Denver', start_date: '2027-02-27', end_date: '2027-02-28', city: 'Denver', state: 'CO' },
+    { name: 'Peacock Cup — Salt Lake City', start_date: '2027-03-20', end_date: '2027-03-21', city: 'Salt Lake City', state: 'UT' },
+    { name: 'Peacock Cup — San Jose', start_date: '2027-04-10', end_date: '2027-04-11', city: 'San Jose', state: 'CA' },
+    { name: 'Peacock Cup — Las Vegas', start_date: '2027-05-01', end_date: '2027-05-02', city: 'Las Vegas', state: 'NV' },
+    { name: 'Peacock Cup Nationals — Orlando', start_date: '2027-06-25', end_date: '2027-06-28', city: 'Orlando', state: 'FL' },
+  ];
+  const totalAwards = yearlySeries.reduce((s, y) => s + y.total, 0);
+  const eventsCount = yearlySeries.reduce((s, y) => s + y.events, 0);
+  return {
+    org,
+    orgVisibility: 'public',
+    stats: { totalAwards, totalStudios: 386, firstYear: '2022' },
+    eventsCount,
+    groupedData,
+    reach: { dancers: 9214, titles: 45 },
+    yearlySeries,
+    topStudios,
+    upcomingEvents,
+    isAdmin: false, // keeps archive rows linkless even for logged-in admins
+  };
+})();
+
+router.get('/dance/org/peacock', (req, res) => {
+  res.set('X-Robots-Tag', 'noindex'); // sample page shouldn't compete with real orgs in search
+  res.render('org_v2', {
+    ...PEACOCK_DEMO,
+    demoMode: true,
+    pageTitle: 'Peacock Cup Dance Competition (sample page)',
+    pageDesc: 'A sample organizer page showing what a competition\'s page looks like on AwardHome.',
+  });
+});
+
 router.get('/dance/org/:slug', async (req, res) => {
   const db = await openDb();
   const org = await db.get(`SELECT * FROM organizations WHERE slug = ?`, [req.params.slug]);

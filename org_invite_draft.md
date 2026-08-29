@@ -236,19 +236,24 @@ framing, a concrete day count, the open door.
 
 ## v5 first-touch letter (reviewed + fact-checked 2026-08-27)
 
-*(v5.1, 2026-08-29 — zero-events branch: when the invited org has no events in
-the archive, the "already there" paragraph is replaced by a sample-page link:
-"Want to see what it looks like in practice? KAR Dance Competition's page is
-live here — champions wall, seasons of results, every award a shareable card:
-[beta-keyed /dance/org/kar]". Sample org = KAR (SAMPLE_ORG constant in
-utils/invites.js buildOrgInviteTemplate): flagship archive, already name-dropped
-in the letter. RULE (Q, 2026-08-29): the paragraph claims only what the page
-shows on PROD — KAR is unclaimed there (its coin approval is local test data),
-so NO branding claims about the sample org; never seed a coin on prod to dress
-the sample either (branding is approval-gated by the org, full stop). Benefit
-#1 + the FAQ's flippable card carry the branding pitch. When a real partner
-approves their coin, swap SAMPLE_ORG and the paragraph may then mention their
-logo. Terminology note: earlier
+*(v5.2, 2026-08-29 — zero-events branch now links the PEACOCK CUP sample page:
+when the invited org has no events in the archive, the "already there"
+paragraph is replaced by: "Want to see what your page would look like? We keep
+a live sample up — the 'Peacock Cup,' a fictitious competition — with the brand
+coin, champions wall, and tour dates all in place: [beta-keyed
+/dance/org/peacock]". The Peacock Cup is RENDER-ONLY (in-memory object in
+routes/dance/public.js, zero DB rows — platform totals/search/rankings/sentinel
+untouched): full organizer edition with approved coin, partner badge, banner
+declaring it a sample, all content links stripped except the Upcoming Events
+directory, noindex header. Supersedes the v5.1 KAR-sample approach (KAR's coin
+was local test data — prod KAR is unclaimed, so the letter couldn't claim
+branding; the fictitious org shows the coin honestly). RULES that still stand:
+never seed a real org's coin on prod to dress a demo (branding is
+approval-gated by the org, full stop); never clone real results under a
+fictitious org (real dancers' names + falsified totals). Orgs WITH archived
+events keep their own page as the demo link — never the generic /dance
+homepage; the organizer FAQ link with the flippable sample card is already in
+the letter. Terminology note: earlier
 v4 line "org page demo link lands on the Rafters organizer edition" refers to
 the RAFTERS DESIGN SYSTEM (site-wide default since 2026-08-24) — there is no
 "Rafters" org. Orgs WITH archived events keep their own page as the demo link —

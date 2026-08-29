@@ -429,3 +429,18 @@ California (Q's choice, 2026-08-29). Operator: AwardHome LLC, a California LLC
 (Articles of Organization filed 2026-08-29) — named in both intro paragraphs and
 the footer copyright; formation follow-ups tracked in TODOS_and_DONE.md §IP/Legal.
 Attorney review still recommended (children's data / COPPA, liability cap tuning).
+
+## Peacock Cup sample org page (2026-08-29)
+`/dance/org/peacock` — a fictitious competition's organizer page for outreach
+demos, rendered by `org_v2.ejs` entirely from an in-memory object
+(`PEACOCK_DEMO` in `routes/dance/public.js`, registered above the `:slug`
+route). Zero DB rows: platform totals, search, rankings, and the sentinel never
+see it. Shows the fully-dressed claimed state — approved peacock coin
+(`public/img/demo/peacock_logo.svg`), partner badge, reach chart, champions
+wall, tour dates, archive tabs — with a banner declaring it a sample and
+illustrative numbers. `demoMode` flag in `org_v2.ejs` renders champion studio
+cards inert (fictional studios have no pages) and points "All N tour stops" at
+the plain `/dance/events` directory — the one outbound content link, kept
+deliberately (benefit 3 demo). `X-Robots-Tag: noindex`. Zero-events outreach
+letters link here (see org_invite_draft.md v5.2); orgs with archived events
+keep their own page as the demo link.

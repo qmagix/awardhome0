@@ -3,6 +3,7 @@
 <link rel="stylesheet" href="/css/org_v2.css">
 
 <%
+  const demo = typeof demoMode !== 'undefined' && !!demoMode;
   const isOwner = typeof user !== 'undefined' && user && org.owner_id && user.id === org.owner_id;
   const isClaimed = !!org.owner_id;
   const monogram = org.name.split(/\s+/).map(w => w[0]).join('').replace(/[^A-Za-z]/g, '').substring(0, 3).toUpperCase();
@@ -17,6 +18,12 @@
 %>
 
 <div class="v2">
+
+  <% if (demo) { %>
+    <div style="background: rgba(14, 124, 123, 0.12); border-bottom: 1px solid rgba(14, 124, 123, 0.45); color: #7fd6d5; padding: 0.6rem 1rem; text-align: center; font-size: 0.85rem; font-weight: 600;">
+      Sample page &mdash; the Peacock Cup is a fictitious competition we use to show what an organizer's page looks like. All numbers and studios are illustrative.
+    </div>
+  <% } %>
 
   <% if (typeof orgVisibility !== 'undefined' && orgVisibility !== 'public') { %>
     <div style="background: rgba(234, 179, 8, 0.12); border-bottom: 1px solid rgba(234, 179, 8, 0.4); color: #eab308; padding: 0.6rem 1rem; text-align: center; font-size: 0.85rem; font-weight: 600;">
@@ -179,11 +186,20 @@
         <p class="v2-lede">Your most-awarded studios, each with a living trophy case built on your results.</p>
         <div class="v2-circuit-grid">
           <% topStudios.forEach(function(s) { %>
-            <a class="v2-org-card v2-champ" href="/dance/studio/<%= s.unique_id %>">
-              <div class="v2-o-count"><%= s.award_count.toLocaleString() %></div>
-              <div class="v2-o-name"><%= s.name %></div>
-              <div class="v2-o-sub">awards at your events</div>
-            </a>
+            <% if (demo) { %>
+              <%# Fictional studios have no pages to visit — cards render inert. %>
+              <div class="v2-org-card v2-champ">
+                <div class="v2-o-count"><%= s.award_count.toLocaleString() %></div>
+                <div class="v2-o-name"><%= s.name %></div>
+                <div class="v2-o-sub">awards at your events</div>
+              </div>
+            <% } else { %>
+              <a class="v2-org-card v2-champ" href="/dance/studio/<%= s.unique_id %>">
+                <div class="v2-o-count"><%= s.award_count.toLocaleString() %></div>
+                <div class="v2-o-name"><%= s.name %></div>
+                <div class="v2-o-sub">awards at your events</div>
+              </a>
+            <% } %>
           <% }); %>
         </div>
       </section>
@@ -223,7 +239,7 @@
           <% }); %>
           <% if (upcomingEvents.length > tourStops.length) { %>
             <div style="text-align: center; margin-top: 1.1rem;">
-              <a class="v2-ghost-btn" href="/dance/events?org=<%= org.id %>">All <%= upcomingEvents.length %> tour stops &rarr;</a>
+              <a class="v2-ghost-btn" href="<%= demo ? '/dance/events' : ('/dance/events?org=' + org.id) %>">All <%= upcomingEvents.length %> tour stops &rarr;</a>
             </div>
           <% } %>
         </div>
