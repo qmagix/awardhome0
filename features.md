@@ -419,7 +419,12 @@ footer links). Both tailored to the product, not boilerplate: published-results
 archive framing (children's names as competitions announced them; competition
 records stay authoritative), claim rules, UGC license + photo-consent, family
 controls enumerated, sponsored-placement disclosure, patent-pending IP, no sale
-of data, "Near me" never stored, first-party-only analytics. Governing law:
+of data, "Near me" never stored, first-party-only analytics. DMCA-conformant
+takedown machinery (2026-08-29): Terms §11 names the Copyright Agent
+(hello@awardhome.com) + full 512(c)(3) notice elements + counter-notice/restore
+flow; §12 has the repeat-infringer termination clause. Safe harbor still needs
+the $6 Copyright Office agent registration once the LLC is approved (tracked in
+TODOS). Governing law:
 California (Q's choice, 2026-08-29). Operator: AwardHome LLC, a California LLC
 (Articles of Organization filed 2026-08-29) — named in both intro paragraphs and
 the footer copyright; formation follow-ups tracked in TODOS_and_DONE.md §IP/Legal.
