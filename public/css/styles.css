@@ -2952,3 +2952,31 @@ footer {
 
 /* Demo cards are inert: no share (no real page behind them). */
 .demo-card-wrap .tcb-share { display: none; }
+
+/* Navbar account dropdown (replaces the raw email + Logout links). */
+.nav-account { position: relative; }
+.nav-account-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; border-radius: 50%;
+  border: 1px solid rgba(212, 175, 55, 0.5);
+  background: rgba(212, 175, 55, 0.12);
+  color: var(--primary); cursor: pointer;
+}
+.nav-account-btn:hover { background: rgba(212, 175, 55, 0.25); }
+.nav-account-menu {
+  display: none; position: absolute; right: 0; top: calc(100% + 8px);
+  min-width: 220px; background: #161616;
+  border: 1px solid var(--border-color); border-radius: 10px;
+  padding: 0.4rem; z-index: 300; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+}
+.nav-account-menu.open { display: block; }
+.nav-account-email {
+  color: var(--text-muted); font-size: 0.78rem; padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid var(--border-color); margin-bottom: 0.3rem;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 260px;
+}
+.nav-account-menu a {
+  display: block; padding: 0.5rem 0.6rem; color: white; text-decoration: none;
+  border-radius: 6px; font-weight: 600; font-size: 0.9rem;
+}
+.nav-account-menu a:hover { background: rgba(255, 255, 255, 0.07); }

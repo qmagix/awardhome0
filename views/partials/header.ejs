@@ -46,8 +46,18 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
             Send Feedback
           </a>
-          <span class="nav-email" style="color: var(--text-muted); font-size: 0.9rem;"><%= user.email %></span>
-          <a href="/logout" style="color: var(--primary); text-decoration: none; font-weight: 600;">Logout</a>
+          <div class="nav-account">
+            <button type="button" class="nav-account-btn" aria-label="Account menu" aria-expanded="false"
+              onclick="event.stopPropagation(); var m = this.nextElementSibling; var open = m.classList.toggle('open'); this.setAttribute('aria-expanded', open);">
+              <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg>
+            </button>
+            <div class="nav-account-menu">
+              <div class="nav-account-email" title="<%= user.email %>"><%= user.email %></div>
+              <a href="<%= (user.role === 'admin' || user.role === 'superadmin') ? '/admin' : (user.role === 'org_owner' ? '/my-org' : (user.role === 'studio_owner' ? '/my-studio' : '/my-dancers')) %>">My dashboard</a>
+              <a href="/account">My account</a>
+              <a href="/logout">Log out</a>
+            </div>
+          </div>
         <% } else { %>
           <a href="/login" style="color: white; text-decoration: none; font-weight: 600;">Login</a>
           <a href="/register" class="btn btn-primary" style="padding: 0.4rem 1.1rem; font-size: 0.9rem; text-decoration: none;">Register</a>
@@ -55,6 +65,14 @@
       </div>
     </div>
   </nav>
+  <script>
+    document.addEventListener('click', function () {
+      document.querySelectorAll('.nav-account-menu.open').forEach(function (m) {
+        m.classList.remove('open');
+        var b = m.previousElementSibling; if (b) b.setAttribute('aria-expanded', 'false');
+      });
+    });
+  </script>
   <main>
   
   <% if (typeof user !== 'undefined' && user) { %>

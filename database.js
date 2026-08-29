@@ -608,6 +608,8 @@ async function initDb() {
   try { await db.exec("ALTER TABLE dancers ADD COLUMN vanity_tag TEXT"); } catch(e) {}
   try { await db.exec("ALTER TABLE dancers ADD COLUMN hide_from_rankings INTEGER DEFAULT 0"); } catch(e) {}
   try { await db.exec("ALTER TABLE dancers ADD COLUMN hide_from_search INTEGER DEFAULT 0"); } catch(e) {}
+  try { await db.exec("ALTER TABLE organizations ADD COLUMN branding_terms_accepted_at DATETIME"); } catch(e) {}
+  try { await db.exec("ALTER TABLE organizations ADD COLUMN branding_terms_accepted_by INTEGER REFERENCES users(id)"); } catch(e) {}
   try {
     // Importers leave created_at NULL; weekly_update.js stamps NULLs after
     // each run, which is also how it detects "events added by this run".

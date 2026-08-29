@@ -1,0 +1,37 @@
+<%- include('partials/header', { pageTitle: 'My Account' }) %>
+
+<div style="max-width: 640px; margin: 3rem auto 2rem; padding: 0 1.5rem;">
+  <h1 style="margin-bottom: 1.5rem;">My Account</h1>
+
+  <div class="card glass-card" style="padding: 1.5rem 1.75rem; margin-bottom: 1.25rem;">
+    <p style="margin: 0 0 0.4rem;"><span class="text-muted">Email:</span> <%= account.email %></p>
+    <p style="margin: 0 0 0.4rem;"><span class="text-muted">Account type:</span>
+      <%= account.role === 'org_owner' ? 'Competition organizer'
+        : account.role === 'studio_owner' ? 'Studio owner'
+        : (account.role === 'admin' || account.role === 'superadmin') ? 'Administrator'
+        : 'Dancer family' %></p>
+    <p style="margin: 0;"><span class="text-muted">Member since:</span> <%= String(account.created_at || '').slice(0, 10) %></p>
+  </div>
+
+  <% if (orgTerms.length || photoConsents.length) { %>
+  <div class="card glass-card" style="padding: 1.5rem 1.75rem;">
+    <h2 style="font-size: 1.05rem; margin: 0 0 1rem;">Agreements on record</h2>
+    <% orgTerms.forEach(function(o) { %>
+      <p style="margin: 0 0 0.5rem; font-size: 0.92rem;">
+        <% if (o.branding_terms_accepted_at) { %>
+          <span style="color: #10b981;">✓</span> Branding Terms of Use — <%= o.name %>, accepted <%= String(o.branding_terms_accepted_at).slice(0, 10) %>
+        <% } else { %>
+          <span class="text-muted">○ Branding Terms of Use — <%= o.name %>: not yet accepted (the Branding page will ask once)</span>
+        <% } %>
+      </p>
+    <% }); %>
+    <% photoConsents.forEach(function(c) { %>
+      <p style="margin: 0 0 0.5rem; font-size: 0.92rem;">
+        <span style="color: #10b981;">✓</span> Card photo permission — <%= c.name %>, given <%= String(c.consented_at).slice(0, 10) %>
+      </p>
+    <% }); %>
+  </div>
+  <% } %>
+</div>
+
+<%- include('partials/footer') %>

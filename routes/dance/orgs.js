@@ -373,6 +373,16 @@ router.post('/manage/org/:id/upcoming/:eventId/delete', requireAuth, requireOrgO
 // SIMULTANEOUS highlighting is what's sold: additional buttons are per-event
 // purchases (opens mid-Oct 2026 — off-platform for now, superadmin marks
 // 'paid'). Admins can always relocate/clear for support.
+// One-time Branding Terms acceptance — recorded per organization so the
+// owner isn't re-asked on every upload (accepted once, always accepted).
+router.post('/manage/org/:id/branding/accept-terms', requireAuth, requireOrgOwner({ allowAdmin: false }), async (req, res) => {
+  const db = await openDb();
+  await db.run(
+    'UPDATE organizations SET branding_terms_accepted_at = CURRENT_TIMESTAMP, branding_terms_accepted_by = ? WHERE id = ? AND branding_terms_accepted_at IS NULL',
+    [req.session.user.id, req.org.id]);
+  res.json({ success: true });
+});
+
 router.post('/manage/org/:id/upcoming/:eventId/gold', requireAuth, requireOrgOwner(), async (req, res) => {
   const db = await openDb();
   await ensureUpcomingTable(db);

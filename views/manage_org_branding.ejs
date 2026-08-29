@@ -1,14 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Manage Organization: <%= org.name %></title>
-  <link rel="stylesheet" href="/css/styles.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-</head>
-<body class="dashboard-body">
-  <%- include('partials/header') %>
+<%- include('partials/header', { pageTitle: 'Branding — ' + org.name }) %>
 
   <div class="dashboard-container container">
     <aside class="dashboard-sidebar">
@@ -49,10 +39,17 @@
             <p class="text-muted" style="font-size: 0.9rem; margin-bottom: 1rem; line-height: 1.5;">
               By uploading branding graphics (including logos and custom icons), you confirm that you have the legal right to distribute these assets. You hereby grant this platform a non-exclusive license to display, resize, and embed these graphics on public-facing digital dancer portfolios, event archives, and promotional materials.
             </p>
-            <label style="display: flex; gap: 0.5rem; align-items: center; color: white; cursor: pointer; font-weight: 500;">
-              <input type="checkbox" id="legal-agreement-checkbox" onchange="toggleUploads()">
-              I agree to the Branding Terms of Use to unlock uploads.
-            </label>
+            <% if (org.branding_terms_accepted_at) { %>
+              <p style="margin: 0; color: #10b981; font-weight: 600;">
+                ✓ Accepted on <%= String(org.branding_terms_accepted_at).slice(0, 10) %> — uploads are unlocked. (Once accepted, you won't be asked again.)
+              </p>
+              <input type="checkbox" id="legal-agreement-checkbox" checked style="display: none;">
+            <% } else { %>
+              <label style="display: flex; gap: 0.5rem; align-items: center; color: white; cursor: pointer; font-weight: 500;">
+                <input type="checkbox" id="legal-agreement-checkbox" onchange="toggleUploads(); if (this.checked) fetch('/manage/org/<%= org.id %>/branding/accept-terms', { method: 'POST', body: new URLSearchParams({}) });">
+                I agree to the Branding Terms of Use to unlock uploads. <span class="text-muted" style="font-weight: 400;">(one time — we remember it)</span>
+              </label>
+            <% } %>
           </div>
           <script>
             function toggleUploads() {
@@ -704,5 +701,4 @@
     }
   </style>
 
-</body>
-</html>
+<%- include('partials/footer') %>

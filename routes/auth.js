@@ -118,6 +118,28 @@ function roleHome(user) {
   return '/my-dancers';
 }
 
+// Lightweight account/profile page: identity + recorded agreements —
+// separate from the working dashboards, linked from the navbar dropdown.
+router.get('/account', async (req, res) => {
+  if (!req.session.user) return res.redirect('/login?next=/account');
+  const db = await openDb();
+  const account = await db.get('SELECT email, role, created_at FROM users WHERE id = ?', [req.session.user.id]);
+  let orgTerms = [];
+  try {
+    orgTerms = await db.all(
+      'SELECT name, branding_terms_accepted_at FROM organizations WHERE owner_id = ?',
+      [req.session.user.id]);
+  } catch (e) { /* column pre-migrate */ }
+  let photoConsents = [];
+  try {
+    photoConsents = await db.all(`
+      SELECT d.name, c.consented_at FROM card_photo_consents c
+      JOIN dancers d ON d.id = c.dancer_id WHERE c.user_id = ?`,
+      [req.session.user.id]);
+  } catch (e) { /* table pre-migrate */ }
+  res.render('account', { user: req.session.user, account, orgTerms, photoConsents });
+});
+
 router.get('/login', (req, res) => {
   const nextUrl = typeof req.query.next === 'string' && req.query.next.startsWith('/') ? req.query.next : null;
   if (req.session.user) return res.redirect(nextUrl || roleHome(req.session.user));
