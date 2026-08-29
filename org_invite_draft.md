@@ -239,11 +239,16 @@ framing, a concrete day count, the open door.
 *(v5.1, 2026-08-29 — zero-events branch: when the invited org has no events in
 the archive, the "already there" paragraph is replaced by a sample-page link:
 "Want to see what it looks like in practice? KAR Dance Competition's page is
-live here — their logo on every award card, champions wall, seasons of results
-browsable: [beta-keyed /dance/org/kar]". Sample org = KAR (SAMPLE_ORG constant
-in utils/invites.js buildOrgInviteTemplate): only org with an approved branding
-coin, so the "your brand on every card" pitch is visible on the page itself;
-swap the constant if a prouder partner page emerges. Terminology note: earlier
+live here — champions wall, seasons of results, every award a shareable card:
+[beta-keyed /dance/org/kar]". Sample org = KAR (SAMPLE_ORG constant in
+utils/invites.js buildOrgInviteTemplate): flagship archive, already name-dropped
+in the letter. RULE (Q, 2026-08-29): the paragraph claims only what the page
+shows on PROD — KAR is unclaimed there (its coin approval is local test data),
+so NO branding claims about the sample org; never seed a coin on prod to dress
+the sample either (branding is approval-gated by the org, full stop). Benefit
+#1 + the FAQ's flippable card carry the branding pitch. When a real partner
+approves their coin, swap SAMPLE_ORG and the paragraph may then mention their
+logo. Terminology note: earlier
 v4 line "org page demo link lands on the Rafters organizer edition" refers to
 the RAFTERS DESIGN SYSTEM (site-wide default since 2026-08-24) — there is no
 "Rafters" org. Orgs WITH archived events keep their own page as the demo link —

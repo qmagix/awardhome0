@@ -175,14 +175,15 @@ function buildOrgInviteTemplate({ org, eventCount = 0, awardCount = 0, totals = 
   const betaSuffix = BETA_MODE && BETA_KEY ? `?beta=${BETA_KEY}` : '';
   const orgPageUrl = `${BASE_URL}/dance/org/${org.slug}${betaSuffix}`;
   const upcomingUrl = `${BASE_URL}/dance/events${betaSuffix}`;
-  // Sample page for orgs with no archived events yet: must be an org whose
-  // branding coin is approved for public display, so the "your brand on every
-  // card" pitch is visible on the page itself.
+  // Sample page for orgs with no archived events yet. The paragraph must only
+  // claim what the page shows on PROD: KAR is unclaimed there (coin approval is
+  // local test data), so no branding claims — benefit #1 and the FAQ's flip
+  // card carry that pitch.
   const SAMPLE_ORG = { name: 'KAR Dance Competition', slug: 'kar' };
   const samplePageUrl = `${BASE_URL}/dance/org/${SAMPLE_ORG.slug}${betaSuffix}`;
   const alreadyLive = eventCount > 0
     ? `In fact, ${n} is already there: ${eventCount.toLocaleString()} of your events, with ${awardCount.toLocaleString()} awards, are live on AwardHome today — see ${orgPageUrl}\nClaiming your organizer profile puts your branding on every one of those award cards.\n\n`
-    : `Want to see what it looks like in practice? ${SAMPLE_ORG.name}'s page is live here — their logo on every award card, champions wall, seasons of results browsable: ${samplePageUrl}\n\n`;
+    : `Want to see what it looks like in practice? ${SAMPLE_ORG.name}'s page is live here — champions wall, seasons of results, every award a shareable card: ${samplePageUrl}\n\n`;
 
   const subject = `Featuring ${n} on AwardHome`;
   const body = `Hi Competition Director,
