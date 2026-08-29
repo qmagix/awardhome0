@@ -236,6 +236,20 @@ framing, a concrete day count, the open door.
 
 ## v5 first-touch letter (reviewed + fact-checked 2026-08-27)
 
+*(v5.1, 2026-08-29 — zero-events branch: when the invited org has no events in
+the archive, the "already there" paragraph is replaced by a sample-page link:
+"Want to see what it looks like in practice? KAR Dance Competition's page is
+live here — their logo on every award card, champions wall, seasons of results
+browsable: [beta-keyed /dance/org/kar]". Sample org = KAR (SAMPLE_ORG constant
+in utils/invites.js buildOrgInviteTemplate): only org with an approved branding
+coin, so the "your brand on every card" pitch is visible on the page itself;
+swap the constant if a prouder partner page emerges. Terminology note: earlier
+v4 line "org page demo link lands on the Rafters organizer edition" refers to
+the RAFTERS DESIGN SYSTEM (site-wide default since 2026-08-24) — there is no
+"Rafters" org. Orgs WITH archived events keep their own page as the demo link —
+never the generic /dance homepage (dancer-facing, dilutes the claim CTA); the
+organizer FAQ link with the flippable sample card is already in the letter.)*
+
 *(v5: numbers refreshed to 1.5M awards / 4,200+ events / 27 competitions —
 all verified against the live DB, incl. the YAGP/Starpower/KAR/NYCDA/Rainbow
 name-drops; attendance-analytics item REMOVED from all letters (Q, 2026-08-27):
