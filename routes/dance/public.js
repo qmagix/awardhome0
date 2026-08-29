@@ -142,6 +142,11 @@ router.get('/terms', (req, res) => {
 });
 
 
+router.get('/privacy', (req, res) => {
+  res.render('privacy');
+});
+
+
 // One-click unsubscribe from invite emails (HMAC-signed, no login needed).
 // GET serves humans clicking the footer link; POST serves RFC 8058
 // one-click unsubscribe from mail clients (params stay in the query string).
