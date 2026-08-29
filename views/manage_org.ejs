@@ -546,7 +546,7 @@
     </script>
 
 <script>
-        function showTab(tabId) {
+        function showTab(tabId, scroll = true) {
             // Hide all tabs
             document.querySelectorAll('.dashboard-tab').forEach(el => el.style.display = 'none');
             // Show targeted tab
@@ -554,8 +554,10 @@
             if (target) {
                 target.style.display = 'block';
                 // The sections sit below the onboarding card — without this,
-                // revealing one looks like nothing happened.
-                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                // a user-clicked reveal looks like nothing happened. Initial
+                // page-load activation passes scroll=false: landing on the
+                // dashboard should show the overview, not jump mid-page.
+                if (scroll) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
             
             // Update active state in sidebar
@@ -575,12 +577,12 @@
         <% if (initialTab) { %>
         // Deep-linked tab (navbar "My Events" and friends) wins over the
         // fresh-org default below.
-        document.addEventListener('DOMContentLoaded', () => showTab('<%= initialTab %>'));
+        document.addEventListener('DOMContentLoaded', () => showTab('<%= initialTab %>', false));
         <% } else if (!onboarding.hasData && !onboarding.hasUpload) { %>
         // Fresh org: the useful first screen is the upload form, not an
         // empty stats grid — open it directly (the welcome checklist above
         // it explains the rest).
-        document.addEventListener('DOMContentLoaded', () => showTab('upload-section'));
+        document.addEventListener('DOMContentLoaded', () => showTab('upload-section', false));
         <% } %>
 
         // Initialize first sub-nav state

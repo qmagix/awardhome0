@@ -14,7 +14,10 @@ const authLimiter = rateLimit({
   message: 'Too many attempts from this IP, please try again after 15 minutes'
 });
 
-router.get('/register', (req, res) => res.render('register'));
+router.get('/register', (req, res) => {
+  if (req.session.user) return res.redirect(roleHome(req.session.user));
+  res.render('register');
+});
 router.post('/register', authLimiter, async (req, res) => {
   const { email, password } = req.body;
   const db = await openDb();
@@ -105,9 +108,21 @@ router.get('/verify-email', async (req, res) => {
 });
 
 
-router.get('/login', (req, res) => res.render('login', {
-  next: typeof req.query.next === 'string' && req.query.next.startsWith('/') ? req.query.next : null
-}));
+// Already-signed-in visitors to /login or /register get routed home by
+// role instead of being re-prompted (re-showing a login form to a logged-in
+// user reads as a bug and invites accidental session switches).
+function roleHome(user) {
+  if (user.role === 'admin' || user.role === 'superadmin') return '/admin';
+  if (user.role === 'org_owner') return '/my-org';
+  if (user.role === 'studio_owner') return '/my-studio';
+  return '/my-dancers';
+}
+
+router.get('/login', (req, res) => {
+  const nextUrl = typeof req.query.next === 'string' && req.query.next.startsWith('/') ? req.query.next : null;
+  if (req.session.user) return res.redirect(nextUrl || roleHome(req.session.user));
+  res.render('login', { next: nextUrl });
+});
 router.post('/login', authLimiter, async (req, res) => {
   const { email, password } = req.body;
   const db = await openDb();
