@@ -39,6 +39,13 @@
               <td>
                 <a href="/dance/studio/<%= studio.unique_id %>" style="color: var(--primary); font-weight: 600; text-decoration: none;">
                   <%= studio.name %>
+                <% if (studio.status === 'frozen') { %>
+                  <button type="button" class="btn" style="margin-left: 0.5rem; padding: 0.15rem 0.5rem; font-size: 0.7rem; border: 1px solid #3b82f6; color: #60a5fa; background: none; cursor: pointer;"
+                    onclick="adminStudioAction(<%= studio.id %>, 'unfreeze', 'Unfreeze <%= studio.name.replace(/'/g, '') %>? (Ownership is not restored automatically.)')">🧊 Unfreeze</button>
+                <% } else if (studio.is_claimed) { %>
+                  <button type="button" class="btn" style="margin-left: 0.5rem; padding: 0.15rem 0.5rem; font-size: 0.7rem; border: 1px solid #ef4444; color: #e57368; background: none; cursor: pointer;"
+                    onclick="adminStudioAction(<%= studio.id %>, 'freeze-release', 'FREEZE <%= studio.name.replace(/'/g, '') %> and release every owner-created dancer/award link? Family-made links and imported history are kept. This revokes the owner account.')">🧊 Freeze &amp; release</button>
+                <% } %>
                 </a>
               </td>
               <td><%= studio.address || 'Unknown' %></td>
@@ -161,3 +168,19 @@ async function toggleFeature(studioId, isFeatured) {
 </style>
 
 <%- include('partials/footer') %>
+
+<script>
+  async function adminStudioAction(id, action, msg) {
+    if (!confirm(msg)) return;
+    const res = await fetch('/api/admin/studio/' + id + '/' + action, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}',
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      alert(action === 'freeze-release'
+        ? 'Frozen. Released ' + (data.awardLinksReleased || 0) + ' award links and ' + (data.rosterLinksReleased || 0) + ' roster links.'
+        : 'Unfrozen (ownership not restored).');
+      location.reload();
+    } else { alert(data.error || 'Action failed'); }
+  }
+</script>

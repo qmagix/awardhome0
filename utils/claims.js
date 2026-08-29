@@ -154,8 +154,34 @@ async function rejectDancerClaim(db, claimId) {
   notifyDancerClaimDecision(db, claimId, false);
 }
 
+// Layer-3 rogue-studio deterrent: when a studio owner attaches a CLAIMED
+// dancer to their roster, the family hears about it — every would-be victim
+// becomes a detector. Fire-and-forget; unclaimed dancers no-op.
+async function notifyRosterAttach(db, dancerId, studioId) {
+  try {
+    const dancer = await db.get(
+      'SELECT d.name, d.id, u.email FROM dancers d JOIN users u ON u.id = d.claimed_by_user_id WHERE d.id = ?',
+      [dancerId]);
+    if (!dancer || !dancer.email) return;
+    const studio = await db.get('SELECT name FROM studios WHERE id = ?', [studioId]);
+    if (!studio) return;
+    await sendEmail({
+      to: dancer.email,
+      subject: `${studio.name} added ${dancer.name} to its roster on AwardHome`,
+      html: `<div style="font-family: Arial, sans-serif; max-width: 540px; line-height: 1.55; color: #222;">
+        <p><strong>${studio.name}</strong> just added <strong>${dancer.name}</strong> to its studio roster on AwardHome.</p>
+        <p>If that's your studio — wonderful, nothing to do.</p>
+        <p>If it's <strong>not</strong>, reply to this email (or use the Send Feedback button on any AwardHome page) and we'll remove the link right away.</p>
+        <p><a href="${BASE_URL}/manage/dancer/${dancer.id}" style="color: #aa8529;">Manage ${dancer.name}'s profile</a></p>
+      </div>`,
+    });
+  } catch (e) {
+    console.error('[notifyRosterAttach] failed:', e.message);
+  }
+}
+
 module.exports = {
   domainsMatch, approveStudioClaim,
   matchDancerClaimCode, approveDancerClaim, rejectDancerClaim,
-  notifyDancerClaimDecision, notifyStudioOfProfileClaim,
+  notifyDancerClaimDecision, notifyStudioOfProfileClaim, notifyRosterAttach,
 };

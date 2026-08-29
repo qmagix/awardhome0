@@ -3,7 +3,7 @@ const router = express.Router();
 const { openDb } = require('../../database');
 const { requireAuth, requireStudioOwner } = require('../../middleware/auth');
 const { logStudioActivity } = require('../../utils/activity');
-const { approveDancerClaim, rejectDancerClaim } = require('../../utils/claims');
+const { approveDancerClaim, rejectDancerClaim, notifyRosterAttach } = require('../../utils/claims');
 const multer = require('multer');
 // CSV imports only (roster + awards). Rejections surface as 400s via the
 // central error handler (err.status = 400).
@@ -463,7 +463,7 @@ router.post('/manage/studio/:id/awards/csv-commit', requireAuth, requireStudioOw
         } else if (!d.matched && d.name) {
           await db.run('INSERT INTO dancers (name) VALUES (?)', [d.name]);
           const newDancer = await db.get('SELECT id FROM dancers ORDER BY id DESC LIMIT 1');
-          await db.run('INSERT INTO dancer_studios (dancer_id, studio_id) VALUES (?, ?)', [newDancer.id, req.params.id]);
+          await db.run("INSERT INTO dancer_studios (dancer_id, studio_id, source) VALUES (?, ?, 'studio_owner')", [newDancer.id, req.params.id]);
           await db.run("INSERT INTO award_dancers (award_id, dancer_id, source) VALUES (?, ?, 'studio_owner')", [award.id, newDancer.id]);
         }
       }
@@ -548,7 +548,7 @@ router.post('/manage/studio/:id/roster/merge', requireAuth, requireStudioOwner, 
     await db.run('DELETE FROM award_dancers WHERE dancer_id = ?', [duplicate_id]);
 
     // 2. Move any OTHER studio affiliations the duplicate might have had (that aren't this studio)
-    await db.run('INSERT OR IGNORE INTO dancer_studios (dancer_id, studio_id, status) SELECT ?, studio_id, status FROM dancer_studios WHERE dancer_id = ?', [primary_id, duplicate_id]);
+    await db.run('INSERT OR IGNORE INTO dancer_studios (dancer_id, studio_id, status, source) SELECT ?, studio_id, status, source FROM dancer_studios WHERE dancer_id = ?', [primary_id, duplicate_id]);
     await db.run('DELETE FROM dancer_studios WHERE dancer_id = ?', [duplicate_id]);
 
     // 3. Delete the duplicate dancer record
@@ -603,7 +603,7 @@ router.post('/manage/studio/:id/roster/clean-duplicate-set', requireAuth, requir
       await db.run('INSERT OR IGNORE INTO award_dancers (award_id, dancer_id, status, source, created_at) SELECT award_id, ?, status, source, created_at FROM award_dancers WHERE dancer_id = ?', [primaryId, dupId]);
       await db.run('DELETE FROM award_dancers WHERE dancer_id = ?', [dupId]);
 
-      await db.run('INSERT OR IGNORE INTO dancer_studios (dancer_id, studio_id, status) SELECT ?, studio_id, status FROM dancer_studios WHERE dancer_id = ?', [primaryId, dupId]);
+      await db.run('INSERT OR IGNORE INTO dancer_studios (dancer_id, studio_id, status, source) SELECT ?, studio_id, status, source FROM dancer_studios WHERE dancer_id = ?', [primaryId, dupId]);
       await db.run('DELETE FROM dancer_studios WHERE dancer_id = ?', [dupId]);
 
       await db.run('DELETE FROM dancers WHERE id = ?', [dupId]);
@@ -735,13 +735,15 @@ router.post('/manage/studio/:id/roster/csv-commit', requireAuth, requireStudioOw
         const status = 'active';
         const gradYear = null;
 
+        const priorLink = await db.get('SELECT 1 FROM dancer_studios WHERE dancer_id = ? AND studio_id = ?', [dancerId, req.params.id]);
         await db.run(`
-          INSERT INTO dancer_studios (dancer_id, studio_id, status, graduation_year) 
-          VALUES (?, ?, ?, ?)
+          INSERT INTO dancer_studios (dancer_id, studio_id, status, graduation_year, source) 
+          VALUES (?, ?, ?, ?, 'studio_owner')
           ON CONFLICT(dancer_id, studio_id) DO UPDATE SET 
             status = excluded.status,
             graduation_year = excluded.graduation_year
         `, [dancerId, req.params.id, status, gradYear]);
+        if (!priorLink) notifyRosterAttach(db, dancerId, req.params.id);
       }
     }
 
@@ -779,7 +781,8 @@ router.post('/manage/studio/:id/roster/claim', requireAuth, requireStudioOwner, 
   }
 
   if (finalDancerId) {
-    await db.run('INSERT OR IGNORE INTO dancer_studios (dancer_id, studio_id, status) VALUES (?, ?, ?)', [finalDancerId, req.params.id, 'active']);
+    const addRes = await db.run("INSERT OR IGNORE INTO dancer_studios (dancer_id, studio_id, status, source) VALUES (?, ?, 'active', 'studio_owner')", [finalDancerId, req.params.id]);
+    if (addRes.changes > 0) notifyRosterAttach(db, finalDancerId, req.params.id);
   }
 
   res.redirect(`/manage/studio/${req.params.id}/roster`);
@@ -1418,7 +1421,8 @@ router.post('/manage/studio/:id/awards/:awardId/dancers', requireAuth, requireSt
     }
 
     try {
-      await db.run('INSERT INTO dancer_studios (dancer_id, studio_id) VALUES (?, ?)', [dancer.id, req.params.id]);
+      await db.run("INSERT INTO dancer_studios (dancer_id, studio_id, source) VALUES (?, ?, 'studio_owner')", [dancer.id, req.params.id]);
+      notifyRosterAttach(db, dancer.id, req.params.id);
     } catch (e) { }
 
     // Director re-adding by hand overrides any earlier removal

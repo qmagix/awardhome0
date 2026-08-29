@@ -821,6 +821,39 @@ router.post('/admin/orgs/:id/delete', requireAdmin, async (req, res) => {
 });
 
 
+// Rogue-studio containment (layer 2): freeze revokes ownership + hides the
+// studio from active-only surfaces, and RELEASES exactly what the owner
+// created (source='studio_owner' links) — families' own dancer_claim links
+// and imported history are untouched. Tombstones block auto-backfill re-adds.
+router.post('/api/admin/studio/:id/freeze-release', requireSuperadmin, express.json(), async (req, res) => {
+  const db = await openDb();
+  const studio = await db.get('SELECT * FROM studios WHERE id = ?', [req.params.id]);
+  if (!studio) return res.status(404).json({ error: 'Studio not found' });
+
+  const ownerLinks = await db.all(`
+    SELECT ad.id, ad.award_id, ad.dancer_id FROM award_dancers ad
+    JOIN awards a ON a.id = ad.award_id
+    WHERE a.studio_id = ? AND ad.source = 'studio_owner'`, [req.params.id]);
+  for (const l of ownerLinks) {
+    await db.run("INSERT OR REPLACE INTO award_dancer_removals (award_id, dancer_id, source) VALUES (?, ?, 'admin_freeze')",
+      [l.award_id, l.dancer_id]).catch(() => {});
+    await db.run('DELETE FROM award_dancers WHERE id = ?', [l.id]);
+  }
+  const roster = await db.run("DELETE FROM dancer_studios WHERE studio_id = ? AND source = 'studio_owner'", [req.params.id]);
+
+  await db.run(`UPDATE studios SET status = 'frozen', frozen_at = CURRENT_TIMESTAMP,
+    frozen_prev_owner_id = owner_id, owner_id = NULL, is_claimed = 0 WHERE id = ?`, [req.params.id]);
+  res.json({ success: true, awardLinksReleased: ownerLinks.length, rosterLinksReleased: roster.changes });
+});
+
+// Unfreeze restores public visibility only — ownership is NOT auto-restored
+// (re-claiming goes through the normal verified flow).
+router.post('/api/admin/studio/:id/unfreeze', requireSuperadmin, express.json(), async (req, res) => {
+  const db = await openDb();
+  await db.run("UPDATE studios SET status = 'active' WHERE id = ? AND status = 'frozen'", [req.params.id]);
+  res.json({ success: true });
+});
+
 router.get('/admin/studios', requireAdmin, async (req, res) => {
   const db = await openDb();
 

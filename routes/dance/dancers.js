@@ -522,7 +522,7 @@ router.post('/manage/dancer/:id/join-studio', requireAuth, async (req, res) => {
   }
 
   try {
-    await db.run('INSERT INTO dancer_studios (dancer_id, studio_id, status) VALUES (?, ?, ?)', [req.params.id, studio.id, 'pending']);
+    await db.run("INSERT INTO dancer_studios (dancer_id, studio_id, status, source) VALUES (?, ?, ?, 'dancer_claim')", [req.params.id, studio.id, 'pending']);
     res.send(`<script>alert("Request sent successfully! The studio director must approve it."); window.location.href="/manage/dancer/${req.params.id}";</script>`);
   } catch (err) {
     // Unique constraint violation
@@ -698,7 +698,7 @@ router.post('/api/claim-award', claimAwardLimiter, async (req, res) => {
         return res.status(400).json({ error: 'The Studio Secret Code you entered is incorrect. Please double check with your Studio Director.' });
       }
       // Insert dancer_studios pending
-      await db.run("INSERT INTO dancer_studios (dancer_id, studio_id, status) VALUES (?, ?, 'pending')", [dancerId, studio_id]);
+      await db.run("INSERT INTO dancer_studios (dancer_id, studio_id, status, source) VALUES (?, ?, 'pending', 'dancer_claim')", [dancerId, studio_id]);
     }
 
     // Fetch target award to get performance_name and event_id

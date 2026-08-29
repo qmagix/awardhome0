@@ -380,3 +380,21 @@ REMEMBER: any new surface rendering flip-cards must join the container-type list
 in styles.css (~line 1133) or cqw falls back to viewport units and the card
 renders 3x oversized (the lightbox bug, rediscovered by this feature).
 flipbook.js is now double-load-safe (swipe listeners bind once).
+
+## Rogue-studio containment (2026-08-28)
+Three layers against mass dancer-attachment abuse (public unique_ids make it
+possible; approval process makes it unlikely; these make it survivable):
+1. **Detect** — sentinel abuse-watch: >200 owner-sourced award links or >100
+   roster adds per studio per 24h -> ABUSE-WATCH line in reviewer alerts.
+   Alert-first by design (group-dancers paste-a-list makes legit bursts).
+2. **Cure** — superadmin Freeze & Release on /admin/studios: provenance-SCOPED
+   (releases source='studio_owner' award_dancers + dancer_studios rows only;
+   dancer_claim + import links untouched), admin_freeze tombstones block
+   auto-backfill re-adds, ownership revoked (frozen_prev_owner_id recorded),
+   status='frozen' drops the studio from active-only surfaces. Unfreeze
+   restores visibility, never ownership. dancer_studios now carries `source`
+   ('import' default; 'studio_owner'/'dancer_claim' set at every app insert;
+   merges copy it).
+3. **Deter** — notifyRosterAttach (utils/claims.js): owner-attaching a CLAIMED
+   dancer emails the family ("not your studio? tell us") — fires only on
+   genuinely new links (upsert/ignore guarded), unclaimed dancers no-op.
