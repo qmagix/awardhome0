@@ -412,3 +412,13 @@ daily_counters 'upcoming_events_views' (page) + 'upcoming_events_ics_exports'
 **per-listing gold lift** (clicks per gold listing / clicks per standard
 listing) — the number to quote when gold buttons go paid (Oct 15, 2026);
 shortlist saves per event ride along from event_shortlists.
+
+## Legal pages (2026-08-29)
+/terms + /privacy (views/terms.ejs, privacy.ejs; routes in routes/dance/public.js;
+footer links). Both tailored to the product, not boilerplate: published-results
+archive framing (children's names as competitions announced them; competition
+records stay authoritative), claim rules, UGC license + photo-consent, family
+controls enumerated, sponsored-placement disclosure, patent-pending IP, no sale
+of data, "Near me" never stored, first-party-only analytics. NOT YET DEPLOYED:
+Terms §17 governing-law state is a marked placeholder pending Q + attorney
+review — fill before deploying.
