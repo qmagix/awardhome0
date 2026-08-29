@@ -436,11 +436,14 @@ demos, rendered by `org_v2.ejs` entirely from an in-memory object
 (`PEACOCK_DEMO` in `routes/dance/public.js`, registered above the `:slug`
 route). Zero DB rows: platform totals, search, rankings, and the sentinel never
 see it. Shows the fully-dressed claimed state — approved peacock coin
-(`public/img/demo/peacock_logo.svg`), partner badge, reach chart, champions
+(`public/img/demo/peacock_logo.svg` — same gold-feather mark as the demo
+card's coin, one consistent brand), partner badge, reach chart, champions
 wall, tour dates, archive tabs — with a banner declaring it a sample and
 illustrative numbers. `demoMode` flag in `org_v2.ejs` renders champion studio
-cards inert (fictional studios have no pages) and points "All N tour stops" at
-the plain `/dance/events` directory — the one outbound content link, kept
-deliberately (benefit 3 demo). `X-Robots-Tag: noindex`. Zero-events outreach
+cards inert (fictional studios have no pages), swaps "The Card" section's flat
+`v2-card-mock` for the REAL flip-book demo card (`partials/demo_card.ejs`,
+whose fictional defaults are already Peacock Cup — Angela Ng / Swanlake Dance /
+"Feathers of Gold"), and points "All N tour stops" at the plain `/dance/events`
+directory — the one outbound content link, kept deliberately (benefit 3 demo). `X-Robots-Tag: noindex`. Zero-events outreach
 letters link here (see org_invite_draft.md v5.2); orgs with archived events
 keep their own page as the demo link.

@@ -139,6 +139,12 @@
           </ul>
         </div>
         <div>
+          <% if (demo) { %>
+            <%# The real flip-book card (FAQ demo partial) — its fictional
+                defaults are already Peacock Cup, so show the actual artifact
+                families share instead of the flat mock. %>
+            <%- include('partials/demo_card', { demo: { colophonMessage: 'Where every dancer earns their plumes.' } }) %>
+          <% } else { %>
           <div class="v2-card-mock-stage">
             <div class="v2-card-mock" aria-hidden="true">
               <div class="v2-cm-coin">
@@ -150,6 +156,7 @@
             </div>
           </div>
           <p class="v2-cm-caption">A <%= org.name %> award card, as families share it.</p>
+          <% } %>
         </div>
         <% } else { %>
         <div>

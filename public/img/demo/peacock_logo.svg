@@ -1,32 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <!-- Peacock Cup demo mark: fanned tail of seven eye-feathers over a simple body. -->
-  <g stroke="#0e7c7b" stroke-width="2" opacity="0.9">
-    <line x1="50" y1="66" x2="21.5" y2="58.7"/>
-    <line x1="50" y1="66" x2="27.7" y2="48"/>
-    <line x1="50" y1="66" x2="37.8" y2="40.6"/>
-    <line x1="50" y1="66" x2="50" y2="36"/>
-    <line x1="50" y1="66" x2="62.2" y2="40.6"/>
-    <line x1="50" y1="66" x2="72.3" y2="48"/>
-    <line x1="50" y1="66" x2="78.5" y2="58.7"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Peacock Cup demo mark — same design as the demo card's coin (data URI in
+       views/partials/demo_card.ejs) so every surface shows one consistent brand. -->
+  <circle cx="32" cy="32" r="30" fill="#14110c" stroke="#d4af37" stroke-width="2.5"/>
+  <g stroke="#d4af37" stroke-width="2" fill="none" stroke-linecap="round">
+    <path d="M32 50 V26"/>
+    <path d="M32 34 C22 30 18 22 19 14"/>
+    <path d="M32 34 C42 30 46 22 45 14"/>
+    <path d="M32 30 C26 24 25 18 26 12"/>
+    <path d="M32 30 C38 24 39 18 38 12"/>
   </g>
-  <g>
-    <g transform="translate(21.5,58.7)"><circle r="6.5" fill="#0e7c7b"/><circle r="3.4" fill="#1d4e89"/><circle r="1.5" fill="#d4af37"/></g>
-    <g transform="translate(27.7,48)"><circle r="6.5" fill="#0e7c7b"/><circle r="3.4" fill="#1d4e89"/><circle r="1.5" fill="#d4af37"/></g>
-    <g transform="translate(37.8,40.6)"><circle r="6.5" fill="#0e7c7b"/><circle r="3.4" fill="#1d4e89"/><circle r="1.5" fill="#d4af37"/></g>
-    <g transform="translate(50,36)"><circle r="6.5" fill="#0e7c7b"/><circle r="3.4" fill="#1d4e89"/><circle r="1.5" fill="#d4af37"/></g>
-    <g transform="translate(62.2,40.6)"><circle r="6.5" fill="#0e7c7b"/><circle r="3.4" fill="#1d4e89"/><circle r="1.5" fill="#d4af37"/></g>
-    <g transform="translate(72.3,48)"><circle r="6.5" fill="#0e7c7b"/><circle r="3.4" fill="#1d4e89"/><circle r="1.5" fill="#d4af37"/></g>
-    <g transform="translate(78.5,58.7)"><circle r="6.5" fill="#0e7c7b"/><circle r="3.4" fill="#1d4e89"/><circle r="1.5" fill="#d4af37"/></g>
-  </g>
-  <path d="M50 52 C 44 62, 44 76, 50 88 C 56 76, 56 62, 50 52 Z" fill="#1d4e89"/>
-  <circle cx="50" cy="50" r="4.6" fill="#1d4e89"/>
-  <path d="M45.6 50.5 L 41.5 52 L 45.9 53.4 Z" fill="#d4af37"/>
-  <g stroke="#0e7c7b" stroke-width="1.4">
-    <line x1="48" y1="46.5" x2="46" y2="42.5"/>
-    <line x1="50" y1="45.6" x2="50" y2="41.2"/>
-    <line x1="52" y1="46.5" x2="54" y2="42.5"/>
-  </g>
-  <circle cx="46" cy="42" r="1.3" fill="#d4af37"/>
-  <circle cx="50" cy="40.7" r="1.3" fill="#d4af37"/>
-  <circle cx="54" cy="42" r="1.3" fill="#d4af37"/>
+  <circle cx="32" cy="20" r="5" fill="#14110c" stroke="#d4af37" stroke-width="2"/>
+  <circle cx="32" cy="20" r="1.8" fill="#f3c545"/>
 </svg>
