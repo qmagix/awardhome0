@@ -2955,7 +2955,9 @@ footer {
   border-radius: 16px;
 }
 .demo-card-wrap .flip-card { width: 100%; }
-.demo-card-hint {
+/* Scoped under the wrap so FAQ page styles (.faq-section p) can't win the
+   cascade and gray the hint out against the dark stage. */
+.demo-card-wrap .demo-card-hint {
   text-align: center;
   color: #fff;
   font-size: 0.8rem;
