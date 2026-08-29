@@ -183,7 +183,7 @@ function buildOrgInviteTemplate({ org, eventCount = 0, awardCount = 0, totals = 
   const samplePageUrl = `${BASE_URL}/dance/org/peacock${betaSuffix}`;
   const alreadyLive = eventCount > 0
     ? `In fact, ${n} is already there: ${eventCount.toLocaleString()} of your events, with ${awardCount.toLocaleString()} awards, are live on AwardHome today — see ${orgPageUrl}\nClaiming your organizer profile puts your branding on every one of those award cards.\n\n`
-    : `Want to see what your page would look like? We keep a live sample up — the "Peacock Cup," a fictitious competition — with the brand coin, champions wall, and tour dates all in place: ${samplePageUrl}\n\n`;
+    : `Want to see what your page would look like? We keep a live sample up — the "Peacock Cup," a fictitious competition — with the brand coin, champions wall, tour dates, and an award card you can actually flip, all in place: ${samplePageUrl}\n\n`;
 
   const subject = `Featuring ${n} on AwardHome`;
   const body = `Hi Competition Director,
