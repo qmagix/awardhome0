@@ -1,0 +1,115 @@
+<%- include('partials/header') %>
+<div class="container" style="max-width: 1400px;">
+  <div class="header-section">
+    <h1>Events Directory Analytics</h1>
+    <p class="subtitle">What converts on <a href="/dance/events" target="_blank" style="color: var(--accent-gold);">/dance/events</a> — register clicks (gold vs standard), shortlist saves, page traffic, and calendar exports. Admin sessions are excluded from every count.</p>
+  </div>
+
+  <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+    <div class="card glass-card" style="text-align: center;">
+      <div style="color: var(--text-muted); font-size: 0.85rem;">Page views</div>
+      <div style="font-size: 1.8rem; font-weight: 700; font-variant-numeric: tabular-nums;"><%= counters.upcoming_events_views.last30 %></div>
+      <div style="color: var(--text-muted); font-size: 0.8rem;">last 30 days · <%= counters.upcoming_events_views.all_time %> all-time</div>
+    </div>
+    <div class="card glass-card" style="text-align: center;">
+      <div style="color: var(--text-muted); font-size: 0.85rem;">Register / site clicks</div>
+      <div style="font-size: 1.8rem; font-weight: 700; font-variant-numeric: tabular-nums;"><%= totals.clicks_30d || 0 %></div>
+      <div style="color: var(--text-muted); font-size: 0.8rem;">last 30 days · <%= totals.clicks || 0 %> all-time
+        <% if (counters.upcoming_events_views.last30 > 0 && totals.clicks_30d > 0) { %>
+          · CTR <%= Math.round(totals.clicks_30d / counters.upcoming_events_views.last30 * 100) %>%
+        <% } %>
+      </div>
+    </div>
+    <div class="card glass-card" style="text-align: center;">
+      <div style="color: var(--text-muted); font-size: 0.85rem;">Gold-button share of clicks</div>
+      <div style="font-size: 1.8rem; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--primary);">
+        <%= totals.clicks > 0 ? Math.round((totals.gold_clicks || 0) / totals.clicks * 100) + '%' : '—' %>
+      </div>
+      <div style="color: var(--text-muted); font-size: 0.8rem;">
+        <%= totals.gold_clicks || 0 %> gold / <%= (totals.clicks || 0) - (totals.gold_clicks || 0) %> standard all-time
+        · <%= listings.gold %> of <%= listings.total %> future listings are gold
+      </div>
+    </div>
+    <div class="card glass-card" style="text-align: center;">
+      <div style="color: var(--text-muted); font-size: 0.85rem;">Shortlist saves</div>
+      <div style="font-size: 1.8rem; font-weight: 700; font-variant-numeric: tabular-nums;"><%= savesTotal %></div>
+      <div style="color: var(--text-muted); font-size: 0.8rem;">all-time, across all events</div>
+    </div>
+    <div class="card glass-card" style="text-align: center;">
+      <div style="color: var(--text-muted); font-size: 0.85rem;">Calendar (.ics) exports</div>
+      <div style="font-size: 1.8rem; font-weight: 700; font-variant-numeric: tabular-nums;"><%= counters.upcoming_events_ics_exports.last30 %></div>
+      <div style="color: var(--text-muted); font-size: 0.8rem;">last 30 days · <%= counters.upcoming_events_ics_exports.all_time %> all-time</div>
+    </div>
+  </div>
+
+  <% if (listings.total > 0 && totals.clicks > 0) { %>
+    <%
+      const goldListings = listings.gold, stdListings = listings.total - listings.gold;
+      const goldPer = goldListings > 0 ? (totals.gold_clicks / goldListings) : null;
+      const stdPer = stdListings > 0 ? ((totals.clicks - totals.gold_clicks) / stdListings) : null;
+    %>
+    <% if (goldPer !== null && stdPer !== null) { %>
+      <div class="card glass-card" style="margin-bottom: 1.5rem;">
+        <h3 style="color: var(--primary); margin-top: 0;">Gold vs standard, per listing</h3>
+        <p style="color: var(--text-muted); margin-bottom: 0;">
+          Gold listings average <strong style="color: var(--primary);"><%= goldPer.toFixed(1) %></strong> clicks each;
+          standard listings average <strong><%= stdPer.toFixed(1) %></strong>.
+          <% if (stdPer > 0) { %>
+            That's a <strong><%= (goldPer / stdPer).toFixed(1) %>×</strong> per-listing lift for gold placement —
+            the number to quote when gold buttons go paid.
+          <% } %>
+          Raw totals favor whichever group has more listings, so compare per-listing.
+        </p>
+      </div>
+    <% } %>
+  <% } %>
+
+  <div class="card glass-card" style="overflow-x: auto;">
+    <h3 style="color: var(--primary); margin-top: 0;">Active listings by clicks</h3>
+    <% if (events.length === 0) { %>
+      <p style="color: var(--text-muted);">No active upcoming events.</p>
+    <% } else { %>
+      <table style="width: 100%; text-align: left; border-collapse: collapse; margin-top: 1rem;">
+        <thead>
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+            <th style="padding: 0.5rem 0.75rem 0.5rem 0; color: var(--text-muted);">Dates</th>
+            <th style="padding: 0.5rem 0.75rem 0.5rem 0; color: var(--text-muted);">Organizer</th>
+            <th style="padding: 0.5rem 0.75rem 0.5rem 0; color: var(--text-muted);">Event</th>
+            <th style="padding: 0.5rem 0.75rem 0.5rem 0; color: var(--text-muted);">Location</th>
+            <th style="padding: 0.5rem 0.75rem 0.5rem 0; color: var(--text-muted);" title="Current button state: free/paid gold on this event, or org-wide sponsor placement. Clicks below are split by what the visitor saw at click time, which may differ.">Gold now</th>
+            <th style="padding: 0.5rem 0.75rem 0.5rem 0; color: var(--text-muted); text-align: right;" title="Register + Official Site clicks in the last 30 days">Clicks /30d</th>
+            <th style="padding: 0.5rem 0.75rem 0.5rem 0; color: var(--text-muted); text-align: right;" title="All-time clicks; 'gold' counts clicks that happened while the button was gold, 'site' counts Official Site (no registration link) clicks">All-time (gold · site)</th>
+            <th style="padding: 0.5rem 0; color: var(--text-muted); text-align: right;" title="Users who starred this event onto their shortlist">Saves</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% events.forEach(ev => { %>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); <%= ev.clicks === 0 && ev.saves === 0 ? 'color: var(--text-muted);' : '' %>">
+              <td style="padding: 0.5rem 0.75rem 0.5rem 0; white-space: nowrap; font-variant-numeric: tabular-nums;">
+                <%= ev.start_date %><%= ev.end_date ? ' – ' + ev.end_date.slice(5) : '' %>
+              </td>
+              <td style="padding: 0.5rem 0.75rem 0.5rem 0;"><%= ev.org_name %></td>
+              <td style="padding: 0.5rem 0.75rem 0.5rem 0;"><strong><%= ev.name %></strong></td>
+              <td style="padding: 0.5rem 0.75rem 0.5rem 0;"><%= [ev.city, ev.state].filter(Boolean).join(', ') || '—' %></td>
+              <td style="padding: 0.5rem 0.75rem 0.5rem 0;">
+                <% if (ev.gold) { %>
+                  <span class="badge" style="background: rgba(212, 175, 55, 0.2); color: var(--primary);"><%= ev.gold %></span>
+                <% } else if (ev.org_sponsored) { %>
+                  <span class="badge" style="background: rgba(212, 175, 55, 0.12); color: var(--gold-light);">sponsor</span>
+                <% } else { %>
+                  <span style="color: var(--text-muted);">—</span>
+                <% } %>
+              </td>
+              <td style="padding: 0.5rem 0.75rem 0.5rem 0; text-align: right; font-variant-numeric: tabular-nums;"><%= ev.clicks_30d %></td>
+              <td style="padding: 0.5rem 0.75rem 0.5rem 0; text-align: right; font-variant-numeric: tabular-nums;">
+                <%= ev.clicks %> <span style="color: var(--text-muted); font-size: 0.85rem;">(<%= ev.gold_clicks %> · <%= ev.site_clicks %>)</span>
+              </td>
+              <td style="padding: 0.5rem 0; text-align: right; font-variant-numeric: tabular-nums;"><%= ev.saves %></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    <% } %>
+  </div>
+</div>
+<%- include('partials/footer') %>

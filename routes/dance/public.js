@@ -466,6 +466,16 @@ router.get('/dance/events', async (req, res) => {
   const db = await openDb();
   await ensureUpcomingTable(db);
 
+  // Impression denominator for register-button click-through (same
+  // admin-exclusion rule as dance_home_views). Never blocks the render.
+  const viewerRole = req.session && req.session.user && req.session.user.role;
+  if (viewerRole !== 'admin' && viewerRole !== 'superadmin') {
+    try {
+      await db.run(`INSERT INTO daily_counters (day, key, count) VALUES (date('now'), 'upcoming_events_views', 1)
+                    ON CONFLICT(day, key) DO UPDATE SET count = count + 1`);
+    } catch (e) { /* table lands with the next migrate */ }
+  }
+
   // the shortlist filter is per-account — send signed-out visitors to login
   if (req.query.saved === '1' && !(req.session && req.session.user)) {
     return res.redirect('/login?redirect=' + encodeURIComponent('/dance/events?saved=1'));
@@ -519,6 +529,45 @@ router.get('/dance/events', async (req, res) => {
   });
 });
 
+// Register-button telemetry on /dance/events: which listings convert, and
+// whether gold placement outperforms the standard ghost button. was_gold is
+// resolved server-side at click time (gold moves between events, sponsorship
+// can lapse) so historical comparisons describe what visitors actually saw.
+// This is also the evidence base for paid gold buttons. CSRF-covered like
+// all POSTs; admin sessions are excluded like the impression counters.
+const regClickLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: 60,
+  message: 'Too many requests.',
+});
+router.post('/api/upcoming/:id/reg-click', regClickLimiter, express.json(), async (req, res) => {
+  if (!/^\d+$/.test(req.params.id)) return res.status(400).json({ error: 'Bad id' });
+  const role = req.session && req.session.user && req.session.user.role;
+  if (role === 'admin' || role === 'superadmin') return res.json({ ok: true, skipped: 'admin' });
+  const db = await openDb();
+  await ensureUpcomingTable(db);
+  const ev = await db.get(`
+    SELECT ue.id, ue.org_id, ue.gold, COALESCE(o.is_sponsor, 0) AS org_sponsored
+    FROM org_upcoming_events ue
+    JOIN organizations o ON o.id = ue.org_id
+    WHERE ue.id = ?`, [req.params.id]);
+  if (!ev) return res.status(404).json({ error: 'Unknown event' });
+  const linkType = req.body && req.body.link_type === 'site' ? 'site' : 'register';
+  const wasGold = (ev.gold || ev.org_sponsored) ? 1 : 0;
+  // Defensive create so the endpoint works before the next migrate runs.
+  await db.run(`CREATE TABLE IF NOT EXISTS event_reg_clicks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    upcoming_event_id INTEGER NOT NULL,
+    org_id INTEGER NOT NULL,
+    was_gold INTEGER NOT NULL DEFAULT 0,
+    link_type TEXT NOT NULL DEFAULT 'register',
+    clicked_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`);
+  await db.run('INSERT INTO event_reg_clicks (upcoming_event_id, org_id, was_gold, link_type) VALUES (?, ?, ?, ?)',
+    [ev.id, ev.org_id, wasGold, linkType]);
+  res.json({ ok: true });
+});
+
 // Shortlist toggle — any signed-in account (studio owner, parent, dancer).
 router.post('/api/upcoming/:id/save', async (req, res) => {
   if (!(req.session && req.session.user)) return res.status(401).json({ error: 'Sign in to save events' });
@@ -543,6 +592,15 @@ router.get('/dance/events.ics', async (req, res) => {
   }
   const db = await openDb();
   await ensureUpcomingTable(db);
+
+  // Calendar exports are a strong planning-intent signal — counted per day.
+  const icsRole = req.session && req.session.user && req.session.user.role;
+  if (icsRole !== 'admin' && icsRole !== 'superadmin') {
+    try {
+      await db.run(`INSERT INTO daily_counters (day, key, count) VALUES (date('now'), 'upcoming_events_ics_exports', 1)
+                    ON CONFLICT(day, key) DO UPDATE SET count = count + 1`);
+    } catch (e) { /* table lands with the next migrate */ }
+  }
   const { rows } = await loadUpcomingFiltered(db, req);
 
   const esc = (s) => String(s || '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');

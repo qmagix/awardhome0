@@ -612,6 +612,80 @@ router.post('/admin/orgs/:id/visibility', requireSuperadmin, express.json(), asy
   res.json({ ok: true });
 });
 
+// Events-directory analytics: what actually converts on /dance/events —
+// register clicks per listing with the gold-vs-standard split (was_gold is
+// snapshotted at click time, so the comparison reflects what visitors saw),
+// shortlist saves, page views, and calendar exports. The gold numbers are
+// the evidence base when gold buttons go paid (see organizer FAQ).
+router.get('/admin/events-analytics', requireSuperadmin, async (req, res) => {
+  const db = await openDb();
+  // Defensive create so the page works before the next migrate runs.
+  await db.run(`CREATE TABLE IF NOT EXISTS event_reg_clicks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    upcoming_event_id INTEGER NOT NULL,
+    org_id INTEGER NOT NULL,
+    was_gold INTEGER NOT NULL DEFAULT 0,
+    link_type TEXT NOT NULL DEFAULT 'register',
+    clicked_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`);
+
+  const events = await db.all(`
+    SELECT ue.id, ue.name, ue.city, ue.state, ue.start_date, ue.end_date, ue.gold,
+           o.name AS org_name, COALESCE(o.is_sponsor, 0) AS org_sponsored,
+           COALESCE(c.total, 0) AS clicks, COALESCE(c.last30, 0) AS clicks_30d,
+           COALESCE(c.gold_clicks, 0) AS gold_clicks,
+           COALESCE(c.site_clicks, 0) AS site_clicks,
+           COALESCE(s.saves, 0) AS saves
+    FROM org_upcoming_events ue
+    JOIN organizations o ON o.id = ue.org_id
+    LEFT JOIN (
+      SELECT upcoming_event_id,
+             COUNT(*) AS total,
+             SUM(CASE WHEN clicked_at >= datetime('now', '-30 days') THEN 1 ELSE 0 END) AS last30,
+             SUM(was_gold) AS gold_clicks,
+             SUM(CASE WHEN link_type = 'site' THEN 1 ELSE 0 END) AS site_clicks
+      FROM event_reg_clicks GROUP BY upcoming_event_id
+    ) c ON c.upcoming_event_id = ue.id
+    LEFT JOIN (
+      SELECT upcoming_event_id, COUNT(*) AS saves
+      FROM event_shortlists GROUP BY upcoming_event_id
+    ) s ON s.upcoming_event_id = ue.id
+    WHERE ue.status = 'active'
+    ORDER BY c.total DESC, s.saves DESC, ue.start_date ASC
+  `);
+
+  const totals = await db.get(`
+    SELECT COUNT(*) AS clicks,
+           SUM(CASE WHEN clicked_at >= datetime('now', '-30 days') THEN 1 ELSE 0 END) AS clicks_30d,
+           COALESCE(SUM(was_gold), 0) AS gold_clicks,
+           COALESCE(SUM(CASE WHEN was_gold = 1 AND clicked_at >= datetime('now', '-30 days') THEN 1 ELSE 0 END), 0) AS gold_clicks_30d
+    FROM event_reg_clicks`);
+
+  const counters = {};
+  for (const key of ['upcoming_events_views', 'upcoming_events_ics_exports']) {
+    counters[key] = await db.get(`
+      SELECT COALESCE(SUM(count), 0) AS all_time,
+             COALESCE(SUM(CASE WHEN day >= date('now', '-30 days') THEN count ELSE 0 END), 0) AS last30
+      FROM daily_counters WHERE key = ?`, [key]);
+  }
+
+  // Per-listing fairness context: raw gold clicks mean little without
+  // knowing how many gold vs standard listings are competing for them.
+  const listings = await db.get(`
+    SELECT COUNT(*) AS total,
+           COALESCE(SUM(CASE WHEN gold IS NOT NULL THEN 1 ELSE 0 END), 0) AS gold
+    FROM org_upcoming_events
+    WHERE status = 'active' AND COALESCE(end_date, start_date) >= date('now')`);
+
+  const savesTotal = await db.get('SELECT COUNT(*) AS n FROM event_shortlists');
+
+  res.render('admin_events_analytics', {
+    events, totals, counters, listings,
+    savesTotal: savesTotal.n,
+    user: req.session.user
+  });
+});
+
 // First revenue stream: partner organizers' Register buttons render in
 // featured gold on /dance/events and their org page (default is the
 // ghost style). Emphasis only — sorting stays neutral by design.

@@ -127,10 +127,12 @@
               <% if (ev.registration_url) { %>
                 <% const isGold = ev.org_sponsored || ev.gold; %>
                 <a class="ue-reg <%= isGold ? '' : 'ue-reg-ghost' %>" href="<%= ev.registration_url %>" target="_blank" rel="noopener nofollow"
+                   data-event-id="<%= ev.id %>" data-link-type="register"
                    <%= isGold ? 'title="Featured partner placement"' : '' %>>Register</a>
               <% } else if (ev.org_website) { %>
                 <% const isGoldSite = ev.org_sponsored || ev.gold; %>
                 <a class="ue-reg <%= isGoldSite ? '' : 'ue-reg-ghost' %>" href="<%= ev.org_website %>" target="_blank" rel="noopener nofollow"
+                   data-event-id="<%= ev.id %>" data-link-type="site"
                    <%= isGoldSite ? 'title="Featured partner placement"' : '' %>>Official Site</a>
               <% } %>
             </div>
@@ -185,6 +187,20 @@
     var qs = location.search;
     if (qs) ics.href = '/dance/events.ics' + qs;
   }
+
+  // Register-button telemetry: fire-and-forget (keepalive survives the
+  // new-tab navigation); csrf.js adds the X-CSRF-Token header to fetch.
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest('a.ue-reg[data-event-id]');
+    if (!a) return;
+    try {
+      fetch('/api/upcoming/' + a.getAttribute('data-event-id') + '/reg-click', {
+        method: 'POST', keepalive: true,
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ link_type: a.getAttribute('data-link-type') || 'register' })
+      }).catch(function () {});
+    } catch (err) { /* tracking must never block the visit */ }
+  });
 
   // shortlist stars (csrf.js adds the X-CSRF-Token header to fetch)
   document.addEventListener('click', function (e) {

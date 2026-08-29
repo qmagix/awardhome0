@@ -509,6 +509,23 @@ async function initDb() {
       UNIQUE(user_id, upcoming_event_id)
     );
 
+    -- Events-directory telemetry: every Register / Official Site click on
+    -- /dance/events. was_gold is snapshotted at click time — gold buttons
+    -- move between events and sponsorships lapse, so the row must remember
+    -- what the visitor actually saw for gold-vs-standard comparisons to
+    -- stay truthful historically. Impression denominators live in
+    -- daily_counters ('upcoming_events_views', 'upcoming_events_ics_exports').
+    CREATE TABLE IF NOT EXISTS event_reg_clicks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      upcoming_event_id INTEGER NOT NULL,
+      org_id INTEGER NOT NULL,
+      was_gold INTEGER NOT NULL DEFAULT 0,
+      link_type TEXT NOT NULL DEFAULT 'register',
+      clicked_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE INDEX IF NOT EXISTS idx_event_reg_clicks_event
+      ON event_reg_clicks(upcoming_event_id);
+
     -- Known flags ship dark; releases happen at /admin/features
     INSERT OR IGNORE INTO feature_flags (key, state) VALUES ('thank_you_notes', 'off');
     INSERT OR IGNORE INTO feature_flags (key, state) VALUES ('award_photos', 'off');

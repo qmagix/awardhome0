@@ -107,6 +107,15 @@
       <a href="/admin/orgs" class="btn btn-primary" style="display: block; text-align: center;">Open Org Directory</a>
     </div>
 
+    <!-- Events Directory Analytics -->
+    <% if (user && user.role === 'superadmin') { %>
+    <div class="card glass-card">
+      <h3 style="color: #60a5fa; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">📈 Events Directory Analytics</h3>
+      <p class="sub-text" style="margin-bottom: 1.5rem;">Register-button clicks (gold vs standard), shortlist saves, and traffic for the Upcoming Events directory.</p>
+      <a href="/admin/events-analytics" class="btn btn-outline" style="display: block; text-align: center; border-color: #60a5fa; color: #60a5fa;">Open Events Analytics</a>
+    </div>
+    <% } %>
+
     <!-- First-Place Audit -->
     <% if (user && user.role === 'superadmin') { %>
     <div class="card glass-card">

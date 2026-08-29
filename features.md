@@ -398,3 +398,17 @@ possible; approval process makes it unlikely; these make it survivable):
 3. **Deter** — notifyRosterAttach (utils/claims.js): owner-attaching a CLAIMED
    dancer emails the family ("not your studio? tell us") — fires only on
    genuinely new links (upsert/ignore guarded), unclaimed dancers no-op.
+
+## Events-directory analytics (2026-08-29)
+What converts on /dance/events, for superadmin (/admin/events-analytics, card
+on /admin). Register/Official-Site anchors carry data-event-id + data-link-type;
+a fire-and-forget keepalive fetch posts to /api/upcoming/:id/reg-click
+(rate-limited, CSRF via csrf.js, admin sessions excluded like all counters).
+`event_reg_clicks` snapshots **was_gold at click time, resolved server-side**
+(gold moves between events, sponsorships lapse — historical gold-vs-standard
+comparisons must describe what the visitor actually saw). Impressions:
+daily_counters 'upcoming_events_views' (page) + 'upcoming_events_ics_exports'
+(calendar pulls = planning intent). Dashboard shows CTR, gold share, and the
+**per-listing gold lift** (clicks per gold listing / clicks per standard
+listing) — the number to quote when gold buttons go paid (Oct 15, 2026);
+shortlist saves per event ride along from event_shortlists.
