@@ -1624,21 +1624,22 @@ router.get('/my-studio', requireAuth, async (req, res) => {
 // dancers are real (two kids named Emma), so nothing links without the
 // director seeing what will happen.
 
-// Awards belonging to one routine-year for this studio. Solos are excluded
-// two ways: the "solo" word heuristic, AND dancer_id IS NULL — by the data
-// rules only solo awards carry dancer_id, so a linked solo can never leak
-// onto the group page even when its category doesn't say "solo" (e.g.
-// StarQuest "Classic Emerging Artist Teen Dancer" titles).
+// The routine is the unit: a routine-year's card covers ALL its awards
+// (solo-worded siblings included — a "Top Classic Teen Solo" Overall belongs
+// to the same routine as its Title). Awards that already carry an
+// org-published dancer (dancer_id set, the solo convention) are READ-ONLY
+// here: they show in counts/casts and feed Sync as a source, but paste/
+// sync/remove never modify them — writes only target dancer-less awards.
 const GROUP_AWARD_FILTER = `
   a.studio_id = ? AND TRIM(IFNULL(a.performance_name, '')) = ?
-  AND a.dancer_id IS NULL
-  AND LOWER(IFNULL(a.award_type, '')) NOT LIKE '%solo%'
-  AND LOWER(IFNULL(a.category, '')) NOT LIKE '%solo%'`;
+  AND a.dancer_id IS NULL`;
 
 // eventIds (optional): restrict to these events — casts can differ per event
 // (injuries, substitutes), so the batch tools let the director scope a round
 // of assignment to ticked events. 0 stands for "no event" (self-reported).
-async function routineAwardIds(db, studioId, routine, year, eventIds) {
+// opts.includeLinkedSolos: read-set variant (Sync's cast source) that also
+// returns dancer_id-linked awards.
+async function routineAwardIds(db, studioId, routine, year, eventIds, opts = {}) {
   const yearCond = year === 'Undated' ? 'e.year IS NULL' : 'e.year = ?';
   const params = year === 'Undated' ? [studioId, routine.trim()] : [studioId, routine.trim(), year];
   let eventCond = '';
@@ -1651,9 +1652,12 @@ async function routineAwardIds(db, studioId, routine, year, eventIds) {
     if (!parts.length) return [];
     eventCond = ` AND (${parts.join(' OR ')})`;
   }
+  const filter = opts.includeLinkedSolos
+    ? GROUP_AWARD_FILTER.replace('AND a.dancer_id IS NULL', '')
+    : GROUP_AWARD_FILTER;
   const rows = await db.all(`
     SELECT a.id FROM awards a LEFT JOIN events e ON a.event_id = e.id
-    WHERE ${GROUP_AWARD_FILTER} AND ${yearCond}${eventCond}`, params);
+    WHERE ${filter} AND ${yearCond}${eventCond}`, params);
   return rows.map(r => r.id);
 }
 
@@ -1661,15 +1665,24 @@ router.get('/manage/studio/:id/group-dancers', requireAuth, requireStudioOwner, 
   const db = await openDb();
   const studio = req.studio;
 
+  // Which routine-years appear: the "solo" word heuristic keeps the page
+  // from flooding with every solo in the archive — a routine qualifies via
+  // at least one plausibly-group award. The card then aggregates ALL of the
+  // routine's awards (solo-worded siblings + dancer_id-linked solos
+  // included), so counts are honest and linked awards feed Sync as a source.
   const routines = await db.all(`
     SELECT TRIM(a.performance_name) AS routine, IFNULL(e.year, 'Undated') AS year,
            COUNT(DISTINCT a.id) AS award_count,
            GROUP_CONCAT(DISTINCT IFNULL(e.name, 'Self-reported')) AS event_names
     FROM awards a LEFT JOIN events e ON a.event_id = e.id
     WHERE a.studio_id = ? AND TRIM(IFNULL(a.performance_name, '')) != ''
-      AND a.dancer_id IS NULL
-      AND LOWER(IFNULL(a.award_type, '')) NOT LIKE '%solo%'
-      AND LOWER(IFNULL(a.category, '')) NOT LIKE '%solo%'
+      AND EXISTS (
+        SELECT 1 FROM awards q LEFT JOIN events qe ON q.event_id = qe.id
+        WHERE q.studio_id = a.studio_id
+          AND TRIM(IFNULL(q.performance_name, '')) = TRIM(a.performance_name)
+          AND IFNULL(qe.year, 'Undated') = IFNULL(e.year, 'Undated')
+          AND LOWER(IFNULL(q.award_type, '')) NOT LIKE '%solo%'
+          AND LOWER(IFNULL(q.category, '')) NOT LIKE '%solo%')
     GROUP BY TRIM(a.performance_name), e.year
     ORDER BY (e.year IS NULL), e.year DESC, TRIM(a.performance_name)
   `, [studio.id]);
@@ -1688,9 +1701,6 @@ router.get('/manage/studio/:id/group-dancers', requireAuth, requireStudioOwner, 
     JOIN dancers d ON d.id = ad.dancer_id
     LEFT JOIN dancer_studios ds ON ds.dancer_id = d.id AND ds.studio_id = a.studio_id
     WHERE a.studio_id = ? AND TRIM(IFNULL(a.performance_name, '')) != ''
-      AND a.dancer_id IS NULL
-      AND LOWER(IFNULL(a.award_type, '')) NOT LIKE '%solo%'
-      AND LOWER(IFNULL(a.category, '')) NOT LIKE '%solo%'
     GROUP BY TRIM(a.performance_name), e.year, d.id
     ORDER BY d.name
   `, [studio.id]);
@@ -1720,9 +1730,6 @@ router.get('/manage/studio/:id/group-dancers', requireAuth, requireStudioOwner, 
     FROM awards a LEFT JOIN events e ON a.event_id = e.id
     LEFT JOIN award_dancers ad ON ad.award_id = a.id
     WHERE a.studio_id = ? AND TRIM(IFNULL(a.performance_name, '')) != ''
-      AND a.dancer_id IS NULL
-      AND LOWER(IFNULL(a.award_type, '')) NOT LIKE '%solo%'
-      AND LOWER(IFNULL(a.category, '')) NOT LIKE '%solo%'
     GROUP BY TRIM(a.performance_name), e.year, e.id
     ORDER BY event_name
   `, [studio.id]);
@@ -1862,12 +1869,16 @@ router.post('/manage/studio/:id/group-dancers/sync', requireAuth, requireStudioO
   const { routine, year, event_ids } = req.body || {};
   if (!routine || !year) return res.status(400).json({ error: 'Missing routine or year' });
 
+  // Write set: dancer-less awards only. Read set (cast source) additionally
+  // includes org-published linked solos — e.g. StarQuest published the
+  // soloist, NexStar didn't: sync carries her across.
   const awardIds = await routineAwardIds(db, req.studio.id, routine, year, event_ids);
   if (!awardIds.length) return res.status(404).json({ error: 'No awards found for this routine (check at least one event).' });
+  const sourceIds = await routineAwardIds(db, req.studio.id, routine, year, event_ids, { includeLinkedSolos: true });
 
-  const ph = awardIds.map(() => '?').join(',');
+  const ph = sourceIds.map(() => '?').join(',');
   const dancers = await db.all(
-    `SELECT DISTINCT dancer_id FROM award_dancers WHERE award_id IN (${ph})`, awardIds);
+    `SELECT DISTINCT dancer_id FROM award_dancers WHERE award_id IN (${ph})`, sourceIds);
   if (!dancers.length) return res.status(400).json({ error: 'None of the ticked events have dancers to sync from.' });
 
   let linked = 0, skippedRemoved = 0;
