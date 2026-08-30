@@ -163,7 +163,10 @@ router.get('/manage/studio/:id', requireAuth, requireStudioOwner, async (req, re
 router.get('/manage/studio/:id/group-dancers/card', requireAuth, requireStudioOwner, async (req, res) => {
   const db = await openDb();
   const key = await resolveRoutineKey(db, req.studio.id, String(req.query.routine || ''));
-  const data = await buildCheckQueueData(db, req.studio, true);
+  // anyRoutine: All Routines lists EVERY routine (pure-solo ones included);
+  // the popup must serve them all, not just check-queue-qualified ones —
+  // e.g. an uncredited solo whose every award says "Solo" (Beginning to End).
+  const data = await buildCheckQueueData(db, req.studio, true, { anyRoutine: true });
   const r = data.routines.find(x => x.routine_key === key && String(x.year) === String(req.query.year || ''));
   if (!r) return res.status(404).send('Routine not found');
   res.render('partials/gd_routine_card', { r, studio: req.studio, autoOpen: true });
@@ -1918,7 +1921,7 @@ router.post('/manage/studio/:id/routines/unalias', requireAuth, requireStudioOwn
 
 // All card data for the Check Routine Dancers surface — used by the page
 // AND the single-card endpoint that powers the All Routines popup.
-async function buildCheckQueueData(db, studio, showAll) {
+async function buildCheckQueueData(db, studio, showAll, opts = {}) {
 
   // Which routine-years appear: the "solo" word heuristic keeps the page
   // from flooding with every solo in the archive — a routine qualifies via
@@ -1933,13 +1936,13 @@ async function buildCheckQueueData(db, studio, showAll) {
            GROUP_CONCAT(DISTINCT IFNULL(e.name, 'Self-reported')) AS event_names
     FROM awards a LEFT JOIN events e ON a.event_id = e.id
     WHERE a.studio_id = ? AND TRIM(IFNULL(a.performance_name, '')) != ''
-      AND EXISTS (
+      ${opts.anyRoutine ? '' : `AND EXISTS (
         SELECT 1 FROM awards q LEFT JOIN events qe ON q.event_id = qe.id
         WHERE q.studio_id = a.studio_id
           AND IFNULL(q.performance_name_key, LOWER(TRIM(IFNULL(q.performance_name, '')))) = IFNULL(a.performance_name_key, LOWER(TRIM(IFNULL(a.performance_name, ''))))
           AND IFNULL(qe.year, 'Undated') = IFNULL(e.year, 'Undated')
           AND LOWER(IFNULL(q.award_type, '')) NOT LIKE '%solo%'
-          AND LOWER(IFNULL(q.category, '')) NOT LIKE '%solo%')
+          AND LOWER(IFNULL(q.category, '')) NOT LIKE '%solo%')`}
     GROUP BY IFNULL(a.performance_name_key, LOWER(TRIM(IFNULL(a.performance_name, '')))), e.year
     ORDER BY (e.year IS NULL), e.year DESC, IFNULL(a.performance_name_key, LOWER(TRIM(IFNULL(a.performance_name, ''))))
   `, [studio.id]);
