@@ -498,3 +498,15 @@ doesn't). Activity: group_cast_synced. Shared confirm
 modal/toast extracted to public/js/ui_dialogs.js (self-injecting; roster page
 now uses it too) — group-dancers page alert()/confirm() replaced. FAQ admin §6
 updated.
+
+## Routines Missing Dancers + All Routines (2026-08-29)
+Sidebar "Group Routine Dancers" renamed to "Routines Missing Dancers" with an
+amber count pill (routines having >=1 uncovered event; computed by a
+router.use middleware for every /manage/studio/:id GET so all hand-copied
+sidebars share it) — the old name was wrong: organizers that don't publish
+solo names (NexStar) turn solos into this queue's work too. New sibling page
+/manage/studio/:id/routines ("All Routines"): every routine-year, groups and
+solos, with award/event counts, dancers on file, sortable columns
+(sortable-table) and live search across routine + dancer names; per-row status
+badge either "✓ credited" or "N awards missing dancers" linking to the entry
+tool. FAQ admin §6 updated.

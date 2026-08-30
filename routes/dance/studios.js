@@ -21,6 +21,33 @@ const upload = multer({
     cb(err);
   },
 });
+// Sidebar count pill: routines with at least one event lacking any dancer
+// link. Computed for every manage-studio page GET (single aggregate query)
+// so each hand-copied sidebar can show "Routines Missing Dancers (N)".
+router.use('/manage/studio/:id', async (req, res, next) => {
+  if (req.method !== 'GET') return next();
+  try {
+    const db = await openDb();
+    const row = await db.get(`
+      WITH per_event AS (
+        SELECT TRIM(a.performance_name) rn, IFNULL(e.year, '-') yr, IFNULL(a.event_id, 0) ev,
+               MAX(CASE WHEN ad.id IS NOT NULL OR a.dancer_id IS NOT NULL THEN 1 ELSE 0 END) covered,
+               MAX(CASE WHEN a.dancer_id IS NULL
+                         AND LOWER(IFNULL(a.award_type, '')) NOT LIKE '%solo%'
+                         AND LOWER(IFNULL(a.category, '')) NOT LIKE '%solo%' THEN 1 ELSE 0 END) groupish
+        FROM awards a LEFT JOIN events e ON a.event_id = e.id
+        LEFT JOIN award_dancers ad ON ad.award_id = a.id
+        WHERE a.studio_id = ? AND TRIM(IFNULL(a.performance_name, '')) != ''
+        GROUP BY rn, yr, ev)
+      SELECT COUNT(*) AS n FROM (
+        SELECT rn, yr FROM per_event GROUP BY rn, yr
+        HAVING MAX(groupish) = 1 AND MIN(covered) = 0)
+    `, [parseInt(req.params.id, 10) || 0]);
+    res.locals.missingRoutinesCount = row ? row.n : 0;
+  } catch (e) { res.locals.missingRoutinesCount = 0; }
+  next();
+});
+
 const { OpenAI } = require('openai');
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const { generateDancerId } = require('../../utils.js');
@@ -1660,6 +1687,43 @@ async function routineAwardIds(db, studioId, routine, year, eventIds, opts = {})
     WHERE ${filter} AND ${yearCond}${eventCond}`, params);
   return rows.map(r => r.id);
 }
+
+// All Studio Routines: every routine-year (groups AND solos), sortable +
+// searchable — the browse/reference view; Routines Missing Dancers stays
+// the work queue.
+router.get('/manage/studio/:id/routines', requireAuth, requireStudioOwner, async (req, res) => {
+  const db = await openDb();
+  const routines = await db.all(`
+    SELECT TRIM(a.performance_name) AS routine, IFNULL(e.year, '') AS year,
+           COUNT(DISTINCT a.id) AS award_count,
+           COUNT(DISTINCT IFNULL(a.event_id, 0)) AS event_count,
+           GROUP_CONCAT(DISTINCT IFNULL(e.name, 'Self-reported')) AS event_names,
+           SUM(CASE WHEN ad.id IS NULL AND a.dancer_id IS NULL THEN 1 ELSE 0 END) AS uncredited_awards
+    FROM awards a LEFT JOIN events e ON a.event_id = e.id
+    LEFT JOIN award_dancers ad ON ad.award_id = a.id
+    WHERE a.studio_id = ? AND TRIM(IFNULL(a.performance_name, '')) != ''
+    GROUP BY TRIM(a.performance_name), e.year
+    ORDER BY (e.year IS NULL OR e.year = ''), e.year DESC, TRIM(a.performance_name) COLLATE NOCASE
+  `, [req.studio.id]);
+
+  const dancerRows = await db.all(`
+    SELECT TRIM(a.performance_name) AS routine, IFNULL(e.year, '') AS year,
+           GROUP_CONCAT(DISTINCT d.name) AS dancer_names
+    FROM awards a LEFT JOIN events e ON a.event_id = e.id
+    JOIN award_dancers ad ON ad.award_id = a.id
+    JOIN dancers d ON d.id = ad.dancer_id
+    WHERE a.studio_id = ? AND TRIM(IFNULL(a.performance_name, '')) != ''
+    GROUP BY TRIM(a.performance_name), e.year
+  `, [req.studio.id]);
+  const dancerMap = {};
+  for (const r of dancerRows) dancerMap[r.routine + '|||' + r.year] = r.dancer_names;
+  routines.forEach(r => { r.dancers = dancerMap[r.routine + '|||' + r.year] || ''; });
+
+  res.render('manage_studio_routines', {
+    studio: req.studio, routines,
+    pageTitle: `${req.studio.name} — All Routines`,
+  });
+});
 
 router.get('/manage/studio/:id/group-dancers', requireAuth, requireStudioOwner, async (req, res) => {
   const db = await openDb();

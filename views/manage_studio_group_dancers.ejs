@@ -19,7 +19,12 @@
         </li>
         <li>
           <a href="/manage/studio/<%= studio.id %>/group-dancers" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: white; background: rgba(212, 175, 55, 0.1); border-left: 3px solid var(--primary); font-weight: 600;">
-            🎭 Group Routine Dancers
+            🎭 Routines Missing Dancers<% if (typeof missingRoutinesCount !== 'undefined' && missingRoutinesCount > 0) { %> <span style="background: rgba(245,158,11,0.2); color: #fbbf24; border-radius: 10px; padding: 0.05rem 0.5rem; font-size: 0.75rem; font-weight: 700;"><%= missingRoutinesCount %></span><% } %>
+          </a>
+        </li>
+        <li>
+          <a href="/manage/studio/<%= studio.id %>/routines" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: var(--text-muted); transition: background 0.2s;">
+            🗂 All Routines
           </a>
         </li>
         <li>
@@ -58,10 +63,11 @@
   <!-- Main Content -->
   <div style="flex: 1; min-width: 0; margin-bottom: 4rem;">
     <div class="header-section" style="margin-bottom: 1rem;">
-      <h1 style="margin-bottom: 0.25rem;">🎭 Group Routine Dancers</h1>
+      <h1 style="margin-bottom: 0.25rem;">🎭 Routines Missing Dancers<% if (typeof missingRoutinesCount !== 'undefined' && missingRoutinesCount > 0) { %> <span style="background: rgba(245,158,11,0.2); color: #fbbf24; border-radius: 10px; padding: 0.05rem 0.5rem; font-size: 0.75rem; font-weight: 700;"><%= missingRoutinesCount %></span><% } %></h1>
       <p class="subtitle" style="margin: 0;">
-        Competitions rarely publish who danced in group routines. List each routine's cast so
-        every dancer gets these wins on their own trophy case.
+        Routines with awards that aren't credited to dancers yet — usually because the
+        competition never published the names. List each routine's cast so every
+        dancer gets these wins on their own trophy case.
       </p>
     </div>
 

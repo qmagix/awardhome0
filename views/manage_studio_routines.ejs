@@ -1,0 +1,137 @@
+<%- include('partials/header') %>
+
+<div class="container manage-layout" style="margin-top: 4rem; display: flex; gap: 2rem;">
+
+  <!-- Sidebar Navigation -->
+  <div class="manage-sidebar" style="width: 250px; flex-shrink: 0;">
+    <div class="card glass-card" style="padding: 1.5rem; position: sticky; top: 2rem;">
+      <h3 style="margin-top: 0; color: var(--primary); font-size: 1.1rem;">Management</h3>
+      <ul style="list-style: none; padding: 0; margin: 1rem 0 0 0; display: flex; flex-direction: column; gap: 0.5rem;">
+        <li>
+          <a href="/manage/studio/<%= studio.id %>" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: var(--text-muted); transition: background 0.2s;">
+            👤 Profile & Customization
+          </a>
+        </li>
+        <li>
+          <a href="/manage/studio/<%= studio.id %>/roster" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: var(--text-muted); transition: background 0.2s;">
+            👥 Dancer Roster
+          </a>
+        </li>
+        <li>
+          <a href="/manage/studio/<%= studio.id %>/group-dancers" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: var(--text-muted); transition: background 0.2s;">
+            🎭 Routines Missing Dancers<% if (typeof missingRoutinesCount !== 'undefined' && missingRoutinesCount > 0) { %> <span style="background: rgba(245,158,11,0.2); color: #fbbf24; border-radius: 10px; padding: 0.05rem 0.5rem; font-size: 0.75rem; font-weight: 700;"><%= missingRoutinesCount %></span><% } %>
+          </a>
+        </li>
+        <li>
+          <a href="/manage/studio/<%= studio.id %>/routines" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: white; background: rgba(212, 175, 55, 0.1); border-left: 3px solid var(--primary); font-weight: 600;">
+            🗂 All Routines
+          </a>
+        </li>
+        <li>
+          <a href="/manage/studio/<%= studio.id %>/history" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: var(--text-muted); transition: background 0.2s;">
+            📊 Organization History
+          </a>
+        </li>
+        <li>
+          <a href="/manage/studio/<%= studio.id %>/awards" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: var(--text-muted); transition: background 0.2s;">
+            🏆 Awards Editor
+          </a>
+        </li>
+        <li>
+          <a href="/manage/studio/<%= studio.id %>/widget" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: var(--text-muted); transition: background 0.2s;">
+            📈 Widget Builder
+          </a>
+        </li>
+        <li>
+          <a href="/manage/studio/<%= studio.id %>/verifications" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: var(--text-muted); transition: background 0.2s;">
+            ✅ Pending Verifications
+          </a>
+        </li>
+        <li>
+          <a href="/manage/studio/<%= studio.id %>/ai-summaries" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: var(--text-muted); transition: background 0.2s;">
+            ✨ AI Summaries
+          </a>
+        </li>
+      </ul>
+
+      <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
+        <a href="/dance/studio/<%= studio.unique_id %>" style="color: var(--primary); text-decoration: none; font-size: 0.9rem;">&larr; Back to Public Profile</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div style="flex: 1; min-width: 0; margin-bottom: 4rem;">
+    <div class="header-section" style="margin-bottom: 1rem;">
+      <h1 style="margin-bottom: 0.25rem;">🗂 All Studio Routines</h1>
+      <p class="subtitle" style="margin: 0;">
+        Every routine on your record — groups and solos, with the dancers we have on file.
+        Click a column header to sort; routines still missing dancers link to the entry tool.
+      </p>
+    </div>
+
+    <div class="card glass-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
+        <input type="search" id="routineSearch" placeholder="Search routines or dancers…"
+          style="flex: 1; min-width: 220px; max-width: 380px; padding: 0.55rem 0.9rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); background: rgba(0,0,0,0.25); color: white;">
+        <span id="routineCount" style="color: var(--text-muted); font-size: 0.85rem;"><%= routines.length %> routine<%= routines.length === 1 ? '' : 's' %></span>
+      </div>
+
+      <div style="overflow-x: auto;">
+        <table class="premium-table sortable-table" id="routinesTable" style="width: 100%;">
+          <thead>
+            <tr>
+              <th>Routine</th>
+              <th>Year</th>
+              <th>Events</th>
+              <th>Awards</th>
+              <th class="no-sort">Dancers</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% routines.forEach(function(r) { %>
+              <tr>
+                <td style="font-weight: 600;"><%= r.routine %></td>
+                <td><%= r.year || '—' %></td>
+                <td style="color: var(--text-muted);" title="<%= r.event_names %>"><%= r.event_count %></td>
+                <td><span class="badge"><%= r.award_count %></span></td>
+                <td style="color: var(--text-muted); font-size: 0.88rem; max-width: 320px;"><%= r.dancers || '—' %></td>
+                <td>
+                  <% if (r.uncredited_awards > 0) { %>
+                    <a href="/manage/studio/<%= studio.id %>/group-dancers" style="text-decoration: none;">
+                      <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24;"><%= r.uncredited_awards %> award<%= r.uncredited_awards === 1 ? '' : 's' %> missing dancers</span>
+                    </a>
+                  <% } else { %>
+                    <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">✓ credited</span>
+                  <% } %>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Live search across routine + dancer names
+  (function () {
+    const input = document.getElementById('routineSearch');
+    const rows = Array.from(document.querySelectorAll('#routinesTable tbody tr'));
+    const count = document.getElementById('routineCount');
+    input.addEventListener('input', () => {
+      const q = input.value.trim().toLowerCase();
+      let shown = 0;
+      for (const row of rows) {
+        const hit = !q || row.textContent.toLowerCase().includes(q);
+        row.style.display = hit ? '' : 'none';
+        if (hit) shown++;
+      }
+      count.textContent = shown + ' routine' + (shown === 1 ? '' : 's') + (q ? ' matching' : '');
+    });
+  })();
+</script>
+
+<%- include('partials/footer') %>
