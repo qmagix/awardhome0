@@ -78,3 +78,23 @@ app — processing is manual. When working with a submitted dump:
 Migrate only on a real signal: a second app server, `SQLITE_BUSY` in logs
 despite WAL, need for managed point-in-time recovery/replicas, or heavy
 analytics competing with production traffic.
+
+## Legacy dancer-link backfill (2026-08-29)
+
+`node scripts/backfill_legacy_dancer_links.js [--apply]` promotes legacy solo
+links (`awards.dancer_id`, the importers' solo convention) into the canonical
+`award_dancers` junction table (`source='backfill'`), so junction-only queries
+count solos correctly. Idempotent; dry-run by default; honors `DB_PATH`. Also
+runs weekly (scripts/weekly_update.js, before run_backfill, against staging).
+
+Skips, by design:
+- director-denied pairs (`award_dancer_removals` — never resurrected);
+- pointers to deleted dancers (stale from pre-fix merges; FKs are OFF);
+- pointers whose award already has a same-named OTHER profile junction-linked
+  (duplicate-profile signal — promoting would double-list the dancer and
+  restyle the solo card as a group; merge the profiles instead, the merge
+  tools now repoint `awards.dancer_id` too).
+
+Each run first sweeps its own earlier rows that later became orphaned or
+double-listing (self-healing). Run on prod once after deploying: same script,
+same flags (data parity by identical script runs).

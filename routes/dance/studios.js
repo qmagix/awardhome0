@@ -679,6 +679,9 @@ router.post('/manage/studio/:id/roster/merge', requireAuth, requireStudioOwner, 
     // 1. Move all awards from duplicate to primary (use INSERT OR IGNORE to prevent UNIQUE constraint errors if they somehow both won the exact same award record)
     await db.run('INSERT OR IGNORE INTO award_dancers (award_id, dancer_id, status, source, created_at) SELECT award_id, ?, status, source, created_at FROM award_dancers WHERE dancer_id = ?', [primary_id, duplicate_id]);
     await db.run('DELETE FROM award_dancers WHERE dancer_id = ?', [duplicate_id]);
+    // Legacy solo attribution rides awards.dancer_id — repoint it too, or the
+    // duplicate's solo awards end up stranded on a deleted dancer id.
+    await db.run('UPDATE awards SET dancer_id = ? WHERE dancer_id = ?', [primary_id, duplicate_id]);
 
     // 2. Move any OTHER studio affiliations the duplicate might have had (that aren't this studio)
     await db.run('INSERT OR IGNORE INTO dancer_studios (dancer_id, studio_id, status, source) SELECT ?, studio_id, status, source FROM dancer_studios WHERE dancer_id = ?', [primary_id, duplicate_id]);
@@ -737,6 +740,8 @@ router.post('/manage/studio/:id/roster/clean-duplicate-set', requireAuth, requir
     for (let dupId of duplicatesToMerge) {
       await db.run('INSERT OR IGNORE INTO award_dancers (award_id, dancer_id, status, source, created_at) SELECT award_id, ?, status, source, created_at FROM award_dancers WHERE dancer_id = ?', [primaryId, dupId]);
       await db.run('DELETE FROM award_dancers WHERE dancer_id = ?', [dupId]);
+      // Legacy solo attribution (awards.dancer_id) must follow the merge too.
+      await db.run('UPDATE awards SET dancer_id = ? WHERE dancer_id = ?', [primaryId, dupId]);
 
       await db.run('INSERT OR IGNORE INTO dancer_studios (dancer_id, studio_id, status, source) SELECT ?, studio_id, status, source FROM dancer_studios WHERE dancer_id = ?', [primaryId, dupId]);
       await db.run('DELETE FROM dancer_studios WHERE dancer_id = ?', [dupId]);

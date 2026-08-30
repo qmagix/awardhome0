@@ -255,6 +255,14 @@ async function runPipeline(opts) {
     }
     console.log(`[firsts] org rules adjusted ${ruleChanges} awards on new events`);
 
+    // Promote legacy solo links (awards.dancer_id) into award_dancers first,
+    // so the routine-propagation backfill below has them as sources.
+    // Global + idempotent; honors DB_PATH so it hits the staging copy here.
+    console.log(`[backfill] promoting legacy solo links into award_dancers...`);
+    const lb = spawnSync('node', [path.join(__dirname, 'backfill_legacy_dancer_links.js'), '--apply'],
+      { cwd: ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+    if (lb.status !== 0) failures.push(`backfill_legacy_dancer_links: exit ${lb.status} — ${(lb.stderr || '').trim().split('\n').pop()}`);
+
     console.log(`[backfill] linking dancers on ${newIds.length} new events...`);
     const bf = spawnSync('node', [path.join(__dirname, 'run_backfill.js'), ...newIds.map(String)],
       { cwd: ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });

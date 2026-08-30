@@ -39,14 +39,18 @@ async function runBackfillForEvent(db, eventId) {
         AND studio_id = ?
     `, [eventId, source.performance_name, source.studio_id]);
 
-    // 4. Map the dancers to all matching awards using INSERT OR IGNORE
+    // 4. Map the dancers to all matching awards using INSERT OR IGNORE.
+    // A director's denial (award_dancer_removals) is a negative assertion —
+    // backfill must never resurrect those links.
     for (const target of targetAwards) {
       for (const d of dancers) {
         const result = await db.run(`
-          INSERT OR IGNORE INTO award_dancers (award_id, dancer_id) 
-          VALUES (?, ?)
-        `, [target.id, d.dancer_id]);
-        
+          INSERT OR IGNORE INTO award_dancers (award_id, dancer_id)
+          SELECT ?, ?
+          WHERE NOT EXISTS (SELECT 1 FROM award_dancer_removals r
+                             WHERE r.award_id = ? AND r.dancer_id = ?)
+        `, [target.id, d.dancer_id, target.id, d.dancer_id]);
+
         if (!result || (result && result.changes > 0)) {
           backfilledCount++;
         }
@@ -77,10 +81,12 @@ async function runBackfillForEvent(db, eventId) {
 
     for (const target of targetAwards) {
       const result = await db.run(`
-        INSERT OR IGNORE INTO award_dancers (award_id, dancer_id) 
-        VALUES (?, ?)
-      `, [target.id, legacy.dancer_id]);
-      
+        INSERT OR IGNORE INTO award_dancers (award_id, dancer_id)
+        SELECT ?, ?
+        WHERE NOT EXISTS (SELECT 1 FROM award_dancer_removals r
+                           WHERE r.award_id = ? AND r.dancer_id = ?)
+      `, [target.id, legacy.dancer_id, target.id, legacy.dancer_id]);
+
       if (!result || (result && result.changes > 0)) {
         backfilledCount++;
       }

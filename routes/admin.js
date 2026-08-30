@@ -1385,6 +1385,10 @@ router.post('/api/merge/dancers', requireAdmin, express.json(), async (req, res)
 
   try {
     await db.run(`UPDATE awards SET dancer_id = ? WHERE dancer_id = ?`, [targetId, sourceId]);
+    // Junction links (group awards, claims) must follow the merge too.
+    await db.run(`INSERT OR IGNORE INTO award_dancers (award_id, dancer_id, status, source, created_at)
+                  SELECT award_id, ?, status, source, created_at FROM award_dancers WHERE dancer_id = ?`, [targetId, sourceId]);
+    await db.run(`DELETE FROM award_dancers WHERE dancer_id = ?`, [sourceId]);
     const links = await db.all(`SELECT studio_id FROM dancer_studios WHERE dancer_id = ?`, [sourceId]);
     for (const link of links) {
       const exists = await db.get(`SELECT id FROM dancer_studios WHERE dancer_id = ? AND studio_id = ?`, [targetId, link.studio_id]);
