@@ -106,6 +106,24 @@ anti-sandbagging proof no generic ID provider holds). Likely the strongest §101
 survivor in the inventory (consent/auth protocol mechanics). *Captured 2026-08-27.
 NOT built — paper design first, then provisional (see plan P3).*
 
+### A9. Scoped delegated cast-entry via emailed capability link ("class-mom flow") (NEW — not built, captured 2026-08-29)
+Studio director emails a single-use link that authorizes a NON-ACCOUNT-HOLDER to
+edit exactly one group routine's cast — optionally per event (the per-event cast
+scoping shipped 2026-08-29 gives the substrate: casts differ by event via subs/
+absences, and the delegate is often the only person who remembers which). The
+capability is the token: scope = (studio, routine, year[, events]), expiry,
+revocable, no account creation; every delegate submission lands as a REVERTIBLE
+staged changeset (provenance source='delegate', batch id) that the director
+reviews/undoes as a unit, with tombstones honored. Novelty angle: fine-grained,
+record-scoped, delegable write-capability over a shared public artifact with
+staged provenance-tracked revertible edits — contrast with page-level share
+links (Google Docs) and role-based CMS grants; combines capability-URL + field/
+row-scope + moderation-queue changeset. Prior art risk: capability URLs are
+old (Waymo-style signed links, Doodle, Google Forms); the row-scoped +
+event-scoped + revertible-changeset combination on a competition-results graph
+is the claimable surface. Do NOT ship before this is filed or consciously
+waived (new matter vs 64/142,611).
+
 ## Tier B — plausible but weaker (business method or heavy prior art risk)
 
 ### B1. Dark-launch claiming via private single-use tokens (no public unclaimed state)

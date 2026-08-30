@@ -143,3 +143,14 @@ studios ("your staff's work, credited").
   the follow-on provisional queue BEFORE building (provisional_patent_plan.md).
 
 **Sequencing:** post-launch, behind a flag; needs studio staff roster UI first.
+
+## 12. Class-mom delegated cast entry (brainstormed 2026-08-29)
+Directors rarely know every group routine's lineup; a "class mom" does — often
+including who missed which event and who subbed. Let the director email a
+scoped link from a routine card: the recipient (no account needed) opens a
+single-purpose page for THAT routine (optionally specific events), sees the
+award context, enters/corrects the cast per event, and submits. Submissions are
+staged as a revertible changeset the director approves/undoes in one click from
+the group-dancers page (and Action History). Extends: per-event cast scoping
+(shipped 2026-08-29), award_dancer_removals tombstones, provenance chips.
+IP: maybe_patentable.md §A9 — file or waive BEFORE shipping.
