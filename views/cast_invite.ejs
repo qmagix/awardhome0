@@ -28,6 +28,12 @@
         <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.25); color: #f87171; padding: 0.8rem 1rem; border-radius: 6px; margin-top: 1rem;"><%= error %></div>
       <% } %>
       <%- include('partials/cast_prior_subs', { priorSubs }) %>
+      <% if (priorSubs.length > 0) { %>
+        <p style="color: var(--text-muted); font-size: 0.88rem; margin-top: 0.75rem;">
+          Your earlier names are already in the boxes below — add or correct anything, then send again.
+          Your update simply replaces what's waiting for the studio; nothing needs retyping.
+        </p>
+      <% } %>
 
       <form method="POST" action="/cast/<%= inv.token %>" style="display: flex; flex-direction: column; gap: 1.25rem; margin-top: 1.5rem;">
         <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
@@ -43,19 +49,19 @@
             </div>
             <textarea name="names_<%= ev.event_id %>" rows="4"
               placeholder="One dancer per line (or comma-separated). If someone missed this event or a sub danced, list exactly who was on stage here.<%= ev.known_dancers.length ? ' Only add names that are missing.' : '' %>"
-              style="width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: white; padding: 0.6rem; font-size: 0.95rem;"></textarea>
+              style="width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: white; padding: 0.6rem; font-size: 0.95rem;"><%= prefill.names[ev.event_id] || '' %></textarea>
           </div>
         <% }); %>
 
         <div>
           <label style="display: block; margin-bottom: 0.4rem; font-weight: 600;">Your name</label>
-          <input type="text" name="helper_name" required maxlength="80" placeholder="So the studio knows who to thank!"
+          <input type="text" name="helper_name" required maxlength="80" placeholder="So the studio knows who to thank!" value="<%= prefill.helperName %>"
             style="width: 100%; padding: 0.7rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); background: rgba(0,0,0,0.25); color: white;">
         </div>
         <div>
           <label style="display: block; margin-bottom: 0.4rem; font-weight: 600;">Anything the studio should know? <span style="color: var(--text-muted); font-weight: 400;">(optional)</span></label>
           <textarea name="note" rows="2" maxlength="500" placeholder='e.g. "Mia was out sick at Nationals — Zoe subbed"'
-            style="width: 100%; padding: 0.6rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); background: rgba(0,0,0,0.25); color: white;"></textarea>
+            style="width: 100%; padding: 0.6rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); background: rgba(0,0,0,0.25); color: white;"><%= prefill.note %></textarea>
         </div>
         <button type="submit" class="btn btn-primary" style="padding: 0.9rem; font-weight: 600;">Send to <%= inv.studio_name %></button>
         <small style="color: var(--text-muted); text-align: center;">This link opens only this routine and expires <%= String(inv.expires_at).slice(0, 10) %>.</small>

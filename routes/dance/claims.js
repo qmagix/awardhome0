@@ -376,22 +376,36 @@ async function priorSubmissions(db, inviteId) {
   });
 }
 
+// Prefill: the latest submission's names land back in the input fields so
+// a returning helper edits in place — adding or correcting — instead of
+// wondering whether to retype (Q, 2026-08-30). Re-sending REPLACES the
+// pending submission, so the studio always reviews one current version.
+function buildPrefill(priorSubs) {
+  const latest = priorSubs[0];
+  const prefill = { names: {}, helperName: '', note: '' };
+  if (!latest) return prefill;
+  prefill.helperName = latest.helper_name || '';
+  prefill.note = latest.note || '';
+  for (const ev of latest.events) prefill.names[ev.event_id] = ev.names.join('\n');
+  return prefill;
+}
+
 router.get('/cast/:token', async (req, res) => {
   const db = await openDb();
   const { inv, error } = await loadCastInvite(db, req.params.token);
-  if (error) return res.status(410).render('cast_invite', { error, inv: null, events: [], priorSubs: [], submitted: false, pageTitle: 'Cast entry' });
+  if (error) return res.status(410).render('cast_invite', { error, inv: null, events: [], priorSubs: [], prefill: buildPrefill([]), submitted: false, pageTitle: 'Cast entry' });
   const events = await castInviteEvents(db, inv);
   const priorSubs = await priorSubmissions(db, inv.id);
-  res.render('cast_invite', { error: null, inv, events, priorSubs, submitted: false, pageTitle: `Dancers of "${inv.routine_display}"` });
+  res.render('cast_invite', { error: null, inv, events, priorSubs, prefill: buildPrefill(priorSubs), submitted: false, pageTitle: `Dancers of "${inv.routine_display}"` });
 });
 
 router.post('/cast/:token', applyLimiter, async (req, res) => {
   const db = await openDb();
   const { inv, error } = await loadCastInvite(db, req.params.token);
-  if (error) return res.status(410).render('cast_invite', { error, inv: null, events: [], priorSubs: [], submitted: false, pageTitle: 'Cast entry' });
+  if (error) return res.status(410).render('cast_invite', { error, inv: null, events: [], priorSubs: [], prefill: buildPrefill([]), submitted: false, pageTitle: 'Cast entry' });
   const events = await castInviteEvents(db, inv);
   const priorSubs = await priorSubmissions(db, inv.id);
-  const fail = (msg) => res.status(400).render('cast_invite', { error: msg, inv, events, priorSubs, submitted: false, pageTitle: `Dancers of "${inv.routine_display}"` });
+  const fail = (msg) => res.status(400).render('cast_invite', { error: msg, inv, events, priorSubs, prefill: buildPrefill(priorSubs), submitted: false, pageTitle: `Dancers of "${inv.routine_display}"` });
 
   const helper = String((req.body && req.body.helper_name) || '').replace(/\s+/g, ' ').trim().slice(0, 80);
   if (!helper) return fail('Please tell us your name — the studio wants to know who to thank!');
@@ -405,11 +419,21 @@ router.post('/cast/:token', applyLimiter, async (req, res) => {
   }
   if (!payload.length) return fail('Add at least one dancer name before sending.');
 
-  await db.run(`INSERT INTO routine_cast_submissions (invite_id, helper_name, payload, note) VALUES (?, ?, ?, ?)`,
-    [inv.id, helper, JSON.stringify(payload), note]);
+  // An unreviewed submission is replaced, not duplicated — the studio
+  // always sees one current version per link.
+  const pending = await db.get(
+    "SELECT id FROM routine_cast_submissions WHERE invite_id = ? AND status = 'pending' ORDER BY created_at DESC LIMIT 1", [inv.id]);
+  if (pending) {
+    await db.run(`UPDATE routine_cast_submissions
+                  SET helper_name = ?, payload = ?, note = ?, created_at = CURRENT_TIMESTAMP WHERE id = ?`,
+      [helper, JSON.stringify(payload), note, pending.id]);
+  } else {
+    await db.run(`INSERT INTO routine_cast_submissions (invite_id, helper_name, payload, note) VALUES (?, ?, ?, ?)`,
+      [inv.id, helper, JSON.stringify(payload), note]);
+  }
   logStudioActivity(inv.studio_id, 'cast_submission_received', { dedupMinutes: 5 });
   const priorSubs2 = await priorSubmissions(db, inv.id);
-  res.render('cast_invite', { error: null, inv, events, priorSubs: priorSubs2, submitted: true, pageTitle: 'Thank you!' });
+  res.render('cast_invite', { error: null, inv, events, priorSubs: priorSubs2, prefill: buildPrefill(priorSubs2), submitted: true, pageTitle: 'Thank you!' });
 });
 
 module.exports = router;
