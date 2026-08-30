@@ -111,3 +111,15 @@ honors tombstones; DB_PATH honored. Local run: 10,452 matched existing,
 7,500 new profiles. Run ONCE on prod after deploy. The importer now resolves
 dancers at import time (and heals link-less rows on re-import), so future
 StarQuest events arrive linked.
+
+## Routine-title whitespace normalization (2026-08-29)
+
+PDF extraction left tabs/multi-spaces inside routine titles (32,942 awards,
+mostly StarQuest) — visually identical routines grouped separately on every
+routine-keyed surface. `node scripts/normalize_performance_whitespace.js
+[--apply]` collapses whitespace (pure collapse — normalizeName's word-glue is
+for category headers and would corrupt titles). Idempotent; run once on prod
+after deploying. The StarQuest importer now collapses routine + dancer fields
+at import. Routine grouping (group-dancers, All Routines, sidebar count,
+routineAwardIds) is also CASE-INSENSITIVE now: orgs capitalize the same
+routine differently ("Tides Of/of Reunion"); display shows one variant.

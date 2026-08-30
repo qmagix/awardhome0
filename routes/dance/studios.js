@@ -30,7 +30,7 @@ router.use('/manage/studio/:id', async (req, res, next) => {
     const db = await openDb();
     const row = await db.get(`
       WITH per_event AS (
-        SELECT TRIM(a.performance_name) rn, IFNULL(e.year, '-') yr, IFNULL(a.event_id, 0) ev,
+        SELECT LOWER(TRIM(a.performance_name)) rn, IFNULL(e.year, '-') yr, IFNULL(a.event_id, 0) ev,
                MAX(CASE WHEN ad.id IS NOT NULL OR a.dancer_id IS NOT NULL THEN 1 ELSE 0 END) covered,
                MAX(CASE WHEN a.dancer_id IS NULL
                          AND LOWER(IFNULL(a.award_type, '')) NOT LIKE '%solo%'
@@ -1658,7 +1658,7 @@ router.get('/my-studio', requireAuth, async (req, res) => {
 // here: they show in counts/casts and feed Sync as a source, but paste/
 // sync/remove never modify them — writes only target dancer-less awards.
 const GROUP_AWARD_FILTER = `
-  a.studio_id = ? AND TRIM(IFNULL(a.performance_name, '')) = ?
+  a.studio_id = ? AND LOWER(TRIM(IFNULL(a.performance_name, ''))) = LOWER(?)
   AND a.dancer_id IS NULL`;
 
 // eventIds (optional): restrict to these events — casts can differ per event
@@ -1679,6 +1679,8 @@ async function routineAwardIds(db, studioId, routine, year, eventIds, opts = {})
     if (!parts.length) return [];
     eventCond = ` AND (${parts.join(' OR ')})`;
   }
+  // Case-insensitive routine matching: orgs capitalize the same routine
+  // differently ("Tides Of Reunion" vs "Tides of Reunion").
   const filter = opts.includeLinkedSolos
     ? GROUP_AWARD_FILTER.replace('AND a.dancer_id IS NULL', '')
     : GROUP_AWARD_FILTER;
@@ -1694,7 +1696,9 @@ async function routineAwardIds(db, studioId, routine, year, eventIds, opts = {})
 router.get('/manage/studio/:id/routines', requireAuth, requireStudioOwner, async (req, res) => {
   const db = await openDb();
   const routines = await db.all(`
-    SELECT TRIM(a.performance_name) AS routine, IFNULL(e.year, '') AS year,
+    SELECT MAX(TRIM(a.performance_name)) AS routine,
+           LOWER(TRIM(a.performance_name)) AS routine_key,
+           IFNULL(e.year, '') AS year,
            COUNT(DISTINCT a.id) AS award_count,
            COUNT(DISTINCT IFNULL(a.event_id, 0)) AS event_count,
            GROUP_CONCAT(DISTINCT IFNULL(e.name, 'Self-reported')) AS event_names,
@@ -1702,22 +1706,22 @@ router.get('/manage/studio/:id/routines', requireAuth, requireStudioOwner, async
     FROM awards a LEFT JOIN events e ON a.event_id = e.id
     LEFT JOIN award_dancers ad ON ad.award_id = a.id
     WHERE a.studio_id = ? AND TRIM(IFNULL(a.performance_name, '')) != ''
-    GROUP BY TRIM(a.performance_name), e.year
-    ORDER BY (e.year IS NULL OR e.year = ''), e.year DESC, TRIM(a.performance_name) COLLATE NOCASE
+    GROUP BY LOWER(TRIM(a.performance_name)), e.year
+    ORDER BY (e.year IS NULL OR e.year = ''), e.year DESC, LOWER(TRIM(a.performance_name))
   `, [req.studio.id]);
 
   const dancerRows = await db.all(`
-    SELECT TRIM(a.performance_name) AS routine, IFNULL(e.year, '') AS year,
+    SELECT LOWER(TRIM(a.performance_name)) AS routine_key, IFNULL(e.year, '') AS year,
            GROUP_CONCAT(DISTINCT d.name) AS dancer_names
     FROM awards a LEFT JOIN events e ON a.event_id = e.id
     JOIN award_dancers ad ON ad.award_id = a.id
     JOIN dancers d ON d.id = ad.dancer_id
     WHERE a.studio_id = ? AND TRIM(IFNULL(a.performance_name, '')) != ''
-    GROUP BY TRIM(a.performance_name), e.year
+    GROUP BY LOWER(TRIM(a.performance_name)), e.year
   `, [req.studio.id]);
   const dancerMap = {};
-  for (const r of dancerRows) dancerMap[r.routine + '|||' + r.year] = r.dancer_names;
-  routines.forEach(r => { r.dancers = dancerMap[r.routine + '|||' + r.year] || ''; });
+  for (const r of dancerRows) dancerMap[r.routine_key + '|||' + r.year] = r.dancer_names;
+  routines.forEach(r => { r.dancers = dancerMap[r.routine_key + '|||' + r.year] || ''; });
 
   res.render('manage_studio_routines', {
     studio: req.studio, routines,
@@ -1735,7 +1739,9 @@ router.get('/manage/studio/:id/group-dancers', requireAuth, requireStudioOwner, 
   // routine's awards (solo-worded siblings + dancer_id-linked solos
   // included), so counts are honest and linked awards feed Sync as a source.
   const routines = await db.all(`
-    SELECT TRIM(a.performance_name) AS routine, IFNULL(e.year, 'Undated') AS year,
+    SELECT MAX(TRIM(a.performance_name)) AS routine,
+           LOWER(TRIM(a.performance_name)) AS routine_key,
+           IFNULL(e.year, 'Undated') AS year,
            COUNT(DISTINCT a.id) AS award_count,
            GROUP_CONCAT(DISTINCT IFNULL(e.name, 'Self-reported')) AS event_names
     FROM awards a LEFT JOIN events e ON a.event_id = e.id
@@ -1743,12 +1749,12 @@ router.get('/manage/studio/:id/group-dancers', requireAuth, requireStudioOwner, 
       AND EXISTS (
         SELECT 1 FROM awards q LEFT JOIN events qe ON q.event_id = qe.id
         WHERE q.studio_id = a.studio_id
-          AND TRIM(IFNULL(q.performance_name, '')) = TRIM(a.performance_name)
+          AND LOWER(TRIM(IFNULL(q.performance_name, ''))) = LOWER(TRIM(a.performance_name))
           AND IFNULL(qe.year, 'Undated') = IFNULL(e.year, 'Undated')
           AND LOWER(IFNULL(q.award_type, '')) NOT LIKE '%solo%'
           AND LOWER(IFNULL(q.category, '')) NOT LIKE '%solo%')
-    GROUP BY TRIM(a.performance_name), e.year
-    ORDER BY (e.year IS NULL), e.year DESC, TRIM(a.performance_name)
+    GROUP BY LOWER(TRIM(a.performance_name)), e.year
+    ORDER BY (e.year IS NULL), e.year DESC, LOWER(TRIM(a.performance_name))
   `, [studio.id]);
 
   // Current cast per routine-year, one query for the whole page. Source
@@ -1756,7 +1762,7 @@ router.get('/manage/studio/:id/group-dancers', requireAuth, requireStudioOwner, 
   // director should SEE where each link came from (import vs their own
   // entry vs a dancer's claim awaiting their verification).
   const casts = await db.all(`
-    SELECT TRIM(a.performance_name) AS routine, IFNULL(e.year, 'Undated') AS year,
+    SELECT LOWER(TRIM(a.performance_name)) AS routine_key, IFNULL(e.year, 'Undated') AS year,
            d.id AS dancer_id, d.name AS dancer_name, MAX(ds.label) AS label,
            GROUP_CONCAT(DISTINCT IFNULL(ad.source, 'import')) AS sources,
            GROUP_CONCAT(DISTINCT IFNULL(ad.status, 'imported')) AS statuses
@@ -1770,7 +1776,7 @@ router.get('/manage/studio/:id/group-dancers', requireAuth, requireStudioOwner, 
   `, [studio.id]);
   const castMap = {};
   for (const c of casts) {
-    const key = c.routine + '|||' + c.year;
+    const key = c.routine_key + '|||' + c.year;
     const sources = (c.sources || '').split(',');
     const statuses = (c.statuses || '').split(',');
     // Most-authoritative source wins the label; a claim still entirely
@@ -1781,32 +1787,32 @@ router.get('/manage/studio/:id/group-dancers', requireAuth, requireStudioOwner, 
     const pending = statuses.length > 0 && statuses.every(s => s === 'pending');
     (castMap[key] = castMap[key] || []).push({ id: c.dancer_id, name: c.dancer_name, label: c.label, source, pending });
   }
-  routines.forEach(r => { r.cast = castMap[r.routine + '|||' + r.year] || []; });
+  routines.forEach(r => { r.cast = castMap[r.routine_key + '|||' + r.year] || []; });
 
   // Per-event breakdown: casts can differ per event (subs, missed events),
   // so the card offers event checkboxes and shows which events still lack
   // dancers. event_id 0 = self-reported awards without an event row.
   const eventRows = await db.all(`
-    SELECT TRIM(a.performance_name) AS routine, IFNULL(e.year, 'Undated') AS year,
+    SELECT LOWER(TRIM(a.performance_name)) AS routine_key, IFNULL(e.year, 'Undated') AS year,
            IFNULL(e.id, 0) AS event_id, IFNULL(e.name, 'Self-reported') AS event_name,
            COUNT(DISTINCT a.id) AS award_count,
            COUNT(DISTINCT CASE WHEN ad.award_id IS NOT NULL THEN a.id END) AS linked_awards
     FROM awards a LEFT JOIN events e ON a.event_id = e.id
     LEFT JOIN award_dancers ad ON ad.award_id = a.id
     WHERE a.studio_id = ? AND TRIM(IFNULL(a.performance_name, '')) != ''
-    GROUP BY TRIM(a.performance_name), e.year, e.id
+    GROUP BY LOWER(TRIM(a.performance_name)), e.year, e.id
     ORDER BY event_name
   `, [studio.id]);
   const eventMap = {};
   for (const ev of eventRows) {
-    const key = ev.routine + '|||' + ev.year;
+    const key = ev.routine_key + '|||' + ev.year;
     (eventMap[key] = eventMap[key] || []).push({
       id: ev.event_id, name: ev.event_name,
       award_count: ev.award_count, covered: ev.linked_awards > 0,
     });
   }
   routines.forEach(r => {
-    r.events = eventMap[r.routine + '|||' + r.year] || [];
+    r.events = eventMap[r.routine_key + '|||' + r.year] || [];
     // Done = every event of the routine has at least one dancer linked
     r.covered = r.events.length ? r.events.every(ev => ev.covered) : r.cast.length > 0;
   });

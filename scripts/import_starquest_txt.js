@@ -102,10 +102,14 @@ async function runImport() {
       }
 
       // Repair extraction whitespace damage (older txt files predate the
-      // normalizeName call in categorize_starquest.js).
+      // normalizeName call in categorize_starquest.js). Routine titles and
+      // dancer names get whitespace collapse ONLY — the word-glue heuristic
+      // is for category headers and would corrupt free-form titles and
+      // names like "de la Cruz".
       category = normalizeName(category);
       awardType = normalizeName(awardType);
-      if (dancer) dancer = normalizeName(dancer);
+      if (dancer) dancer = dancer.replace(/\s+/g, ' ').trim();
+      if (routine) routine = routine.replace(/\s+/g, ' ').trim();
 
       if (routine === 'N/A') routine = null;
       if (dancer === 'N/A') dancer = null;
