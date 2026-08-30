@@ -139,3 +139,19 @@ All Routines, sidebar count, resolveDancer routine tie-break. Local sweep:
 1,275,953 keys filled; 247 studio-routine spelling variants unified.
 Phase 2 (not built): per-studio alias table for owner-specified merges of
 true misspellings ("Kongfu"/"Kungfu") + display-spelling choice.
+
+## Dancer profile convergence (2026-08-30)
+
+Two scripts, both idempotent, both in the weekly pipeline after the routine-key
+sweep; run once on prod after deploy:
+- `node scripts/normalize_dancer_whitespace.js --apply` — whitespace collapse
+  in dancers.name (194 repaired locally; pure collapse, never word-glue).
+- `node scripts/auto_merge_dancer_profiles.js --apply` — merges duplicate
+  dancer profiles on strong evidence: same clean name + same studio + >=1
+  shared canonical routine in the same year (Q's rule — name+routine+studio+
+  year collisions are vanishingly rare). Single-pass in-memory design (~2.5s
+  for 1.5M awards): full-table reads grouped in JS, no per-group queries.
+  Rails: components with >1 claimed profile skipped; dups owning family
+  content (claims/acks/photos) never deleted; primary = claimed > most
+  awards > oldest. Local run: 1,070 dups merged (e.g. 4x "Ina Su" -> 1).
+  This is the convergence mechanism for repair-created per-routine profiles.

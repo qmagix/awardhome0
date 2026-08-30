@@ -273,6 +273,13 @@ async function runPipeline(opts) {
     const rk = spawnSync('node', [path.join(__dirname, 'sweep_routine_keys.js'), '--apply'],
       { cwd: ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
     if (rk.status !== 0) failures.push(`sweep_routine_keys: exit ${rk.status} — ${(rk.stderr || '').trim().split('\n').pop()}`);
+
+    // Duplicate dancer profiles converge on routine evidence (same clean
+    // name + studio + canonical routine + year) — needs the keys above.
+    console.log(`[backfill] auto-merging duplicate dancer profiles...`);
+    const am = spawnSync('node', [path.join(__dirname, 'auto_merge_dancer_profiles.js'), '--apply'],
+      { cwd: ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+    if (am.status !== 0) failures.push(`auto_merge_dancer_profiles: exit ${am.status} — ${(am.stderr || '').trim().split('\n').pop()}`);
   }
 
   // ---- Summary ----
