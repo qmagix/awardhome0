@@ -1,0 +1,61 @@
+<%- include('partials/header', { title: pageTitle }) %>
+<div class="container" style="max-width: 640px; margin: 3rem auto; padding: 0 1rem;">
+  <div class="card glass-card" style="padding: 2.5rem;">
+    <% if (error) { %>
+      <h2 style="margin-top: 0; color: var(--primary);">This link isn't working</h2>
+      <p style="color: var(--text-muted); line-height: 1.6;"><%= error %></p>
+    <% } else if (submitted) { %>
+      <h2 style="margin-top: 0; color: var(--primary);">Thank you! 💛</h2>
+      <p style="color: var(--text-muted); line-height: 1.6;">
+        Your names are on their way to <strong><%= inv.studio_name %></strong>. They'll review and
+        add them to the awards — and every dancer you named gets this win on their own trophy case.
+        You'll be credited for the help.
+      </p>
+      <p style="color: var(--text-muted); line-height: 1.6;">Remembered someone else? The link keeps
+        working until <%= String(inv.expires_at).slice(0, 10) %> — just come back.</p>
+    <% } else { %>
+      <h2 style="margin-top: 0; color: var(--primary);">Who danced &ldquo;<%= inv.routine_display %>&rdquo;?</h2>
+      <p style="color: var(--text-muted); line-height: 1.6;">
+        <strong><%= inv.studio_name %></strong> is completing its <%= inv.year %> award records and
+        thinks you know this routine's dancers best. No account needed — the studio reviews
+        everything before it appears anywhere.
+      </p>
+      <% if (inv.note) { %>
+        <p style="border-left: 3px solid var(--primary); padding-left: 0.9rem; color: var(--text-muted); font-style: italic;">&ldquo;<%= inv.note %>&rdquo;</p>
+      <% } %>
+
+      <form method="POST" action="/cast/<%= inv.token %>" style="display: flex; flex-direction: column; gap: 1.25rem; margin-top: 1.5rem;">
+        <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+
+        <% events.forEach(function(ev) { %>
+          <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1rem;">
+            <div style="font-weight: 600; color: white;"><%= ev.event_name %></div>
+            <div style="color: var(--text-muted); font-size: 0.85rem; margin: 0.2rem 0 0.6rem;">
+              <%= ev.award_count %> award<%= ev.award_count === 1 ? '' : 's' %>
+              <% if (ev.known_dancers.length) { %>
+                · already listed: <%= ev.known_dancers.join(', ') %>
+              <% } %>
+            </div>
+            <textarea name="names_<%= ev.event_id %>" rows="4"
+              placeholder="One dancer per line (or comma-separated). If someone missed this event or a sub danced, list exactly who was on stage here.<%= ev.known_dancers.length ? ' Only add names that are missing.' : '' %>"
+              style="width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: white; padding: 0.6rem; font-size: 0.95rem;"></textarea>
+          </div>
+        <% }); %>
+
+        <div>
+          <label style="display: block; margin-bottom: 0.4rem; font-weight: 600;">Your name</label>
+          <input type="text" name="helper_name" required maxlength="80" placeholder="So the studio knows who to thank!"
+            style="width: 100%; padding: 0.7rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); background: rgba(0,0,0,0.25); color: white;">
+        </div>
+        <div>
+          <label style="display: block; margin-bottom: 0.4rem; font-weight: 600;">Anything the studio should know? <span style="color: var(--text-muted); font-weight: 400;">(optional)</span></label>
+          <textarea name="note" rows="2" maxlength="500" placeholder='e.g. "Mia was out sick at Nationals — Zoe subbed"'
+            style="width: 100%; padding: 0.6rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); background: rgba(0,0,0,0.25); color: white;"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary" style="padding: 0.9rem; font-weight: 600;">Send to <%= inv.studio_name %></button>
+        <small style="color: var(--text-muted); text-align: center;">This link opens only this routine and expires <%= String(inv.expires_at).slice(0, 10) %>.</small>
+      </form>
+    <% } %>
+  </div>
+</div>
+<%- include('partials/footer') %>

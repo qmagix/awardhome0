@@ -6,6 +6,7 @@ const { logStudioActivity } = require('../../utils/activity');
 const { approveDancerClaim, rejectDancerClaim, notifyRosterAttach } = require('../../utils/claims');
 const { ensureMergeRequestTable } = require('../../utils/studioMerge');
 const { canonicalizeRoutine, routineKeySql, ensureRoutineAliasTable, ensureRoutineChecksTable, resolveRoutineKey, resweepStudioKeys } = require('../../utils/routineKey');
+const { ensureCastInviteTables, newInviteToken, inviteExpiry, sendCastInviteEmail } = require('../../utils/castInvites');
 const { sendEmail } = require('../../utils/mailer');
 const multer = require('multer');
 // CSV imports only (roster + awards). Rejections surface as 400s via the
@@ -226,6 +227,9 @@ const ACTIVITY_LABELS = {
   group_cast_synced: 'Group routine cast synced across events',
   routine_spelling_merged: 'Routine spellings merged / corrected',
   routine_marked_complete: 'Routine marked complete (dancers checked)',
+  cast_invite_sent: 'Cast-entry invitation emailed',
+  cast_submission_received: 'Cast names received from a helper',
+  cast_submission_applied: 'Helper-provided cast applied',
   routine_alias_removed: 'Routine spelling merge undone',
   profile_update: 'Studio profile updated',
   widget_embed: 'Awards widget embedded',
@@ -249,6 +253,62 @@ router.get('/manage/studio/:id/activity', requireAuth, requireStudioOwner, async
     studio: req.studio, mergeHistory, activity,
     pageTitle: `${req.studio.name} — Action History`,
   });
+});
+
+
+// ---- Delegated cast entry (maybe_patentable §A9): the director emails a
+// capability link scoped to ONE routine-year; the helper needs no account;
+// their submission stages for the director's review; credit is recorded. ----
+
+router.post('/manage/studio/:id/group-dancers/invite', requireAuth, requireStudioOwner, express.json(), async (req, res) => {
+  const db = await openDb();
+  await ensureCastInviteTables(db);
+  const { routine, year, email, note } = req.body || {};
+  const cleanEmail = String(email || '').trim();
+  if (!routine || !year) return res.status(400).json({ error: 'Missing routine or year' });
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) return res.status(400).json({ error: 'Please enter a valid email address.' });
+  const key = await resolveRoutineKey(db, req.studio.id, routine);
+  const exists = await db.get(`SELECT 1 FROM awards a WHERE a.studio_id = ?
+    AND IFNULL(a.performance_name_key, LOWER(TRIM(IFNULL(a.performance_name, '')))) = ? LIMIT 1`, [req.studio.id, key]);
+  if (!exists) return res.status(404).json({ error: 'Routine not found.' });
+
+  const token = newInviteToken();
+  await db.run(`INSERT INTO routine_cast_invites (studio_id, routine_key, routine_display, year, email, token, note, created_by, expires_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [req.studio.id, key, String(routine).trim(), String(year), cleanEmail,
+     token, String(note || '').trim().slice(0, 500) || null, req.session.user.id, inviteExpiry()]);
+  const link = `${require('../../config').BASE_URL}/cast/${token}`;
+  sendCastInviteEmail({ email: cleanEmail, studioName: req.studio.name, routine, year, note, link })
+    .catch(e => console.error('cast invite email failed:', e));
+  logStudioActivity(req.studio.id, 'cast_invite_sent', { dedupMinutes: 5 });
+  res.json({ success: true, link });
+});
+
+router.post('/manage/studio/:id/group-dancers/invite/:inviteId/revoke', requireAuth, requireStudioOwner, express.json(), async (req, res) => {
+  const db = await openDb();
+  await ensureCastInviteTables(db);
+  const r = await db.run('UPDATE routine_cast_invites SET revoked_at = CURRENT_TIMESTAMP WHERE id = ? AND studio_id = ? AND revoked_at IS NULL',
+    [parseInt(req.params.inviteId, 10), req.studio.id]);
+  if (!r.changes) return res.status(404).json({ error: 'Invite not found.' });
+  res.json({ success: true });
+});
+
+// Director decides a helper submission: applied (credit recorded) or
+// dismissed. Applying the actual names still runs through the normal
+// preview/apply flow — the human stays in the loop on identity matching.
+router.post('/manage/studio/:id/group-dancers/submission/:sid', requireAuth, requireStudioOwner, express.json(), async (req, res) => {
+  const db = await openDb();
+  await ensureCastInviteTables(db);
+  const action = req.body && req.body.action;
+  if (!['applied', 'dismissed'].includes(action)) return res.status(400).json({ error: 'Invalid action' });
+  const r = await db.run(`
+    UPDATE routine_cast_submissions SET status = ?, decided_at = CURRENT_TIMESTAMP, decided_by = ?
+    WHERE id = ? AND status = 'pending'
+      AND invite_id IN (SELECT id FROM routine_cast_invites WHERE studio_id = ?)`,
+    [action, req.session.user.id, parseInt(req.params.sid, 10), req.studio.id]);
+  if (!r.changes) return res.status(404).json({ error: 'Submission not found.' });
+  if (action === 'applied') logStudioActivity(req.studio.id, 'cast_submission_applied');
+  res.json({ success: true });
 });
 
 
@@ -1964,10 +2024,32 @@ router.get('/manage/studio/:id/group-dancers', requireAuth, requireStudioOwner, 
       && claimOldEnough && latestEntry <= threshold;
   });
 
+  // Delegated cast entry: pending invites + submissions per routine-year
+  await ensureCastInviteTables(db);
+  const inviteRows = await db.all(`
+    SELECT id, routine_key, year, email, expires_at
+    FROM routine_cast_invites
+    WHERE studio_id = ? AND revoked_at IS NULL AND expires_at > CURRENT_TIMESTAMP`, [studio.id]);
+  const subRows = await db.all(`
+    SELECT s.id, s.helper_name, s.payload, s.note, s.status, s.created_at,
+           i.routine_key, i.year
+    FROM routine_cast_submissions s JOIN routine_cast_invites i ON i.id = s.invite_id
+    WHERE i.studio_id = ? AND s.status IN ('pending', 'applied')
+    ORDER BY s.created_at DESC`, [studio.id]);
+  routines.forEach(r => {
+    const k = (x) => x.routine_key === r.routine_key && String(x.year) === String(r.year);
+    r.invites = inviteRows.filter(k);
+    r.submissions = subRows.filter(k).map(x => {
+      let events = [];
+      try { events = JSON.parse(x.payload); } catch (e) {}
+      return { ...x, events };
+    });
+  });
+
   // The page is a work queue: only open items by default; ?all=1 shows
   // everything (covered, marked-complete, and legacy stay editable there).
   const totalCount = routines.length;
-  const openRoutines = routines.filter(r => !r.covered && !r.checked && !r.legacy);
+  const openRoutines = routines.filter(r => (!r.covered && !r.checked && !r.legacy) || r.submissions.some(x => x.status === 'pending'));
   const legacyCount = routines.filter(r => r.legacy).length;
   const showAll = req.query.all === '1';
   const visibleRoutines = showAll ? routines : openRoutines;

@@ -553,3 +553,21 @@ remains only on cards WITH dancers. Dancer resolution
 (utils/resolveDancer.js) tie-break now requires name+routine+studio+YEAR when
 the award's year is known (undated awards fall back to routine+studio) —
 callers (StarQuest importer + repair) pass the event year.
+
+## Delegated cast entry — "class-mom flow" (2026-08-30, BUILT NOT SHIPPED)
+IP GATE: maybe_patentable §A9 — do not deploy until filed or waived.
+Director clicks "✉️ Ask someone who knows" on a Check Routine Dancers card ->
+popup mail modal (email + personal note, no page navigation) -> capability
+link emailed (also returned in the modal for direct sharing): /cast/<token>,
+scoped to ONE routine-year of one studio, 14-day expiry, withdrawable from the
+card. Helper needs no account; sees per-event blocks (award counts + already-
+listed dancers as context — those names are already public on award pages),
+enters names per event + their own name (required — credit) + optional note.
+NOTHING writes directly: submissions stage in routine_cast_submissions; the
+card shows the helper's names per event with "Load into form" (fills the
+paste box + ticks that event -> normal preview/apply keeps the director in
+the identity loop), then "Done — credit <helper>" or Dismiss. Applied
+submissions show "💛 Cast credited to <name>" on the card; all steps hit the
+activity log (cast_invite_sent / cast_submission_received /
+cast_submission_applied -> Action History). CSRF on the public form,
+rate-limited POST, tokens 48-hex, revoked/expired links die with warm copy.

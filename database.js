@@ -94,6 +94,31 @@ async function initDb() {
       FOREIGN KEY(user_id) REFERENCES users(id),
       FOREIGN KEY(studio_id) REFERENCES studios(id)
     );
+    CREATE TABLE IF NOT EXISTS routine_cast_invites (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      studio_id INTEGER NOT NULL REFERENCES studios(id),
+      routine_key TEXT NOT NULL,
+      routine_display TEXT NOT NULL,
+      year TEXT NOT NULL,
+      email TEXT NOT NULL,
+      token TEXT UNIQUE NOT NULL,
+      note TEXT,
+      created_by INTEGER REFERENCES users(id),
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      expires_at DATETIME NOT NULL,
+      revoked_at DATETIME
+    );
+    CREATE TABLE IF NOT EXISTS routine_cast_submissions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      invite_id INTEGER NOT NULL REFERENCES routine_cast_invites(id),
+      helper_name TEXT NOT NULL,
+      payload TEXT NOT NULL,
+      note TEXT,
+      status TEXT DEFAULT 'pending',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      decided_at DATETIME,
+      decided_by INTEGER REFERENCES users(id)
+    );
     CREATE TABLE IF NOT EXISTS studio_routine_checks (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       studio_id INTEGER NOT NULL REFERENCES studios(id),

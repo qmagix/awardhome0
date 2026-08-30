@@ -137,16 +137,52 @@
                       no-name routines retire to legacy automatically instead. %>
                   <span style="color: #f87171; font-size: 0.85rem; font-weight: 600;">No dancers listed yet</span>
                 <% } else { %>
-                  <% if (!r.covered) { %>
-                    <span style="color: #fbbf24; font-size: 0.85rem; font-weight: 600;">◐ <%= r.events.filter(ev => ev.covered).length %> of <%= r.events.length %> events have dancers</span>
-                  <% } else { %>
-                    <span style="color: #34d399; font-size: 0.85rem; font-weight: 600;">✓ <%= r.cast.length %> dancer<%= r.cast.length === 1 ? '' : 's' %></span>
+                  <% if (r.cast.length > 0) { %>
+                    <% if (!r.covered) { %>
+                      <span style="color: #fbbf24; font-size: 0.85rem; font-weight: 600;">◐ <%= r.events.filter(ev => ev.covered).length %> of <%= r.events.length %> events have dancers</span>
+                    <% } else { %>
+                      <span style="color: #34d399; font-size: 0.85rem; font-weight: 600;">✓ <%= r.cast.length %> dancer<%= r.cast.length === 1 ? '' : 's' %></span>
+                    <% } %>
+                    <button type="button" class="gd-complete btn" title="Nothing missing here — remove this routine from the check list (undoable)"
+                      style="background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.4); color: #34d399; padding: 0.2rem 0.7rem; font-size: 0.78rem;">✓ Mark complete</button>
                   <% } %>
-                  <button type="button" class="gd-complete btn" title="Nothing missing here — remove this routine from the check list (undoable)"
-                    style="background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.4); color: #34d399; padding: 0.2rem 0.7rem; font-size: 0.78rem;">✓ Mark complete</button>
+                  <button type="button" class="gd-invite btn" title="Email someone who knows this routine's dancers — a team parent, the choreographer — a private link to fill them in. You review everything before it saves."
+                    style="background: rgba(96,165,250,0.12); border: 1px solid rgba(96,165,250,0.4); color: #60a5fa; padding: 0.2rem 0.7rem; font-size: 0.78rem;">✉️ Ask someone who knows</button>
+                <% } %>
+                <% const creditSub = r.submissions && r.submissions.find(x => x.status === 'applied'); %>
+                <% if (creditSub) { %>
+                  <span style="color: var(--text-muted); font-size: 0.78rem;" title="This cast was provided by a helper the studio invited">💛 Cast credited to <%= creditSub.helper_name %></span>
                 <% } %>
               </div>
             </div>
+
+            <% (r.invites || []).forEach(function(iv) { %>
+              <div style="margin-top: 0.5rem; font-size: 0.82rem; color: var(--text-muted);">
+                ✉️ Invitation sent to <strong style="color: white;"><%= iv.email %></strong> · expires <%= String(iv.expires_at).slice(0, 10) %>
+                <button type="button" class="gd-invite-revoke" data-invite-id="<%= iv.id %>"
+                  style="background: none; border: none; color: var(--text-muted); text-decoration: underline; cursor: pointer; font-size: 0.8rem;">withdraw</button>
+              </div>
+            <% }); %>
+            <% (r.submissions || []).filter(x => x.status === 'pending').forEach(function(sub) { %>
+              <div style="margin-top: 0.6rem; background: rgba(96,165,250,0.08); border: 1px solid rgba(96,165,250,0.35); border-radius: 8px; padding: 0.8rem 1rem;">
+                <div style="font-size: 0.9rem; color: white;">💡 <strong><%= sub.helper_name %></strong> filled in the cast <span style="color: var(--text-muted);">(<%= String(sub.created_at).slice(0, 10) %>)</span></div>
+                <% if (sub.note) { %><div style="color: var(--text-muted); font-size: 0.85rem; font-style: italic; margin-top: 0.2rem;">&ldquo;<%= sub.note %>&rdquo;</div><% } %>
+                <% sub.events.forEach(function(sev) { %>
+                  <div style="margin-top: 0.45rem; font-size: 0.87rem;">
+                    <span style="color: var(--text-muted);"><%= sev.event_name %>:</span>
+                    <span style="color: white;"><%= sev.names.join(', ') %></span>
+                    <button type="button" class="gd-sub-load btn" data-names="<%= encodeURIComponent(sev.names.join('\n')) %>" data-event-id="<%= sev.event_id %>"
+                      style="background: rgba(96,165,250,0.15); border: 1px solid rgba(96,165,250,0.4); color: #60a5fa; padding: 0.1rem 0.55rem; font-size: 0.75rem; margin-left: 0.4rem;">Load into form</button>
+                  </div>
+                <% }); %>
+                <div style="margin-top: 0.6rem; display: flex; gap: 0.5rem;">
+                  <button type="button" class="gd-sub-decide btn" data-sid="<%= sub.id %>" data-action="applied"
+                    style="background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.4); color: #34d399; padding: 0.2rem 0.7rem; font-size: 0.78rem;">✓ Done — credit <%= sub.helper_name %></button>
+                  <button type="button" class="gd-sub-decide btn" data-sid="<%= sub.id %>" data-action="dismissed"
+                    style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: var(--text-muted); padding: 0.2rem 0.7rem; font-size: 0.78rem;">Dismiss</button>
+                </div>
+              </div>
+            <% }); %>
 
             <% if (r.events.length > 1) { %>
               <%# Casts can differ per event (subs, missed events): tick which
@@ -227,6 +263,28 @@
   </div>
 </div>
 
+<!-- Ask-someone-who-knows: popup mail form (no page navigation) -->
+<div id="castInviteModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 2000; align-items: center; justify-content: center;">
+  <div class="card glass-card" style="max-width: 500px; width: calc(100% - 2rem); padding: 1.75rem;">
+    <h3 style="margin: 0 0 0.4rem 0; color: white;">Ask someone who knows</h3>
+    <p id="castInviteRoutine" style="color: var(--text-muted); font-size: 0.9rem; margin: 0 0 1rem 0;"></p>
+    <label style="display: block; margin-bottom: 0.3rem; font-weight: 600; font-size: 0.9rem;">Their email</label>
+    <input type="email" id="castInviteEmail" placeholder="team parent, choreographer, coach…"
+      style="width: 100%; padding: 0.6rem 0.9rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); background: rgba(0,0,0,0.25); color: white; margin-bottom: 1rem;">
+    <label style="display: block; margin-bottom: 0.3rem; font-weight: 600; font-size: 0.9rem;">Personal note <span style="color: var(--text-muted); font-weight: 400;">(optional)</span></label>
+    <textarea id="castInviteNote" rows="2" maxlength="500" placeholder='e.g. "Hi Jane — you know the Anhelo kids better than I do!"'
+      style="width: 100%; padding: 0.6rem 0.9rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); background: rgba(0,0,0,0.25); color: white; margin-bottom: 1rem;"></textarea>
+    <p style="color: var(--text-muted); font-size: 0.8rem; margin: 0 0 1.25rem 0;">
+      They get a private link that opens only this routine — no account needed. Their names come back
+      to you for review before anything saves, and they're credited for the help.
+    </p>
+    <div id="castInviteResult" style="display: none; margin-bottom: 1rem; font-size: 0.85rem; color: #34d399;"></div>
+    <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+      <button class="btn" onclick="document.getElementById('castInviteModal').style.display='none'" style="background: rgba(255,255,255,0.1); color: white;">Close</button>
+      <button id="castInviteSend" class="btn" style="background: var(--primary); color: #0a0a0a; font-weight: 600;">Send invitation</button>
+    </div>
+  </div>
+</div>
 <script src="/js/ui_dialogs.js"></script>
 <script>
 (function () {
@@ -332,6 +390,68 @@
         body: JSON.stringify(ctx)
       });
       if (res.ok) location.reload(); else toast('Could not undo — please try again.', true);
+    }
+
+    if (e.target.classList.contains('gd-invite')) {
+      const modal = document.getElementById('castInviteModal');
+      document.getElementById('castInviteRoutine').textContent =
+        'For "' + ctx.routine + '" (' + ctx.year + ') — they\'ll see this routine and nothing else.';
+      document.getElementById('castInviteEmail').value = '';
+      document.getElementById('castInviteNote').value = '';
+      const result = document.getElementById('castInviteResult');
+      result.style.display = 'none'; result.textContent = '';
+      const send = document.getElementById('castInviteSend');
+      send.disabled = false;
+      send.onclick = async () => {
+        const email = document.getElementById('castInviteEmail').value.trim();
+        if (!email) { toast('Enter their email address first.', true); return; }
+        send.disabled = true;
+        try {
+          const res = await fetch(base + '/invite', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ...ctx, email, note: document.getElementById('castInviteNote').value.trim() })
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) { toast(data.error || 'Could not send — please try again.', true); send.disabled = false; return; }
+          result.textContent = 'Sent! You can also share the link directly: ' + data.link;
+          result.style.display = 'block';
+          toast('Invitation sent.');
+          setTimeout(() => location.reload(), 2500);
+        } catch (err) { toast('Could not send — please try again.', true); send.disabled = false; }
+      };
+      modal.style.display = 'flex';
+    }
+
+    if (e.target.classList.contains('gd-invite-revoke')) {
+      const res = await fetch(base + '/invite/' + e.target.dataset.inviteId + '/revoke', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}',
+      });
+      if (res.ok) location.reload(); else toast('Could not withdraw — please try again.', true);
+    }
+
+    if (e.target.classList.contains('gd-sub-load')) {
+      // Fill the entry form with the helper's names, scoped to their event
+      const names = decodeURIComponent(e.target.dataset.names);
+      const evId = e.target.dataset.eventId;
+      const details = card.querySelector('details');
+      if (details) details.open = true;
+      card.querySelector('.gd-names').value = names;
+      const boxes = card.querySelectorAll('.gd-event');
+      if (boxes.length) boxes.forEach(b => { b.checked = (b.value === evId); });
+      toast('Names loaded — Preview, then Confirm & Save.');
+    }
+
+    if (e.target.classList.contains('gd-sub-decide')) {
+      const action = e.target.dataset.action;
+      if (action === 'dismissed') {
+        const ok = await uiConfirm({ title: 'Dismiss these names?', message: 'The submission is set aside without saving anything. The helper is not notified.', confirmLabel: 'Dismiss' });
+        if (!ok) return;
+      }
+      const res = await fetch(base + '/submission/' + e.target.dataset.sid, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action })
+      });
+      if (res.ok) location.reload(); else toast('Could not update — please try again.', true);
     }
 
     if (e.target.classList.contains('gd-remove')) {

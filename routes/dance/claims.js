@@ -320,4 +320,79 @@ router.post('/claim/org/:token', applyLimiter, async (req, res) => {
   res.redirect('/manage/org/' + row.org_id);
 });
 
+// ---- Delegated cast entry, public side (maybe_patentable §A9) ----
+// The token IS the authorization: it opens exactly one routine-year of one
+// studio, needs no account, and never writes dancer links directly — the
+// helper's names stage as a submission the director reviews and credits.
+
+const { ensureCastInviteTables } = require('../../utils/castInvites');
+
+async function loadCastInvite(db, token) {
+  await ensureCastInviteTables(db);
+  const inv = await db.get(`
+    SELECT i.*, s.name AS studio_name
+    FROM routine_cast_invites i JOIN studios s ON s.id = i.studio_id
+    WHERE i.token = ?`, [String(token || '')]);
+  if (!inv) return { error: 'This link is not valid. Check that the full link from the email was copied.' };
+  if (inv.revoked_at) return { error: 'This link was withdrawn by the studio. If you think that\'s a mistake, just reply to the email that brought you here.' };
+  if (new Date(inv.expires_at) < new Date()) return { error: 'This link has expired. Reply to the email that brought you here and the studio can send a fresh one.' };
+  return { inv };
+}
+
+async function castInviteEvents(db, inv) {
+  const events = await db.all(`
+    SELECT IFNULL(e.id, 0) AS event_id, IFNULL(e.name, 'Self-reported') AS event_name,
+           COUNT(DISTINCT a.id) AS award_count
+    FROM awards a LEFT JOIN events e ON a.event_id = e.id
+    WHERE a.studio_id = ?
+      AND IFNULL(a.performance_name_key, LOWER(TRIM(IFNULL(a.performance_name, '')))) = ?
+      AND IFNULL(CAST(e.year AS TEXT), 'Undated') = ?
+    GROUP BY e.id ORDER BY event_name`, [inv.studio_id, inv.routine_key, String(inv.year)]);
+  // Existing named dancers per event, for context (these names are already
+  // public on award pages once linked — no new disclosure).
+  for (const ev of events) {
+    const rows = await db.all(`
+      SELECT DISTINCT d.name FROM award_dancers ad
+      JOIN awards a ON a.id = ad.award_id JOIN dancers d ON d.id = ad.dancer_id
+      WHERE a.studio_id = ? AND IFNULL(a.event_id, 0) = ?
+        AND IFNULL(a.performance_name_key, LOWER(TRIM(IFNULL(a.performance_name, '')))) = ?
+      ORDER BY d.name`, [inv.studio_id, ev.event_id, inv.routine_key]);
+    ev.known_dancers = rows.map(r => r.name);
+  }
+  return events;
+}
+
+router.get('/cast/:token', async (req, res) => {
+  const db = await openDb();
+  const { inv, error } = await loadCastInvite(db, req.params.token);
+  if (error) return res.status(410).render('cast_invite', { error, inv: null, events: [], submitted: false, pageTitle: 'Cast entry' });
+  const events = await castInviteEvents(db, inv);
+  res.render('cast_invite', { error: null, inv, events, submitted: false, pageTitle: `Dancers of "${inv.routine_display}"` });
+});
+
+router.post('/cast/:token', applyLimiter, async (req, res) => {
+  const db = await openDb();
+  const { inv, error } = await loadCastInvite(db, req.params.token);
+  if (error) return res.status(410).render('cast_invite', { error, inv: null, events: [], submitted: false, pageTitle: 'Cast entry' });
+  const events = await castInviteEvents(db, inv);
+  const fail = (msg) => res.status(400).render('cast_invite', { error: msg, inv, events, submitted: false, pageTitle: `Dancers of "${inv.routine_display}"` });
+
+  const helper = String((req.body && req.body.helper_name) || '').replace(/\s+/g, ' ').trim().slice(0, 80);
+  if (!helper) return fail('Please tell us your name — the studio wants to know who to thank!');
+  const note = String((req.body && req.body.note) || '').trim().slice(0, 500) || null;
+
+  const payload = [];
+  for (const ev of events) {
+    const raw = String((req.body && req.body['names_' + ev.event_id]) || '');
+    const names = raw.split(/[\n,;]+/).map(n => n.trim().replace(/\s+/g, ' ')).filter(Boolean).slice(0, 60);
+    if (names.length) payload.push({ event_id: ev.event_id, event_name: ev.event_name, names });
+  }
+  if (!payload.length) return fail('Add at least one dancer name before sending.');
+
+  await db.run(`INSERT INTO routine_cast_submissions (invite_id, helper_name, payload, note) VALUES (?, ?, ?, ?)`,
+    [inv.id, helper, JSON.stringify(payload), note]);
+  logStudioActivity(inv.studio_id, 'cast_submission_received', { dedupMinutes: 5 });
+  res.render('cast_invite', { error: null, inv, events, submitted: true, pageTitle: 'Thank you!' });
+});
+
 module.exports = router;
