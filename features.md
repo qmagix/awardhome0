@@ -617,3 +617,28 @@ way to help") without anchoring a price before demonstrated value, matching the
 commitment-ladder strategy in org_invite_draft.md. The integrity disclosure
 (sponsored placement never alters results, listing order, or dates) is
 unaffected — it lives in Terms §9.
+
+## Major Awards: one definition, explained in place (2026-08-30)
+`utils/majorAward.js` is now the single source for the Major Awards stat —
+`isMajorAward()` for JS passes and `majorAwardSql()` for aggregates — replacing
+two hand-maintained copies (public studio page SQL, owner Organization History
+JS) that had drifted. Rule unchanged in intent: a first place that is a
+prestige award (title/scholarship/invitation/DOY/photogenic) at a national /
+finals / grand / title stage, in the award's wording or the event's.
+COUNT CORRECTIONS from unification (local DB, 236,721 first places): old public
+SQL 10,969 -> 13,459 (+2,490) because bare `a.category || ...` concatenation
+returned NULL whenever category was NULL, silently excluding 44,953 first
+places — e.g. NexStar's branded "Premier/Elite Title - Miss Nexstar" wins; old
+private JS 12,686 -> 13,459 because it read `award_type || category`, ignoring
+category whenever award_type existed. Counts only ever rise, so no studio loses
+a previously displayed achievement.
+The Organization History card's ℹ️ is now a real button (was a hover-only
+`title` most users never saw) opening a popup that explains the rule in plain
+language, states that the figure is public and therefore platform-wide rather
+than self-editable (a self-serve definition would let a studio inflate a public
+claim), lists the studio's own qualifying awards from
+GET /manage/studio/:id/history/major-awards so the rule is verifiable, and
+offers a "something looks wrong" mail path for classification fixes.
+Year rows: the expand chevron was an absolutely-positioned `::after` pinned to
+the summary's right edge, overlapping the "Major: n" figure; it is now a real
+flex item at the end of the stats row (`.yr-chevron`), so it cannot overlap.

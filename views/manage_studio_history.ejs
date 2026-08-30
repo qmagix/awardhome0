@@ -107,7 +107,10 @@
                   <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary);"><%= org.first_places_all_time %></div>
                 </div>
                 <div>
-                  <div style="font-size: 0.8rem; color: var(--text-muted);" title="Premium/National/Grand Titles">Major Awards ℹ️</div>
+                  <div style="font-size: 0.8rem; color: var(--text-muted);">Major Awards
+                    <button type="button" onclick="openMajorInfo()" title="What counts as a Major Award?"
+                      style="background: none; border: none; color: var(--primary); cursor: pointer; padding: 0 0 0 0.15rem; font-size: 0.85rem; line-height: 1;">&#9432;</button>
+                  </div>
                   <div style="font-size: 1.5rem; font-weight: bold; color: #aa8529;"><%= org.major_awards_all_time %></div>
                 </div>
               </div>
@@ -123,10 +126,11 @@
                       <span style="font-weight: bold; color: white; font-size: 1.1rem;"><%= year %></span>
                       <span style="color: var(--text-muted); font-size: 0.9rem;"><%= yrData.events.length %> Event(s)</span>
                     </div>
-                    <div style="display: flex; gap: 1rem; font-size: 0.9rem;">
+                    <div style="display: flex; gap: 1rem; font-size: 0.9rem; align-items: center;">
                       <span style="color: var(--text-muted);">Awards: <strong style="color: white;"><%= yrData.total_awards %></strong></span>
                       <span style="color: var(--text-muted);">1st Places: <strong style="color: var(--primary);"><%= yrData.first_places %></strong></span>
                       <span style="color: var(--text-muted);">Major: <strong style="color: #aa8529;"><%= yrData.major_awards %></strong></span>
+                      <span class="yr-chevron" aria-hidden="true">&#9662;</span>
                     </div>
                   </summary>
                   <div style="padding: 0 1rem 1rem 1rem; border-top: 1px solid rgba(255,255,255,0.05); margin-top: 0.5rem; padding-top: 1rem;">
@@ -443,20 +447,79 @@ function copySummary(event) {
   details > summary::-webkit-details-marker {
     display: none;
   }
-  details > summary {
-    position: relative;
-  }
-  details > summary::after {
-    content: '▼';
-    position: absolute;
-    right: 1rem;
+  /* The chevron used to be an absolutely-positioned ::after pinned to the
+     summary's right edge, where it sat on top of the "Major: n" figure.
+     It is now a real flex item at the end of the stats row, so it can
+     never overlap. */
+  .yr-chevron {
     color: var(--text-muted);
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     transition: transform 0.2s;
+    display: inline-block;
+    width: 1rem;
+    text-align: center;
   }
-  details[open] > summary::after {
+  details[open] > summary .yr-chevron {
     transform: rotate(180deg);
   }
+  details > summary:hover .yr-chevron { color: var(--primary); }
 </style>
+
+<!-- What counts as a Major Award? -->
+<div id="majorInfoModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 2000; align-items: flex-start; justify-content: center; overflow-y: auto; padding: 3rem 1rem;">
+  <div class="card glass-card" style="max-width: 640px; width: 100%; padding: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;">
+      <h3 style="margin: 0; color: var(--primary);">What counts as a Major Award?</h3>
+      <button onclick="document.getElementById('majorInfoModal').style.display='none'" class="btn" style="background: rgba(255,255,255,0.1); color: white; padding: 0.25rem 0.7rem;">&#10005;</button>
+    </div>
+    <p style="color: var(--text-muted); line-height: 1.6; margin: 1rem 0 0;">
+      A <strong style="color: #aa8529;">Major Award</strong> is a <strong>first place</strong> that is also a
+      <strong>prestige award</strong> — a title, scholarship, invitation, Dancer of the Year and the like —
+      won at a <strong>national, finals, or grand</strong> stage (either in the award's own name or the event's).
+      Everything else still counts in Total Awards and 1st Places.
+    </p>
+    <p style="color: var(--text-muted); font-size: 0.88rem; line-height: 1.6; margin: 0.75rem 0 0;">
+      This figure also appears on your <strong>public studio page</strong>, so the definition is the same for
+      every studio on AwardHome and isn't self-editable — that's what keeps it meaningful to the families and
+      organizers reading it. Your awards below are exactly the ones being counted; if something looks wrong,
+      tell us and we'll fix the classification for everyone.
+    </p>
+    <div id="majorInfoList" style="margin-top: 1.25rem; color: var(--text-muted);">Loading your major awards…</div>
+    <div style="margin-top: 1.5rem; display: flex; gap: 0.75rem; justify-content: flex-end;">
+      <a class="btn" href="mailto:hello@awardhome.com?subject=Major%20Award%20classification%20-%20<%= encodeURIComponent(studio.name) %>"
+        style="background: transparent; border: 1px solid var(--primary); color: var(--primary); text-decoration: none; padding: 0.5rem 1rem;">Something looks wrong</a>
+      <button onclick="document.getElementById('majorInfoModal').style.display='none'" class="btn" style="background: var(--primary); color: #0a0a0a; font-weight: 600; padding: 0.5rem 1.2rem;">Got it</button>
+    </div>
+  </div>
+</div>
+<script>
+  let majorInfoLoaded = false;
+  function openMajorInfo() {
+    const modal = document.getElementById('majorInfoModal');
+    modal.style.display = 'flex';
+    if (majorInfoLoaded) return;
+    majorInfoLoaded = true;
+    fetch('/manage/studio/<%= studio.id %>/history/major-awards')
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(d => {
+        const box = document.getElementById('majorInfoList');
+        if (!d.count) { box.textContent = 'No awards currently meet this bar — the first one is coming.'; return; }
+        const esc = t => String(t || '').replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+        box.innerHTML = '<div style="font-weight: 600; color: white; margin-bottom: 0.5rem;">Your ' + d.count
+          + ' major award' + (d.count === 1 ? '' : 's') + '</div>'
+          + '<div style="max-height: 260px; overflow-y: auto; font-size: 0.88rem; line-height: 1.7;">'
+          + d.awards.map(a => '<div style="border-bottom: 1px solid rgba(255,255,255,0.06); padding: 0.35rem 0;">'
+              + '<span style="color: #aa8529;">' + esc(a.award_type || a.category) + '</span>'
+              + (a.performance_name ? ' <span style="color: white;">&mdash; ' + esc(a.performance_name) + '</span>' : '')
+              + '<div style="color: var(--text-muted); font-size: 0.82rem;">' + esc(a.event_name) + ' &middot; ' + esc(a.year) + '</div>'
+            + '</div>').join('')
+          + '</div>';
+      })
+      .catch(() => { document.getElementById('majorInfoList').textContent = 'Could not load the list right now.'; });
+  }
+  document.getElementById('majorInfoModal').addEventListener('click', function (e) {
+    if (e.target === this) this.style.display = 'none';
+  });
+</script>
 
 <%- include('partials/footer') %>

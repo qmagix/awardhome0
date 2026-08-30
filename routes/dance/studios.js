@@ -5,6 +5,7 @@ const { requireAuth, requireStudioOwner } = require('../../middleware/auth');
 const { logStudioActivity } = require('../../utils/activity');
 const { approveDancerClaim, rejectDancerClaim, notifyRosterAttach } = require('../../utils/claims');
 const { ensureMergeRequestTable } = require('../../utils/studioMerge');
+const { isMajorAward, majorAwardSql, PRESTIGE_TERMS, STAGE_TERMS } = require('../../utils/majorAward');
 const { canonicalizeRoutine, routineKeySql, ensureRoutineAliasTable, ensureRoutineChecksTable, resolveRoutineKey, resweepStudioKeys } = require('../../utils/routineKey');
 const { ensureCastInviteTables, newInviteToken, inviteExpiry, sendCastInviteEmail } = require('../../utils/castInvites');
 const { sendEmail } = require('../../utils/mailer');
@@ -170,6 +171,22 @@ router.get('/manage/studio/:id/group-dancers/card', requireAuth, requireStudioOw
   const r = data.routines.find(x => x.routine_key === key && String(x.year) === String(req.query.year || ''));
   if (!r) return res.status(404).send('Routine not found');
   res.render('partials/gd_routine_card', { r, studio: req.studio, autoOpen: true });
+});
+
+
+// Backing data for the "What counts as a Major Award?" popup: the studio's
+// own awards that matched, so the rule is verifiable rather than asserted.
+router.get('/manage/studio/:id/history/major-awards', requireAuth, requireStudioOwner, async (req, res) => {
+  const db = await openDb();
+  const rows = await db.all(`
+    SELECT e.year, e.name AS event_name, o.name AS org_name,
+           a.award_type, a.category, a.performance_name
+    FROM awards a JOIN events e ON e.id = a.event_id
+    LEFT JOIN organizations o ON o.id = e.org_id
+    WHERE a.studio_id = ? AND ${majorAwardSql('a', 'e')}
+    ORDER BY e.year DESC, o.name, a.award_type
+    LIMIT 500`, [req.studio.id]);
+  res.json({ terms: { prestige: PRESTIGE_TERMS, stage: STAGE_TERMS }, count: rows.length, awards: rows });
 });
 
 
@@ -1334,16 +1351,10 @@ router.get('/manage/studio/:id/history', requireAuth, requireStudioOwner, async 
     org.total_awards_all_time++;
     if (award.is_first_place) org.first_places_all_time++;
 
-    const premiumDetails = req.app.locals.getPremiumDetails(award);
-    let isMajor = false;
-    if (award.is_first_place && premiumDetails.isPremium) {
-      const nameLower = (award.award_type || award.category || '').toLowerCase();
-      const eventNameLower = (award.event_name || '').toLowerCase();
-      if (nameLower.includes('national') || nameLower.includes('final') || nameLower.includes('grand') || nameLower.includes('title') || eventNameLower.includes('national') || eventNameLower.includes('final')) {
-        isMajor = true;
-        org.major_awards_all_time++;
-      }
-    }
+    // Shared definition (utils/majorAward.js) — this used to be a
+    // hand-duplicated variant of the public studio page's SQL and drifted.
+    const isMajor = isMajorAward(award);
+    if (isMajor) org.major_awards_all_time++;
 
     if (!org.years[award.event_year]) {
       org.years[award.event_year] = {

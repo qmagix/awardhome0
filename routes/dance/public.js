@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { majorAwardSql } = require('../../utils/majorAward');
 const { openDb } = require('../../database');
 const { logStudioActivity } = require('../../utils/activity');
 const { cached } = require('../../utils/cache');
@@ -1076,24 +1077,7 @@ router.get('/dance/studio/:id', profileLimiter, async (req, res) => {
     SELECT o.id as org_id, o.name as org_name, o.logo_url, e.year, e.id as event_id, e.name as event_name, 
            COUNT(*) as total_awards, 
            SUM(CASE WHEN a.is_first_place = 1 THEN 1 ELSE 0 END) as first_places,
-           SUM(CASE WHEN a.is_first_place = 1 AND 
-             (
-              LOWER(a.category || ' ' || COALESCE(a.award_type, '') || ' ' || COALESCE(a.performance_name, '')) LIKE '%scholarship%' OR
-              LOWER(a.category || ' ' || COALESCE(a.award_type, '') || ' ' || COALESCE(a.performance_name, '')) LIKE '%invite%' OR
-              LOWER(a.category || ' ' || COALESCE(a.award_type, '') || ' ' || COALESCE(a.performance_name, '')) LIKE '%title%' OR
-              LOWER(a.category || ' ' || COALESCE(a.award_type, '') || ' ' || COALESCE(a.performance_name, '')) LIKE '%photogenic%' OR
-              LOWER(a.category || ' ' || COALESCE(a.award_type, '') || ' ' || COALESCE(a.performance_name, '')) LIKE '%doy%' OR
-              LOWER(a.category || ' ' || COALESCE(a.award_type, '') || ' ' || COALESCE(a.performance_name, '')) LIKE '%dancer of the year%'
-             ) AND 
-             (
-              LOWER(a.category || ' ' || COALESCE(a.award_type, '')) LIKE '%national%' OR
-              LOWER(a.category || ' ' || COALESCE(a.award_type, '')) LIKE '%final%' OR
-              LOWER(a.category || ' ' || COALESCE(a.award_type, '')) LIKE '%grand%' OR
-              LOWER(a.category || ' ' || COALESCE(a.award_type, '')) LIKE '%title%' OR
-              LOWER(e.name) LIKE '%national%' OR
-              LOWER(e.name) LIKE '%final%'
-             )
-           THEN 1 ELSE 0 END) as major_awards
+           SUM(CASE WHEN ${majorAwardSql('a', 'e')} THEN 1 ELSE 0 END) as major_awards
     FROM awards a
     JOIN events e ON a.event_id = e.id
     JOIN organizations o ON e.org_id = o.id
