@@ -585,3 +585,12 @@ HTML fragment (buildCheckQueueData refactored out of the page route).
 Deliberately NOT built (Q): a quick Sync button on list rows — same-named
 routines (ballet variations by different dancers) make sync-without-detail-view
 error-prone; the popup keeps the detail view in the loop.
+
+## Roster duplicates: batch merge-all (2026-08-30)
+"No two of your students share a name? Merge all N sets at once" link in the
+Suspected Duplicates widget -> confirmation modal stating the premise and the
+rails -> POST /manage/studio/:id/roster/clean-all-duplicates merges every
+same-name set (claimed > most-awarded primary, per-set transaction). Rails:
+sets with >1 claimed profile skipped for manual review (reported in the
+toast); "different people" exceptions excluded; activity-logged
+(roster_batch_merged). FAQ studio admin §19 updated.
