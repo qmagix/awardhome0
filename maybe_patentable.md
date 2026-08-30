@@ -106,7 +106,12 @@ anti-sandbagging proof no generic ID provider holds). Likely the strongest §101
 survivor in the inventory (consent/auth protocol mechanics). *Captured 2026-08-27.
 NOT built — paper design first, then provisional (see plan P3).*
 
-### A9. Scoped delegated cast-entry via emailed capability link ("class-mom flow") (BUILT 2026-08-30, NOT SHIPPED — deploy blocked pending file-or-waive)
+### A9. Scoped delegated cast-entry via emailed capability link ("class-mom flow") (SHIPPED 2026-08-30 — PUBLIC DISCLOSURE DATE)
+**Q consciously shipped without filing (decision 2026-08-30).** US grace
+period: any US provisional/non-provisional covering A9 must be filed by
+**2027-08-30**. Foreign (absolute-novelty) rights: largely forfeited as of
+disclosure. If A9 matter goes into the P2 filing, note this disclosure date
+in the application record.
 Studio director emails a single-use link that authorizes a NON-ACCOUNT-HOLDER to
 edit exactly one group routine's cast — optionally per event (the per-event cast
 scoping shipped 2026-08-29 gives the substrate: casts differ by event via subs/

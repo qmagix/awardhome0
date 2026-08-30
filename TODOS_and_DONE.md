@@ -16,7 +16,7 @@
 - [ ] Teacher & choreographer accounts + card credits (two-sided accept; see ideas.md §11). IP: add credit-granularity embodiment to the follow-on provisional queue before building.
 
 ### IP / Legal
-- [ ] **DEPLOY BLOCKER: class-mom delegated cast entry (maybe_patentable §A9) is BUILT and committed but MUST NOT deploy until the P2/follow-on provisional decision (file or consciously waive)** — public availability = disclosure. Everything else on main is deployable; if deploying other work first, confirm this feature ships with it knowingly or hold the commits.
+- [x] (RESOLVED 2026-08-30) **A9 class-mom delegation: Q consciously shipped without filing** — public disclosure date 2026-08-30 recorded in maybe_patentable.md §A9. If filing A9 matter later (e.g. in P2): US deadline 2027-08-30, foreign rights forfeited.
 - [x] (DONE 2026-08-29) **AwardHome LLC — Articles of Organization filed** (California, via bizfileonline; entity name matches the brand, so no FBN/dba needed; ComputerMagix sole-prop FBN stays separate, untouched by this project). Terms/Privacy intro + footer copyright now name "AwardHome LLC".
 - [ ] **LLC formation follow-ups** (start once SOS approval arrives):
   - [ ] Statement of Information (Form LLC-12, $20) — due within 90 days of filing, so by ~2026-11-27; biennial after.
