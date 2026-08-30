@@ -102,7 +102,8 @@ async function initDb() {
       status TEXT DEFAULT 'pending',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       decided_at DATETIME,
-      decided_by INTEGER REFERENCES users(id)
+      decided_by INTEGER REFERENCES users(id),
+      dismissed_at DATETIME
     );
     CREATE TABLE IF NOT EXISTS dancer_claims (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -564,6 +565,7 @@ async function initDb() {
   `);
   
   // Migrations
+  try { await db.exec('ALTER TABLE studio_merge_requests ADD COLUMN dismissed_at DATETIME'); } catch(e) {}
   try { await db.exec('ALTER TABLE studios ADD COLUMN instagram_handle TEXT'); } catch(e) {}
   try { await db.exec('ALTER TABLE studios ADD COLUMN tiktok_handle TEXT'); } catch(e) {}
   try { await db.exec('ALTER TABLE studios ADD COLUMN join_code TEXT'); } catch(e) {}

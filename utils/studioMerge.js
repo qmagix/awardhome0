@@ -17,9 +17,12 @@ async function ensureMergeRequestTable(db) {
       status TEXT DEFAULT 'pending',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       decided_at DATETIME,
-      decided_by INTEGER REFERENCES users(id)
+      decided_by INTEGER REFERENCES users(id),
+      dismissed_at DATETIME
     )
   `);
+  // Older local DBs created the table before dismissed_at existed.
+  try { await db.exec('ALTER TABLE studio_merge_requests ADD COLUMN dismissed_at DATETIME'); } catch (e) {}
 }
 
 // The one true merge: awards move with traceability, dancer links transfer

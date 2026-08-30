@@ -464,4 +464,9 @@ queue: compare link, approve-and-merge, reject) — decisions email the owner
 SQL extracted to utils/studioMerge.js mergeStudios(), shared by the admin
 compare tool (which also settles matching pending requests when used directly).
 "Not My Studio" now hits an owner-scoped endpoint (was the same silent-403
-bug). FAQ: studio admin §18.
+bug). Decided requests can be cleared from the dashboard ("Clear decided →
+history" sets dismissed_at; pending rows can't be dismissed) — the full record
+lives on the owner's Action History page (/manage/studio/:id/history:
+merge-request history incl. dismissed + a friendly-labeled studio_activity
+feed). Dismissed sources stay excluded from Merge Suggestions. FAQ: studio
+admin §18.

@@ -91,16 +91,19 @@ router.get('/manage/studio/:id', requireAuth, requireStudioOwner, async (req, re
   }
 
   await ensureMergeRequestTable(db);
-  const mergeRequests = await db.all(`
-    SELECT mr.id, mr.status, mr.created_at, s.name AS source_name, s.unique_id AS source_uid
+  const allMergeRequests = await db.all(`
+    SELECT mr.id, mr.status, mr.created_at, mr.dismissed_at, s.name AS source_name, s.unique_id AS source_uid
     FROM studio_merge_requests mr
     JOIN studios s ON mr.source_studio_id = s.id
     WHERE mr.target_studio_id = ?
     ORDER BY mr.created_at DESC
   `, [studio.id]);
-  // A studio with a request on file (any status) leaves the suggestion list:
-  // pending/approved live in the requests table, rejected shouldn't be re-asked.
-  const requestedIds = new Set(mergeRequests.map(r => r.source_uid));
+  // A studio with a request on file (any status, dismissed included) leaves
+  // the suggestion list: pending/approved live in the requests panel,
+  // rejected shouldn't be re-asked. The dashboard panel itself shows only
+  // undismissed rows — decided ones can be moved to the history page.
+  const requestedIds = new Set(allMergeRequests.map(r => r.source_uid));
+  const mergeRequests = allMergeRequests.filter(r => !r.dismissed_at);
   const potentialDuplicates = (await findPotentialDuplicates(db, studio))
     .filter(d => !requestedIds.has(d.unique_id));
 
@@ -154,6 +157,57 @@ router.post('/manage/studio/:id/merge-request', requireAuth, requireStudioOwner,
   }).catch((err) => console.error('merge-request admin email failed:', err));
 
   res.json({ success: true });
+});
+
+
+// Dismiss decided merge requests from the dashboard panel — they remain
+// on the Action History page. Pending rows can't be dismissed (an open
+// request should stay visible until it's decided).
+router.post('/manage/studio/:id/merge-requests/dismiss', requireAuth, requireStudioOwner, express.json(), async (req, res) => {
+  const db = await openDb();
+  await ensureMergeRequestTable(db);
+  const result = await db.run(
+    `UPDATE studio_merge_requests SET dismissed_at = CURRENT_TIMESTAMP
+     WHERE target_studio_id = ? AND status != 'pending' AND dismissed_at IS NULL`,
+    [req.studio.id]);
+  res.json({ success: true, dismissed: result.changes || 0 });
+});
+
+
+// Action History: the studio's full merge-request record (including
+// dismissed rows) plus the activity log — the durable home for anything
+// cleared off the dashboard.
+const ACTIVITY_LABELS = {
+  claim_approved: 'Studio claim approved',
+  merge_requested: 'Merge request sent',
+  verification_action: 'Award verification decided',
+  award_claim: 'Award claimed onto roster',
+  award_self_report: 'Award self-reported',
+  awards_csv_commit: 'Awards imported from CSV',
+  roster_csv_commit: 'Roster imported from CSV',
+  group_cast_added: 'Dancers linked to a group routine',
+  profile_update: 'Studio profile updated',
+  widget_embed: 'Awards widget embedded',
+  ai_summary: 'AI studio summary generated',
+};
+router.get('/manage/studio/:id/history', requireAuth, requireStudioOwner, async (req, res) => {
+  const db = await openDb();
+  await ensureMergeRequestTable(db);
+  const mergeHistory = await db.all(`
+    SELECT mr.status, mr.created_at, mr.decided_at, s.name AS source_name
+    FROM studio_merge_requests mr
+    JOIN studios s ON mr.source_studio_id = s.id
+    WHERE mr.target_studio_id = ?
+    ORDER BY mr.created_at DESC
+  `, [req.studio.id]);
+  const activity = await db.all(
+    `SELECT action, created_at FROM studio_activity WHERE studio_id = ? ORDER BY created_at DESC LIMIT 200`,
+    [req.studio.id]);
+  for (const a of activity) a.label = ACTIVITY_LABELS[a.action] || a.action.replace(/_/g, ' ');
+  res.render('manage_studio_history', {
+    studio: req.studio, mergeHistory, activity,
+    pageTitle: `${req.studio.name} — Action History`,
+  });
 });
 
 
