@@ -26,6 +26,7 @@
             <th>Events Attended</th>
             <th>Total Awards</th>
             <th>Status</th>
+            <th>Claimed By</th>
             <th class="no-sort" style="width: 50px; text-align: center;">Featured</th>
             <th class="no-sort" style="text-align: right;">Actions</th>
           </tr>
@@ -56,6 +57,18 @@
                   <span class="badge" style="background: rgba(239, 68, 68, 0.2); color: #ef4444;">Needs Review</span>
                 <% } else { %>
                   <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">Active</span>
+                <% } %>
+              </td>
+              <td>
+                <% if (studio.is_claimed && studio.owner_email) { %>
+                  <a href="mailto:<%= studio.owner_email %>" style="color: var(--primary); text-decoration: none;"><%= studio.owner_email %></a>
+                  <% if (studio.claimed_at) { %>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">claimed <%= String(studio.claimed_at).slice(0, 10) %></div>
+                  <% } %>
+                <% } else if (studio.is_claimed) { %>
+                  <span style="color: var(--text-muted);">claimed &mdash; owner account missing</span>
+                <% } else { %>
+                  <span style="color: var(--text-muted);">&mdash;</span>
                 <% } %>
               </td>
               <td style="text-align: center;">

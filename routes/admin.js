@@ -951,11 +951,15 @@ router.get('/admin/studios', requireAdmin, async (req, res) => {
   const queryParams2 = [...queryParams, limit, offset];
 
   const studios = await db.all(`
-    SELECT s.*, 
+    SELECT s.*,
            COUNT(DISTINCT a.id) as total_awards,
-           COUNT(DISTINCT a.event_id) as total_events
+           COUNT(DISTINCT a.event_id) as total_events,
+           u.email AS owner_email,
+           (SELECT MAX(sc.created_at) FROM studio_claims sc
+             WHERE sc.studio_id = s.id AND sc.user_id = s.owner_id AND sc.status = 'approved') AS claimed_at
     FROM studios s
     LEFT JOIN awards a ON s.id = a.studio_id
+    LEFT JOIN users u ON u.id = s.owner_id
     ${whereClause}
     GROUP BY s.id
     ORDER BY s.name ASC
