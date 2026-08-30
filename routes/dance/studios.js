@@ -158,6 +158,18 @@ router.get('/manage/studio/:id', requireAuth, requireStudioOwner, async (req, re
 });
 
 
+// Single routine card as an HTML fragment — powers the All Routines popup
+// so a director can manage a routine's dancers without leaving the page.
+router.get('/manage/studio/:id/group-dancers/card', requireAuth, requireStudioOwner, async (req, res) => {
+  const db = await openDb();
+  const key = await resolveRoutineKey(db, req.studio.id, String(req.query.routine || ''));
+  const data = await buildCheckQueueData(db, req.studio, true);
+  const r = data.routines.find(x => x.routine_key === key && String(x.year) === String(req.query.year || ''));
+  if (!r) return res.status(404).send('Routine not found');
+  res.render('partials/gd_routine_card', { r, studio: req.studio, autoOpen: true });
+});
+
+
 // Owner asks us to merge a suggested duplicate into their studio. Never a
 // direct write — absorbing another record's awards is the rogue-studio
 // attack surface, so every request waits for admin review (see
@@ -1904,9 +1916,9 @@ router.post('/manage/studio/:id/routines/unalias', requireAuth, requireStudioOwn
   res.json({ success: true });
 });
 
-router.get('/manage/studio/:id/group-dancers', requireAuth, requireStudioOwner, async (req, res) => {
-  const db = await openDb();
-  const studio = req.studio;
+// All card data for the Check Routine Dancers surface — used by the page
+// AND the single-card endpoint that powers the All Routines popup.
+async function buildCheckQueueData(db, studio, showAll) {
 
   // Which routine-years appear: the "solo" word heuristic keeps the page
   // from flooding with every solo in the archive — a routine qualifies via
@@ -2051,14 +2063,22 @@ router.get('/manage/studio/:id/group-dancers', requireAuth, requireStudioOwner, 
   const totalCount = routines.length;
   const openRoutines = routines.filter(r => (!r.covered && !r.checked && !r.legacy) || r.submissions.some(x => x.status === 'pending'));
   const legacyCount = routines.filter(r => r.legacy).length;
-  const showAll = req.query.all === '1';
+  // showAll comes in as a parameter
   const visibleRoutines = showAll ? routines : openRoutines;
   visibleRoutines.sort((a, b) => (a.covered || a.checked || a.legacy) - (b.covered || b.checked || b.legacy));
   const doneCount = totalCount - openRoutines.length;
 
+  return { routines, visibleRoutines, doneCount, totalCount, openCount: openRoutines.length, legacyCount, showAll };
+}
+
+router.get('/manage/studio/:id/group-dancers', requireAuth, requireStudioOwner, async (req, res) => {
+  const db = await openDb();
+  const studio = req.studio;
+  const data = await buildCheckQueueData(db, studio, req.query.all === '1');
   res.render('manage_studio_group_dancers', {
-    studio, routines: visibleRoutines, doneCount, totalCount,
-    openCount: openRoutines.length, legacyCount, showAll,
+    studio, routines: data.visibleRoutines, doneCount: data.doneCount,
+    totalCount: data.totalCount, openCount: data.openCount,
+    legacyCount: data.legacyCount, showAll: data.showAll,
     pageTitle: 'Check Routine Dancers'
   });
 });

@@ -571,3 +571,17 @@ submissions show "💛 Cast credited to <name>" on the card; all steps hit the
 activity log (cast_invite_sent / cast_submission_received /
 cast_submission_applied -> Action History). CSRF on the public form,
 rate-limited POST, tokens 48-hex, revoked/expired links die with warm copy.
+
+## All Routines: in-place routine card popup (2026-08-30)
+The routine name and the "N awards missing dancers" badge on All Routines now
+open the FULL Check Routine Dancers card in a popup — paste/preview/apply,
+event checkboxes, Sync, Mark complete, and Ask-someone-who-knows all work
+without leaving the page (actions reload it, so the row updates). Mechanics:
+the card is extracted to partials/gd_routine_card.ejs; its interactions to
+public/js/gd_card.js (document-delegated; cards carry data-studio-id so the
+same script drives both pages); the invite modal to partials/gd_modals.ejs;
+GET /manage/studio/:id/group-dancers/card?routine&year serves one card as an
+HTML fragment (buildCheckQueueData refactored out of the page route).
+Deliberately NOT built (Q): a quick Sync button on list rows — same-named
+routines (ballet variations by different dancers) make sync-without-detail-view
+error-prone; the popup keeps the detail view in the loop.

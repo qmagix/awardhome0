@@ -1,0 +1,22 @@
+<!-- Ask-someone-who-knows: popup mail form (no page navigation) -->
+<div id="castInviteModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 2000; align-items: center; justify-content: center;">
+  <div class="card glass-card" style="max-width: 500px; width: calc(100% - 2rem); padding: 1.75rem;">
+    <h3 style="margin: 0 0 0.4rem 0; color: white;">Ask someone who knows</h3>
+    <p id="castInviteRoutine" style="color: var(--text-muted); font-size: 0.9rem; margin: 0 0 1rem 0;"></p>
+    <label style="display: block; margin-bottom: 0.3rem; font-weight: 600; font-size: 0.9rem;">Their email</label>
+    <input type="email" id="castInviteEmail" placeholder="team parent, choreographer, coach…"
+      style="width: 100%; padding: 0.6rem 0.9rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); background: rgba(0,0,0,0.25); color: white; margin-bottom: 1rem;">
+    <label style="display: block; margin-bottom: 0.3rem; font-weight: 600; font-size: 0.9rem;">Personal note <span style="color: var(--text-muted); font-weight: 400;">(optional)</span></label>
+    <textarea id="castInviteNote" rows="2" maxlength="500" placeholder='e.g. "Hi Jane — you know the Anhelo kids better than I do!"'
+      style="width: 100%; padding: 0.6rem 0.9rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); background: rgba(0,0,0,0.25); color: white; margin-bottom: 1rem;"></textarea>
+    <p style="color: var(--text-muted); font-size: 0.8rem; margin: 0 0 1.25rem 0;">
+      They get a private link that opens only this routine — no account needed. Their names come back
+      to you for review before anything saves, and they're credited for the help.
+    </p>
+    <div id="castInviteResult" style="display: none; margin-bottom: 1rem; font-size: 0.85rem; color: #34d399;"></div>
+    <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+      <button class="btn" onclick="document.getElementById('castInviteModal').style.display='none'" style="background: rgba(255,255,255,0.1); color: white;">Close</button>
+      <button id="castInviteSend" class="btn" style="background: var(--primary); color: #0a0a0a; font-weight: 600;">Send invitation</button>
+    </div>
+  </div>
+</div>

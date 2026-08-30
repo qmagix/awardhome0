@@ -100,7 +100,10 @@
                   <input type="checkbox" class="rt-select" value="<%= r.routine_key %>" data-display="<%= r.routine %>"
                     style="transform: scale(1.15); accent-color: var(--primary);">
                 </td>
-                <td style="font-weight: 600;"><%= r.routine %></td>
+                <td style="font-weight: 600;">
+                  <a href="#" class="rt-open-card" data-routine="<%= r.routine %>" data-year="<%= r.year || 'Undated' %>"
+                    title="Manage this routine's dancers right here" style="color: white; text-decoration: none; border-bottom: 1px dotted var(--primary);"><%= r.routine %></a>
+                </td>
                 <td><%= r.year || '—' %></td>
                 <td style="color: var(--text-muted);" title="<%= r.event_names %>"><%= r.event_count %></td>
                 <td><span class="badge"><%= r.award_count %></span></td>
@@ -113,7 +116,7 @@
                   <% } else if (r.legacy) { %>
                     <span class="badge" style="background: rgba(255,255,255,0.08); color: var(--text-muted);" title="No dancers were ever recorded and the season is several years past — retired from the check list. Adding names still works.">🗄 legacy — names never recorded</span>
                   <% } else if (r.uncredited_awards > 0) { %>
-                    <a href="/manage/studio/<%= studio.id %>/group-dancers" style="text-decoration: none;">
+                    <a href="#" class="rt-open-card" data-routine="<%= r.routine %>" data-year="<%= r.year || 'Undated' %>" style="text-decoration: none;" title="Fix right here — opens this routine's card">
                       <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24;"><%= r.uncredited_awards %> award<%= r.uncredited_awards === 1 ? '' : 's' %> missing dancers</span>
                     </a>
                   <% } else { %>
@@ -172,7 +175,19 @@
   </div>
 </div>
 
+<!-- Routine card popup: the full Check Routine Dancers card, fetched as a
+     fragment — paste/preview/sync/invite all work without leaving this page -->
+<div id="gdCardModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1900; align-items: flex-start; justify-content: center; overflow-y: auto; padding: 3rem 1rem;">
+  <div style="width: min(900px, 100%);">
+    <div style="display: flex; justify-content: flex-end; margin-bottom: 0.5rem;">
+      <button onclick="closeGdCardModal()" class="btn" style="background: rgba(255,255,255,0.1); color: white; padding: 0.3rem 0.8rem;">✕ Close</button>
+    </div>
+    <div id="gdCardModalBody"></div>
+  </div>
+</div>
+<%- include('partials/gd_modals') %>
 <script src="/js/ui_dialogs.js"></script>
+<script src="/js/gd_card.js"></script>
 <script>
   // Live search across routine + dancer names
   (function () {
@@ -255,6 +270,26 @@
     });
     if (res.ok) location.reload(); else toast('Could not undo — please try again.', true);
   }
+
+  // ---- Routine card popup ----
+  function closeGdCardModal() {
+    document.getElementById('gdCardModal').style.display = 'none';
+    document.getElementById('gdCardModalBody').innerHTML = '';
+  }
+  document.getElementById('gdCardModal').addEventListener('click', function (e) {
+    if (e.target === this) closeGdCardModal();
+  });
+  document.addEventListener('click', async (e) => {
+    const opener = e.target.closest('.rt-open-card');
+    if (!opener) return;
+    e.preventDefault();
+    const url = '/manage/studio/<%= studio.id %>/group-dancers/card?routine='
+      + encodeURIComponent(opener.dataset.routine) + '&year=' + encodeURIComponent(opener.dataset.year);
+    const res = await fetch(url);
+    if (!res.ok) { toast('Could not load this routine — try the Check Routine Dancers page.', true); return; }
+    document.getElementById('gdCardModalBody').innerHTML = await res.text();
+    document.getElementById('gdCardModal').style.display = 'flex';
+  });
 
   async function removeAlias(id) {
     const ok = await uiConfirm({

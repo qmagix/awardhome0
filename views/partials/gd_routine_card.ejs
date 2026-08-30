@@ -1,0 +1,152 @@
+<%# One Check-Routine-Dancers card. Locals: r (routine object from
+    buildCheckQueueData), studio, autoOpen (open the entry box).
+    Interactions come from /js/gd_card.js (delegated, works inside the
+    All Routines popup too); the invite modal is partials/gd_modals. %>
+          <div class="card glass-card gd-card" style="padding: 1.25rem 1.5rem;"
+            data-routine="<%= r.routine %>" data-year="<%= r.year %>" data-studio-id="<%= studio.id %>">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; flex-wrap: wrap;">
+              <div>
+                <strong style="font-size: 1.05rem;">"<%= r.routine %>"</strong>
+                <span class="badge" style="background: rgba(212,175,55,0.15); color: var(--primary); margin-left: 0.5rem;"><%= r.year %></span>
+                <div style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem;">
+                  <%= r.award_count %> award<%= r.award_count === 1 ? '' : 's' %> · <%= r.event_names %>
+                  <%# Single-event cards have no event checklist, so surface a
+                      differing as-published spelling here instead. %>
+                  <% if (r.events.length === 1 && r.events[0].raw_names && r.events[0].raw_names !== r.routine) { %>
+                    · <span style="color: #fbbf24; font-size: 0.8rem; font-style: italic;" title="Exactly as this competition published it">published as &ldquo;<%= r.events[0].raw_names %>&rdquo;</span>
+                  <% } %>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                <% if (r.checked) { %>
+                  <span style="color: #34d399; font-size: 0.85rem; font-weight: 600;">✓ Marked complete</span>
+                  <button type="button" class="gd-uncomplete btn" style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: var(--text-muted); padding: 0.2rem 0.6rem; font-size: 0.78rem;">Undo</button>
+                <% } else if (r.legacy) { %>
+                  <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600;" title="No dancers were ever recorded and the season is several years past — retired from the check list automatically. Adding names below still works and revives it.">🗄 Legacy — names never recorded</span>
+                <% } else if (r.cast.length === 0) { %>
+                  <%# No easy dismissal (Q): the job is to fill names in. Old
+                      no-name routines retire to legacy automatically instead. %>
+                  <span style="color: #f87171; font-size: 0.85rem; font-weight: 600;">No dancers listed yet</span>
+                <% } else if (r.cast.length > 0) { %>
+                  <% if (!r.covered) { %>
+                    <span style="color: #fbbf24; font-size: 0.85rem; font-weight: 600;">◐ <%= r.events.filter(ev => ev.covered).length %> of <%= r.events.length %> events have dancers</span>
+                  <% } else { %>
+                    <span style="color: #34d399; font-size: 0.85rem; font-weight: 600;">✓ <%= r.cast.length %> dancer<%= r.cast.length === 1 ? '' : 's' %></span>
+                  <% } %>
+                  <button type="button" class="gd-complete btn" title="Nothing missing here — remove this routine from the check list (undoable)"
+                    style="background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.4); color: #34d399; padding: 0.2rem 0.7rem; font-size: 0.78rem;">✓ Mark complete</button>
+                <% } %>
+                <%# Invite renders on EVERY card that isn't marked complete —
+                    empty-cast and legacy cards are where a helper matters most. %>
+                <% if (!r.checked) { %>
+                  <button type="button" class="gd-invite btn" title="Email someone who knows this routine's dancers — a team parent, the choreographer — a private link to fill them in. You review everything before it saves."
+                    style="background: rgba(96,165,250,0.12); border: 1px solid rgba(96,165,250,0.4); color: #60a5fa; padding: 0.2rem 0.7rem; font-size: 0.78rem;">✉️ Ask someone who knows</button>
+                <% } %>
+                <% const creditSub = r.submissions && r.submissions.find(x => x.status === 'applied'); %>
+                <% if (creditSub) { %>
+                  <span style="color: var(--text-muted); font-size: 0.78rem;" title="This cast was provided by a helper the studio invited">💛 Cast credited to <%= creditSub.helper_name %></span>
+                <% } %>
+              </div>
+            </div>
+
+            <% (r.invites || []).forEach(function(iv) { %>
+              <div style="margin-top: 0.5rem; font-size: 0.82rem; color: var(--text-muted);">
+                ✉️ Invitation sent to <strong style="color: white;"><%= iv.email %></strong> · expires <%= String(iv.expires_at).slice(0, 10) %>
+                <button type="button" class="gd-invite-revoke" data-invite-id="<%= iv.id %>"
+                  style="background: none; border: none; color: var(--text-muted); text-decoration: underline; cursor: pointer; font-size: 0.8rem;">withdraw</button>
+              </div>
+            <% }); %>
+            <% (r.submissions || []).filter(x => x.status === 'pending').forEach(function(sub) { %>
+              <div style="margin-top: 0.6rem; background: rgba(96,165,250,0.08); border: 1px solid rgba(96,165,250,0.35); border-radius: 8px; padding: 0.8rem 1rem;">
+                <div style="font-size: 0.9rem; color: white;">💡 <strong><%= sub.helper_name %></strong> filled in the cast <span style="color: var(--text-muted);">(<%= String(sub.created_at).slice(0, 10) %>)</span></div>
+                <% if (sub.note) { %><div style="color: var(--text-muted); font-size: 0.85rem; font-style: italic; margin-top: 0.2rem;">&ldquo;<%= sub.note %>&rdquo;</div><% } %>
+                <% sub.events.forEach(function(sev) { %>
+                  <div style="margin-top: 0.45rem; font-size: 0.87rem;">
+                    <span style="color: var(--text-muted);"><%= sev.event_name %>:</span>
+                    <span style="color: white;"><%= sev.names.join(', ') %></span>
+                    <button type="button" class="gd-sub-load btn" data-names="<%= encodeURIComponent(sev.names.join('\n')) %>" data-event-id="<%= sev.event_id %>"
+                      style="background: rgba(96,165,250,0.15); border: 1px solid rgba(96,165,250,0.4); color: #60a5fa; padding: 0.1rem 0.55rem; font-size: 0.75rem; margin-left: 0.4rem;">Load into form</button>
+                  </div>
+                <% }); %>
+                <div style="margin-top: 0.6rem; display: flex; gap: 0.5rem;">
+                  <button type="button" class="gd-sub-decide btn" data-sid="<%= sub.id %>" data-action="applied"
+                    style="background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.4); color: #34d399; padding: 0.2rem 0.7rem; font-size: 0.78rem;">✓ Done — credit <%= sub.helper_name %></button>
+                  <button type="button" class="gd-sub-decide btn" data-sid="<%= sub.id %>" data-action="dismissed"
+                    style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: var(--text-muted); padding: 0.2rem 0.7rem; font-size: 0.78rem;">Dismiss</button>
+                </div>
+              </div>
+            <% }); %>
+
+            <% if (r.events.length > 1) { %>
+              <%# Casts can differ per event (subs, missed events): tick which
+                  events this round of names applies to. Default = all. %>
+              <div class="gd-events" style="margin-top: 0.75rem; padding: 0.6rem 0.85rem; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px;">
+                <div style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 0.4rem;">
+                  Same cast at every event? Leave all ticked. If the lineup changed (a dancer missed an event, or a sub stepped in), untick the differing events and enter them in a separate round.
+                </div>
+                <% r.events.forEach(ev => { %>
+                  <label style="display: inline-flex; align-items: center; gap: 0.4rem; margin: 0.15rem 1rem 0.15rem 0; cursor: pointer; font-size: 0.87rem; color: white;">
+                    <input type="checkbox" class="gd-event" value="<%= ev.id %>" checked style="transform: scale(1.1); accent-color: var(--primary);">
+                    <span><%= ev.name %> <span style="color: var(--text-muted);">(<%= ev.award_count %> award<%= ev.award_count === 1 ? '' : 's' %>)</span></span>
+                    <%# As-published spelling on EVERY event row — the human
+                        eye-check that the grouping is valid. Amber when it
+                        differs from the card's title (case/punctuation folds,
+                        owner aliases), muted when identical. %>
+                    <% if (ev.raw_names) { const differs = ev.raw_names !== r.routine; %>
+                      <span style="color: <%= differs ? '#fbbf24' : 'var(--text-muted)' %>; font-size: 0.78rem; font-style: italic;" title="Exactly as this competition published it">published as &ldquo;<%= ev.raw_names %>&rdquo;</span>
+                    <% } %>
+                    <% if (ev.covered) { %>
+                      <span style="color: #34d399; font-size: 0.78rem;" title="This event already has dancers linked">✓</span>
+                    <% } else { %>
+                      <span style="color: #f87171; font-size: 0.78rem;" title="No dancers linked at this event yet">missing dancers</span>
+                    <% } %>
+                  </label>
+                <% }) %>
+                <% if (r.cast.length > 0) { %>
+                  <div style="margin-top: 0.5rem;">
+                    <button type="button" class="btn gd-sync" style="background: rgba(52,211,153,0.15); border: 1px solid rgba(52,211,153,0.45); color: #34d399; padding: 0.3rem 0.9rem; font-size: 0.82rem;">⇄ Sync dancers across ticked events</button>
+                    <small style="color: var(--text-muted); margin-left: 0.5rem;">Adds missing dancers only — never removes anyone.</small>
+                  </div>
+                <% } %>
+              </div>
+            <% } %>
+
+            <div class="gd-cast" style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.75rem;">
+              <% r.cast.forEach(d => {
+                // Provenance styling: who asserted this link
+                let chipStyle = 'background: rgba(212,175,55,0.12); border: 1px solid rgba(212,175,55,0.4);';
+                let chipIcon = '', chipTitle = 'From competition results';
+                if (d.pending) {
+                  chipStyle = 'background: rgba(245,158,11,0.08); border: 1px dashed rgba(245,158,11,0.6);';
+                  chipIcon = '⏳'; chipTitle = 'Claimed by the dancer/parent — awaiting your verification';
+                } else if (d.source === 'studio_owner' || d.source === 'admin') {
+                  chipIcon = '👤'; chipTitle = 'Added by your studio';
+                } else if (d.source === 'dancer_claim') {
+                  chipStyle = 'background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.5);';
+                  chipIcon = '✓'; chipTitle = 'Claimed by the dancer and verified';
+                }
+              %>
+                <span class="gd-chip" title="<%= chipTitle %>" style="display: inline-flex; align-items: center; gap: 0.35rem; <%= chipStyle %> border-radius: 14px; padding: 0.2rem 0.7rem; font-size: 0.85rem;">
+                  <% if (chipIcon) { %><span style="font-size: 0.75rem;"><%= chipIcon %></span><% } %>
+                  <%= d.name %><% if (d.label) { %> <span style="color: var(--text-muted); font-size: 0.78rem;">🏷 <%= d.label %></span><% } %>
+                  <button type="button" class="gd-remove" data-dancer-id="<%= d.id %>" title="Remove from this routine"
+                    style="background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 0; font-size: 0.95rem; line-height: 1;">×</button>
+                </span>
+              <% }) %>
+            </div>
+
+            <details style="margin-top: 0.75rem;" <%= (typeof autoOpen !== 'undefined' && autoOpen) ? 'open' : '' %>>
+              <summary style="cursor: pointer; color: var(--primary); font-size: 0.9rem; font-weight: 600;">
+                <%= r.cast.length === 0 ? 'Add dancers' : 'Add more dancers' %>
+              </summary>
+              <div style="margin-top: 0.75rem;">
+                <textarea class="gd-names" rows="4" placeholder="Ava Johnson&#10;Mia Chen, Sophia Rodriguez&#10;…"
+                  style="width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: white; padding: 0.6rem; font-size: 0.95rem;"></textarea>
+                <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem; align-items: center;">
+                  <button type="button" class="btn gd-preview" style="background: var(--primary); color: #0a0a0a; border: none; padding: 0.45rem 1.2rem; font-weight: 600;">Preview</button>
+                  <small style="color: var(--text-muted);">Nothing saves until you confirm.</small>
+                </div>
+                <div class="gd-result" style="margin-top: 0.75rem;"></div>
+              </div>
+            </details>
+          </div>
