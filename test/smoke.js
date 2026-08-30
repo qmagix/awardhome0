@@ -284,9 +284,7 @@ async function main() {
 
         // Group Routine Dancers: page renders, preview classifies against
         // the roster without writing, apply links the confirmed cast.
-        // ?all=1: the fixture rides the OLDEST event, so a no-dancer routine
-        // there is "legacy" and hidden from the default check queue by design.
-        const gdPage = await fetch(BASE + `/manage/studio/${s1.lastID}/group-dancers?all=1`, { headers: { Cookie: owner.cookie } });
+        const gdPage = await fetch(BASE + `/manage/studio/${s1.lastID}/group-dancers`, { headers: { Cookie: owner.cookie } });
         const gdHtml = await gdPage.text();
         check(gdPage.status === 200 && gdHtml.includes('Smoke Group Routine'),
           'group-dancers page lists the group routine', 'status ' + gdPage.status);

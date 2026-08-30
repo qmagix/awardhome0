@@ -34,6 +34,7 @@ router.use('/manage/studio/:id', async (req, res, next) => {
       WITH per_event AS (
         SELECT IFNULL(a.performance_name_key, LOWER(TRIM(IFNULL(a.performance_name, '')))) rn, IFNULL(e.year, 'Undated') yr, IFNULL(a.event_id, 0) ev,
                MAX(CASE WHEN ad.id IS NOT NULL OR a.dancer_id IS NOT NULL THEN 1 ELSE 0 END) covered,
+               MAX(IFNULL(e.created_at, '9999-12-31')) entered_at,
                MAX(CASE WHEN a.dancer_id IS NULL
                          AND LOWER(IFNULL(a.award_type, '')) NOT LIKE '%solo%'
                          AND LOWER(IFNULL(a.category, '')) NOT LIKE '%solo%' THEN 1 ELSE 0 END) groupish
@@ -42,12 +43,15 @@ router.use('/manage/studio/:id', async (req, res, next) => {
         WHERE a.studio_id = ? AND TRIM(IFNULL(a.performance_name, '')) != ''
         GROUP BY rn, yr, ev)
       SELECT COUNT(*) AS n FROM (
-        SELECT rn, yr, MAX(covered) AS mx FROM per_event GROUP BY rn, yr
+        SELECT rn, yr, MAX(covered) AS mx, MAX(entered_at) AS le FROM per_event GROUP BY rn, yr
         HAVING MAX(groupish) = 1 AND MIN(covered) = 0) g
       WHERE NOT EXISTS (SELECT 1 FROM studio_routine_checks c
                          WHERE c.studio_id = ? AND c.routine_key = g.rn AND c.year = g.yr)
-        AND NOT (g.mx = 0 AND CAST(g.yr AS INTEGER) >= 1900 AND CAST(g.yr AS INTEGER) <= ?)
-    `, [parseInt(req.params.id, 10) || 0, parseInt(req.params.id, 10) || 0, new Date().getFullYear() - LEGACY_AFTER_YEARS]);
+        AND NOT (g.mx = 0 AND g.le <= ?
+                 AND IFNULL((SELECT MAX(created_at) FROM studio_claims sc
+                              WHERE sc.studio_id = ? AND sc.status = 'approved'), '9999-12-31') <= ?)
+    `, [parseInt(req.params.id, 10) || 0, parseInt(req.params.id, 10) || 0,
+        legacyThreshold(), parseInt(req.params.id, 10) || 0, legacyThreshold()]);
     res.locals.missingRoutinesCount = row ? row.n : 0;
   } catch (e) { res.locals.missingRoutinesCount = 0; }
   next();
@@ -1665,11 +1669,22 @@ router.get('/my-studio', requireAuth, async (req, res) => {
 // org-published dancer (dancer_id set, the solo convention) are READ-ONLY
 // here: they show in counts/casts and feed Sync as a source, but paste/
 // sync/remove never modify them — writes only target dancer-less awards.
-// Routines with NO dancers at all retire to "legacy" after this many years
-// (Q, 2026-08-30): don't offer an easy dismiss — encourage filling names in —
-// but stop nagging about ancient awards whose names will likely never come.
-// Legacy entries stay fillable forever (show-all view + All Routines).
-const LEGACY_AFTER_YEARS = 3;
+// Routines with NO dancers retire to "legacy" only after the OWNER had a
+// real chance to act (Q, 2026-08-30): BOTH clocks must exceed the window —
+// years since the studio was claimed AND years since the data was entered
+// (event import stamp). Season year is irrelevant; unknown dates count as
+// recent (never retire on missing information). Legacy entries stay fillable
+// forever (show-all view + All Routines) — adding names revives them.
+const LEGACY_AFTER_YEARS = 2;
+const legacyThreshold = () => {
+  const d = new Date(); d.setFullYear(d.getFullYear() - LEGACY_AFTER_YEARS);
+  return d.toISOString();
+};
+async function studioClaimedAt(db, studioId) {
+  const r = await db.get(
+    "SELECT MAX(created_at) AS at FROM studio_claims WHERE studio_id = ? AND status = 'approved'", [studioId]);
+  return r && r.at ? r.at : null;
+}
 
 const GROUP_AWARD_FILTER = `
   a.studio_id = ? AND ${routineKeySql('a')} = ?
@@ -1717,7 +1732,8 @@ router.get('/manage/studio/:id/routines', requireAuth, requireStudioOwner, async
            COUNT(DISTINCT a.id) AS award_count,
            COUNT(DISTINCT IFNULL(a.event_id, 0)) AS event_count,
            GROUP_CONCAT(DISTINCT IFNULL(e.name, 'Self-reported')) AS event_names,
-           SUM(CASE WHEN ad.id IS NULL AND a.dancer_id IS NULL THEN 1 ELSE 0 END) AS uncredited_awards
+           SUM(CASE WHEN ad.id IS NULL AND a.dancer_id IS NULL THEN 1 ELSE 0 END) AS uncredited_awards,
+           MAX(IFNULL(e.created_at, '9999-12-31')) AS entered_at
     FROM awards a LEFT JOIN events e ON a.event_id = e.id
     LEFT JOIN award_dancers ad ON ad.award_id = a.id
     WHERE a.studio_id = ? AND TRIM(IFNULL(a.performance_name, '')) != ''
@@ -1749,9 +1765,16 @@ router.get('/manage/studio/:id/routines', requireAuth, requireStudioOwner, async
   for (const a of aliases) if (a.display_name) displayMap[a.to_key] = a.display_name;
   routines.forEach(r => { if (displayMap[r.routine_key]) r.routine = displayMap[r.routine_key]; });
 
+  const claimedAtAR = await studioClaimedAt(db, req.studio.id);
+  const thresholdAR = legacyThreshold();
+  const claimOldAR = !!claimedAtAR && claimedAtAR <= thresholdAR;
+  routines.forEach(r => {
+    r.legacy = !r.checked && !r.dancers && r.uncredited_awards > 0
+      && claimOldAR && r.entered_at <= thresholdAR;
+  });
+
   res.render('manage_studio_routines', {
     studio: req.studio, routines, aliases,
-    legacyCutoff: new Date().getFullYear() - LEGACY_AFTER_YEARS,
     pageTitle: `${req.studio.name} — All Routines`,
   });
 });
@@ -1897,7 +1920,8 @@ router.get('/manage/studio/:id/group-dancers', requireAuth, requireStudioOwner, 
            IFNULL(e.id, 0) AS event_id, IFNULL(e.name, 'Self-reported') AS event_name,
            COUNT(DISTINCT a.id) AS award_count,
            COUNT(DISTINCT CASE WHEN ad.award_id IS NOT NULL OR a.dancer_id IS NOT NULL THEN a.id END) AS linked_awards,
-           GROUP_CONCAT(DISTINCT TRIM(a.performance_name)) AS raw_names
+           GROUP_CONCAT(DISTINCT TRIM(a.performance_name)) AS raw_names,
+           MAX(IFNULL(e.created_at, '9999-12-31')) AS entered_at
     FROM awards a LEFT JOIN events e ON a.event_id = e.id
     LEFT JOIN award_dancers ad ON ad.award_id = a.id
     WHERE a.studio_id = ? AND TRIM(IFNULL(a.performance_name, '')) != ''
@@ -1910,7 +1934,7 @@ router.get('/manage/studio/:id/group-dancers', requireAuth, requireStudioOwner, 
     (eventMap[key] = eventMap[key] || []).push({
       id: ev.event_id, name: ev.event_name,
       award_count: ev.award_count, covered: ev.linked_awards > 0,
-      raw_names: ev.raw_names || '',
+      raw_names: ev.raw_names || '', entered_at: ev.entered_at,
     });
   }
   routines.forEach(r => {
@@ -1926,12 +1950,18 @@ router.get('/manage/studio/:id/group-dancers', requireAuth, requireStudioOwner, 
   const checkSet = new Set(checkRows.map(c => c.routine_key + '|||' + c.year));
   routines.forEach(r => { r.checked = checkSet.has(r.routine_key + '|||' + r.year); });
 
-  // Age-based retirement: a routine with NO dancers whose year is old
-  // enough goes legacy — out of the queue and the pill, still fillable.
-  const legacyCutoff = new Date().getFullYear() - LEGACY_AFTER_YEARS;
+  // Retirement needs BOTH clocks past the window: studio claimed >= 2y ago
+  // AND the routine's data entered >= 2y ago (latest event entry stamp;
+  // unknown stamps count as recent).
+  const claimedAt = await studioClaimedAt(db, studio.id);
+  const threshold = legacyThreshold();
+  const claimOldEnough = !!claimedAt && claimedAt <= threshold;
   routines.forEach(r => {
-    const y = parseInt(r.year, 10);
-    r.legacy = !r.checked && r.cast.length === 0 && Number.isFinite(y) && y <= legacyCutoff;
+    const latestEntry = r.events.length
+      ? r.events.reduce((m, ev) => (ev.entered_at > m ? ev.entered_at : m), '')
+      : '9999-12-31';
+    r.legacy = !r.checked && r.cast.length === 0
+      && claimOldEnough && latestEntry <= threshold;
   });
 
   // The page is a work queue: only open items by default; ?all=1 shows

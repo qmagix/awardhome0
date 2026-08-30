@@ -541,10 +541,14 @@ excludes checked routine-years. Activity: routine_marked_complete. FAQ §6.
 ## Legacy retirement + year-aware dancer matching (2026-08-30)
 Empty-cast routines no longer offer any dismissal (Q: encourage filling names
 in, don't make skipping easy) — the "Names unavailable" button lasted one
-deploy and is gone. Instead, a routine with NO dancers whose season is
->= LEGACY_AFTER_YEARS (3) old retires automatically: out of the check queue
-and sidebar pill, badged "legacy — names never recorded" on show-all and All
-Routines, still fillable forever (adding names revives it). Mark complete
+deploy and is gone. Retirement runs on TWO clocks, both required (Q's
+correction 2026-08-30: season year is irrelevant): studio claimed >= 2 years
+ago AND the routine's data entered >= 2 years ago (events.created_at import
+stamp; unknown claim date or entry stamp counts as recent — never retire on
+missing information). Practical effect: every owner gets a full 2-year window
+from whichever came later, claiming or the import. Legacy entries are out of
+the check queue and sidebar pill, badged "legacy — names never recorded" on
+show-all and All Routines, still fillable forever (adding names revives). Mark complete
 remains only on cards WITH dancers. Dancer resolution
 (utils/resolveDancer.js) tie-break now requires name+routine+studio+YEAR when
 the award's year is known (undated awards fall back to routine+studio) —
