@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { openDb } = require('../database');
 const { normalizeName } = require('../utils/normalize_names');
+const { resolveOrCreateDancer } = require('../utils/resolveDancer');
 
 async function getOrCreateOrg(orgName = 'Starquest') {
   const db = await openDb();
@@ -104,6 +105,7 @@ async function runImport() {
       // normalizeName call in categorize_starquest.js).
       category = normalizeName(category);
       awardType = normalizeName(awardType);
+      if (dancer) dancer = normalizeName(dancer);
 
       if (routine === 'N/A') routine = null;
       if (dancer === 'N/A') dancer = null;
@@ -114,7 +116,7 @@ async function runImport() {
       const studioId = await getOrCreateStudio(studioName);
 
       // Check if award already exists (idempotency)
-      let query = `SELECT id, award_class FROM awards WHERE event_id = ? AND studio_id = ? AND category = ? AND award_type = ? AND place = ?`;
+      let query = `SELECT id, award_class, dancer_id FROM awards WHERE event_id = ? AND studio_id = ? AND category = ? AND award_type = ? AND place = ?`;
       const params = [eventId, studioId, category, awardType, place];
 
       if (routine) { query += ` AND performance_name = ?`; params.push(routine); } else { query += ` AND performance_name IS NULL`; }
@@ -128,17 +130,44 @@ async function runImport() {
            finalNotes += ` (Dancer: ${dancer})`;
         }
 
-        await db.run(`
-          INSERT INTO awards (event_id, studio_id, place, performance_name, award_type, category, notes, verification_status, award_class)
-          VALUES (?, ?, ?, ?, ?, ?, ?, 'imported', ?)
-        `, [eventId, studioId, place, routine, awardType, category, finalNotes.trim(), aClass]);
-        
+        // Published dancer names become real links (name+studio match,
+        // routine tie-break — utils/resolveDancer.js), not just a notes
+        // stash. Solo convention: awards.dancer_id + junction row.
+        let dancerId = null;
+        if (dancer) {
+          const resolved = await resolveOrCreateDancer(db, { name: dancer, studioId, routine });
+          if (resolved) dancerId = resolved.id;
+        }
+
+        const ins = await db.run(`
+          INSERT INTO awards (event_id, studio_id, place, performance_name, award_type, category, notes, verification_status, award_class, dancer_id)
+          VALUES (?, ?, ?, ?, ?, ?, ?, 'imported', ?, ?)
+        `, [eventId, studioId, place, routine, awardType, category, finalNotes.trim(), aClass, dancerId]);
+        if (dancerId) {
+          await db.run('INSERT OR IGNORE INTO award_dancers (award_id, dancer_id) VALUES (?, ?)', [ins.lastID, dancerId]);
+        }
+
         fileImportCount++;
         totalImported++;
       } else {
         // Update award_class if it's null or has changed
         if (existing.award_class !== aClass) {
           await db.run('UPDATE awards SET award_class = ? WHERE id = ?', [aClass, existing.id]);
+        }
+        // Heal pre-fix rows on re-import: link the published dancer if the
+        // award still has none (tombstoned pairs stay removed).
+        if (dancer && !existing.dancer_id) {
+          const hasLink = await db.get('SELECT 1 FROM award_dancers WHERE award_id = ?', [existing.id]);
+          if (!hasLink) {
+            const resolved = await resolveOrCreateDancer(db, { name: dancer, studioId, routine });
+            if (resolved) {
+              const removed = await db.get('SELECT 1 FROM award_dancer_removals WHERE award_id = ? AND dancer_id = ?', [existing.id, resolved.id]);
+              if (!removed) {
+                await db.run('UPDATE awards SET dancer_id = ? WHERE id = ?', [resolved.id, existing.id]);
+                await db.run('INSERT OR IGNORE INTO award_dancers (award_id, dancer_id) VALUES (?, ?)', [existing.id, resolved.id]);
+              }
+            }
+          }
         }
       }
     }

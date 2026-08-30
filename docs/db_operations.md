@@ -98,3 +98,16 @@ Skips, by design:
 Each run first sweeps its own earlier rows that later became orphaned or
 double-listing (self-healing). Run on prod once after deploying: same script,
 same flags (data parity by identical script runs).
+
+## StarQuest notes-dancer repair (2026-08-29)
+
+The original StarQuest importer stashed published dancer names in awards.notes
+("(Dancer: Faye Gu)") without creating/linking dancers — 17,952 awards.
+`node scripts/repair_starquest_notes_dancers.js [--apply]` promotes them into
+real links: name+studio match with routine tie-break
+(utils/resolveDancer.js; ambiguous cases create a new profile the roster
+duplicates widget surfaces), then awards.dancer_id + junction row. Idempotent;
+honors tombstones; DB_PATH honored. Local run: 10,452 matched existing,
+7,500 new profiles. Run ONCE on prod after deploy. The importer now resolves
+dancers at import time (and heals link-less rows on re-import), so future
+StarQuest events arrive linked.

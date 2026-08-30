@@ -1,0 +1,44 @@
+const { generateDancerId } = require('../utils.js');
+
+// Resolve a published dancer name to a dancer id for a studio's award, per
+// the data rules: match by name+studio; when several same-name dancers are
+// rostered, the routine is the tie-breaker (name+routine+studio collisions
+// are vanishingly rare — Q, 2026-08-29); otherwise create a fresh profile
+// and let the roster duplicates widget surface the ambiguity to a human
+// instead of guessing silently.
+//
+// Note for batch callers: link each award as you resolve it — a created
+// profile then wins the routine tie-break for that routine's later awards,
+// so one routine never mints two profiles.
+async function resolveOrCreateDancer(db, { name, studioId, routine }) {
+  const clean = String(name || '').replace(/\s+/g, ' ').trim();
+  if (!clean || !studioId) return null;
+
+  const candidates = await db.all(`
+    SELECT d.id FROM dancers d JOIN dancer_studios ds ON ds.dancer_id = d.id
+    WHERE ds.studio_id = ? AND LOWER(d.name) = LOWER(?)`, [studioId, clean]);
+  if (candidates.length === 1) return { id: candidates[0].id, created: false };
+
+  if (candidates.length > 1 && routine) {
+    const r = String(routine).replace(/\s+/g, ' ').trim().toLowerCase();
+    const matched = [];
+    for (const c of candidates) {
+      const hit = await db.get(`
+        SELECT 1 FROM award_dancers ad JOIN awards a ON a.id = ad.award_id
+        WHERE ad.dancer_id = ? AND a.studio_id = ? AND LOWER(TRIM(a.performance_name)) = ?
+        UNION
+        SELECT 1 FROM awards a2
+        WHERE a2.dancer_id = ? AND a2.studio_id = ? AND LOWER(TRIM(a2.performance_name)) = ?
+        LIMIT 1`, [c.id, studioId, r, c.id, studioId, r]);
+      if (hit) matched.push(c);
+    }
+    if (matched.length === 1) return { id: matched[0].id, created: false };
+  }
+
+  // Zero rostered, or irreducibly ambiguous: new profile, visible + reviewable.
+  const ins = await db.run('INSERT INTO dancers (unique_id, name) VALUES (?, ?)', [generateDancerId(clean), clean]);
+  await db.run('INSERT OR IGNORE INTO dancer_studios (dancer_id, studio_id) VALUES (?, ?)', [ins.lastID, studioId]);
+  return { id: ins.lastID, created: true };
+}
+
+module.exports = { resolveOrCreateDancer };
