@@ -133,13 +133,19 @@
                 <% } else { %>
                   <% if (r.cast.length === 0) { %>
                     <span style="color: #f87171; font-size: 0.85rem; font-weight: 600;">No dancers listed yet</span>
-                  <% } else if (!r.covered) { %>
-                    <span style="color: #fbbf24; font-size: 0.85rem; font-weight: 600;">◐ <%= r.events.filter(ev => ev.covered).length %> of <%= r.events.length %> events have dancers</span>
+                    <%# Empty cast: "complete" would read as a contradiction —
+                        the honest dismissal here is "names can't be known". %>
+                    <button type="button" class="gd-complete btn" data-empty="1" title="The competition never published these names and nobody can supply them — remove from the check list (undoable)"
+                      style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: var(--text-muted); padding: 0.2rem 0.7rem; font-size: 0.78rem;">Names unavailable — dismiss</button>
                   <% } else { %>
-                    <span style="color: #34d399; font-size: 0.85rem; font-weight: 600;">✓ <%= r.cast.length %> dancer<%= r.cast.length === 1 ? '' : 's' %></span>
+                    <% if (!r.covered) { %>
+                      <span style="color: #fbbf24; font-size: 0.85rem; font-weight: 600;">◐ <%= r.events.filter(ev => ev.covered).length %> of <%= r.events.length %> events have dancers</span>
+                    <% } else { %>
+                      <span style="color: #34d399; font-size: 0.85rem; font-weight: 600;">✓ <%= r.cast.length %> dancer<%= r.cast.length === 1 ? '' : 's' %></span>
+                    <% } %>
+                    <button type="button" class="gd-complete btn" title="Nothing missing here — remove this routine from the check list (undoable)"
+                      style="background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.4); color: #34d399; padding: 0.2rem 0.7rem; font-size: 0.78rem;">✓ Mark complete</button>
                   <% } %>
-                  <button type="button" class="gd-complete btn" title="Nothing missing here — remove this routine from the check list (undoable)"
-                    style="background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.4); color: #34d399; padding: 0.2rem 0.7rem; font-size: 0.78rem;">✓ Mark complete</button>
                 <% } %>
               </div>
             </div>
@@ -308,7 +314,12 @@
     }
 
     if (e.target.classList.contains('gd-complete')) {
-      const ok = await uiConfirm({
+      const empty = e.target.dataset.empty === '1';
+      const ok = await uiConfirm(empty ? {
+        title: 'Dismiss this routine?',
+        message: 'No dancers are listed. Dismiss only if the names can\'t be known — the competition never published them and nobody can supply them. It leaves the check list; undo anytime from "Show all routines" or All Routines.',
+        confirmLabel: 'Dismiss — names unavailable',
+      } : {
         title: 'Mark this routine complete?',
         message: 'It leaves the check list (and the sidebar count). Nothing else changes — you can undo from "Show all routines" or the All Routines page.',
         confirmLabel: 'Mark complete',
