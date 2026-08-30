@@ -320,7 +320,9 @@ router.get('/manage/studio/:id/roster/export', requireAuth, requireStudioOwner, 
 
   const roster = await db.all(`
     SELECT d.name, d.unique_id, d.birthday, ds.status, ds.graduation_year,
-           (SELECT COUNT(*) FROM award_dancers ad JOIN awards a ON ad.award_id = a.id WHERE ad.dancer_id = d.id AND a.studio_id = ds.studio_id) as total_awards
+           (SELECT COUNT(DISTINCT a.id) FROM awards a
+              LEFT JOIN award_dancers ad ON ad.award_id = a.id AND ad.dancer_id = d.id
+             WHERE a.studio_id = ds.studio_id AND (ad.dancer_id = d.id OR a.dancer_id = d.id)) as total_awards
     FROM dancers d
     JOIN dancer_studios ds ON d.id = ds.dancer_id
     WHERE ds.studio_id = ? AND ds.status != 'alumni'
@@ -348,19 +350,23 @@ router.get('/manage/studio/:id/roster', requireAuth, requireStudioOwner, async (
 
   const roster = await db.all(`
     SELECT d.id, d.unique_id, d.name, d.birthday, ds.status, ds.headshot_url, ds.graduation_year, ds.label,
-           (SELECT COUNT(*) FROM award_dancers ad JOIN awards a ON ad.award_id = a.id WHERE ad.dancer_id = d.id AND a.studio_id = ds.studio_id) as total_awards
+           (SELECT COUNT(DISTINCT a.id) FROM awards a
+              LEFT JOIN award_dancers ad ON ad.award_id = a.id AND ad.dancer_id = d.id
+             WHERE a.studio_id = ds.studio_id AND (ad.dancer_id = d.id OR a.dancer_id = d.id)) as total_awards
     FROM dancers d
     JOIN dancer_studios ds ON d.id = ds.dancer_id
     WHERE ds.studio_id = ?
     ORDER BY d.name ASC
   `, [req.params.id]);
 
+  // Junction links first, legacy awards.dancer_id as fallback — scraped solo
+  // awards often carry only the legacy column (dancer page rule: ad OR a.dancer_id).
   const studioAwardsRaw = await db.all(`
-    SELECT ad.dancer_id, a.place, a.category, a.performance_name, e.year, e.name as event_name
-    FROM award_dancers ad
-    JOIN awards a ON ad.award_id = a.id
+    SELECT COALESCE(ad.dancer_id, a.dancer_id) AS dancer_id, a.place, a.category, a.performance_name, e.year, e.name as event_name
+    FROM awards a
+    LEFT JOIN award_dancers ad ON ad.award_id = a.id
     JOIN events e ON a.event_id = e.id
-    WHERE a.studio_id = ?
+    WHERE a.studio_id = ? AND (ad.dancer_id IS NOT NULL OR a.dancer_id IS NOT NULL)
     ORDER BY e.year DESC, a.id DESC
   `, [req.params.id]);
 
@@ -378,7 +384,9 @@ router.get('/manage/studio/:id/roster', requireAuth, requireStudioOwner, async (
 
   const suspectedDuplicatesRaw = await db.all(`
     SELECT d.name, d.id, d.unique_id, d.birthday, d.claimed_by_user_id,
-           (SELECT COUNT(*) FROM award_dancers ad JOIN awards a ON ad.award_id = a.id WHERE ad.dancer_id = d.id AND a.studio_id = ds.studio_id) as total_awards
+           (SELECT COUNT(DISTINCT a.id) FROM awards a
+              LEFT JOIN award_dancers ad ON ad.award_id = a.id AND ad.dancer_id = d.id
+             WHERE a.studio_id = ds.studio_id AND (ad.dancer_id = d.id OR a.dancer_id = d.id)) as total_awards
     FROM dancers d
     JOIN dancer_studios ds ON d.id = ds.dancer_id
     WHERE ds.studio_id = ?
@@ -702,7 +710,9 @@ router.post('/manage/studio/:id/roster/clean-duplicate-set', requireAuth, requir
     // Fetch all profiles for this exact name in this studio
     const profiles = await db.all(`
       SELECT d.id, d.claimed_by_user_id,
-             (SELECT COUNT(*) FROM award_dancers ad JOIN awards a ON ad.award_id = a.id WHERE ad.dancer_id = d.id AND a.studio_id = ds.studio_id) as total_awards
+             (SELECT COUNT(DISTINCT a.id) FROM awards a
+                LEFT JOIN award_dancers ad ON ad.award_id = a.id AND ad.dancer_id = d.id
+               WHERE a.studio_id = ds.studio_id AND (ad.dancer_id = d.id OR a.dancer_id = d.id)) as total_awards
       FROM dancers d
       JOIN dancer_studios ds ON d.id = ds.dancer_id
       WHERE ds.studio_id = ? AND LOWER(d.name) = ?
@@ -1706,12 +1716,14 @@ router.post('/manage/studio/:id/group-dancers/preview', requireAuth, requireStud
   for (const name of parsed) {
     const candidates = await db.all(`
       SELECT d.id, d.name, d.graduation_year, ds.label,
-             (SELECT COUNT(*) FROM award_dancers ad JOIN awards a ON ad.award_id = a.id
-              WHERE ad.dancer_id = d.id AND a.studio_id = ds.studio_id) AS award_count,
+             (SELECT COUNT(DISTINCT a.id) FROM awards a
+              LEFT JOIN award_dancers ad ON ad.award_id = a.id AND ad.dancer_id = d.id
+              WHERE a.studio_id = ds.studio_id AND (ad.dancer_id = d.id OR a.dancer_id = d.id)) AS award_count,
              (SELECT IFNULL(MIN(e.year), '') || '–' || IFNULL(MAX(e.year), '')
-              FROM award_dancers ad JOIN awards a ON ad.award_id = a.id
+              FROM awards a
+              LEFT JOIN award_dancers ad ON ad.award_id = a.id AND ad.dancer_id = d.id
               JOIN events e ON a.event_id = e.id
-              WHERE ad.dancer_id = d.id AND a.studio_id = ds.studio_id) AS years
+              WHERE a.studio_id = ds.studio_id AND (ad.dancer_id = d.id OR a.dancer_id = d.id)) AS years
       FROM dancers d JOIN dancer_studios ds ON ds.dancer_id = d.id
       WHERE ds.studio_id = ? AND LOWER(d.name) = LOWER(?)
     `, [req.studio.id, name]);
