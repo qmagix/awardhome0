@@ -1,0 +1,63 @@
+<%- include('partials/header') %>
+<div class="container" style="max-width: 860px; margin: 2rem auto; padding: 0 1rem;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.75rem;">
+    <h1 style="margin: 0;">Action History</h1>
+    <a href="/manage/studio/<%= studio.id %>" class="btn btn-secondary" style="text-decoration: none;">&larr; Back to dashboard</a>
+  </div>
+  <p style="color: var(--text-muted); margin-bottom: 2rem;">
+    Everything that's happened on <strong><%= studio.name %></strong> — including items you've cleared from the dashboard.
+  </p>
+
+  <div class="card glass-card" style="margin-bottom: 2rem;">
+    <h3 style="margin: 0 0 1rem 0;">🔀 Merge Requests</h3>
+    <% if (mergeHistory.length === 0) { %>
+      <p style="color: var(--text-muted); margin: 0;">No merge requests yet. When we spot a likely duplicate of your studio, it appears on your dashboard under Merge Suggestions.</p>
+    <% } else { %>
+      <table class="premium-table" style="width: 100%;">
+        <thead>
+          <tr><th>Studio</th><th>Requested</th><th>Decided</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <% mergeHistory.forEach(function(mr) { %>
+            <tr>
+              <td><%= mr.source_name %></td>
+              <td style="color: var(--text-muted);"><%= String(mr.created_at).slice(0, 10) %></td>
+              <td style="color: var(--text-muted);"><%= mr.decided_at ? String(mr.decided_at).slice(0, 10) : '—' %></td>
+              <td>
+                <% if (mr.status === 'pending') { %>
+                  <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24;">Pending review</span>
+                <% } else if (mr.status === 'approved') { %>
+                  <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">Merged</span>
+                <% } else { %>
+                  <span class="badge" style="background: rgba(255,255,255,0.08); color: var(--text-muted);">Kept separate</span>
+                <% } %>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    <% } %>
+  </div>
+
+  <div class="card glass-card">
+    <h3 style="margin: 0 0 1rem 0;">📋 Activity</h3>
+    <% if (activity.length === 0) { %>
+      <p style="color: var(--text-muted); margin: 0;">No recorded activity yet.</p>
+    <% } else { %>
+      <table class="premium-table" style="width: 100%;">
+        <thead>
+          <tr><th>Action</th><th>When</th></tr>
+        </thead>
+        <tbody>
+          <% activity.forEach(function(a) { %>
+            <tr>
+              <td><%= a.label %></td>
+              <td style="color: var(--text-muted);"><%= String(a.created_at).slice(0, 16).replace('T', ' ') %></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    <% } %>
+  </div>
+</div>
+<%- include('partials/footer') %>

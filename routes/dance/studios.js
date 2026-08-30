@@ -176,7 +176,8 @@ router.post('/manage/studio/:id/merge-requests/dismiss', requireAuth, requireStu
 
 // Action History: the studio's full merge-request record (including
 // dismissed rows) plus the activity log — the durable home for anything
-// cleared off the dashboard.
+// cleared off the dashboard. Lives at /activity: /history is taken by
+// the Organization History page (competition breakdown by org).
 const ACTIVITY_LABELS = {
   claim_approved: 'Studio claim approved',
   merge_requested: 'Merge request sent',
@@ -190,7 +191,7 @@ const ACTIVITY_LABELS = {
   widget_embed: 'Awards widget embedded',
   ai_summary: 'AI studio summary generated',
 };
-router.get('/manage/studio/:id/history', requireAuth, requireStudioOwner, async (req, res) => {
+router.get('/manage/studio/:id/activity', requireAuth, requireStudioOwner, async (req, res) => {
   const db = await openDb();
   await ensureMergeRequestTable(db);
   const mergeHistory = await db.all(`
@@ -204,7 +205,7 @@ router.get('/manage/studio/:id/history', requireAuth, requireStudioOwner, async 
     `SELECT action, created_at FROM studio_activity WHERE studio_id = ? ORDER BY created_at DESC LIMIT 200`,
     [req.studio.id]);
   for (const a of activity) a.label = ACTIVITY_LABELS[a.action] || a.action.replace(/_/g, ' ');
-  res.render('manage_studio_history', {
+  res.render('manage_studio_activity', {
     studio: req.studio, mergeHistory, activity,
     pageTitle: `${req.studio.name} — Action History`,
   });

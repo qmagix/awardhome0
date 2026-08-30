@@ -466,7 +466,7 @@ compare tool (which also settles matching pending requests when used directly).
 "Not My Studio" now hits an owner-scoped endpoint (was the same silent-403
 bug). Decided requests can be cleared from the dashboard ("Clear decided →
 history" sets dismissed_at; pending rows can't be dismissed) — the full record
-lives on the owner's Action History page (/manage/studio/:id/history:
+lives on the owner's Action History page (/manage/studio/:id/activity —
 merge-request history incl. dismissed + a friendly-labeled studio_activity
 feed). Dismissed sources stay excluded from Merge Suggestions. FAQ: studio
 admin §18.

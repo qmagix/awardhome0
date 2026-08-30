@@ -189,13 +189,13 @@
             <% if (mergeRequests.some(function(mr) { return mr.status !== 'pending'; })) { %>
               <button onclick="dismissDecidedMerges()" class="btn" style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: var(--text-muted); padding: 0.3rem 0.8rem; font-size: 0.8rem;">Clear decided &rarr; history</button>
             <% } %>
-            <a href="/manage/studio/<%= studio.id %>/history" style="color: var(--primary); font-size: 0.85rem; text-decoration: none;">View history &rarr;</a>
+            <a href="/manage/studio/<%= studio.id %>/activity" style="color: var(--primary); font-size: 0.85rem; text-decoration: none;">View history &rarr;</a>
           </div>
         </div>
         <p style="margin: 0 0 1rem 0; color: var(--text-muted); font-size: 0.9rem;">
           Our team double-checks every merge. Pending requests are usually reviewed within a few days —
           we'll email you the moment one is decided. Decided requests can be cleared to your
-          <a href="/manage/studio/<%= studio.id %>/history" style="color: var(--primary);">Action History</a> anytime.
+          <a href="/manage/studio/<%= studio.id %>/activity" style="color: var(--primary);">Action History</a> anytime.
         </p>
         <table class="premium-table" style="width: 100%;">
           <thead>

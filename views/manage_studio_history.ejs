@@ -1,63 +1,457 @@
 <%- include('partials/header') %>
-<div class="container" style="max-width: 860px; margin: 2rem auto; padding: 0 1rem;">
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.75rem;">
-    <h1 style="margin: 0;">Action History</h1>
-    <a href="/manage/studio/<%= studio.id %>" class="btn btn-secondary" style="text-decoration: none;">&larr; Back to dashboard</a>
-  </div>
-  <p style="color: var(--text-muted); margin-bottom: 2rem;">
-    Everything that's happened on <strong><%= studio.name %></strong> — including items you've cleared from the dashboard.
-  </p>
 
-  <div class="card glass-card" style="margin-bottom: 2rem;">
-    <h3 style="margin: 0 0 1rem 0;">🔀 Merge Requests</h3>
-    <% if (mergeHistory.length === 0) { %>
-      <p style="color: var(--text-muted); margin: 0;">No merge requests yet. When we spot a likely duplicate of your studio, it appears on your dashboard under Merge Suggestions.</p>
-    <% } else { %>
-      <table class="premium-table" style="width: 100%;">
-        <thead>
-          <tr><th>Studio</th><th>Requested</th><th>Decided</th><th>Status</th></tr>
-        </thead>
-        <tbody>
-          <% mergeHistory.forEach(function(mr) { %>
-            <tr>
-              <td><%= mr.source_name %></td>
-              <td style="color: var(--text-muted);"><%= String(mr.created_at).slice(0, 10) %></td>
-              <td style="color: var(--text-muted);"><%= mr.decided_at ? String(mr.decided_at).slice(0, 10) : '—' %></td>
-              <td>
-                <% if (mr.status === 'pending') { %>
-                  <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24;">Pending review</span>
-                <% } else if (mr.status === 'approved') { %>
-                  <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">Merged</span>
+<div class="container manage-layout" style="margin-top: 4rem; display: flex; gap: 2rem;">
+  
+  <!-- Sidebar Navigation -->
+  <div class="manage-sidebar" style="width: 250px; flex-shrink: 0;">
+    <div class="card glass-card" style="padding: 1.5rem; position: sticky; top: 2rem;">
+      <h3 style="margin-top: 0; color: var(--primary); font-size: 1.1rem;">Management</h3>
+      <ul style="list-style: none; padding: 0; margin: 1rem 0 0 0; display: flex; flex-direction: column; gap: 0.5rem;">
+        <li>
+          <a href="/manage/studio/<%= studio.id %>" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: var(--text-muted); transition: background 0.2s;">
+            👤 Profile & Customization
+          </a>
+        </li>
+        <li>
+          <a href="/manage/studio/<%= studio.id %>/roster" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: var(--text-muted); transition: background 0.2s;">
+            👥 Dancer Roster
+          </a>
+        </li>
+        <li>
+          <a href="/manage/studio/<%= studio.id %>/group-dancers" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: var(--text-muted); transition: background 0.2s;">
+            🎭 Group Routine Dancers
+          </a>
+        </li>
+        <li>
+          <a href="/manage/studio/<%= studio.id %>/history" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: white; background: rgba(212, 175, 55, 0.1); border-left: 3px solid var(--primary); font-weight: 600;">
+            📊 Organization History
+          </a>
+        </li>
+        <li>
+          <a href="/manage/studio/<%= studio.id %>/awards" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: var(--text-muted); transition: background 0.2s;">
+            🏆 Awards Editor
+          </a>
+        </li>
+        <li>
+          <a href="/manage/studio/<%= studio.id %>/widget" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: var(--text-muted); transition: background 0.2s;">
+            📈 Widget Builder
+          </a>
+        </li>
+        <li>
+          <a href="/manage/studio/<%= studio.id %>/verifications" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: var(--text-muted); transition: background 0.2s;">
+            ✅ Pending Verifications
+          </a>
+        </li>
+        <li>
+          <a href="/manage/studio/<%= studio.id %>/ai-summaries" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: var(--text-muted); transition: background 0.2s;">
+            ✨ AI Summaries
+          </a>
+        </li>
+      </ul>
+      
+      <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
+        <a href="/dance/studio/<%= studio.unique_id %>" style="color: var(--primary); text-decoration: none; font-size: 0.9rem;">&larr; Back to Public Profile</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Area -->
+  <div style="flex-grow: 1;">
+    <div class="header-section" style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: flex-end;">
+      <div>
+        <h1>Organization History</h1>
+        <p class="subtitle">A complete breakdown of events you've attended, summarized by organization.</p>
+      </div>
+      <div>
+        <a href="/manage/studio/<%= studio.id %>#visibility" class="btn" style="background: rgba(255,255,255,0.1); color: white;">Manage Public Visibility</a>
+      </div>
+    </div>
+
+    <!-- Org Cards -->
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+      <% if (orgs.length === 0) { %>
+        <div class="card glass-card" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+          No events attended yet. Start adding awards to see your history!
+        </div>
+      <% } else { %>
+        <% orgs.forEach(org => { %>
+          <div class="card glass-card" style="padding: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem; margin-bottom: 1rem;">
+              <div style="display: flex; align-items: center; gap: 1rem;">
+                <% if (org.logo_url) { %>
+                  <img src="<%= org.logo_url %>" alt="<%= org.name %>" style="height: 40px; border-radius: 4px;">
                 <% } else { %>
-                  <span class="badge" style="background: rgba(255,255,255,0.08); color: var(--text-muted);">Kept separate</span>
+                  <div style="width: 40px; height: 40px; border-radius: 4px; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-weight: bold; color: var(--text-muted);"><%= org.name.substring(0, 2).toUpperCase() %></div>
                 <% } %>
-              </td>
-            </tr>
-          <% }); %>
-        </tbody>
-      </table>
-    <% } %>
-  </div>
+                <div style="display: flex; flex-direction: column;">
+                  <h2 style="margin: 0; color: white; display: flex; align-items: center; gap: 1rem;">
+                    <%= org.name %>
+                  </h2>
+                  <button type="button" class="btn" style="background: rgba(255, 255, 255, 0.08); color: #e0e0e0; border: 1px solid rgba(255, 255, 255, 0.15); padding: 0.25rem 0.75rem; font-size: 0.8rem; margin-top: 0.5rem; width: fit-content; cursor: pointer;" data-studio-id="<%= studio.id %>" data-org-id="<%= org.id %>" data-org-name="<%= org.name %>" onclick="generateSummary(this.dataset.studioId, this.dataset.orgId, this.dataset.orgName)">
+                    📄 Generate Text Summary
+                  </button>
+                </div>
+              </div>
+              <div style="display: flex; gap: 1.5rem; text-align: right;">
+                <div>
+                  <div style="font-size: 0.8rem; color: var(--text-muted);">Total Awards</div>
+                  <div style="font-size: 1.5rem; font-weight: bold; color: white;"><%= org.total_awards_all_time %></div>
+                </div>
+                <div>
+                  <div style="font-size: 0.8rem; color: var(--text-muted);">1st Places</div>
+                  <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary);"><%= org.first_places_all_time %></div>
+                </div>
+                <div>
+                  <div style="font-size: 0.8rem; color: var(--text-muted);" title="Premium/National/Grand Titles">Major Awards ℹ️</div>
+                  <div style="font-size: 1.5rem; font-weight: bold; color: #aa8529;"><%= org.major_awards_all_time %></div>
+                </div>
+              </div>
+            </div>
 
-  <div class="card glass-card">
-    <h3 style="margin: 0 0 1rem 0;">📋 Activity</h3>
-    <% if (activity.length === 0) { %>
-      <p style="color: var(--text-muted); margin: 0;">No recorded activity yet.</p>
-    <% } else { %>
-      <table class="premium-table" style="width: 100%;">
-        <thead>
-          <tr><th>Action</th><th>When</th></tr>
-        </thead>
-        <tbody>
-          <% activity.forEach(function(a) { %>
-            <tr>
-              <td><%= a.label %></td>
-              <td style="color: var(--text-muted);"><%= String(a.created_at).slice(0, 16).replace('T', ' ') %></td>
-            </tr>
-          <% }); %>
-        </tbody>
-      </table>
-    <% } %>
+            <!-- Year by Year Breakdown -->
+            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+              <% const sortedYears = Object.keys(org.years).sort((a,b) => b - a); %>
+              <% sortedYears.forEach(year => { const yrData = org.years[year]; %>
+                <details style="background: rgba(0,0,0,0.3); border-radius: 6px;">
+                  <summary style="padding: 1rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; list-style: none;">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                      <span style="font-weight: bold; color: white; font-size: 1.1rem;"><%= year %></span>
+                      <span style="color: var(--text-muted); font-size: 0.9rem;"><%= yrData.events.length %> Event(s)</span>
+                    </div>
+                    <div style="display: flex; gap: 1rem; font-size: 0.9rem;">
+                      <span style="color: var(--text-muted);">Awards: <strong style="color: white;"><%= yrData.total_awards %></strong></span>
+                      <span style="color: var(--text-muted);">1st Places: <strong style="color: var(--primary);"><%= yrData.first_places %></strong></span>
+                      <span style="color: var(--text-muted);">Major: <strong style="color: #aa8529;"><%= yrData.major_awards %></strong></span>
+                    </div>
+                  </summary>
+                  <div style="padding: 0 1rem 1rem 1rem; border-top: 1px solid rgba(255,255,255,0.05); margin-top: 0.5rem; padding-top: 1rem;">
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                      <% yrData.events.forEach(evt => { %>
+                        <details style="background: rgba(0,0,0,0.2); border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                          <summary style="padding: 0.75rem 1rem; cursor: pointer; display: flex; align-items: center; justify-content: space-between; font-size: 0.9rem;">
+                            <div>
+                              <strong style="color: white;"><%= evt.name %></strong> 
+                              <span style="margin-left: 0.5rem; font-size: 0.85rem; color: var(--text-muted);">(<%= evt.total_awards %> Awards, <%= evt.first_places %> 1st Places)</span>
+                            </div>
+                          </summary>
+                          <div style="padding: 0 1rem 1rem 1rem; overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                              <thead>
+                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-muted); text-align: left;">
+                                  <th style="padding: 0.5rem;">Award</th>
+                                  <th style="padding: 0.5rem;">Routine</th>
+                                  <th style="padding: 0.5rem;">Category / Age</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <% evt.awards.sort((a,b) => {
+                                  const pA = parseInt(a.place) || 999;
+                                  const pB = parseInt(b.place) || 999;
+                                  return pA - pB;
+                                }).forEach(award => { %>
+                                  <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                    <td style="padding: 0.5rem;">
+                                      <% if (award.is_first_place) { %>🥇 <% } %>
+                                      <strong style="color: white;"><%= award.place %></strong>
+                                      <% if (award.award_class) { %>
+                                        <span style="color: var(--text-muted); font-size: 0.75rem; display: block; text-transform: capitalize;"><%= award.award_class %></span>
+                                      <% } %>
+                                    </td>
+                                    <td style="padding: 0.5rem; color: white;">
+                                      <%= award.performance_name || 'N/A' %>
+                                      <% if (award.dancers && award.dancers.length > 0) { %>
+                                        <div style="margin-top: 0.3rem; font-size: 0.75rem; color: var(--text-muted);">
+                                          <%= award.dancers.join(', ') %>
+                                        </div>
+                                      <% } %>
+                                    </td>
+                                    <td style="padding: 0.5rem; color: var(--text-muted);">
+                                      <%= award.category || award.award_type || 'N/A' %>
+                                      <% if (award.age_division) { %>
+                                        <span class="badge" style="background: rgba(255, 255, 255, 0.08); color: #e0e0e0; border: 1px solid rgba(255, 255, 255, 0.15); font-size: 0.7rem; padding: 0.1rem 0.3rem; margin-left: 0.3rem;"><%= award.age_division %></span>
+                                      <% } %>
+                                    </td>
+                                  </tr>
+                                <% }) %>
+                              </tbody>
+                            </table>
+                          </div>
+                        </details>
+                      <% }) %>
+                    </div>
+                  </div>
+                </details>
+              <% }) %>
+            </div>
+
+          </div>
+        <% }) %>
+      <% } %>
+    </div>
+
   </div>
 </div>
+
+<!-- Summary Modal -->
+<div id="summaryModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center;">
+  <div class="card glass-card" style="width: 100%; max-width: 700px; max-height: 90vh; display: flex; flex-direction: column; padding: 2rem; position: relative;">
+    <button type="button" onclick="document.getElementById('summaryModal').style.display='none'" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer;">&times;</button>
+    <h2 style="margin-top: 0; margin-bottom: 1rem;" id="summaryModalTitle">Awards Summary</h2>
+    
+    <!-- Step 1: Selection -->
+    <div id="summaryStep1" style="display: flex; flex-direction: column; overflow-y: auto; flex: 1;">
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0; margin-bottom: 1rem;">Select the awards you want to include in the text summary.</p>
+      
+      <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+        <select id="aiToneSelect" style="flex: 1; padding: 0.5rem; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 4px;">
+          <option value="Enthusiastic">Tone: Enthusiastic (Social Media)</option>
+          <option value="Professional">Tone: Professional (Press Release)</option>
+        </select>
+        <button type="button" class="btn" id="btnGenerateAi" style="background: rgba(255, 255, 255, 0.08); color: #e0e0e0; border: 1px solid rgba(255, 255, 255, 0.15); flex: 1;" onclick="generateAiSummary()">✨ Generate AI Summary</button>
+      </div>
+
+      <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+        <button type="button" class="btn" style="background: rgba(255,255,255,0.1); border: none; color: white; font-size: 0.8rem; padding: 0.25rem 0.5rem;" onclick="selectAllAwards()">Select All</button>
+        <button type="button" class="btn" style="background: rgba(255,255,255,0.1); border: none; color: white; font-size: 0.8rem; padding: 0.25rem 0.5rem;" onclick="selectMostRecentYear()">Most Recent Year Only</button>
+        <button type="button" class="btn" style="background: rgba(255,255,255,0.1); border: none; color: white; font-size: 0.8rem; padding: 0.25rem 0.5rem;" onclick="deselectAllAwards()">Clear All</button>
+      </div>
+      <div id="summaryChecklist" style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05); color: white; margin-bottom: 1rem; overflow-y: auto;">
+        Loading...
+      </div>
+      <button type="button" class="btn btn-primary" style="width: 100%; flex-shrink: 0;" onclick="buildFinalText()">➡️ Generate Raw Text Summary</button>
+    </div>
+
+    <!-- Step 2: Output -->
+    <div id="summaryStep2" style="display: none; flex-direction: column; flex: 1;">
+      <button type="button" class="btn" style="background: rgba(255,255,255,0.1); border: none; color: white; margin-bottom: 1rem; width: fit-content;" onclick="document.getElementById('summaryStep2').style.display='none'; document.getElementById('summaryStep1').style.display='flex';">⬅️ Back to Selection</button>
+      <textarea id="summaryTextarea" style="width: 100%; height: 400px; padding: 1rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 4px; font-family: monospace; resize: vertical;" oninput="handleTextareaEdit()"></textarea>
+      <div id="saveStatus" style="font-size: 0.8rem; color: var(--text-muted); text-align: right; margin-top: 0.5rem; height: 1rem;"></div>
+      <button type="button" class="btn btn-primary" style="margin-top: 0.5rem; width: 100%; flex-shrink: 0;" onclick="copySummary(event)">📋 Copy to Clipboard</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentOrgName = '';
+let currentStudioId = null;
+let currentOrgId = null;
+let currentAiSummaryId = null;
+let saveTimeout = null;
+
+async function generateSummary(studioId, orgId, orgName) {
+  currentStudioId = studioId;
+  currentOrgId = orgId;
+  currentOrgName = orgName;
+  document.getElementById('summaryModalTitle').innerText = orgName + ' Summary';
+  document.getElementById('summaryChecklist').innerHTML = 'Loading...';
+  
+  document.getElementById('summaryStep1').style.display = 'flex';
+  document.getElementById('summaryStep2').style.display = 'none';
+  document.getElementById('summaryModal').style.display = 'flex';
+  
+  try {
+    const res = await fetch(`/api/studio/${studioId}/history/org/${orgId}/summary`);
+    const data = await res.json();
+    
+    if (!data.groups || Object.keys(data.groups).length === 0) {
+      document.getElementById('summaryChecklist').innerHTML = '<div style="color: var(--text-muted);">No awards found.</div>';
+      return;
+    }
+
+    let html = '';
+    const sortedYears = Object.keys(data.groups).sort();
+    
+    for (const year of sortedYears) {
+      html += `<div class="summary-year-group" data-year="${year}" style="margin-bottom: 1.5rem;">`;
+      html += `<h3 style="margin-top: 0; margin-bottom: 0.5rem; color: #e0e0e0;">${year}</h3>`;
+      
+      const divKeys = Object.keys(data.groups[year]).sort();
+      for (const div of divKeys) {
+        html += `<div class="summary-div-group" data-div="${div}" style="margin-left: 1rem; margin-bottom: 1rem;">`;
+        if (div !== 'Others') {
+          html += `<div style="font-weight: bold; margin-bottom: 0.5rem; color: var(--text-muted);">${div}</div>`;
+        }
+        
+        data.groups[year][div].forEach(award => {
+          const checked = award.autoCheck ? 'checked' : '';
+          html += `
+            <label style="display: flex; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.5rem; cursor: pointer; font-size: 0.9rem;">
+              <input type="checkbox" class="award-checkbox" data-text="${award.text.replace(/"/g, '&quot;')}" ${checked} style="margin-top: 0.2rem;">
+              <span>${award.text}</span>
+            </label>
+          `;
+        });
+        html += `</div>`;
+      }
+      html += `</div>`;
+    }
+    
+    document.getElementById('summaryChecklist').innerHTML = html;
+
+  } catch (err) {
+    document.getElementById('summaryChecklist').innerHTML = '<div style="color: red;">Error loading summary.</div>';
+    console.error(err);
+  }
+}
+
+function getSelectedAwards() {
+  const selected = [];
+  const checkboxes = document.querySelectorAll('.award-checkbox:checked');
+  checkboxes.forEach(cb => {
+    selected.push(cb.getAttribute('data-text'));
+  });
+  return selected;
+}
+
+function selectAllAwards() {
+  document.querySelectorAll('.award-checkbox').forEach(cb => cb.checked = true);
+}
+
+function deselectAllAwards() {
+  document.querySelectorAll('.award-checkbox').forEach(cb => cb.checked = false);
+}
+
+function selectMostRecentYear() {
+  deselectAllAwards();
+  const yearGroups = document.querySelectorAll('.summary-year-group');
+  if (yearGroups.length > 0) {
+    let maxYearStr = "0";
+    let maxGroup = null;
+    yearGroups.forEach(yg => {
+      const y = yg.getAttribute('data-year');
+      if (y > maxYearStr) {
+        maxYearStr = y;
+        maxGroup = yg;
+      }
+    });
+    if (maxGroup) {
+      maxGroup.querySelectorAll('.award-checkbox').forEach(cb => cb.checked = true);
+    }
+  }
+}
+
+async function generateAiSummary() {
+  const selectedAwards = getSelectedAwards();
+  if (selectedAwards.length === 0) return alert('Please select at least one award.');
+  
+  const tone = document.getElementById('aiToneSelect').value;
+  const btn = document.getElementById('btnGenerateAi');
+  btn.innerText = '✨ Generating...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(`/api/studio/${currentStudioId}/history/org/${currentOrgId}/ai-summary`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tone, awardsList: selectedAwards, orgName: currentOrgName })
+    });
+    const data = await res.json();
+    
+    currentAiSummaryId = data.id;
+    document.getElementById('summaryTextarea').value = data.text;
+    document.getElementById('summaryStep1').style.display = 'none';
+    document.getElementById('summaryStep2').style.display = 'flex';
+    document.getElementById('saveStatus').innerText = 'AI generated successfully.';
+  } catch (err) {
+    console.error(err);
+    alert('Failed to generate AI summary.');
+  } finally {
+    btn.innerText = '✨ Generate AI Summary';
+    btn.disabled = false;
+  }
+}
+
+function handleTextareaEdit() {
+  if (!currentAiSummaryId) return; // Only autosave if it's an AI summary
+  
+  document.getElementById('saveStatus').innerText = 'Saving...';
+  clearTimeout(saveTimeout);
+  
+  saveTimeout = setTimeout(async () => {
+    const text = document.getElementById('summaryTextarea').value;
+    try {
+      await fetch(`/api/studio/ai-summary/${currentAiSummaryId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      });
+      document.getElementById('saveStatus').innerText = 'All edits saved to database.';
+    } catch (err) {
+      document.getElementById('saveStatus').innerText = 'Failed to save edits.';
+      console.error(err);
+    }
+  }, 1000);
+}
+
+function buildFinalText() {
+  currentAiSummaryId = null; // Clear AI tracking for raw text
+  document.getElementById('saveStatus').innerText = '';
+  let summaryText = currentOrgName + " awards history\n\n";
+  
+  const yearGroups = document.querySelectorAll('.summary-year-group');
+  
+  yearGroups.forEach(yg => {
+    const yearStr = yg.getAttribute('data-year');
+    let yearHasItems = false;
+    let yearTextBlock = `${yearStr}\n\n`;
+    
+    const divGroups = yg.querySelectorAll('.summary-div-group');
+    divGroups.forEach(dg => {
+      const divStr = dg.getAttribute('data-div');
+      const checkboxes = dg.querySelectorAll('.award-checkbox:checked');
+      
+      if (checkboxes.length > 0) {
+        yearHasItems = true;
+        if (divStr !== 'Others') {
+          yearTextBlock += `${divStr}\n`;
+        }
+        checkboxes.forEach(cb => {
+          yearTextBlock += `${cb.getAttribute('data-text')}\n`;
+        });
+        yearTextBlock += `\n`;
+      }
+    });
+    
+    if (yearHasItems) {
+      summaryText += yearTextBlock;
+    }
+  });
+
+  document.getElementById('summaryTextarea').value = summaryText.trim();
+  document.getElementById('summaryStep1').style.display = 'none';
+  document.getElementById('summaryStep2').style.display = 'flex';
+}
+
+function copySummary(event) {
+  const textarea = document.getElementById('summaryTextarea');
+  textarea.select();
+  document.execCommand('copy');
+  
+  const btn = event.target;
+  const oldText = btn.innerText;
+  btn.innerText = '✅ Copied!';
+  setTimeout(() => btn.innerText = oldText, 2000);
+}
+</script>
+
+<style>
+  details > summary::-webkit-details-marker {
+    display: none;
+  }
+  details > summary {
+    position: relative;
+  }
+  details > summary::after {
+    content: '▼';
+    position: absolute;
+    right: 1rem;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    transition: transform 0.2s;
+  }
+  details[open] > summary::after {
+    transform: rotate(180deg);
+  }
+</style>
+
 <%- include('partials/footer') %>
