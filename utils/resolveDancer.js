@@ -35,7 +35,14 @@ async function resolveOrCreateDancer(db, { name, studioId, routine }) {
         LIMIT 1`, [c.id, studioId, r, c.id, studioId, r]);
       if (hit) matched.push(c);
     }
-    if (matched.length === 1) return { id: matched[0].id, created: false };
+    // ANY routine match wins — if several same-name candidates all carry this
+    // routine, then by the evidence rule (name+routine+studio+year collisions
+    // are vanishingly rare) they are duplicates of EACH OTHER; the weekly
+    // auto-merge will unify them, so linking to one is correct and minting a
+    // third profile is strictly worse. (The old ===1 rule created one new
+    // profile per routine whenever the roster already held duplicate
+    // profiles — the Ina Su amplification, 2026-08-30.)
+    if (matched.length >= 1) return { id: matched[0].id, created: false };
   }
 
   // Zero rostered, or irreducibly ambiguous: new profile, visible + reviewable.
