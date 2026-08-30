@@ -5,7 +5,7 @@ const { requireAuth, requireStudioOwner } = require('../../middleware/auth');
 const { logStudioActivity } = require('../../utils/activity');
 const { approveDancerClaim, rejectDancerClaim, notifyRosterAttach } = require('../../utils/claims');
 const { ensureMergeRequestTable } = require('../../utils/studioMerge');
-const { canonicalizeRoutine, routineKeySql } = require('../../utils/routineKey');
+const { canonicalizeRoutine, routineKeySql, ensureRoutineAliasTable, resolveRoutineKey, resweepStudioKeys } = require('../../utils/routineKey');
 const { sendEmail } = require('../../utils/mailer');
 const multer = require('multer');
 // CSV imports only (roster + awards). Rejections surface as 400s via the
@@ -216,6 +216,8 @@ const ACTIVITY_LABELS = {
   roster_csv_commit: 'Roster imported from CSV',
   group_cast_added: 'Dancers linked to a group routine',
   group_cast_synced: 'Group routine cast synced across events',
+  routine_spelling_merged: 'Routine spellings merged / corrected',
+  routine_alias_removed: 'Routine spelling merge undone',
   profile_update: 'Studio profile updated',
   widget_embed: 'Awards widget embedded',
   ai_summary: 'AI studio summary generated',
@@ -1669,7 +1671,7 @@ const GROUP_AWARD_FILTER = `
 // returns dancer_id-linked awards.
 async function routineAwardIds(db, studioId, routine, year, eventIds, opts = {}) {
   const yearCond = year === 'Undated' ? 'e.year IS NULL' : 'e.year = ?';
-  const key = canonicalizeRoutine(routine);
+  const key = await resolveRoutineKey(db, studioId, routine);
   const params = year === 'Undated' ? [studioId, key] : [studioId, key, year];
   let eventCond = '';
   if (Array.isArray(eventIds) && eventIds.length > 0) {
@@ -1725,10 +1727,82 @@ router.get('/manage/studio/:id/routines', requireAuth, requireStudioOwner, async
   for (const r of dancerRows) dancerMap[r.routine_key + '|||' + r.year] = r.dancer_names;
   routines.forEach(r => { r.dancers = dancerMap[r.routine_key + '|||' + r.year] || ''; });
 
+  await ensureRoutineAliasTable(db);
+  const aliases = await db.all(
+    'SELECT id, from_key, to_key, display_name FROM studio_routine_aliases WHERE studio_id = ? ORDER BY to_key, from_key', [req.studio.id]);
+  const displayMap = {};
+  for (const a of aliases) if (a.display_name) displayMap[a.to_key] = a.display_name;
+  routines.forEach(r => { if (displayMap[r.routine_key]) r.routine = displayMap[r.routine_key]; });
+
   res.render('manage_studio_routines', {
-    studio: req.studio, routines,
+    studio: req.studio, routines, aliases,
     pageTitle: `${req.studio.name} — All Routines`,
   });
+});
+
+
+// Owner merges routine spellings ("Kongfu"/"Kungfu Kiddies") and/or fixes the
+// display spelling. Aliases redirect performance_name_key only — raw
+// performance_name is untouched, so this is fully undoable (unalias below).
+router.post('/manage/studio/:id/routines/merge', requireAuth, requireStudioOwner, express.json(), async (req, res) => {
+  const db = await openDb();
+  await ensureRoutineAliasTable(db);
+  let { keys, target_key, display_name } = req.body || {};
+  keys = [...new Set((Array.isArray(keys) ? keys : []).map(k => String(k || '').trim()).filter(Boolean))];
+  target_key = String(target_key || '').trim();
+  display_name = String(display_name || '').replace(/\s+/g, ' ').trim().slice(0, 120) || null;
+  if (!keys.length || !target_key || !keys.includes(target_key)) return res.status(400).json({ error: 'Pick which spelling is correct.' });
+  const others = keys.filter(k => k !== target_key);
+  if (!others.length && !display_name) return res.status(400).json({ error: 'Select more spellings to merge, or enter the corrected spelling.' });
+
+  const ph = keys.map(() => '?').join(',');
+  const found = await db.all(
+    `SELECT DISTINCT performance_name_key AS k FROM awards WHERE studio_id = ? AND performance_name_key IN (${ph})`,
+    [req.studio.id, ...keys]);
+  if (found.length !== keys.length) return res.status(400).json({ error: 'One of the routines changed — refresh and try again.' });
+
+  await db.run('BEGIN TRANSACTION');
+  try {
+    for (const k of others) {
+      await db.run('INSERT OR REPLACE INTO studio_routine_aliases (studio_id, from_key, to_key, created_by) VALUES (?, ?, ?, ?)',
+        [req.studio.id, k, target_key, req.session.user.id]);
+      // Flatten chains: anything that pointed at k now points at the target
+      await db.run('UPDATE studio_routine_aliases SET to_key = ? WHERE studio_id = ? AND to_key = ?', [target_key, req.studio.id, k]);
+      await db.run('UPDATE awards SET performance_name_key = ? WHERE studio_id = ? AND performance_name_key = ?', [target_key, req.studio.id, k]);
+    }
+    if (display_name) {
+      await db.run('INSERT OR REPLACE INTO studio_routine_aliases (studio_id, from_key, to_key, display_name, created_by) VALUES (?, ?, ?, ?, ?)',
+        [req.studio.id, target_key, target_key, display_name, req.session.user.id]);
+      // A custom spelling's own machine key must also fold to the target
+      const dk = canonicalizeRoutine(display_name);
+      if (dk && dk !== target_key) {
+        await db.run('INSERT OR REPLACE INTO studio_routine_aliases (studio_id, from_key, to_key, created_by) VALUES (?, ?, ?, ?)',
+          [req.studio.id, dk, target_key, req.session.user.id]);
+        await db.run('UPDATE awards SET performance_name_key = ? WHERE studio_id = ? AND performance_name_key = ?', [target_key, req.studio.id, dk]);
+      }
+    }
+    await db.run('COMMIT');
+  } catch (e) {
+    await db.run('ROLLBACK');
+    return res.status(500).json({ error: e.message });
+  }
+  logStudioActivity(req.studio.id, 'routine_spelling_merged');
+  res.json({ success: true, merged: others.length });
+});
+
+
+// Undo one alias: keys for the whole studio are recomputed from scratch
+// (machine canonical + remaining aliases), so behavior fully reverts.
+router.post('/manage/studio/:id/routines/unalias', requireAuth, requireStudioOwner, express.json(), async (req, res) => {
+  const db = await openDb();
+  await ensureRoutineAliasTable(db);
+  const aliasId = parseInt(req.body && req.body.alias_id, 10);
+  if (!aliasId) return res.status(400).json({ error: 'Invalid alias.' });
+  const r = await db.run('DELETE FROM studio_routine_aliases WHERE id = ? AND studio_id = ?', [aliasId, req.studio.id]);
+  if (!r.changes) return res.status(404).json({ error: 'Alias not found.' });
+  await resweepStudioKeys(db, req.studio.id);
+  logStudioActivity(req.studio.id, 'routine_alias_removed');
+  res.json({ success: true });
 });
 
 router.get('/manage/studio/:id/group-dancers', requireAuth, requireStudioOwner, async (req, res) => {
@@ -1791,6 +1865,14 @@ router.get('/manage/studio/:id/group-dancers', requireAuth, requireStudioOwner, 
   }
   routines.forEach(r => { r.cast = castMap[r.routine_key + '|||' + r.year] || []; });
 
+  // Owner-declared display spellings (studio_routine_aliases.display_name)
+  await ensureRoutineAliasTable(db);
+  const displayRows = await db.all(
+    'SELECT to_key, display_name FROM studio_routine_aliases WHERE studio_id = ? AND display_name IS NOT NULL', [studio.id]);
+  const displayMap = {};
+  for (const d of displayRows) displayMap[d.to_key] = d.display_name;
+  routines.forEach(r => { if (displayMap[r.routine_key]) r.routine = displayMap[r.routine_key]; });
+
   // Per-event breakdown: casts can differ per event (subs, missed events),
   // so the card offers event checkboxes and shows which events still lack
   // dancers. event_id 0 = self-reported awards without an event row.
@@ -1798,7 +1880,8 @@ router.get('/manage/studio/:id/group-dancers', requireAuth, requireStudioOwner, 
     SELECT IFNULL(a.performance_name_key, LOWER(TRIM(IFNULL(a.performance_name, '')))) AS routine_key, IFNULL(e.year, 'Undated') AS year,
            IFNULL(e.id, 0) AS event_id, IFNULL(e.name, 'Self-reported') AS event_name,
            COUNT(DISTINCT a.id) AS award_count,
-           COUNT(DISTINCT CASE WHEN ad.award_id IS NOT NULL THEN a.id END) AS linked_awards
+           COUNT(DISTINCT CASE WHEN ad.award_id IS NOT NULL THEN a.id END) AS linked_awards,
+           GROUP_CONCAT(DISTINCT TRIM(a.performance_name)) AS raw_names
     FROM awards a LEFT JOIN events e ON a.event_id = e.id
     LEFT JOIN award_dancers ad ON ad.award_id = a.id
     WHERE a.studio_id = ? AND TRIM(IFNULL(a.performance_name, '')) != ''
@@ -1811,6 +1894,7 @@ router.get('/manage/studio/:id/group-dancers', requireAuth, requireStudioOwner, 
     (eventMap[key] = eventMap[key] || []).push({
       id: ev.event_id, name: ev.event_name,
       award_count: ev.award_count, covered: ev.linked_awards > 0,
+      raw_names: ev.raw_names || '',
     });
   }
   routines.forEach(r => {

@@ -20,8 +20,8 @@ async function resolveOrCreateDancer(db, { name, studioId, routine }) {
   if (candidates.length === 1) return { id: candidates[0].id, created: false };
 
   if (candidates.length > 1 && routine) {
-    const { canonicalizeRoutine } = require('./routineKey');
-    const r = canonicalizeRoutine(routine);
+    const { resolveRoutineKey } = require('./routineKey');
+    const r = await resolveRoutineKey(db, studioId, routine);
     const matched = [];
     for (const c of candidates) {
       const hit = await db.get(`

@@ -510,3 +510,19 @@ solos, with award/event counts, dancers on file, sortable columns
 (sortable-table) and live search across routine + dancer names; per-row status
 badge either "✓ credited" or "N awards missing dancers" linking to the entry
 tool. FAQ admin §6 updated.
+
+## Canonical routine names (2026-08-29)
+Phase 1: awards.performance_name_key — machine-canonical routine key
+(utils/routineKey.js: NFKC, curly quotes, dashes, nbsp, whitespace, case),
+indexed, filled by scripts/sweep_routine_keys.js (weekly pipeline + deploy);
+readers fall back to LOWER(TRIM()) for unswept rows; performance_name itself
+is never rewritten (source-of-record + importer idempotency anchor). Unified
+247 studio-routine spelling variants. Phase 2: studio_routine_aliases —
+owner-declared merges for true misspellings via "Merge / fix spelling" on All
+Routines (tick rows -> pick or type the correct spelling; display_name shown
+everywhere; alias redirects stored keys instantly; sweep applies aliases so
+weekly runs preserve them; Undo recomputes the studio from scratch). Write
+paths resolve client-sent spellings through aliases (routineAwardIds,
+resolveDancer tie-break). Group-dancers event rows show the title "published
+as" each competition printed it whenever it differs from the display name —
+the human audit trail for the folding. FAQ admin §6.

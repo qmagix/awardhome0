@@ -74,6 +74,9 @@
       <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
         <input type="search" id="routineSearch" placeholder="Search routines or dancers…"
           style="flex: 1; min-width: 220px; max-width: 380px; padding: 0.55rem 0.9rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); background: rgba(0,0,0,0.25); color: white;">
+        <button type="button" id="mergeSpellingsBtn" class="btn" disabled onclick="openSpellingModal()"
+          title="Tick the rows that are really the same routine (or one row to fix its spelling)"
+          style="background: rgba(212,175,55,0.15); border: 1px solid rgba(212,175,55,0.4); color: var(--primary); padding: 0.45rem 1rem; opacity: 0.5;">✏️ Merge / fix spelling</button>
         <span id="routineCount" style="color: var(--text-muted); font-size: 0.85rem;"><%= routines.length %> routine<%= routines.length === 1 ? '' : 's' %></span>
       </div>
 
@@ -81,6 +84,7 @@
         <table class="premium-table sortable-table" id="routinesTable" style="width: 100%;">
           <thead>
             <tr>
+              <th class="no-sort" style="width: 40px;" title="Tick rows that are the same routine under different spellings"></th>
               <th>Routine</th>
               <th>Year</th>
               <th>Events</th>
@@ -92,6 +96,10 @@
           <tbody>
             <% routines.forEach(function(r) { %>
               <tr>
+                <td>
+                  <input type="checkbox" class="rt-select" value="<%= r.routine_key %>" data-display="<%= r.routine %>"
+                    style="transform: scale(1.15); accent-color: var(--primary);">
+                </td>
                 <td style="font-weight: 600;"><%= r.routine %></td>
                 <td><%= r.year || '—' %></td>
                 <td style="color: var(--text-muted);" title="<%= r.event_names %>"><%= r.event_count %></td>
@@ -112,9 +120,53 @@
         </table>
       </div>
     </div>
+
+    <% if (typeof aliases !== 'undefined' && aliases.length > 0) { %>
+      <div class="card glass-card" style="margin-top: 1.5rem;">
+        <h3 style="margin: 0 0 0.5rem 0;">✏️ Merged / corrected spellings</h3>
+        <p style="color: var(--text-muted); font-size: 0.88rem; margin: 0 0 1rem 0;">
+          Your spelling decisions. Removing one restores the original spellings as separate routines —
+          the imported names themselves are never changed.
+        </p>
+        <table class="premium-table" style="width: 100%;">
+          <thead><tr><th>Spelling</th><th>Folds into</th><th style="text-align: right;"></th></tr></thead>
+          <tbody>
+            <% aliases.forEach(function(al) { %>
+              <tr>
+                <td style="color: var(--text-muted);"><%= al.from_key %><%= al.display_name && al.from_key === al.to_key ? ' (display: "' + al.display_name + '")' : '' %></td>
+                <td><%= al.to_key %></td>
+                <td style="text-align: right;">
+                  <button class="btn" onclick="removeAlias(<%= al.id %>)" style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: var(--text-muted); padding: 0.25rem 0.7rem; font-size: 0.8rem;">Undo</button>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+
+    <!-- Merge / fix spelling modal -->
+    <div id="spellingModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 2000; align-items: center; justify-content: center;">
+      <div class="card glass-card" style="max-width: 520px; width: calc(100% - 2rem); padding: 1.75rem;">
+        <h3 style="margin: 0 0 0.5rem 0; color: white;">Which spelling is correct?</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0 0 1rem 0;">
+          The selected entries become one routine everywhere in your studio (all years and events).
+          Imported names aren't changed — this is undoable below.
+        </p>
+        <div id="spellingChoices" style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem;"></div>
+        <label style="display: block; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.3rem;">…or type the corrected spelling:</label>
+        <input type="text" id="spellingCustom" maxlength="120" placeholder="e.g. Kung Fu Kiddies"
+          style="width: 100%; padding: 0.55rem 0.9rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); background: rgba(0,0,0,0.25); color: white; margin-bottom: 1.25rem;">
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+          <button class="btn" onclick="document.getElementById('spellingModal').style.display='none'" style="background: rgba(255,255,255,0.1); color: white;">Cancel</button>
+          <button class="btn" onclick="submitSpellingMerge()" style="background: var(--primary); color: #0a0a0a; font-weight: 600;">Save</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
+<script src="/js/ui_dialogs.js"></script>
 <script>
   // Live search across routine + dancer names
   (function () {
@@ -132,6 +184,78 @@
       count.textContent = shown + ' routine' + (shown === 1 ? '' : 's') + (q ? ' matching' : '');
     });
   })();
+
+  // ---- Merge / fix spelling (owner-declared routine aliases) ----
+  function selectedSpellings() {
+    // distinct by key — the same routine can appear once per year
+    const seen = new Map();
+    document.querySelectorAll('.rt-select:checked').forEach(b => {
+      if (b.value && !seen.has(b.value)) seen.set(b.value, b.dataset.display);
+    });
+    return [...seen.entries()]; // [key, display]
+  }
+  document.addEventListener('change', (e) => {
+    if (!e.target.classList || !e.target.classList.contains('rt-select')) return;
+    const n = selectedSpellings().length;
+    const btn = document.getElementById('mergeSpellingsBtn');
+    btn.disabled = n < 1;
+    btn.style.opacity = n < 1 ? 0.5 : 1;
+    btn.textContent = n > 1 ? `✏️ Merge ${n} spellings` : '✏️ Merge / fix spelling';
+  });
+
+  function openSpellingModal() {
+    const sel = selectedSpellings();
+    if (!sel.length) { toast('Tick at least one routine first.', true); return; }
+    const box = document.getElementById('spellingChoices');
+    box.innerHTML = sel.map(([key, display], i) =>
+      '<label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: white;">' +
+      `<input type="radio" name="spellingPick" value="${key.replace(/"/g, '&quot;')}" ${i === 0 ? 'checked' : ''} style="accent-color: var(--primary);">` +
+      `<span>${display.replace(/</g, '&lt;')}</span></label>`).join('');
+    document.getElementById('spellingCustom').value = '';
+    document.getElementById('spellingModal').style.display = 'flex';
+  }
+
+  async function submitSpellingMerge() {
+    const sel = selectedSpellings();
+    const picked = document.querySelector('input[name="spellingPick"]:checked');
+    const custom = document.getElementById('spellingCustom').value.trim();
+    if (!picked) return;
+    const target_key = picked.value;
+    const pickedDisplay = sel.find(([k]) => k === target_key)[1];
+    const body = {
+      keys: sel.map(([k]) => k),
+      target_key,
+      display_name: custom || (sel.length > 1 ? pickedDisplay : ''),
+    };
+    if (sel.length === 1 && !custom) { toast('Type the corrected spelling for this routine.', true); return; }
+    const res = await fetch('/manage/studio/<%= studio.id %>/routines/merge', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok && data.success) {
+      document.getElementById('spellingModal').style.display = 'none';
+      toast('Saved — spellings merged.');
+      setTimeout(() => location.reload(), 800);
+    } else {
+      toast(data.error || 'Could not save — please try again.', true);
+    }
+  }
+
+  async function removeAlias(id) {
+    const ok = await uiConfirm({
+      title: 'Undo this spelling decision?',
+      message: 'The original spellings return as separate routines. Nothing else changes — imported names were never modified.',
+      confirmLabel: 'Undo',
+    });
+    if (!ok) return;
+    const res = await fetch('/manage/studio/<%= studio.id %>/routines/unalias', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ alias_id: id }),
+    });
+    if (res.ok) location.reload();
+    else toast('Could not undo — please try again.', true);
+  }
 </script>
 
 <%- include('partials/footer') %>

@@ -123,6 +123,12 @@
                   <label style="display: inline-flex; align-items: center; gap: 0.4rem; margin: 0.15rem 1rem 0.15rem 0; cursor: pointer; font-size: 0.87rem; color: white;">
                     <input type="checkbox" class="gd-event" value="<%= ev.id %>" checked style="transform: scale(1.1); accent-color: var(--primary);">
                     <span><%= ev.name %> <span style="color: var(--text-muted);">(<%= ev.award_count %> award<%= ev.award_count === 1 ? '' : 's' %>)</span></span>
+                    <%# As-published spelling: lets the eye audit the grouping —
+                        shown whenever this event's raw title differs from the
+                        card's display name (case/punctuation folds, aliases). %>
+                    <% if (ev.raw_names && ev.raw_names !== r.routine) { %>
+                      <span style="color: var(--text-muted); font-size: 0.78rem; font-style: italic;" title="Exactly as this competition published it">published as &ldquo;<%= ev.raw_names %>&rdquo;</span>
+                    <% } %>
                     <% if (ev.covered) { %>
                       <span style="color: #34d399; font-size: 0.78rem;" title="This event already has dancers linked">✓</span>
                     <% } else { %>
