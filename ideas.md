@@ -157,13 +157,19 @@ IP: maybe_patentable.md §A9 — file or waive BEFORE shipping.
 
 ## 13. Award as a memory book (brainstormed 2026-08-30)
 Each award is a book: the card is the cover, and inside are pages you flip
-through — performance photos, video of the routine, the song danced to, voice
-messages, thank-you notes, and congratulations from teammates, family, and
-teachers. Extends the shipped flip-book back-stack from four fixed pages to an
+through — performance photos, video of the routine, voice messages, thank-you
+notes, congratulations from teammates, family, and teachers, and an
+AI-generated celebration score composed from the award's own content (placement,
+category, routine title, the notes themselves) in a chosen mood — triumphant,
+tender, funny, nostalgic — that learns the family's taste over time. Generating
+the music rather than using the routine's licensed track sidesteps song
+licensing entirely. Extends the shipped flip-book back-stack from four fixed pages to an
 open-ended, multi-contributor keepsake bound to a verified award. Natural
 companions: A9's scoped invitation links (how you'd collect congratulations
 without accounts), the existing moderation queue (every page approved before
 public display), and studio-aggregated acks (ideas.md §9).
-Before building: music licensing (routine songs are third-party), video
-storage/bandwidth, and a higher consent bar for video/voice of minors.
+Before building: video storage/bandwidth, generated-audio cost/latency plus
+the generator's commercial-use terms, a higher consent bar for video/voice of
+minors, and — for the taste-learning — keep preferences as the ACCOUNT HOLDER's
+declared choices, not inferred profiling of a child's behavior (COPPA).
 IP: maybe_patentable.md §A10 — file or waive BEFORE shipping.
