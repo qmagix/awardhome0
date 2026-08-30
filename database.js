@@ -119,6 +119,15 @@ async function initDb() {
       decided_at DATETIME,
       decided_by INTEGER REFERENCES users(id)
     );
+    CREATE TABLE IF NOT EXISTS studio_award_weights (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      studio_id INTEGER NOT NULL REFERENCES studios(id),
+      award_term TEXT NOT NULL,
+      weight INTEGER NOT NULL DEFAULT 1,
+      updated_by INTEGER REFERENCES users(id),
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(studio_id, award_term)
+    );
     CREATE TABLE IF NOT EXISTS studio_routine_checks (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       studio_id INTEGER NOT NULL REFERENCES studios(id),

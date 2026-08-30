@@ -6,6 +6,7 @@ const { logStudioActivity } = require('../../utils/activity');
 const { approveDancerClaim, rejectDancerClaim, notifyRosterAttach } = require('../../utils/claims');
 const { ensureMergeRequestTable } = require('../../utils/studioMerge');
 const { isMajorAward, majorAwardSql, PRESTIGE_TERMS, STAGE_TERMS } = require('../../utils/majorAward');
+const { WEIGHTS, DEFAULT_WEIGHT, awardTerm, weightsForStudio, weightOf, ensureAwardWeightTable } = require('../../utils/awardWeights');
 const { canonicalizeRoutine, routineKeySql, ensureRoutineAliasTable, ensureRoutineChecksTable, resolveRoutineKey, resweepStudioKeys } = require('../../utils/routineKey');
 const { ensureCastInviteTables, newInviteToken, inviteExpiry, sendCastInviteEmail } = require('../../utils/castInvites');
 const { sendEmail } = require('../../utils/mailer');
@@ -187,6 +188,57 @@ router.get('/manage/studio/:id/history/major-awards', requireAuth, requireStudio
     ORDER BY e.year DESC, o.name, a.award_type
     LIMIT 500`, [req.studio.id]);
   res.json({ terms: { prestige: PRESTIGE_TERMS, stage: STAGE_TERMS }, count: rows.length, awards: rows });
+});
+
+
+// Owner-tunable emphasis (private). GET returns the studio's distinct award
+// names with their current weights; POST saves changes. See
+// utils/awardWeights.js for why this can't touch the public figure.
+router.get('/manage/studio/:id/history/weights', requireAuth, requireStudioOwner, async (req, res) => {
+  const db = await openDb();
+  const weights = await weightsForStudio(db, req.studio.id);
+  const rows = await db.all(`
+    SELECT COALESCE(NULLIF(TRIM(a.award_type), ''), a.category) AS term,
+           COUNT(*) AS n,
+           SUM(CASE WHEN a.is_first_place = 1 THEN 1 ELSE 0 END) AS firsts
+    FROM awards a JOIN events e ON e.id = a.event_id
+    WHERE a.studio_id = ? AND COALESCE(NULLIF(TRIM(a.award_type), ''), a.category) IS NOT NULL
+    GROUP BY LOWER(TRIM(COALESCE(NULLIF(TRIM(a.award_type), ''), a.category)))
+    ORDER BY firsts DESC, n DESC LIMIT 60`, [req.studio.id]);
+  res.json({
+    scale: WEIGHTS, defaultWeight: DEFAULT_WEIGHT,
+    terms: rows.map(r => ({
+      term: r.term, key: String(r.term).replace(/\s+/g, ' ').trim().toLowerCase(),
+      count: r.n, firsts: r.firsts,
+      weight: weights.has(String(r.term).replace(/\s+/g, ' ').trim().toLowerCase())
+        ? weights.get(String(r.term).replace(/\s+/g, ' ').trim().toLowerCase()) : DEFAULT_WEIGHT,
+    })),
+  });
+});
+
+router.post('/manage/studio/:id/history/weights', requireAuth, requireStudioOwner, express.json(), async (req, res) => {
+  const db = await openDb();
+  await ensureAwardWeightTable(db);
+  const items = Array.isArray(req.body && req.body.weights) ? req.body.weights : [];
+  if (!items.length) return res.status(400).json({ error: 'Nothing to save.' });
+  let saved = 0;
+  for (const it of items.slice(0, 200)) {
+    const key = String(it.key || '').replace(/\s+/g, ' ').trim().toLowerCase();
+    const w = parseInt(it.weight, 10);
+    if (!key || !Object.prototype.hasOwnProperty.call(WEIGHTS, w)) continue;
+    if (w === DEFAULT_WEIGHT) {
+      await db.run('DELETE FROM studio_award_weights WHERE studio_id = ? AND award_term = ?', [req.studio.id, key]);
+    } else {
+      await db.run(`INSERT INTO studio_award_weights (studio_id, award_term, weight, updated_by)
+                    VALUES (?, ?, ?, ?)
+                    ON CONFLICT(studio_id, award_term) DO UPDATE SET
+                      weight = excluded.weight, updated_by = excluded.updated_by, updated_at = CURRENT_TIMESTAMP`,
+        [req.studio.id, key, w, req.session.user.id]);
+    }
+    saved++;
+  }
+  logStudioActivity(req.studio.id, 'award_weights_updated', { dedupMinutes: 30 });
+  res.json({ success: true, saved });
 });
 
 
@@ -1333,6 +1385,7 @@ router.get('/manage/studio/:id/history', requireAuth, requireStudioOwner, async 
     }
   });
 
+  const ownerWeights = await weightsForStudio(db, req.studio.id);
   const orgsMap = {};
 
   for (const award of awards) {
@@ -1344,7 +1397,8 @@ router.get('/manage/studio/:id/history', requireAuth, requireStudioOwner, async 
         years: {},
         total_awards_all_time: 0,
         first_places_all_time: 0,
-        major_awards_all_time: 0
+        major_awards_all_time: 0,
+        highlights_all_time: 0
       };
     }
     const org = orgsMap[award.org_id];
@@ -1355,6 +1409,9 @@ router.get('/manage/studio/:id/history', requireAuth, requireStudioOwner, async 
     // hand-duplicated variant of the public studio page's SQL and drifted.
     const isMajor = isMajorAward(award);
     if (isMajor) org.major_awards_all_time++;
+    // Private, owner-weighted view — never leaves this page (the public
+    // figure above stays the platform rule).
+    if (award.is_first_place && weightOf(ownerWeights, award) >= 2) org.highlights_all_time++;
 
     if (!org.years[award.event_year]) {
       org.years[award.event_year] = {
@@ -1534,6 +1591,14 @@ router.post('/api/studio/:id/history/org/:org_id/ai-summary', requireAuth, requi
 
     const studio = req.studio;
 
+    // Owner emphasis shapes the narrative — the visible payoff that makes
+    // honest weighting worth an owner's time (utils/awardWeights.js).
+    const weights = await weightsForStudio(db, studioId);
+    const emphasise = [], downplay = [];
+    for (const [term, w] of weights) {
+      if (w >= 2) emphasise.push(term);
+      else if (w === 0) downplay.push(term);
+    }
     const awardsText = awardsList.join('\n');
     let systemPrompt = `You are an expert marketing copywriter for a competitive dance studio. Write a concise, inspiring social media caption celebrating the studio's achievements at ${orgName} based on the provided list of awards.`;
     
@@ -1543,7 +1608,10 @@ router.post('/api/studio/:id/history/org/:org_id/ai-summary', requireAuth, requi
       systemPrompt = `You are an extremely enthusiastic marketing copywriter for a competitive dance studio. Write a highly energetic, inspiring social media caption celebrating the studio's achievements at ${orgName} based on the provided list of awards. Use emojis generously and make it sound exciting!`;
     }
 
-    const prompt = `Awards List:\n${awardsText}\n\nWrite the marketing summary. Keep it under 150 words. Do not hallucinate any awards. Focus on podium placements (1st, 2nd, 3rd) and major awards.`;
+    let emphasisNote = '';
+    if (emphasise.length) emphasisNote += `\n\nThis studio considers these award types their most prestigious — lead with them where they appear: ${emphasise.join('; ')}.`;
+    if (downplay.length) emphasisNote += `\nThey consider these routine — mention only in passing, if at all: ${downplay.join('; ')}.`;
+    const prompt = `Awards List:\n${awardsText}${emphasisNote}\n\nWrite the marketing summary. Keep it under 150 words. Do not hallucinate any awards. Focus on podium placements (1st, 2nd, 3rd) and major awards.`;
 
     const modelSetting = await db.get(`SELECT value FROM system_settings WHERE key = 'openai_model'`);
     const aiModel = modelSetting ? modelSetting.value : 'gpt-4o-mini';

@@ -642,3 +642,19 @@ offers a "something looks wrong" mail path for classification fixes.
 Year rows: the expand chevron was an absolutely-positioned `::after` pinned to
 the summary's right edge, overlapping the "Major: n" figure; it is now a real
 flex item at the end of the stats row (`.yr-chevron`), so it cannot overlap.
+
+## Owner award emphasis: private weighting, public figure fixed (2026-08-30)
+`studio_award_weights` (studio_id, award_term, weight 0-3) + utils/awardWeights.js.
+In the Major Awards popup, owners weight their own award types: Not notable /
+Normal / Notable / Headline. Boundaries, deliberately: weights NEVER affect the
+public Major Awards figure (utils/majorAward.js stays the platform rule) — so no
+studio can inflate a public claim; they drive a private "Your Highlights 🔒"
+count on Organization History; and they steer the AI summary (emphasise/downplay
+lists injected into the prompt, with a hint next to the Generate button telling
+owners their emphasis drives it). Because inflating buys nothing public while
+accuracy improves the generated summary, the pooled weights are a credible
+signal: GET /admin/award-emphasis (superadmin) aggregates them per award term
+(studios, avg weight, headline/not-notable counts) to inform canonical
+classification (docs/org_top_awards.md, award vocab). Owner endpoints:
+GET/POST /manage/studio/:id/history/weights. Activity: award_weights_updated.
+IP: maybe_patentable.md §A11.

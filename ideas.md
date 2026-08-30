@@ -173,3 +173,12 @@ the generator's commercial-use terms, a higher consent bar for video/voice of
 minors, and — for the taste-learning — keep preferences as the ACCOUNT HOLDER's
 declared choices, not inferred profiling of a child's behavior (COPPA).
 IP: maybe_patentable.md §A10 — file or waive BEFORE shipping.
+
+## 14. Owner emphasis -> platform classification signal (built 2026-08-30)
+Studio owners privately mark what each award type is really worth at their
+studio (Not notable / Normal / Notable / Headline). It never touches public
+figures, it powers a private "Your Highlights" count, and — the reason anyone
+bothers — it tells the AI summary writer what to lead with. Because inflation
+buys nothing public and accuracy buys a better summary, the pooled marks are an
+honest signal of what the field values, feeding canonical award classification
+that we otherwise guess with keyword rules. IP: maybe_patentable.md §A11.

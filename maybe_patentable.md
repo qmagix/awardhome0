@@ -205,6 +205,39 @@ free-standing greeting artifact.
 standalone filing — it is an embodiment cluster on the same artifact family as
 64/142,611. Per the queue rule, file or consciously waive BEFORE shipping.
 
+### A11. Incentive-compatible private weighting that yields a public classification signal (BUILT 2026-08-30, not yet deployed)
+Q's design. Each studio owner privately weights the award types in their own
+history (Not notable / Normal / Notable / Headline). Three properties make the
+combination interesting:
+1. **The weighting cannot move any public number.** The public "Major Awards"
+   figure stays the platform-wide rule (utils/majorAward.js); weights drive
+   only a private "Your Highlights" count.
+2. **The owner gets real private value** — the weighting steers the
+   AI-generated award summary (what to lead with, what to skip), which is the
+   visible payoff that makes the effort worthwhile.
+3. **Therefore the aggregate is credible.** Because inflating weights buys no
+   public advantage, and accuracy buys a better generated narrative, the
+   pooled weights across studios are a *truthful* crowd signal of what the
+   field considers prestigious — fed back into canonical classification
+   (docs/org_top_awards.md, admin award vocab) that the platform previously
+   had to guess with keyword heuristics.
+Claimable shape: eliciting domain expertise via a per-tenant private
+control whose payoff is generative-output steering rather than public score
+adjustment, and aggregating those elicitations into a canonical classification
+for a shared verified-record corpus — i.e., an incentive-compatible labelling
+loop embedded in a product feature, not a survey.
+**Prior art to expect:** collaborative filtering / preference elicitation,
+crowdsourced labelling (reCAPTCHA-style dual-purpose work), personalization
+weights in recommenders, RLHF-ish preference collection. The distinguishing
+combination is the *separation* — private weighting + fixed public statistic +
+generative-steering payoff + aggregation into canonical classification of a
+verified achievement corpus — which is what removes the incentive to lie that
+plagues ordinary crowd rating.
+**Caution:** the value depends on keeping the public figure genuinely
+unmovable; if weights ever leak into public numbers, the aggregate stops being
+credible AND the integrity promise breaks. Keep that boundary in code and in
+the UI copy.
+
 ## Tier B — plausible but weaker (business method or heavy prior art risk)
 
 ### B1. Dark-launch claiming via private single-use tokens (no public unclaimed state)

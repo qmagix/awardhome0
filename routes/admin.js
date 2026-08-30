@@ -1188,6 +1188,33 @@ router.post('/admin/users/:id/toggle-role', requireSuperadmin, async (req, res) 
 });
 
 
+// Aggregate of owner-set award emphasis — the crowd signal that feeds
+// canonical classification (docs/org_top_awards.md, award vocab). Credible
+// precisely because weights can't touch a studio's public numbers, so
+// nobody gains by inflating them (utils/awardWeights.js).
+router.get('/admin/award-emphasis', requireSuperadmin, async (req, res) => {
+  const db = await openDb();
+  try {
+    const rows = await db.all(`
+      SELECT w.award_term,
+             COUNT(*) AS studios,
+             ROUND(AVG(w.weight), 2) AS avg_weight,
+             SUM(CASE WHEN w.weight = 3 THEN 1 ELSE 0 END) AS headline,
+             SUM(CASE WHEN w.weight = 0 THEN 1 ELSE 0 END) AS not_notable
+      FROM studio_award_weights w
+      GROUP BY w.award_term
+      HAVING COUNT(*) >= 1
+      ORDER BY avg_weight DESC, studios DESC
+      LIMIT 300`);
+    res.json({
+      note: 'Owner-set emphasis, pooled. Weights are private to each studio and never affect public figures; use this to tune canonical award classification.',
+      terms: rows,
+    });
+  } catch (e) {
+    res.json({ note: 'No weights recorded yet.', terms: [] });
+  }
+});
+
 router.get('/admin/duplicates', requireSuperadmin, async (req, res) => {
   const db = await openDb();
   await ensureMergeRequestTable(db);
