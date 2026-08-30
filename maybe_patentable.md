@@ -132,8 +132,9 @@ waived (new matter vs 64/142,611).
 ### A10. Award-as-memory-book: heterogeneous, multi-contributor media pages (NEW — not built, captured 2026-08-30)
 Q's framing: **each award IS a book.** The award card is the cover; inside is an
 open-ended, page-by-page set of memory pages — performance photos, VIDEO of the
-routine, the music/song danced to, VOICE messages, thank-you notes, and
-congratulations from teammates, family, teachers, and the wider community.
+routine, an AI-GENERATED celebration score composed from the award's own
+content, VOICE messages, thank-you notes, and congratulations from teammates,
+family, teachers, and the wider community.
 Extends A3 from a fixed 4-page back-stack (certificate → photo → acks →
 colophon) to an unbounded, media-typed book whose pages come from MULTIPLE
 contributors, not just the owner.
@@ -143,7 +144,7 @@ conditional page materialization (absent content = no page), per-page share
 rendering, role-gated content, multi-face continuous flip (claims 16–18).
 **Likely NEW MATTER — the claimable delta:**
 - **Time-based media inside the artifact**: video and audio pages (routine
-  video, the performance's music, spoken voice messages) in a paged award
+  video, the generated score, spoken voice messages) in a paged award
   object — playback state vs. page-turn/flip state is a real mechanism
   question (autoplay on page arrival, pause on flip-away, per-page seek
   position preserved across turns, audio continuing under a page turn as a
@@ -154,6 +155,18 @@ rendering, role-gated content, multi-face continuous flip (claims 16–18).
   invitation/capability scoping (cf. A9's delegated entry), and per-page
   approval before public display — i.e., a crowd-composed keepsake bound to a
   verified competition record.
+- **Generative celebration score conditioned on the achievement record**
+  (Q's clarification 2026-08-30 — explicitly NOT the routine's licensed track):
+  audio synthesized from the book's own structured content — placement and
+  award tier, category/age division, routine title, organization, the sentiment
+  of thank-you notes and congratulations, photo/ack counts, even a season's arc
+  across several awards — parameterized by celebration MOOD (triumphant,
+  tender, funny, nostalgic) and adapted to the learned preferences of the owner
+  and returning viewers. Claimable mechanism: the mapping pipeline (verified
+  award metadata + moderated page content → generation parameters → score)
+  bound to the paged artifact, with mood/preference feedback that re-renders
+  the score for the same award. Sidesteps third-party music licensing
+  entirely — a commercial advantage, not merely a legal one.
 - **Page-type registry / heterogeneous page grammar**: pages of different media
   types composing one flippable artifact with type-specific rendering, sizing
   (the cqw system), and share behavior.
@@ -162,21 +175,31 @@ rendering, role-gated content, multi-face continuous flip (claims 16–18).
 memory-book and tribute-page products (ForeverMissed, Kudoboard, Tribute),
 video-message compilations (VidDay, Tribute.co), yearbook signing apps.
 Kudoboard/Tribute in particular are close on "many people contribute
-congratulations to one page." **The defensible combination is the binding to a
+congratulations to one page." For the generated score: Suno/Udio/MusicGen/AIVA
+(parameter- or text-conditioned music generation) and — closest — Apple Photos
+"Memories" and Google Photos, which auto-assemble montages with mood-matched
+soundtracks; those SELECT from licensed catalogs rather than GENERATE from the
+record's own data, which is the distinction to press." **The defensible combination is the binding to a
 VERIFIED, imported competition award** — the book is the back of an
 authenticated achievement record, with moderation and role gating — not a
 free-standing greeting artifact.
 
 **Build cautions (not IP):**
-- **Music rights**: the song a routine danced to is almost always licensed
-  third-party music. Hosting it is a copyright exposure, not a feature —
-  route through the DMCA agent + notice/takedown machinery (Terms §11) and
-  consider user-uploaded-only with the same moderation gate as photos, or
-  links out rather than hosted audio.
+- **Generated-audio caveats** (the routine's own licensed track stays OUT —
+  that would be copyright exposure, not a feature): check the generator's
+  commercial-use and output-ownership terms; label AI-generated audio as such
+  (consumer trust + FTC disclosure norms); budget cost/latency and cache per
+  award rather than per view; keep generated output inside the same moderation
+  gate as photos and acks.
 - **Video costs**: storage/bandwidth/transcoding dwarf photos; needs a plan
   before it ships (and Litestream/S3 backup implications).
 - **Child-safety surface**: video + voice of minors raises the consent bar
   above the existing photo-consent checkbox; COPPA review with counsel.
+- **Preference learning on minors is its own COPPA question**: behavioral
+  profiling of children to personalize output is a sensitive category. Safer
+  design — learn from the ACCOUNT HOLDER's explicit choices (a parent or studio
+  picking a mood, thumbs-up on a rendered score) stored as declared settings,
+  never from a child's inferred interaction stream.
 
 **Action:** bundle into the P2/follow-on provisional (with A9) rather than a
 standalone filing — it is an embodiment cluster on the same artifact family as
