@@ -106,21 +106,29 @@
               <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
                 <div>
                   <h4 style="margin: 0 0 0.5rem 0; color: white;"><%= set.name %> <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: normal;">(<%= set.profiles.length %> profiles)</span></h4>
-                  <ul style="margin: 0; padding-left: 1.5rem; color: var(--text-muted); font-size: 0.9rem;">
+                  <ul style="margin: 0; padding: 0; list-style: none; color: var(--text-muted); font-size: 0.9rem;">
                     <% set.profiles.forEach((p, idx) => { %>
-                      <li style="margin-bottom: 0.25rem;">
-                        <strong>Profile <%= String.fromCharCode(65 + idx) %>:</strong> 
-                        <span style="color: <%= p.claimed_by_user_id ? '#10b981' : '#ef4444' %>;"><%= p.claimed_by_user_id ? 'Claimed' : 'Unclaimed' %></span>,
-                        DOB: <%= p.birthday || 'N/A' %>,
-                        <%= p.total_awards %> Awards 
-                        <a href="/dancer/<%= p.unique_id %>" target="_blank" style="color: var(--primary); text-decoration: none; font-size: 0.85rem; margin-left: 0.5rem;">[View Profile]</a>
+                      <li style="margin-bottom: 0.35rem;">
+                        <label style="display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                          <input type="checkbox" class="dup-select" data-set="<%= set.name %>" value="<%= p.id %>" checked
+                            title="Untick if this profile is a different dancer — unticked profiles are left untouched"
+                            style="transform: scale(1.15); accent-color: #aa8529;">
+                          <span>
+                            <strong>Profile <%= String.fromCharCode(65 + idx) %>:</strong>
+                            <span style="color: <%= p.claimed_by_user_id ? '#10b981' : '#ef4444' %>;"><%= p.claimed_by_user_id ? 'Claimed' : 'Unclaimed' %></span>,
+                            DOB: <%= p.birthday || 'N/A' %>,
+                            <%= p.total_awards %> Awards
+                          </span>
+                        </label>
+                        <a href="/dancer/<%= p.unique_id %>" data-uid="<%= p.unique_id %>" data-name="<%= set.name %>" onclick="openProfilePreview(this); return false;"
+                          style="color: var(--primary); text-decoration: none; font-size: 0.85rem; margin-left: 0.5rem;">[View Profile]</a>
                       </li>
                     <% }) %>
                   </ul>
                 </div>
-                <div style="display: flex; gap: 0.5rem;">
-                  <button class="btn btn-blue" onclick="cleanDuplicateSet('<%= set.name %>')" style="background: #aa8529; color: white;">1-Click Merge & Clean</button>
-                  <button class="btn" style="background: rgba(255,255,255,0.1); color: white;" onclick="ignoreDuplicateSet('<%= set.name %>')">Mark as Different People</button>
+                <div style="display: flex; gap: 0.5rem; align-items: flex-start;">
+                  <button class="btn btn-blue dup-merge-btn" data-name="<%= set.name %>" onclick="cleanDuplicateSet(this.dataset.name)" style="background: #aa8529; color: white;">Merge Selected (<%= set.profiles.length %>)</button>
+                  <button class="btn" style="background: rgba(255,255,255,0.1); color: white;" data-name="<%= set.name %>" onclick="ignoreDuplicateSet(this.dataset.name)">Mark as Different People</button>
                 </div>
               </div>
             </div>
@@ -128,6 +136,31 @@
         </div>
       </div>
     <% } %>
+
+    <!-- Shared confirm modal, profile preview modal, toast (vanilla) -->
+    <div id="uiConfirmModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 2000; align-items: center; justify-content: center;">
+      <div class="card glass-card" style="max-width: 440px; width: calc(100% - 2rem); padding: 1.75rem;">
+        <h3 id="uiConfirmTitle" style="margin: 0 0 0.75rem 0; color: white;"></h3>
+        <p id="uiConfirmMessage" style="color: var(--text-muted); margin: 0 0 1.5rem 0; line-height: 1.55; white-space: pre-line;"></p>
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+          <button id="uiConfirmCancel" class="btn" style="background: rgba(255,255,255,0.1); color: white;">Cancel</button>
+          <button id="uiConfirmOk" class="btn" style="background: var(--primary); color: #0a0a0a; font-weight: 600;"></button>
+        </div>
+      </div>
+    </div>
+    <div id="profilePreviewModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1900; align-items: center; justify-content: center;">
+      <div class="card glass-card" style="width: min(1000px, calc(100% - 2rem)); height: min(82vh, 900px); padding: 0; display: flex; flex-direction: column; overflow: hidden;">
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+          <strong id="profilePreviewTitle" style="color: white;"></strong>
+          <div style="display: flex; gap: 1rem; align-items: center;">
+            <a id="profilePreviewOpen" href="#" target="_blank" rel="noopener" style="color: var(--primary); font-size: 0.85rem; text-decoration: none;">Open full page &nearr;</a>
+            <button onclick="closeProfilePreview()" class="btn" style="background: rgba(255,255,255,0.1); color: white; padding: 0.25rem 0.7rem;">✕</button>
+          </div>
+        </div>
+        <iframe id="profilePreviewFrame" src="about:blank" style="flex: 1; width: 100%; border: none; background: #0a0a0a;"></iframe>
+      </div>
+    </div>
+    <div id="uiToast" style="display: none; position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%); z-index: 2100; background: rgba(15,23,42,0.96); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; padding: 0.8rem 1.4rem; color: white; max-width: min(90vw, 480px); box-shadow: 0 10px 30px rgba(0,0,0,0.5);"></div>
 
     <!-- Roster Management -->
     <% 
@@ -489,7 +522,7 @@
 
   function openMergeModal() {
     const boxes = checkedMergeBoxes();
-    if (boxes.length !== 2) { alert('Tick the checkboxes next to exactly two dancers first.'); return; }
+    if (boxes.length !== 2) { toast('Tick the checkboxes next to exactly two dancers first.', true); return; }
     const [a, b] = boxes;
     document.getElementById('mergeNameA').textContent = a.dataset.name;
     document.getElementById('mergeDobA').textContent = a.dataset.dob || 'N/A';
@@ -553,44 +586,120 @@
     document.getElementById('summaryModal').style.display = 'block';
   }
 
+  // ---- Shared UI: promise-based confirm modal + toast (replaces alert/confirm) ----
+  function uiConfirm({ title, message, confirmLabel = 'Confirm' }) {
+    return new Promise((resolve) => {
+      const modal = document.getElementById('uiConfirmModal');
+      document.getElementById('uiConfirmTitle').textContent = title;
+      document.getElementById('uiConfirmMessage').textContent = message;
+      const ok = document.getElementById('uiConfirmOk');
+      const cancel = document.getElementById('uiConfirmCancel');
+      ok.textContent = confirmLabel;
+      const done = (v) => { modal.style.display = 'none'; ok.onclick = cancel.onclick = modal.onclick = null; resolve(v); };
+      ok.onclick = () => done(true);
+      cancel.onclick = () => done(false);
+      modal.onclick = (e) => { if (e.target === modal) done(false); };
+      modal.style.display = 'flex';
+    });
+  }
+
+  let toastTimer = null;
+  function toast(msg, isError) {
+    const el = document.getElementById('uiToast');
+    el.textContent = msg;
+    el.style.borderColor = isError ? 'rgba(239, 68, 68, 0.6)' : 'rgba(16, 185, 129, 0.6)';
+    el.style.display = 'block';
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { el.style.display = 'none'; }, 4000);
+  }
+
+  // ---- Profile preview modal (View Profile without leaving the page) ----
+  function openProfilePreview(link) {
+    const uid = link.dataset.uid;
+    document.getElementById('profilePreviewTitle').textContent = link.dataset.name;
+    document.getElementById('profilePreviewOpen').href = '/dancer/' + uid;
+    document.getElementById('profilePreviewFrame').src = '/dancer/' + uid;
+    document.getElementById('profilePreviewModal').style.display = 'flex';
+  }
+  function closeProfilePreview() {
+    document.getElementById('profilePreviewModal').style.display = 'none';
+    document.getElementById('profilePreviewFrame').src = 'about:blank';
+  }
+  document.getElementById('profilePreviewModal').addEventListener('click', function (e) {
+    if (e.target === this) closeProfilePreview();
+  });
+
+  // Keep each set's merge button label in sync with its ticked profiles
+  function dupBoxesFor(name) {
+    return Array.from(document.querySelectorAll('.dup-select')).filter(b => b.dataset.set === name);
+  }
+  document.addEventListener('change', (e) => {
+    if (!e.target.classList || !e.target.classList.contains('dup-select')) return;
+    const name = e.target.dataset.set;
+    const n = dupBoxesFor(name).filter(b => b.checked).length;
+    document.querySelectorAll('.dup-merge-btn').forEach(btn => {
+      if (btn.dataset.name === name) {
+        btn.textContent = `Merge Selected (${n})`;
+        btn.disabled = n < 2;
+        btn.style.opacity = n < 2 ? 0.5 : 1;
+      }
+    });
+  });
+
   async function cleanDuplicateSet(name) {
-    if (!confirm(`Are you sure you want to merge all profiles for "${name}" into a single Primary profile?`)) return;
-    
+    const boxes = dupBoxesFor(name);
+    const selected = boxes.filter(b => b.checked).map(b => parseInt(b.value, 10));
+    if (selected.length < 2) { toast('Tick at least two profiles to merge.', true); return; }
+    const partial = selected.length < boxes.length;
+    const ok = await uiConfirm({
+      title: `Merge ${selected.length} profiles of "${name}"?`,
+      message: `The ${selected.length} ticked profiles become one, keeping the claimed (or most-awarded) profile as primary — all awards and studio links follow it.`
+        + (partial ? `\n\nThe ${boxes.length - selected.length} unticked profile(s) are left untouched: after the merge you can merge them separately or use "Mark as Different People".` : ''),
+      confirmLabel: 'Merge profiles',
+    });
+    if (!ok) return;
+
     try {
       const res = await fetch(`/manage/studio/<%= studio.id %>/roster/clean-duplicate-set`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ duplicate_name: name })
+        body: JSON.stringify({ duplicate_name: name, merge_ids: selected })
       });
-      const data = await res.json();
-      if (data.success) {
-        alert(`Successfully merged ${data.merged} duplicate(s) into the Primary profile!`);
-        window.location.reload();
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
+        toast(`Merged ${data.merged} duplicate profile(s) into the primary.`);
+        setTimeout(() => window.location.reload(), 900);
       } else {
-        alert(data.error || 'Failed to merge duplicates.');
+        toast(data.error || 'Failed to merge duplicates.', true);
       }
     } catch (err) {
-      alert('Error connecting to server.');
+      toast('Error connecting to server.', true);
     }
   }
 
   async function ignoreDuplicateSet(name) {
-    if (!confirm(`Are you sure "${name}" represents two DIFFERENT people on your roster? This will permanently dismiss this warning.`)) return;
-    
+    const ok = await uiConfirm({
+      title: 'Different people?',
+      message: `Confirm that the "${name}" profiles on your roster are different dancers who happen to share a name — we'll stop flagging this name for your studio.`,
+      confirmLabel: 'Yes, different people',
+    });
+    if (!ok) return;
+
     try {
       const res = await fetch(`/manage/studio/<%= studio.id %>/roster/ignore-duplicate-set`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ duplicate_name: name })
       });
-      const data = await res.json();
-      if (data.success) {
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
         document.getElementById('dupSet-' + encodeURIComponent(name)).style.display = 'none';
+        toast(`Got it — "${name}" won't be flagged again.`);
       } else {
-        alert(data.error || 'Failed to dismiss warning.');
+        toast(data.error || 'Failed to dismiss warning.', true);
       }
     } catch (err) {
-      alert('Error connecting to server.');
+      toast('Error connecting to server.', true);
     }
   }
 
@@ -631,10 +740,10 @@
       if (data.success) {
         window.location.reload();
       } else {
-        alert(data.error || 'Failed to toggle status.');
+        toast(data.error || 'Failed to toggle status.', true);
       }
     } catch (err) {
-      alert('Error connecting to server.');
+      toast('Error connecting to server.', true);
     }
   }
 

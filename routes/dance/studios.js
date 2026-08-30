@@ -702,7 +702,7 @@ router.post('/manage/studio/:id/roster/merge', requireAuth, requireStudioOwner, 
 
 // Clean Duplicate Set (1-Click Merge)
 router.post('/manage/studio/:id/roster/clean-duplicate-set', requireAuth, requireStudioOwner, async (req, res) => {
-  const { duplicate_name } = req.body;
+  const { duplicate_name, merge_ids } = req.body;
   const db = await openDb();
 
   const studio = req.studio;
@@ -711,7 +711,7 @@ router.post('/manage/studio/:id/roster/clean-duplicate-set', requireAuth, requir
 
   try {
     // Fetch all profiles for this exact name in this studio
-    const profiles = await db.all(`
+    let profiles = await db.all(`
       SELECT d.id, d.claimed_by_user_id,
              (SELECT COUNT(DISTINCT a.id) FROM awards a
                 LEFT JOIN award_dancers ad ON ad.award_id = a.id AND ad.dancer_id = d.id
@@ -721,7 +721,15 @@ router.post('/manage/studio/:id/roster/clean-duplicate-set', requireAuth, requir
       WHERE ds.studio_id = ? AND LOWER(d.name) = ?
     `, [req.params.id, duplicate_name.trim().toLowerCase()]);
 
-    if (profiles.length < 2) return res.status(400).json({ error: 'No duplicates found for this name.' });
+    // Optional subset merge: only the ticked profiles are merged; unticked
+    // ones are left untouched (the widget re-renders with them, so twins
+    // can be merged pair-by-pair, then marked as different people).
+    // Filtering the name-scoped list also validates the ids belong here.
+    if (Array.isArray(merge_ids) && merge_ids.length > 0) {
+      const wanted = new Set(merge_ids.map(Number));
+      profiles = profiles.filter(p => wanted.has(p.id));
+    }
+    if (profiles.length < 2) return res.status(400).json({ error: 'Select at least two profiles of this name to merge.' });
 
     // Determine Primary
     // Priority 1: Claimed

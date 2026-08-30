@@ -470,3 +470,14 @@ lives on the owner's Action History page (/manage/studio/:id/activity —
 merge-request history incl. dismissed + a friendly-labeled studio_activity
 feed). Dismissed sources stay excluded from Merge Suggestions. FAQ: studio
 admin §18.
+
+## Roster duplicate cleanup, selective merge (2026-08-29)
+The roster page's Suspected Duplicates widget now supports partial merges:
+every profile row has a checkbox (default: all ticked); "Merge Selected (N)"
+merges only the ticked profiles (claimed > most-awarded picks the primary),
+leaving unticked ones untouched so the set re-renders and twins can be merged
+pair-by-pair, then "Mark as Different People" ends the flag (endpoint accepts
+optional merge_ids, validated against the name+studio scope). [View Profile]
+opens the dancer's trophy case in an iframe modal (logged-in sessions pass the
+beta gate) instead of a new tab. All alert()/confirm() on the roster page
+replaced by a shared promise-based confirm modal + toast. FAQ: studio admin §19.
