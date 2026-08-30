@@ -90,7 +90,7 @@
         <p class="subtitle">Manage your team (<%= roster.filter(d => d.status !== 'alumni').length %> Active Dancers).</p>
       </div>
       <div style="display: flex; gap: 1rem;">
-        <button id="mergeBtn" class="btn" disabled
+        <button id="mergeBtn" class="btn"
           title="Tick the checkbox next to two dancers who are really the same person, then compare and merge them"
           style="background: var(--primary); color: #0a0a0a;" onclick="openMergeModal()">Compare &amp; Merge — select 2 dancers</button>
         <button class="btn btn-blue" onclick="window.location.href='/manage/studio/<%= studio.id %>/roster/export'">Export Roster CSV</button>
@@ -505,9 +505,11 @@
   }
   function updateMergeBtn() {
     const n = checkedMergeBoxes().length;
-    mergeBtn.disabled = n !== 2;
+    // Never `disabled`: a dead button that swallows clicks silently is the
+    // worst failure mode (the user can't tell it from a broken page). It
+    // stays clickable and dim, and the guard in openMergeModal explains.
     mergeBtn.style.opacity = n === 2 ? '1' : '0.55';
-    mergeBtn.style.cursor = n === 2 ? 'pointer' : 'not-allowed';
+    mergeBtn.style.cursor = 'pointer';
     mergeBtn.textContent = n === 2 ? 'Compare & Merge (2 selected)'
       : n === 0 ? 'Compare & Merge — select 2 dancers'
       : n === 1 ? 'Compare & Merge — tick 1 more dancer'
@@ -522,7 +524,15 @@
 
   function openMergeModal() {
     const boxes = checkedMergeBoxes();
-    if (boxes.length !== 2) { toast('Tick the checkboxes next to exactly two dancers first.', true); return; }
+    if (boxes.length !== 2) {
+      const n = boxes.length;
+      const hidden = boxes.filter(b => b.offsetParent === null).length;
+      toast(n === 0 ? 'Tick the checkbox next to two dancers who are the same person.'
+        : n === 1 ? 'Tick one more dancer — comparison needs exactly two.'
+        : `You have ${n} ticked — untick ${n - 2} so exactly two remain.`
+          + (hidden ? ` (${hidden} of them ${hidden === 1 ? 'is' : 'are'} on the other tab.)` : ''), true);
+      return;
+    }
     const [a, b] = boxes;
     document.getElementById('mergeNameA').textContent = a.dataset.name;
     document.getElementById('mergeDobA').textContent = a.dataset.dob || 'N/A';

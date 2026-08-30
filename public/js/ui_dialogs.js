@@ -22,7 +22,11 @@
     if (document.getElementById('uiToast')) return;
     const el = document.createElement('div');
     el.id = 'uiToast';
-    el.style.cssText = 'display:none; position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); z-index:2100; background:rgba(15,23,42,0.96); border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:0.8rem 1.4rem; color:white; max-width:min(90vw, 480px); box-shadow:0 10px 30px rgba(0,0,0,0.5);';
+    // pointer-events:none — the toast sits at bottom-center over the same
+    // band as floating action buttons (e.g. the roster's Compare & Merge at
+    // bottom-right); with pointer events it silently swallowed their clicks
+    // for its 4s lifetime. Nothing in a toast is interactive.
+    el.style.cssText = 'display:none; pointer-events:none; position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); z-index:2100; background:rgba(15,23,42,0.96); border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:0.8rem 1.4rem; color:white; max-width:min(90vw, 480px); box-shadow:0 10px 30px rgba(0,0,0,0.5);';
     document.body.appendChild(el);
   }
 
