@@ -1624,10 +1624,14 @@ router.get('/my-studio', requireAuth, async (req, res) => {
 // dancers are real (two kids named Emma), so nothing links without the
 // director seeing what will happen.
 
-// Awards belonging to one routine-year for this studio (solo-typed awards
-// excluded — solos come with dancer names from the source).
+// Awards belonging to one routine-year for this studio. Solos are excluded
+// two ways: the "solo" word heuristic, AND dancer_id IS NULL — by the data
+// rules only solo awards carry dancer_id, so a linked solo can never leak
+// onto the group page even when its category doesn't say "solo" (e.g.
+// StarQuest "Classic Emerging Artist Teen Dancer" titles).
 const GROUP_AWARD_FILTER = `
   a.studio_id = ? AND TRIM(IFNULL(a.performance_name, '')) = ?
+  AND a.dancer_id IS NULL
   AND LOWER(IFNULL(a.award_type, '')) NOT LIKE '%solo%'
   AND LOWER(IFNULL(a.category, '')) NOT LIKE '%solo%'`;
 
@@ -1663,6 +1667,7 @@ router.get('/manage/studio/:id/group-dancers', requireAuth, requireStudioOwner, 
            GROUP_CONCAT(DISTINCT IFNULL(e.name, 'Self-reported')) AS event_names
     FROM awards a LEFT JOIN events e ON a.event_id = e.id
     WHERE a.studio_id = ? AND TRIM(IFNULL(a.performance_name, '')) != ''
+      AND a.dancer_id IS NULL
       AND LOWER(IFNULL(a.award_type, '')) NOT LIKE '%solo%'
       AND LOWER(IFNULL(a.category, '')) NOT LIKE '%solo%'
     GROUP BY TRIM(a.performance_name), e.year
@@ -1683,6 +1688,7 @@ router.get('/manage/studio/:id/group-dancers', requireAuth, requireStudioOwner, 
     JOIN dancers d ON d.id = ad.dancer_id
     LEFT JOIN dancer_studios ds ON ds.dancer_id = d.id AND ds.studio_id = a.studio_id
     WHERE a.studio_id = ? AND TRIM(IFNULL(a.performance_name, '')) != ''
+      AND a.dancer_id IS NULL
       AND LOWER(IFNULL(a.award_type, '')) NOT LIKE '%solo%'
       AND LOWER(IFNULL(a.category, '')) NOT LIKE '%solo%'
     GROUP BY TRIM(a.performance_name), e.year, d.id
@@ -1714,6 +1720,7 @@ router.get('/manage/studio/:id/group-dancers', requireAuth, requireStudioOwner, 
     FROM awards a LEFT JOIN events e ON a.event_id = e.id
     LEFT JOIN award_dancers ad ON ad.award_id = a.id
     WHERE a.studio_id = ? AND TRIM(IFNULL(a.performance_name, '')) != ''
+      AND a.dancer_id IS NULL
       AND LOWER(IFNULL(a.award_type, '')) NOT LIKE '%solo%'
       AND LOWER(IFNULL(a.category, '')) NOT LIKE '%solo%'
     GROUP BY TRIM(a.performance_name), e.year, e.id
