@@ -610,6 +610,10 @@ async function initDb() {
   
   // Migrations
   try { await db.exec('ALTER TABLE studio_merge_requests ADD COLUMN dismissed_at DATETIME'); } catch(e) {}
+  // Password reset: SHA-256 of the emailed token (never the token itself —
+  // a DB leak must not enable account takeover), plus a short expiry.
+  try { await db.exec('ALTER TABLE users ADD COLUMN reset_token_hash TEXT'); } catch(e) {}
+  try { await db.exec('ALTER TABLE users ADD COLUMN reset_token_expires DATETIME'); } catch(e) {}
   // Machine-canonical routine key (utils/routineKey.js); filled by
   // scripts/sweep_routine_keys.js — see docs/db_operations.md.
   try { await db.exec('ALTER TABLE awards ADD COLUMN performance_name_key TEXT'); } catch(e) {}

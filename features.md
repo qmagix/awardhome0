@@ -594,3 +594,15 @@ same-name set (claimed > most-awarded primary, per-set transaction). Rails:
 sets with >1 claimed profile skipped for manual review (reported in the
 toast); "different people" exceptions excluded; activity-logged
 (roster_batch_merged). FAQ studio admin §19 updated.
+
+## Password reset (2026-08-30)
+Previously ABSENT — a forgotten password meant emailing support and a
+hand-edited row. /forgot-password (linked from the login page) emails a
+single-use link; /reset-password/:token sets a new one. Security: the emailed
+token is 32 random bytes but only its SHA-256 hash is stored (a DB leak can't
+be replayed), 1-hour expiry, cleared on use, rate-limited via authLimiter, and
+the request endpoint answers identically for known and unknown emails (no
+account enumeration). A successful reset also sets is_verified (clicking the
+emailed link proves address control — otherwise an unverified user who forgot
+their password stayed stuck) and regenerates the session so a stolen session
+can't survive the change. FAQ: dancer + studio admin.

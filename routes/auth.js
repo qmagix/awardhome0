@@ -237,6 +237,100 @@ router.post('/resend-verification', authLimiter, async (req, res) => {
 });
 
 
+// ---- Password reset ----
+// Families and studio directors lock themselves out; without this the only
+// recovery is a support email and a hand-edited DB row. Rules: the emailed
+// token is random and stored ONLY as a SHA-256 hash, expires in 1 hour, is
+// single-use, and the request endpoint always answers identically so it
+// can't be used to discover which emails have accounts.
+
+const RESET_TTL_MS = 60 * 60 * 1000;
+const hashResetToken = (t) => crypto.createHash('sha256').update(String(t)).digest('hex');
+
+router.get('/forgot-password', (req, res) => {
+  res.render('forgot_password', { sent: false, error: null, pageTitle: 'Reset your password' });
+});
+
+router.post('/forgot-password', authLimiter, async (req, res) => {
+  const email = String((req.body && req.body.email) || '').trim();
+  const db = await openDb();
+  // Same response either way — no account enumeration.
+  const done = () => res.render('forgot_password', { sent: true, error: null, pageTitle: 'Reset your password' });
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.render('forgot_password', { sent: false, error: 'Please enter a valid email address.', pageTitle: 'Reset your password' });
+  }
+
+  const user = await db.get('SELECT id, email FROM users WHERE email = ?', [email]);
+  if (!user) return done();
+
+  const token = crypto.randomBytes(32).toString('hex');
+  await db.run('UPDATE users SET reset_token_hash = ?, reset_token_expires = ? WHERE id = ?',
+    [hashResetToken(token), new Date(Date.now() + RESET_TTL_MS).toISOString(), user.id]);
+
+  const link = `${BASE_URL}/reset-password/${token}`;
+  if (process.env.EMAIL_PROVIDER) {
+    const result = await sendEmail({
+      to: user.email,
+      subject: 'Reset your AwardHome password',
+      html: `<p>Hi,</p>
+        <p>Someone (hopefully you) asked to reset the password for your AwardHome account.</p>
+        <p><a href="${link}">Choose a new password</a></p>
+        <p>This link works once and expires in an hour. If you didn't ask for it, you can ignore
+        this email — your password stays as it is.</p>`,
+    });
+    if (!result.success) console.error('Failed to send password reset email:', result.error);
+  } else {
+    console.log(`[DEV MODE] Password reset link for ${user.email}: ${link}`);
+  }
+  return done();
+});
+
+async function userForResetToken(db, token) {
+  if (!token) return null;
+  return db.get(
+    'SELECT id, email FROM users WHERE reset_token_hash = ? AND reset_token_expires > ?',
+    [hashResetToken(token), new Date().toISOString()]);
+}
+
+router.get('/reset-password/:token', async (req, res) => {
+  const db = await openDb();
+  const user = await userForResetToken(db, req.params.token);
+  if (!user) {
+    return res.status(410).render('reset_password', {
+      expired: true, token: null, error: null, pageTitle: 'Reset your password' });
+  }
+  res.render('reset_password', { expired: false, token: req.params.token, error: null, pageTitle: 'Reset your password' });
+});
+
+router.post('/reset-password/:token', authLimiter, async (req, res) => {
+  const db = await openDb();
+  const user = await userForResetToken(db, req.params.token);
+  if (!user) {
+    return res.status(410).render('reset_password', {
+      expired: true, token: null, error: null, pageTitle: 'Reset your password' });
+  }
+  const { password, password_confirm } = req.body || {};
+  const fail = (error) => res.status(400).render('reset_password', {
+    expired: false, token: req.params.token, error, pageTitle: 'Reset your password' });
+  if (!password || password.length < 8) return fail('Password must be at least 8 characters.');
+  if (password !== password_confirm) return fail('Those passwords do not match.');
+
+  const hash = await bcrypt.hash(password, 10);
+  // Clicking the emailed link proves control of the address, so a reset
+  // also verifies the account — otherwise an unverified user who forgot
+  // their password would still be stuck after resetting it.
+  await db.run(
+    'UPDATE users SET password_hash = ?, reset_token_hash = NULL, reset_token_expires = NULL, is_verified = 1 WHERE id = ?',
+    [hash, user.id]);
+
+  // Drop any existing session so an attacker's stolen session can't survive
+  // the password change; the owner signs in fresh below.
+  req.session.regenerate(() => {
+    res.render('login', { next: null, message: 'Your password is updated — sign in with it below.' });
+  });
+});
+
+
 router.get('/logout', (req, res) => {
   req.session.destroy();
   res.redirect('/');
