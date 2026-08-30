@@ -29,6 +29,21 @@ function routineKeySql(alias = 'a') {
 // carry the preferred display spelling), so removing an alias fully
 // restores machine behavior via resweepStudioKeys.
 
+// Owner's "nothing missing here" assertion for a routine-year the system
+// can't judge (e.g. a NexStar solo whose dancer was never published).
+async function ensureRoutineChecksTable(db) {
+  await db.run(`
+    CREATE TABLE IF NOT EXISTS studio_routine_checks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      studio_id INTEGER NOT NULL REFERENCES studios(id),
+      routine_key TEXT NOT NULL,
+      year TEXT NOT NULL,
+      created_by INTEGER REFERENCES users(id),
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(studio_id, routine_key, year)
+    )`);
+}
+
 async function ensureRoutineAliasTable(db) {
   await db.run(`
     CREATE TABLE IF NOT EXISTS studio_routine_aliases (
@@ -75,4 +90,4 @@ async function resweepStudioKeys(db, studioId) {
   return changed;
 }
 
-module.exports = { canonicalizeRoutine, routineKeySql, ensureRoutineAliasTable, resolveRoutineKey, resweepStudioKeys };
+module.exports = { canonicalizeRoutine, routineKeySql, ensureRoutineAliasTable, ensureRoutineChecksTable, resolveRoutineKey, resweepStudioKeys };

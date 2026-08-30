@@ -19,7 +19,7 @@
         </li>
         <li>
           <a href="/manage/studio/<%= studio.id %>/group-dancers" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: white; background: rgba(212, 175, 55, 0.1); border-left: 3px solid var(--primary); font-weight: 600;">
-            🎭 Routines Missing Dancers<% if (typeof missingRoutinesCount !== 'undefined' && missingRoutinesCount > 0) { %> <span style="background: rgba(245,158,11,0.2); color: #fbbf24; border-radius: 10px; padding: 0.05rem 0.5rem; font-size: 0.75rem; font-weight: 700;"><%= missingRoutinesCount %></span><% } %>
+            🎭 Check Routine Dancers<% if (typeof missingRoutinesCount !== 'undefined' && missingRoutinesCount > 0) { %> <span style="background: rgba(245,158,11,0.2); color: #fbbf24; border-radius: 10px; padding: 0.05rem 0.5rem; font-size: 0.75rem; font-weight: 700;"><%= missingRoutinesCount %></span><% } %>
           </a>
         </li>
         <li>
@@ -63,26 +63,44 @@
   <!-- Main Content -->
   <div style="flex: 1; min-width: 0; margin-bottom: 4rem;">
     <div class="header-section" style="margin-bottom: 1rem;">
-      <h1 style="margin-bottom: 0.25rem;">🎭 Routines Missing Dancers<% if (typeof missingRoutinesCount !== 'undefined' && missingRoutinesCount > 0) { %> <span style="background: rgba(245,158,11,0.2); color: #fbbf24; border-radius: 10px; padding: 0.05rem 0.5rem; font-size: 0.75rem; font-weight: 700;"><%= missingRoutinesCount %></span><% } %></h1>
+      <h1 style="margin-bottom: 0.25rem;">🎭 Check Routine Dancers<% if (typeof missingRoutinesCount !== 'undefined' && missingRoutinesCount > 0) { %> <span style="background: rgba(245,158,11,0.2); color: #fbbf24; border-radius: 10px; padding: 0.05rem 0.5rem; font-size: 0.75rem; font-weight: 700;"><%= missingRoutinesCount %></span><% } %></h1>
       <p class="subtitle" style="margin: 0;">
         Routines with awards that aren't credited to dancers yet — usually because the
-        competition never published the names. List each routine's cast so every
-        dancer gets these wins on their own trophy case.
+        competition never published the names. List each routine's cast so every dancer
+        gets these wins on their own trophy case; if nothing is actually missing (say,
+        a solo whose competition never printed the name), mark it complete.
       </p>
     </div>
 
-    <% if (routines.length === 0) { %>
+    <% if (totalCount === 0) { %>
       <div class="card glass-card" style="padding: 2.5rem; text-align: center;">
-        <p style="margin: 0; color: var(--text-muted);">No group routines found for your studio yet.</p>
+        <p style="margin: 0; color: var(--text-muted);">No routines found for your studio yet.</p>
       </div>
     <% } else { %>
-      <div class="card glass-card" style="padding: 1rem 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem;">
-        <div style="flex: 1;">
-          <strong style="color: #fbbf24;"><%= doneCount %> of <%= routines.length %></strong>
-          <span style="color: var(--text-muted);">routines have dancers listed.</span>
+      <div class="card glass-card" style="padding: 1rem 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 240px;">
+          <% if (openCount === 0) { %>
+            <strong style="color: #34d399;">🎉 All <%= totalCount %> routines are checked</strong>
+            <span style="color: var(--text-muted);">— nothing waiting.</span>
+          <% } else { %>
+            <strong style="color: #fbbf24;"><%= openCount %></strong>
+            <span style="color: var(--text-muted);">of <%= totalCount %> routines still to check · <%= doneCount %> done.</span>
+          <% } %>
+          <div style="margin-top: 0.25rem;">
+            <% if (showAll) { %>
+              <a href="/manage/studio/<%= studio.id %>/group-dancers" style="color: var(--primary); font-size: 0.85rem;">Show only routines needing attention</a>
+            <% } else { %>
+              <a href="/manage/studio/<%= studio.id %>/group-dancers?all=1" style="color: var(--primary); font-size: 0.85rem;">Show all <%= totalCount %> routines (including completed)</a>
+            <% } %>
+          </div>
         </div>
         <small style="color: var(--text-muted);">Paste names — one per line or comma-separated — then preview before anything saves.</small>
       </div>
+      <% if (routines.length === 0 && openCount === 0) { %>
+        <div class="card glass-card" style="padding: 2rem; text-align: center;">
+          <p style="margin: 0; color: var(--text-muted);">Nothing needs attention — every routine either has its dancers or was marked complete. 🎉</p>
+        </div>
+      <% } %>
 
       <div style="display: flex; flex-wrap: wrap; gap: 1rem; margin: -0.5rem 0 1.5rem 0.25rem; font-size: 0.8rem; color: var(--text-muted);">
         <span><span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: rgba(212,175,55,0.5); vertical-align: middle;"></span> from competition results</span>
@@ -108,13 +126,22 @@
                   <% } %>
                 </div>
               </div>
-              <% if (r.cast.length === 0) { %>
-                <span style="color: #f87171; font-size: 0.85rem; font-weight: 600;">No dancers listed yet</span>
-              <% } else if (!r.covered) { %>
-                <span style="color: #fbbf24; font-size: 0.85rem; font-weight: 600;">◐ <%= r.events.filter(ev => ev.covered).length %> of <%= r.events.length %> events have dancers</span>
-              <% } else { %>
-                <span style="color: #34d399; font-size: 0.85rem; font-weight: 600;">✓ <%= r.cast.length %> dancer<%= r.cast.length === 1 ? '' : 's' %></span>
-              <% } %>
+              <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                <% if (r.checked) { %>
+                  <span style="color: #34d399; font-size: 0.85rem; font-weight: 600;">✓ Marked complete</span>
+                  <button type="button" class="gd-uncomplete btn" style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: var(--text-muted); padding: 0.2rem 0.6rem; font-size: 0.78rem;">Undo</button>
+                <% } else { %>
+                  <% if (r.cast.length === 0) { %>
+                    <span style="color: #f87171; font-size: 0.85rem; font-weight: 600;">No dancers listed yet</span>
+                  <% } else if (!r.covered) { %>
+                    <span style="color: #fbbf24; font-size: 0.85rem; font-weight: 600;">◐ <%= r.events.filter(ev => ev.covered).length %> of <%= r.events.length %> events have dancers</span>
+                  <% } else { %>
+                    <span style="color: #34d399; font-size: 0.85rem; font-weight: 600;">✓ <%= r.cast.length %> dancer<%= r.cast.length === 1 ? '' : 's' %></span>
+                  <% } %>
+                  <button type="button" class="gd-complete btn" title="Nothing missing here — remove this routine from the check list (undoable)"
+                    style="background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.4); color: #34d399; padding: 0.2rem 0.7rem; font-size: 0.78rem;">✓ Mark complete</button>
+                <% } %>
+              </div>
             </div>
 
             <% if (r.events.length > 1) { %>
@@ -278,6 +305,29 @@
           + (data.skippedRemoved ? ' Previously-removed dancers were left removed.' : ''));
         setTimeout(() => location.reload(), 900);
       } finally { e.target.disabled = false; }
+    }
+
+    if (e.target.classList.contains('gd-complete')) {
+      const ok = await uiConfirm({
+        title: 'Mark this routine complete?',
+        message: 'It leaves the check list (and the sidebar count). Nothing else changes — you can undo from "Show all routines" or the All Routines page.',
+        confirmLabel: 'Mark complete',
+      });
+      if (!ok) return;
+      const res = await fetch(base + '/complete', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(ctx)
+      });
+      if (res.ok) { toast('Marked complete.'); setTimeout(() => location.reload(), 700); }
+      else toast('Could not save — please try again.', true);
+    }
+
+    if (e.target.classList.contains('gd-uncomplete')) {
+      const res = await fetch(base + '/uncomplete', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(ctx)
+      });
+      if (res.ok) location.reload(); else toast('Could not undo — please try again.', true);
     }
 
     if (e.target.classList.contains('gd-remove')) {

@@ -19,7 +19,7 @@
         </li>
         <li>
           <a href="/manage/studio/<%= studio.id %>/group-dancers" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: var(--text-muted); transition: background 0.2s;">
-            🎭 Routines Missing Dancers<% if (typeof missingRoutinesCount !== 'undefined' && missingRoutinesCount > 0) { %> <span style="background: rgba(245,158,11,0.2); color: #fbbf24; border-radius: 10px; padding: 0.05rem 0.5rem; font-size: 0.75rem; font-weight: 700;"><%= missingRoutinesCount %></span><% } %>
+            🎭 Check Routine Dancers<% if (typeof missingRoutinesCount !== 'undefined' && missingRoutinesCount > 0) { %> <span style="background: rgba(245,158,11,0.2); color: #fbbf24; border-radius: 10px; padding: 0.05rem 0.5rem; font-size: 0.75rem; font-weight: 700;"><%= missingRoutinesCount %></span><% } %>
           </a>
         </li>
         <li>
@@ -106,7 +106,11 @@
                 <td><span class="badge"><%= r.award_count %></span></td>
                 <td style="color: var(--text-muted); font-size: 0.88rem; max-width: 320px;"><%= r.dancers || '—' %></td>
                 <td>
-                  <% if (r.uncredited_awards > 0) { %>
+                  <% if (r.checked) { %>
+                    <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">✓ marked complete</span>
+                    <button class="btn" onclick="uncheckRoutine(this)" data-routine="<%= r.routine %>" data-year="<%= r.year || 'Undated' %>"
+                      style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: var(--text-muted); padding: 0.15rem 0.5rem; font-size: 0.75rem; margin-left: 0.3rem;">Undo</button>
+                  <% } else if (r.uncredited_awards > 0) { %>
                     <a href="/manage/studio/<%= studio.id %>/group-dancers" style="text-decoration: none;">
                       <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24;"><%= r.uncredited_awards %> award<%= r.uncredited_awards === 1 ? '' : 's' %> missing dancers</span>
                     </a>
@@ -240,6 +244,14 @@
     } else {
       toast(data.error || 'Could not save — please try again.', true);
     }
+  }
+
+  async function uncheckRoutine(btn) {
+    const res = await fetch('/manage/studio/<%= studio.id %>/group-dancers/uncomplete', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ routine: btn.dataset.routine, year: btn.dataset.year }),
+    });
+    if (res.ok) location.reload(); else toast('Could not undo — please try again.', true);
   }
 
   async function removeAlias(id) {

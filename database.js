@@ -94,6 +94,15 @@ async function initDb() {
       FOREIGN KEY(user_id) REFERENCES users(id),
       FOREIGN KEY(studio_id) REFERENCES studios(id)
     );
+    CREATE TABLE IF NOT EXISTS studio_routine_checks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      studio_id INTEGER NOT NULL REFERENCES studios(id),
+      routine_key TEXT NOT NULL,
+      year TEXT NOT NULL,
+      created_by INTEGER REFERENCES users(id),
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(studio_id, routine_key, year)
+    );
     CREATE TABLE IF NOT EXISTS studio_routine_aliases (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       studio_id INTEGER NOT NULL REFERENCES studios(id),

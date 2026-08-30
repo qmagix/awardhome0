@@ -5,7 +5,7 @@ const { requireAuth, requireStudioOwner } = require('../../middleware/auth');
 const { logStudioActivity } = require('../../utils/activity');
 const { approveDancerClaim, rejectDancerClaim, notifyRosterAttach } = require('../../utils/claims');
 const { ensureMergeRequestTable } = require('../../utils/studioMerge');
-const { canonicalizeRoutine, routineKeySql, ensureRoutineAliasTable, resolveRoutineKey, resweepStudioKeys } = require('../../utils/routineKey');
+const { canonicalizeRoutine, routineKeySql, ensureRoutineAliasTable, ensureRoutineChecksTable, resolveRoutineKey, resweepStudioKeys } = require('../../utils/routineKey');
 const { sendEmail } = require('../../utils/mailer');
 const multer = require('multer');
 // CSV imports only (roster + awards). Rejections surface as 400s via the
@@ -29,9 +29,10 @@ router.use('/manage/studio/:id', async (req, res, next) => {
   if (req.method !== 'GET') return next();
   try {
     const db = await openDb();
+    await ensureRoutineChecksTable(db);
     const row = await db.get(`
       WITH per_event AS (
-        SELECT IFNULL(a.performance_name_key, LOWER(TRIM(IFNULL(a.performance_name, '')))) rn, IFNULL(e.year, '-') yr, IFNULL(a.event_id, 0) ev,
+        SELECT IFNULL(a.performance_name_key, LOWER(TRIM(IFNULL(a.performance_name, '')))) rn, IFNULL(e.year, 'Undated') yr, IFNULL(a.event_id, 0) ev,
                MAX(CASE WHEN ad.id IS NOT NULL OR a.dancer_id IS NOT NULL THEN 1 ELSE 0 END) covered,
                MAX(CASE WHEN a.dancer_id IS NULL
                          AND LOWER(IFNULL(a.award_type, '')) NOT LIKE '%solo%'
@@ -42,8 +43,10 @@ router.use('/manage/studio/:id', async (req, res, next) => {
         GROUP BY rn, yr, ev)
       SELECT COUNT(*) AS n FROM (
         SELECT rn, yr FROM per_event GROUP BY rn, yr
-        HAVING MAX(groupish) = 1 AND MIN(covered) = 0)
-    `, [parseInt(req.params.id, 10) || 0]);
+        HAVING MAX(groupish) = 1 AND MIN(covered) = 0) g
+      WHERE NOT EXISTS (SELECT 1 FROM studio_routine_checks c
+                         WHERE c.studio_id = ? AND c.routine_key = g.rn AND c.year = g.yr)
+    `, [parseInt(req.params.id, 10) || 0, parseInt(req.params.id, 10) || 0]);
     res.locals.missingRoutinesCount = row ? row.n : 0;
   } catch (e) { res.locals.missingRoutinesCount = 0; }
   next();
@@ -217,6 +220,7 @@ const ACTIVITY_LABELS = {
   group_cast_added: 'Dancers linked to a group routine',
   group_cast_synced: 'Group routine cast synced across events',
   routine_spelling_merged: 'Routine spellings merged / corrected',
+  routine_marked_complete: 'Routine marked complete (dancers checked)',
   routine_alias_removed: 'Routine spelling merge undone',
   profile_update: 'Studio profile updated',
   widget_embed: 'Awards widget embedded',
@@ -1728,6 +1732,10 @@ router.get('/manage/studio/:id/routines', requireAuth, requireStudioOwner, async
   routines.forEach(r => { r.dancers = dancerMap[r.routine_key + '|||' + r.year] || ''; });
 
   await ensureRoutineAliasTable(db);
+  await ensureRoutineChecksTable(db);
+  const checkRows = await db.all('SELECT routine_key, year FROM studio_routine_checks WHERE studio_id = ?', [req.studio.id]);
+  const checkSet = new Set(checkRows.map(c => c.routine_key + '|||' + c.year));
+  routines.forEach(r => { r.checked = checkSet.has(r.routine_key + '|||' + (r.year || 'Undated')); });
   const aliases = await db.all(
     'SELECT id, from_key, to_key, display_name FROM studio_routine_aliases WHERE studio_id = ? ORDER BY to_key, from_key', [req.studio.id]);
   const displayMap = {};
@@ -1903,14 +1911,54 @@ router.get('/manage/studio/:id/group-dancers', requireAuth, requireStudioOwner, 
     r.covered = r.events.length ? r.events.every(ev => ev.covered) : r.cast.length > 0;
   });
 
-  // Routines with uncovered events first — that's the work to be done
-  routines.sort((a, b) => a.covered - b.covered);
-  const doneCount = routines.filter(r => r.covered).length;
+  // Owner "mark complete" assertions hide routines the system can't judge
+  await ensureRoutineChecksTable(db);
+  const checkRows = await db.all(
+    'SELECT routine_key, year FROM studio_routine_checks WHERE studio_id = ?', [studio.id]);
+  const checkSet = new Set(checkRows.map(c => c.routine_key + '|||' + c.year));
+  routines.forEach(r => { r.checked = checkSet.has(r.routine_key + '|||' + r.year); });
+
+  // The page is a work queue: only open items by default; ?all=1 shows
+  // everything (covered + marked-complete stay editable there).
+  const totalCount = routines.length;
+  const openRoutines = routines.filter(r => !r.covered && !r.checked);
+  const showAll = req.query.all === '1';
+  const visibleRoutines = showAll ? routines : openRoutines;
+  visibleRoutines.sort((a, b) => (a.covered || a.checked) - (b.covered || b.checked));
+  const doneCount = totalCount - openRoutines.length;
 
   res.render('manage_studio_group_dancers', {
-    studio, routines, doneCount,
-    pageTitle: 'Group Routine Dancers'
+    studio, routines: visibleRoutines, doneCount, totalCount,
+    openCount: openRoutines.length, showAll,
+    pageTitle: 'Check Routine Dancers'
   });
+});
+
+
+// Owner asserts a routine-year needs nothing more (solo the org never named,
+// cast fully entered, etc.) — removes it from the check queue. Undoable.
+router.post('/manage/studio/:id/group-dancers/complete', requireAuth, requireStudioOwner, express.json(), async (req, res) => {
+  const db = await openDb();
+  await ensureRoutineChecksTable(db);
+  const { routine, year } = req.body || {};
+  if (!routine || !year) return res.status(400).json({ error: 'Missing routine or year' });
+  const key = await resolveRoutineKey(db, req.studio.id, routine);
+  if (!key) return res.status(400).json({ error: 'Invalid routine' });
+  await db.run('INSERT OR REPLACE INTO studio_routine_checks (studio_id, routine_key, year, created_by) VALUES (?, ?, ?, ?)',
+    [req.studio.id, key, String(year), req.session.user.id]);
+  logStudioActivity(req.studio.id, 'routine_marked_complete', { dedupMinutes: 60 });
+  res.json({ success: true });
+});
+
+router.post('/manage/studio/:id/group-dancers/uncomplete', requireAuth, requireStudioOwner, express.json(), async (req, res) => {
+  const db = await openDb();
+  await ensureRoutineChecksTable(db);
+  const { routine, year } = req.body || {};
+  if (!routine || !year) return res.status(400).json({ error: 'Missing routine or year' });
+  const key = await resolveRoutineKey(db, req.studio.id, routine);
+  const r = await db.run('DELETE FROM studio_routine_checks WHERE studio_id = ? AND routine_key = ? AND year = ?',
+    [req.studio.id, key, String(year)]);
+  res.json({ success: true, removed: r.changes || 0 });
 });
 
 // Director's private tag for a roster dancer ("Senior Mia") — the

@@ -526,3 +526,14 @@ paths resolve client-sent spellings through aliases (routineAwardIds,
 resolveDancer tie-break). Group-dancers event rows show the title "published
 as" each competition printed it whenever it differs from the display name —
 the human audit trail for the folding. FAQ admin §6.
+
+## Check Routine Dancers queue semantics (2026-08-30)
+Sidebar item renamed "Routines Missing Dancers" -> "Check Routine Dancers"
+(solos with unpublished dancer names are queue work too, so "missing" was only
+half the story). The page is now a true work queue: routines auto-leave once
+every event has dancers linked; "Show all routines" (?all=1) keeps covered/
+completed cards editable. "✓ Mark complete" (studio_routine_checks, keyed
+studio+routine_key+year) removes what the system can't judge — e.g. a NexStar
+solo whose dancer was never published — undoable from show-all or the All
+Routines status column ("✓ marked complete" + Undo). Sidebar count pill
+excludes checked routine-years. Activity: routine_marked_complete. FAQ §6.
