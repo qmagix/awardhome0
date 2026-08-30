@@ -267,6 +267,12 @@ async function runPipeline(opts) {
     const bf = spawnSync('node', [path.join(__dirname, 'run_backfill.js'), ...newIds.map(String)],
       { cwd: ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
     if (bf.status !== 0) failures.push(`run_backfill: exit ${bf.status} — ${(bf.stderr || '').trim().split('\n').pop()}`);
+
+    // Canonical routine keys for freshly imported awards (global + idempotent).
+    console.log(`[backfill] sweeping routine keys...`);
+    const rk = spawnSync('node', [path.join(__dirname, 'sweep_routine_keys.js'), '--apply'],
+      { cwd: ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+    if (rk.status !== 0) failures.push(`sweep_routine_keys: exit ${rk.status} — ${(rk.stderr || '').trim().split('\n').pop()}`);
   }
 
   // ---- Summary ----

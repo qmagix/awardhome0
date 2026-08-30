@@ -566,6 +566,10 @@ async function initDb() {
   
   // Migrations
   try { await db.exec('ALTER TABLE studio_merge_requests ADD COLUMN dismissed_at DATETIME'); } catch(e) {}
+  // Machine-canonical routine key (utils/routineKey.js); filled by
+  // scripts/sweep_routine_keys.js — see docs/db_operations.md.
+  try { await db.exec('ALTER TABLE awards ADD COLUMN performance_name_key TEXT'); } catch(e) {}
+  try { await db.exec('CREATE INDEX IF NOT EXISTS idx_awards_studio_perfkey ON awards(studio_id, performance_name_key)'); } catch(e) {}
   try { await db.exec('ALTER TABLE studios ADD COLUMN instagram_handle TEXT'); } catch(e) {}
   try { await db.exec('ALTER TABLE studios ADD COLUMN tiktok_handle TEXT'); } catch(e) {}
   try { await db.exec('ALTER TABLE studios ADD COLUMN join_code TEXT'); } catch(e) {}

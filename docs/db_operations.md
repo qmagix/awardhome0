@@ -123,3 +123,19 @@ after deploying. The StarQuest importer now collapses routine + dancer fields
 at import. Routine grouping (group-dancers, All Routines, sidebar count,
 routineAwardIds) is also CASE-INSENSITIVE now: orgs capitalize the same
 routine differently ("Tides Of/of Reunion"); display shows one variant.
+
+## Canonical routine keys, phase 1 (2026-08-29)
+
+`awards.performance_name_key` = machine-canonical routine key
+(utils/routineKey.js: NFKC, curly quotes/apostrophes → straight, en/em-dash →
+hyphen, nbsp, whitespace collapse, lowercase), indexed on
+(studio_id, performance_name_key). DERIVED ONLY — performance_name is never
+rewritten (it's the source-of-record and every importer's idempotency anchor).
+Filled by `node scripts/sweep_routine_keys.js --apply` (chunked, idempotent;
+weekly pipeline runs it after imports; run once on prod at deploy). Readers
+fall back to LOWER(TRIM()) for unswept rows. All routine-keyed matching uses
+the key: group-dancers grouping/casts/events, paste/sync/remove targeting,
+All Routines, sidebar count, resolveDancer routine tie-break. Local sweep:
+1,275,953 keys filled; 247 studio-routine spelling variants unified.
+Phase 2 (not built): per-studio alias table for owner-specified merges of
+true misspellings ("Kongfu"/"Kungfu") + display-spelling choice.

@@ -20,15 +20,18 @@ async function resolveOrCreateDancer(db, { name, studioId, routine }) {
   if (candidates.length === 1) return { id: candidates[0].id, created: false };
 
   if (candidates.length > 1 && routine) {
-    const r = String(routine).replace(/\s+/g, ' ').trim().toLowerCase();
+    const { canonicalizeRoutine } = require('./routineKey');
+    const r = canonicalizeRoutine(routine);
     const matched = [];
     for (const c of candidates) {
       const hit = await db.get(`
         SELECT 1 FROM award_dancers ad JOIN awards a ON a.id = ad.award_id
-        WHERE ad.dancer_id = ? AND a.studio_id = ? AND LOWER(TRIM(a.performance_name)) = ?
+        WHERE ad.dancer_id = ? AND a.studio_id = ?
+          AND IFNULL(a.performance_name_key, LOWER(TRIM(IFNULL(a.performance_name, '')))) = ?
         UNION
         SELECT 1 FROM awards a2
-        WHERE a2.dancer_id = ? AND a2.studio_id = ? AND LOWER(TRIM(a2.performance_name)) = ?
+        WHERE a2.dancer_id = ? AND a2.studio_id = ?
+          AND IFNULL(a2.performance_name_key, LOWER(TRIM(IFNULL(a2.performance_name, '')))) = ?
         LIMIT 1`, [c.id, studioId, r, c.id, studioId, r]);
       if (hit) matched.push(c);
     }
