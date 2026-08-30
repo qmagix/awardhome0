@@ -136,16 +136,18 @@
                   <%# No easy dismissal (Q): the job is to fill names in. Old
                       no-name routines retire to legacy automatically instead. %>
                   <span style="color: #f87171; font-size: 0.85rem; font-weight: 600;">No dancers listed yet</span>
-                <% } else { %>
-                  <% if (r.cast.length > 0) { %>
-                    <% if (!r.covered) { %>
-                      <span style="color: #fbbf24; font-size: 0.85rem; font-weight: 600;">◐ <%= r.events.filter(ev => ev.covered).length %> of <%= r.events.length %> events have dancers</span>
-                    <% } else { %>
-                      <span style="color: #34d399; font-size: 0.85rem; font-weight: 600;">✓ <%= r.cast.length %> dancer<%= r.cast.length === 1 ? '' : 's' %></span>
-                    <% } %>
-                    <button type="button" class="gd-complete btn" title="Nothing missing here — remove this routine from the check list (undoable)"
-                      style="background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.4); color: #34d399; padding: 0.2rem 0.7rem; font-size: 0.78rem;">✓ Mark complete</button>
+                <% } else if (r.cast.length > 0) { %>
+                  <% if (!r.covered) { %>
+                    <span style="color: #fbbf24; font-size: 0.85rem; font-weight: 600;">◐ <%= r.events.filter(ev => ev.covered).length %> of <%= r.events.length %> events have dancers</span>
+                  <% } else { %>
+                    <span style="color: #34d399; font-size: 0.85rem; font-weight: 600;">✓ <%= r.cast.length %> dancer<%= r.cast.length === 1 ? '' : 's' %></span>
                   <% } %>
+                  <button type="button" class="gd-complete btn" title="Nothing missing here — remove this routine from the check list (undoable)"
+                    style="background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.4); color: #34d399; padding: 0.2rem 0.7rem; font-size: 0.78rem;">✓ Mark complete</button>
+                <% } %>
+                <%# Invite renders on EVERY card that isn't marked complete —
+                    empty-cast and legacy cards are where a helper matters most. %>
+                <% if (!r.checked) { %>
                   <button type="button" class="gd-invite btn" title="Email someone who knows this routine's dancers — a team parent, the choreographer — a private link to fill them in. You review everything before it saves."
                     style="background: rgba(96,165,250,0.12); border: 1px solid rgba(96,165,250,0.4); color: #60a5fa; padding: 0.2rem 0.7rem; font-size: 0.78rem;">✉️ Ask someone who knows</button>
                 <% } %>
