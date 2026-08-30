@@ -99,10 +99,33 @@
               </div>
               <% if (r.cast.length === 0) { %>
                 <span style="color: #f87171; font-size: 0.85rem; font-weight: 600;">No dancers listed yet</span>
+              <% } else if (!r.covered) { %>
+                <span style="color: #fbbf24; font-size: 0.85rem; font-weight: 600;">◐ <%= r.events.filter(ev => ev.covered).length %> of <%= r.events.length %> events have dancers</span>
               <% } else { %>
                 <span style="color: #34d399; font-size: 0.85rem; font-weight: 600;">✓ <%= r.cast.length %> dancer<%= r.cast.length === 1 ? '' : 's' %></span>
               <% } %>
             </div>
+
+            <% if (r.events.length > 1) { %>
+              <%# Casts can differ per event (subs, missed events): tick which
+                  events this round of names applies to. Default = all. %>
+              <div class="gd-events" style="margin-top: 0.75rem; padding: 0.6rem 0.85rem; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px;">
+                <div style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 0.4rem;">
+                  Same cast at every event? Leave all ticked. If the lineup changed (a dancer missed an event, or a sub stepped in), untick the differing events and enter them in a separate round.
+                </div>
+                <% r.events.forEach(ev => { %>
+                  <label style="display: inline-flex; align-items: center; gap: 0.4rem; margin: 0.15rem 1rem 0.15rem 0; cursor: pointer; font-size: 0.87rem; color: white;">
+                    <input type="checkbox" class="gd-event" value="<%= ev.id %>" checked style="transform: scale(1.1); accent-color: var(--primary);">
+                    <span><%= ev.name %> <span style="color: var(--text-muted);">(<%= ev.award_count %> award<%= ev.award_count === 1 ? '' : 's' %>)</span></span>
+                    <% if (ev.covered) { %>
+                      <span style="color: #34d399; font-size: 0.78rem;" title="This event already has dancers linked">✓</span>
+                    <% } else { %>
+                      <span style="color: #f87171; font-size: 0.78rem;" title="No dancers linked at this event yet">needs dancers</span>
+                    <% } %>
+                  </label>
+                <% }) %>
+              </div>
+            <% } %>
 
             <div class="gd-cast" style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.75rem;">
               <% r.cast.forEach(d => {
@@ -149,10 +172,18 @@
   </div>
 </div>
 
+<script src="/js/ui_dialogs.js"></script>
 <script>
 (function () {
   const base = '/manage/studio/<%= studio.id %>/group-dancers';
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  // Ticked events scope this round of assignment (absent checkboxes = all)
+  function checkedEventIds(card) {
+    const boxes = [...card.querySelectorAll('.gd-event')];
+    if (!boxes.length) return undefined;
+    return boxes.filter(b => b.checked).map(b => parseInt(b.value, 10));
+  }
 
   document.addEventListener('click', async (e) => {
     const card = e.target.closest('.gd-card');
@@ -162,14 +193,16 @@
     if (e.target.classList.contains('gd-preview')) {
       const names = card.querySelector('.gd-names').value;
       if (!names.trim()) return;
+      const event_ids = checkedEventIds(card);
+      if (event_ids && event_ids.length === 0) { toast('Tick at least one event for this round.', true); return; }
       e.target.disabled = true;
       try {
         const res = await fetch(base + '/preview', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...ctx, names })
+          body: JSON.stringify({ ...ctx, names, event_ids })
         });
         const data = await res.json();
-        if (!res.ok) { alert(data.error || 'Preview failed'); return; }
+        if (!res.ok) { toast(data.error || 'Preview failed', true); return; }
         renderPreview(card, data);
       } finally { e.target.disabled = false; }
     }
@@ -184,28 +217,35 @@
         return { name: row.dataset.name, dancer_id: row.dataset.dancerId };
       }).filter(en => en.dancer_id);
       const unresolved = rows.length - entries.length;
-      if (unresolved > 0) { alert('Please choose an option for every highlighted name first.'); return; }
+      if (unresolved > 0) { toast('Please choose an option for every highlighted name first.', true); return; }
       if (!entries.length) return;
+      const event_ids = checkedEventIds(card);
+      if (event_ids && event_ids.length === 0) { toast('Tick at least one event for this round.', true); return; }
       e.target.disabled = true;
       try {
         const res = await fetch(base + '/apply', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...ctx, entries })
+          body: JSON.stringify({ ...ctx, entries, event_ids })
         });
         const data = await res.json();
-        if (!res.ok) { alert(data.error || 'Save failed'); return; }
+        if (!res.ok) { toast(data.error || 'Save failed', true); return; }
         location.reload();
       } finally { e.target.disabled = false; }
     }
 
     if (e.target.classList.contains('gd-remove')) {
       const chip = e.target.closest('.gd-chip');
-      if (!confirm('Remove this dancer from every award of this routine?')) return;
+      const ok = await uiConfirm({
+        title: 'Remove dancer from this routine?',
+        message: 'This removes them from every award of this routine across all its events. To take them off just one event\'s awards, re-enter the cast per event using the event checkboxes instead.',
+        confirmLabel: 'Remove',
+      });
+      if (!ok) return;
       const res = await fetch(base + '/remove', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...ctx, dancer_id: e.target.dataset.dancerId })
       });
-      if (res.ok) chip.remove(); else alert('Remove failed');
+      if (res.ok) chip.remove(); else toast('Remove failed', true);
     }
   });
 

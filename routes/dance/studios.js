@@ -1630,12 +1630,25 @@ const GROUP_AWARD_FILTER = `
   AND LOWER(IFNULL(a.award_type, '')) NOT LIKE '%solo%'
   AND LOWER(IFNULL(a.category, '')) NOT LIKE '%solo%'`;
 
-async function routineAwardIds(db, studioId, routine, year) {
+// eventIds (optional): restrict to these events — casts can differ per event
+// (injuries, substitutes), so the batch tools let the director scope a round
+// of assignment to ticked events. 0 stands for "no event" (self-reported).
+async function routineAwardIds(db, studioId, routine, year, eventIds) {
   const yearCond = year === 'Undated' ? 'e.year IS NULL' : 'e.year = ?';
   const params = year === 'Undated' ? [studioId, routine.trim()] : [studioId, routine.trim(), year];
+  let eventCond = '';
+  if (Array.isArray(eventIds) && eventIds.length > 0) {
+    const ids = eventIds.map(Number).filter(Number.isFinite);
+    const real = ids.filter(id => id > 0);
+    const parts = [];
+    if (real.length) { parts.push(`a.event_id IN (${real.map(() => '?').join(',')})`); params.push(...real); }
+    if (ids.includes(0)) parts.push('a.event_id IS NULL');
+    if (!parts.length) return [];
+    eventCond = ` AND (${parts.join(' OR ')})`;
+  }
   const rows = await db.all(`
     SELECT a.id FROM awards a LEFT JOIN events e ON a.event_id = e.id
-    WHERE ${GROUP_AWARD_FILTER} AND ${yearCond}`, params);
+    WHERE ${GROUP_AWARD_FILTER} AND ${yearCond}${eventCond}`, params);
   return rows.map(r => r.id);
 }
 
@@ -1689,9 +1702,39 @@ router.get('/manage/studio/:id/group-dancers', requireAuth, requireStudioOwner, 
   }
   routines.forEach(r => { r.cast = castMap[r.routine + '|||' + r.year] || []; });
 
-  // Routines missing a cast first — that's the work to be done
-  routines.sort((a, b) => (a.cast.length > 0) - (b.cast.length > 0));
-  const doneCount = routines.filter(r => r.cast.length > 0).length;
+  // Per-event breakdown: casts can differ per event (subs, missed events),
+  // so the card offers event checkboxes and shows which events still lack
+  // dancers. event_id 0 = self-reported awards without an event row.
+  const eventRows = await db.all(`
+    SELECT TRIM(a.performance_name) AS routine, IFNULL(e.year, 'Undated') AS year,
+           IFNULL(e.id, 0) AS event_id, IFNULL(e.name, 'Self-reported') AS event_name,
+           COUNT(DISTINCT a.id) AS award_count,
+           COUNT(DISTINCT CASE WHEN ad.award_id IS NOT NULL THEN a.id END) AS linked_awards
+    FROM awards a LEFT JOIN events e ON a.event_id = e.id
+    LEFT JOIN award_dancers ad ON ad.award_id = a.id
+    WHERE a.studio_id = ? AND TRIM(IFNULL(a.performance_name, '')) != ''
+      AND LOWER(IFNULL(a.award_type, '')) NOT LIKE '%solo%'
+      AND LOWER(IFNULL(a.category, '')) NOT LIKE '%solo%'
+    GROUP BY TRIM(a.performance_name), e.year, e.id
+    ORDER BY event_name
+  `, [studio.id]);
+  const eventMap = {};
+  for (const ev of eventRows) {
+    const key = ev.routine + '|||' + ev.year;
+    (eventMap[key] = eventMap[key] || []).push({
+      id: ev.event_id, name: ev.event_name,
+      award_count: ev.award_count, covered: ev.linked_awards > 0,
+    });
+  }
+  routines.forEach(r => {
+    r.events = eventMap[r.routine + '|||' + r.year] || [];
+    // Done = every event of the routine has at least one dancer linked
+    r.covered = r.events.length ? r.events.every(ev => ev.covered) : r.cast.length > 0;
+  });
+
+  // Routines with uncovered events first — that's the work to be done
+  routines.sort((a, b) => a.covered - b.covered);
+  const doneCount = routines.filter(r => r.covered).length;
 
   res.render('manage_studio_group_dancers', {
     studio, routines, doneCount,
@@ -1713,11 +1756,11 @@ router.post('/manage/studio/:id/roster/:dancerId/label', requireAuth, requireStu
 // Phase 1: classify each pasted name against the roster — NO writes.
 router.post('/manage/studio/:id/group-dancers/preview', requireAuth, requireStudioOwner, async (req, res) => {
   const db = await openDb();
-  const { routine, year, names } = req.body || {};
+  const { routine, year, names, event_ids } = req.body || {};
   if (!routine || !year || typeof names !== 'string') return res.status(400).json({ error: 'Missing routine, year, or names' });
 
-  const awardIds = await routineAwardIds(db, req.studio.id, routine, year);
-  if (!awardIds.length) return res.status(404).json({ error: 'No awards found for this routine' });
+  const awardIds = await routineAwardIds(db, req.studio.id, routine, year, event_ids);
+  if (!awardIds.length) return res.status(404).json({ error: 'No awards found for this routine (check at least one event).' });
 
   // Accept one-per-line, commas, or semicolons; dedupe case-insensitively
   const seen = new Set();
@@ -1763,12 +1806,12 @@ router.post('/manage/studio/:id/group-dancers/preview', requireAuth, requireStud
 // Phase 2: apply the confirmed cast to every award of the routine-year.
 router.post('/manage/studio/:id/group-dancers/apply', requireAuth, requireStudioOwner, async (req, res) => {
   const db = await openDb();
-  const { routine, year, entries } = req.body || {};
+  const { routine, year, entries, event_ids } = req.body || {};
   if (!routine || !year || !Array.isArray(entries) || !entries.length) return res.status(400).json({ error: 'Nothing to apply' });
   if (entries.length > 60) return res.status(400).json({ error: 'Too many dancers in one routine' });
 
-  const awardIds = await routineAwardIds(db, req.studio.id, routine, year);
-  if (!awardIds.length) return res.status(404).json({ error: 'No awards found for this routine' });
+  const awardIds = await routineAwardIds(db, req.studio.id, routine, year, event_ids);
+  if (!awardIds.length) return res.status(404).json({ error: 'No awards found for this routine (check at least one event).' });
 
   let created = 0, linked = 0;
   for (const entry of entries) {

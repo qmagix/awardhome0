@@ -481,3 +481,15 @@ optional merge_ids, validated against the name+studio scope). [View Profile]
 opens the dancer's trophy case in an iframe modal (logged-in sessions pass the
 beta gate) instead of a new tab. All alert()/confirm() on the roster page
 replaced by a shared promise-based confirm modal + toast. FAQ: studio admin §19.
+
+## Group Routine Dancers, per-event casts (2026-08-29)
+Routine cards batch by routine+year, but casts differ per event (injuries,
+subs, regionals-vs-nationals lineups). Multi-event cards now list each event
+with a checkbox (default all ticked = one paste covers everything); preview and
+apply take optional event_ids (0 = self-reported/no event; absent = all —
+backward compatible), so a round of names lands only on ticked events. Cards
+show per-event coverage (✓ / "needs dancers"), a partial badge ("1 of 2 events
+have dancers"), and sort/progress count by full coverage. Shared confirm
+modal/toast extracted to public/js/ui_dialogs.js (self-injecting; roster page
+now uses it too) — group-dancers page alert()/confirm() replaced. FAQ admin §6
+updated.
