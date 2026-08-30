@@ -129,6 +129,59 @@ event-scoped + revertible-changeset combination on a competition-results graph
 is the claimable surface. Do NOT ship before this is filed or consciously
 waived (new matter vs 64/142,611).
 
+### A10. Award-as-memory-book: heterogeneous, multi-contributor media pages (NEW — not built, captured 2026-08-30)
+Q's framing: **each award IS a book.** The award card is the cover; inside is an
+open-ended, page-by-page set of memory pages — performance photos, VIDEO of the
+routine, the music/song danced to, VOICE messages, thank-you notes, and
+congratulations from teammates, family, teachers, and the wider community.
+Extends A3 from a fixed 4-page back-stack (certificate → photo → acks →
+colophon) to an unbounded, media-typed book whose pages come from MULTIPLE
+contributors, not just the owner.
+
+**Likely covered by 64/142,611** (filed 2026-08-27): the paged/flip mechanics,
+conditional page materialization (absent content = no page), per-page share
+rendering, role-gated content, multi-face continuous flip (claims 16–18).
+**Likely NEW MATTER — the claimable delta:**
+- **Time-based media inside the artifact**: video and audio pages (routine
+  video, the performance's music, spoken voice messages) in a paged award
+  object — playback state vs. page-turn/flip state is a real mechanism
+  question (autoplay on page arrival, pause on flip-away, per-page seek
+  position preserved across turns, audio continuing under a page turn as a
+  "soundtrack" for the whole book).
+- **Multi-contributor page sourcing with per-page provenance + moderation**:
+  congratulations solicited from many people (teammates, family, coaches,
+  spectators) each becoming its own page, with contributor identity,
+  invitation/capability scoping (cf. A9's delegated entry), and per-page
+  approval before public display — i.e., a crowd-composed keepsake bound to a
+  verified competition record.
+- **Page-type registry / heterogeneous page grammar**: pages of different media
+  types composing one flippable artifact with type-specific rendering, sizing
+  (the cqw system), and share behavior.
+
+**Prior art to expect:** digital photo books / flipbook viewers (Issuu, Blurb),
+memory-book and tribute-page products (ForeverMissed, Kudoboard, Tribute),
+video-message compilations (VidDay, Tribute.co), yearbook signing apps.
+Kudoboard/Tribute in particular are close on "many people contribute
+congratulations to one page." **The defensible combination is the binding to a
+VERIFIED, imported competition award** — the book is the back of an
+authenticated achievement record, with moderation and role gating — not a
+free-standing greeting artifact.
+
+**Build cautions (not IP):**
+- **Music rights**: the song a routine danced to is almost always licensed
+  third-party music. Hosting it is a copyright exposure, not a feature —
+  route through the DMCA agent + notice/takedown machinery (Terms §11) and
+  consider user-uploaded-only with the same moderation gate as photos, or
+  links out rather than hosted audio.
+- **Video costs**: storage/bandwidth/transcoding dwarf photos; needs a plan
+  before it ships (and Litestream/S3 backup implications).
+- **Child-safety surface**: video + voice of minors raises the consent bar
+  above the existing photo-consent checkbox; COPPA review with counsel.
+
+**Action:** bundle into the P2/follow-on provisional (with A9) rather than a
+standalone filing — it is an embodiment cluster on the same artifact family as
+64/142,611. Per the queue rule, file or consciously waive BEFORE shipping.
+
 ## Tier B — plausible but weaker (business method or heavy prior art risk)
 
 ### B1. Dark-launch claiming via private single-use tokens (no public unclaimed state)
