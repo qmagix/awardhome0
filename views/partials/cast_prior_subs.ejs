@@ -1,0 +1,15 @@
+<% if (typeof priorSubs !== 'undefined' && priorSubs.length > 0) { %>
+  <div style="background: rgba(52,211,153,0.08); border: 1px solid rgba(52,211,153,0.3); border-radius: 8px; padding: 0.9rem 1.1rem; margin-top: 1.25rem;">
+    <div style="font-weight: 600; color: #34d399; margin-bottom: 0.4rem;">✓ Already sent from this link</div>
+    <% priorSubs.forEach(function(ps) { %>
+      <div style="font-size: 0.88rem; color: var(--text-muted); margin-top: 0.4rem;">
+        <span style="color: white;"><%= ps.helper_name %></span> · <%= String(ps.created_at).slice(0, 10) %> ·
+        <%= ps.status === 'applied' ? 'added by the studio ✓' : 'with the studio for review' %>
+        <% ps.events.forEach(function(ev) { %>
+          <div style="margin-left: 0.9rem;"><%= ev.event_name %>: <span style="color: white;"><%= ev.names.join(', ') %></span></div>
+        <% }); %>
+        <% if (ps.note) { %><div style="margin-left: 0.9rem; font-style: italic;">&ldquo;<%= ps.note %>&rdquo;</div><% } %>
+      </div>
+    <% }); %>
+  </div>
+<% } %>

@@ -1,7 +1,7 @@
 <%- include('partials/header', { title: pageTitle }) %>
 <div class="container" style="max-width: 640px; margin: 3rem auto; padding: 0 1rem;">
   <div class="card glass-card" style="padding: 2.5rem;">
-    <% if (error) { %>
+    <% if (error && !inv) { %>
       <h2 style="margin-top: 0; color: var(--primary);">This link isn't working</h2>
       <p style="color: var(--text-muted); line-height: 1.6;"><%= error %></p>
     <% } else if (submitted) { %>
@@ -13,6 +13,7 @@
       </p>
       <p style="color: var(--text-muted); line-height: 1.6;">Remembered someone else? The link keeps
         working until <%= String(inv.expires_at).slice(0, 10) %> — just come back.</p>
+      <%- include('partials/cast_prior_subs', { priorSubs }) %>
     <% } else { %>
       <h2 style="margin-top: 0; color: var(--primary);">Who danced &ldquo;<%= inv.routine_display %>&rdquo;?</h2>
       <p style="color: var(--text-muted); line-height: 1.6;">
@@ -23,6 +24,10 @@
       <% if (inv.note) { %>
         <p style="border-left: 3px solid var(--primary); padding-left: 0.9rem; color: var(--text-muted); font-style: italic;">&ldquo;<%= inv.note %>&rdquo;</p>
       <% } %>
+      <% if (error) { %>
+        <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.25); color: #f87171; padding: 0.8rem 1rem; border-radius: 6px; margin-top: 1rem;"><%= error %></div>
+      <% } %>
+      <%- include('partials/cast_prior_subs', { priorSubs }) %>
 
       <form method="POST" action="/cast/<%= inv.token %>" style="display: flex; flex-direction: column; gap: 1.25rem; margin-top: 1.5rem;">
         <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">

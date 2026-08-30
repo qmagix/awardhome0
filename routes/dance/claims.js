@@ -362,20 +362,36 @@ async function castInviteEvents(db, inv) {
   return events;
 }
 
+// The helper's own earlier submissions on this link — shown on return
+// visits so they can see what they already sent (and its status).
+async function priorSubmissions(db, inviteId) {
+  const rows = await db.all(`
+    SELECT helper_name, payload, note, status, created_at
+    FROM routine_cast_submissions WHERE invite_id = ? AND status != 'dismissed'
+    ORDER BY created_at DESC`, [inviteId]);
+  return rows.map(r => {
+    let events = [];
+    try { events = JSON.parse(r.payload); } catch (e) {}
+    return { ...r, events };
+  });
+}
+
 router.get('/cast/:token', async (req, res) => {
   const db = await openDb();
   const { inv, error } = await loadCastInvite(db, req.params.token);
-  if (error) return res.status(410).render('cast_invite', { error, inv: null, events: [], submitted: false, pageTitle: 'Cast entry' });
+  if (error) return res.status(410).render('cast_invite', { error, inv: null, events: [], priorSubs: [], submitted: false, pageTitle: 'Cast entry' });
   const events = await castInviteEvents(db, inv);
-  res.render('cast_invite', { error: null, inv, events, submitted: false, pageTitle: `Dancers of "${inv.routine_display}"` });
+  const priorSubs = await priorSubmissions(db, inv.id);
+  res.render('cast_invite', { error: null, inv, events, priorSubs, submitted: false, pageTitle: `Dancers of "${inv.routine_display}"` });
 });
 
 router.post('/cast/:token', applyLimiter, async (req, res) => {
   const db = await openDb();
   const { inv, error } = await loadCastInvite(db, req.params.token);
-  if (error) return res.status(410).render('cast_invite', { error, inv: null, events: [], submitted: false, pageTitle: 'Cast entry' });
+  if (error) return res.status(410).render('cast_invite', { error, inv: null, events: [], priorSubs: [], submitted: false, pageTitle: 'Cast entry' });
   const events = await castInviteEvents(db, inv);
-  const fail = (msg) => res.status(400).render('cast_invite', { error: msg, inv, events, submitted: false, pageTitle: `Dancers of "${inv.routine_display}"` });
+  const priorSubs = await priorSubmissions(db, inv.id);
+  const fail = (msg) => res.status(400).render('cast_invite', { error: msg, inv, events, priorSubs, submitted: false, pageTitle: `Dancers of "${inv.routine_display}"` });
 
   const helper = String((req.body && req.body.helper_name) || '').replace(/\s+/g, ' ').trim().slice(0, 80);
   if (!helper) return fail('Please tell us your name — the studio wants to know who to thank!');
@@ -392,7 +408,8 @@ router.post('/cast/:token', applyLimiter, async (req, res) => {
   await db.run(`INSERT INTO routine_cast_submissions (invite_id, helper_name, payload, note) VALUES (?, ?, ?, ?)`,
     [inv.id, helper, JSON.stringify(payload), note]);
   logStudioActivity(inv.studio_id, 'cast_submission_received', { dedupMinutes: 5 });
-  res.render('cast_invite', { error: null, inv, events, submitted: true, pageTitle: 'Thank you!' });
+  const priorSubs2 = await priorSubmissions(db, inv.id);
+  res.render('cast_invite', { error: null, inv, events, priorSubs: priorSubs2, submitted: true, pageTitle: 'Thank you!' });
 });
 
 module.exports = router;
