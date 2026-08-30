@@ -103,7 +103,12 @@
     <% if (Object.keys(duplicateSets).length > 0) { %>
       <div class="card glass-card" style="margin-bottom: 2rem; border-color: rgba(245, 158, 11, 0.3);">
         <h3 style="color: #aa8529; margin-top: 0;">⚠️ Suspected Duplicates Detected</h3>
-        <p style="color: var(--text-muted); margin-bottom: 1.5rem;">The following dancers have multiple profiles on your roster. Review and clean them up.</p>
+        <p style="color: var(--text-muted); margin-bottom: 0.5rem;">The following dancers have multiple profiles on your roster. Review and clean them up.</p>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
+          No two of your students share a name? Then every set below is the same dancer —
+          <button type="button" onclick="cleanAllDuplicates(<%= Object.keys(duplicateSets).length %>)"
+            style="background: none; border: none; color: var(--primary); text-decoration: underline; cursor: pointer; font-size: 0.9rem; padding: 0;">merge all <%= Object.keys(duplicateSets).length %> sets at once</button>.
+        </p>
         
         <div style="display: flex; flex-direction: column; gap: 1rem;">
           <% for (let name in duplicateSets) { const set = duplicateSets[name]; %>
@@ -615,6 +620,30 @@
       }
     });
   });
+
+  async function cleanAllDuplicates(setCount) {
+    const ok = await uiConfirm({
+      title: 'Merge all ' + setCount + ' duplicate sets?',
+      message: 'Only do this if NO two different students at your studio share a name — every same-name set below becomes one profile (the claimed or most-awarded one wins).\n\nSets with more than one claimed profile are skipped for you to review by hand, and names you marked "different people" are left alone. Merging cannot be undone.',
+      confirmLabel: 'Yes — merge all',
+    });
+    if (!ok) return;
+    try {
+      const res = await fetch(`/manage/studio/<%= studio.id %>/roster/clean-all-duplicates`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}',
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
+        toast(`Merged ${data.profilesMerged} duplicate profile(s) across ${data.setsMerged} dancers.`
+          + (data.skippedClaimed ? ` ${data.skippedClaimed} set(s) with multiple claimed profiles left for manual review.` : ''));
+        setTimeout(() => window.location.reload(), 1200);
+      } else {
+        toast(data.error || 'Failed to merge — please try again.', true);
+      }
+    } catch (err) {
+      toast('Error connecting to server.', true);
+    }
+  }
 
   async function cleanDuplicateSet(name) {
     const boxes = dupBoxesFor(name);

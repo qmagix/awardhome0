@@ -238,6 +238,7 @@ const ACTIVITY_LABELS = {
   award_self_report: 'Award self-reported',
   awards_csv_commit: 'Awards imported from CSV',
   roster_csv_commit: 'Roster imported from CSV',
+  roster_batch_merged: 'All same-name duplicate profiles batch-merged',
   group_cast_added: 'Dancers linked to a group routine',
   group_cast_synced: 'Group routine cast synced across events',
   routine_spelling_merged: 'Routine spellings merged / corrected',
@@ -879,6 +880,64 @@ router.post('/manage/studio/:id/roster/clean-duplicate-set', requireAuth, requir
     console.error(err);
     res.status(500).json({ error: 'Server Error' });
   }
+});
+
+
+// Batch: merge EVERY suspected-duplicate set at once — for studios where
+// no two different students share a name (owner confirms that premise in
+// a modal first). Per set: same rules as the single merge (claimed > most
+// awards picks the primary); sets with MORE THAN ONE claimed profile are
+// skipped (humans only), and names marked "different people" are excluded
+// by the same exception list that hides them from the widget.
+router.post('/manage/studio/:id/roster/clean-all-duplicates', requireAuth, requireStudioOwner, express.json(), async (req, res) => {
+  const db = await openDb();
+  const sets = await db.all(`
+    SELECT LOWER(TRIM(d.name)) AS cname
+    FROM dancers d JOIN dancer_studios ds ON d.id = ds.dancer_id
+    WHERE ds.studio_id = ?
+      AND LOWER(TRIM(d.name)) NOT IN (SELECT LOWER(dancer_name) FROM studio_duplicate_exceptions WHERE studio_id = ?)
+    GROUP BY LOWER(TRIM(d.name)) HAVING COUNT(DISTINCT d.id) > 1`,
+    [req.studio.id, req.studio.id]);
+
+  let setsMerged = 0, profilesMerged = 0, skippedClaimed = 0;
+  for (const set of sets) {
+    const profiles = await db.all(`
+      SELECT DISTINCT d.id, d.claimed_by_user_id,
+             (SELECT COUNT(DISTINCT a.id) FROM awards a
+                LEFT JOIN award_dancers ad ON ad.award_id = a.id AND ad.dancer_id = d.id
+               WHERE a.studio_id = ds.studio_id AND (ad.dancer_id = d.id OR a.dancer_id = d.id)) as total_awards
+      FROM dancers d JOIN dancer_studios ds ON d.id = ds.dancer_id
+      WHERE ds.studio_id = ? AND LOWER(TRIM(d.name)) = ?`, [req.studio.id, set.cname]);
+    if (profiles.length < 2) continue;
+    if (profiles.filter(p => p.claimed_by_user_id).length > 1) { skippedClaimed++; continue; }
+
+    profiles.sort((a, b) => {
+      if (a.claimed_by_user_id && !b.claimed_by_user_id) return -1;
+      if (!a.claimed_by_user_id && b.claimed_by_user_id) return 1;
+      return b.total_awards - a.total_awards;
+    });
+    const primaryId = profiles[0].id;
+
+    await db.run('BEGIN TRANSACTION');
+    try {
+      for (const dup of profiles.slice(1)) {
+        await db.run('INSERT OR IGNORE INTO award_dancers (award_id, dancer_id, status, source, created_at) SELECT award_id, ?, status, source, created_at FROM award_dancers WHERE dancer_id = ?', [primaryId, dup.id]);
+        await db.run('DELETE FROM award_dancers WHERE dancer_id = ?', [dup.id]);
+        await db.run('UPDATE awards SET dancer_id = ? WHERE dancer_id = ?', [primaryId, dup.id]);
+        await db.run('INSERT OR IGNORE INTO dancer_studios (dancer_id, studio_id, status, source) SELECT ?, studio_id, status, source FROM dancer_studios WHERE dancer_id = ?', [primaryId, dup.id]);
+        await db.run('DELETE FROM dancer_studios WHERE dancer_id = ?', [dup.id]);
+        await db.run('DELETE FROM dancers WHERE id = ?', [dup.id]);
+        profilesMerged++;
+      }
+      await db.run('COMMIT');
+      setsMerged++;
+    } catch (e) {
+      await db.run('ROLLBACK');
+      return res.status(500).json({ error: e.message, setsMerged, profilesMerged });
+    }
+  }
+  logStudioActivity(req.studio.id, 'roster_batch_merged');
+  res.json({ success: true, setsMerged, profilesMerged, skippedClaimed });
 });
 
 
