@@ -33,12 +33,21 @@
         >
           <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
           <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Your Name</label>
+            <input type="text" name="contact_name" required placeholder="e.g. Jane Miller" style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;">
+          </div>
+          <div>
             <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Your Role / Affiliation</label>
             <input type="text" name="role" required placeholder="e.g. Studio Director, Owner" style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;">
           </div>
           <div>
             <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Phone Number</label>
             <input type="tel" name="phone" required placeholder="For verification purposes" style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;">
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Studio Address</label>
+            <input type="text" name="studio_address" required placeholder="e.g. 428 Main St, Springfield, IL" style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;">
+            <p style="margin: 0.35rem 0 0; font-size: 0.8rem; color: var(--text-muted);">Helps us tell studios with the same name apart.</p>
           </div>
           <div>
             <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Additional Proof (Optional)</label>
@@ -74,6 +83,11 @@
           <div>
             <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Phone Number</label>
             <input type="tel" name="phone" required placeholder="For verification purposes" style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;">
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Studio Address</label>
+            <input type="text" name="studio_address" required placeholder="e.g. 428 Main St, Springfield, IL" style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;">
+            <p style="margin: 0.35rem 0 0; font-size: 0.8rem; color: var(--text-muted);">Helps us tell studios with the same name apart.</p>
           </div>
           <div>
             <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Create a Password</label>

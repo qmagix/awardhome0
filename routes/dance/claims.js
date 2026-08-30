@@ -28,18 +28,21 @@ router.get('/claim/studio/:id', async (req, res) => {
 
 
 router.post('/claim/studio/:id', requireAuth, async (req, res) => {
-  const { role, phone, proof } = req.body;
+  const { contact_name, role, phone, studio_address, proof } = req.body;
   const db = await openDb();
 
   const studio = await db.get('SELECT * FROM studios WHERE unique_id = ?', [req.params.id]);
   if (!studio) return res.status(404).send('Studio not found');
+  const fail = (error) => res.status(400).render('claim_studio', { studio, error, pageTitle: `Claim ${studio.name}` });
 
   if (studio.is_claimed) {
-    return res.render('claim_studio', { studio, error: 'Studio is already claimed.' });
+    return res.render('claim_studio', { studio, error: 'Studio is already claimed.', pageTitle: `Claim ${studio.name}` });
   }
+  if (!contact_name || !contact_name.trim()) return fail('Please enter your name.');
+  if (!studio_address || !studio_address.trim()) return fail("Please enter your studio's address — it helps us tell same-named studios apart.");
 
   // Combine proof text
-  const proof_text = `Role: ${role}\nPhone: ${phone}\nDetails: ${proof}`;
+  const proof_text = `Contact: ${contact_name.trim()}\nRole: ${role}\nPhone: ${phone}\nStudio address: ${studio_address.trim()}\nDetails: ${proof}`;
 
   // Fast-Track Verification Logic (session emails are verified at login)
   const user = req.session.user;
@@ -60,7 +63,7 @@ router.post('/claim/studio/:id', requireAuth, async (req, res) => {
 // One-page apply: creates the account AND files the claim together.
 // Auto-approval deliberately waits for email verification (see auth.js).
 router.post('/claim/studio/:id/apply', applyLimiter, async (req, res) => {
-  const { contact_name, email, password, phone, role, proof } = req.body || {};
+  const { contact_name, email, password, phone, role, studio_address, proof } = req.body || {};
   const db = await openDb();
 
   const studio = await db.get('SELECT * FROM studios WHERE unique_id = ?', [req.params.id]);
@@ -69,6 +72,7 @@ router.post('/claim/studio/:id/apply', applyLimiter, async (req, res) => {
 
   if (studio.is_claimed) return fail('This studio is already claimed.');
   if (!contact_name || !contact_name.trim()) return fail('Please enter your name.');
+  if (!studio_address || !studio_address.trim()) return fail("Please enter your studio's address — it helps us tell same-named studios apart.");
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return fail('Please enter a valid email address.');
   if (!password || password.length < 8) return fail('Password must be at least 8 characters.');
 
@@ -91,7 +95,7 @@ router.post('/claim/studio/:id/apply', applyLimiter, async (req, res) => {
   );
   const newUser = await db.get('SELECT id FROM users WHERE email = ?', [cleanEmail]);
 
-  const proof_text = `Contact: ${contact_name.trim()}\nRole: ${role || ''}\nPhone: ${phone || ''}\nDetails: ${proof || ''}`;
+  const proof_text = `Contact: ${contact_name.trim()}\nRole: ${role || ''}\nPhone: ${phone || ''}\nStudio address: ${studio_address.trim()}\nDetails: ${proof || ''}`;
   await db.run('INSERT INTO studio_claims (user_id, studio_id, proof_text, status) VALUES (?, ?, ?, ?)',
     [newUser.id, studio.id, proof_text, 'pending']);
 
