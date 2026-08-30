@@ -120,10 +120,16 @@
                     <% if (ev.covered) { %>
                       <span style="color: #34d399; font-size: 0.78rem;" title="This event already has dancers linked">✓</span>
                     <% } else { %>
-                      <span style="color: #f87171; font-size: 0.78rem;" title="No dancers linked at this event yet">needs dancers</span>
+                      <span style="color: #f87171; font-size: 0.78rem;" title="No dancers linked at this event yet">missing dancers</span>
                     <% } %>
                   </label>
                 <% }) %>
+                <% if (r.cast.length > 0) { %>
+                  <div style="margin-top: 0.5rem;">
+                    <button type="button" class="btn gd-sync" style="background: rgba(52,211,153,0.15); border: 1px solid rgba(52,211,153,0.45); color: #34d399; padding: 0.3rem 0.9rem; font-size: 0.82rem;">⇄ Sync dancers across ticked events</button>
+                    <small style="color: var(--text-muted); margin-left: 0.5rem;">Adds missing dancers only — never removes anyone.</small>
+                  </div>
+                <% } %>
               </div>
             <% } %>
 
@@ -230,6 +236,29 @@
         const data = await res.json();
         if (!res.ok) { toast(data.error || 'Save failed', true); return; }
         location.reload();
+      } finally { e.target.disabled = false; }
+    }
+
+    if (e.target.classList.contains('gd-sync')) {
+      const event_ids = checkedEventIds(card);
+      if (event_ids && event_ids.length === 0) { toast('Tick at least one event to sync.', true); return; }
+      const ok = await uiConfirm({
+        title: 'Sync cast across ticked events?',
+        message: 'Every dancer already listed on this routine at any ticked event will be added to its awards at all ticked events.\n\nAdditions only — nobody is removed, and dancers you removed earlier stay removed.',
+        confirmLabel: 'Sync dancers',
+      });
+      if (!ok) return;
+      e.target.disabled = true;
+      try {
+        const res = await fetch(base + '/sync', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...ctx, event_ids })
+        });
+        const data = await res.json();
+        if (!res.ok) { toast(data.error || 'Sync failed', true); return; }
+        toast(`Synced: ${data.linked} link${data.linked === 1 ? '' : 's'} added across ${data.awardCount} awards.`
+          + (data.skippedRemoved ? ' Previously-removed dancers were left removed.' : ''));
+        setTimeout(() => location.reload(), 900);
       } finally { e.target.disabled = false; }
     }
 

@@ -187,6 +187,7 @@ const ACTIVITY_LABELS = {
   awards_csv_commit: 'Awards imported from CSV',
   roster_csv_commit: 'Roster imported from CSV',
   group_cast_added: 'Dancers linked to a group routine',
+  group_cast_synced: 'Group routine cast synced across events',
   profile_update: 'Studio profile updated',
   widget_embed: 'Awards widget embedded',
   ai_summary: 'AI studio summary generated',
@@ -1843,6 +1844,40 @@ router.post('/manage/studio/:id/group-dancers/apply', requireAuth, requireStudio
 
   logStudioActivity(req.studio.id, 'group_cast_added', { dedupMinutes: 60 });
   res.json({ success: true, created, linked, awardCount: awardIds.length });
+});
+
+// Sync: additive cast equalization across the ticked events of a routine —
+// every dancer already linked to ANY selected award gets linked to ALL of
+// them. Additions only; director-tombstoned pairs (award_dancer_removals)
+// are never resurrected (use the paste flow to explicitly re-add someone).
+router.post('/manage/studio/:id/group-dancers/sync', requireAuth, requireStudioOwner, express.json(), async (req, res) => {
+  const db = await openDb();
+  const { routine, year, event_ids } = req.body || {};
+  if (!routine || !year) return res.status(400).json({ error: 'Missing routine or year' });
+
+  const awardIds = await routineAwardIds(db, req.studio.id, routine, year, event_ids);
+  if (!awardIds.length) return res.status(404).json({ error: 'No awards found for this routine (check at least one event).' });
+
+  const ph = awardIds.map(() => '?').join(',');
+  const dancers = await db.all(
+    `SELECT DISTINCT dancer_id FROM award_dancers WHERE award_id IN (${ph})`, awardIds);
+  if (!dancers.length) return res.status(400).json({ error: 'None of the ticked events have dancers to sync from.' });
+
+  let linked = 0, skippedRemoved = 0;
+  for (const awardId of awardIds) {
+    for (const d of dancers) {
+      const removed = await db.get(
+        'SELECT 1 FROM award_dancer_removals WHERE award_id = ? AND dancer_id = ?', [awardId, d.dancer_id]);
+      if (removed) { skippedRemoved++; continue; }
+      const r = await db.run(
+        "INSERT OR IGNORE INTO award_dancers (award_id, dancer_id, source) VALUES (?, ?, 'studio_owner')",
+        [awardId, d.dancer_id]);
+      linked += r.changes || 0;
+    }
+  }
+
+  logStudioActivity(req.studio.id, 'group_cast_synced', { dedupMinutes: 60 });
+  res.json({ success: true, linked, dancers: dancers.length, awardCount: awardIds.length, skippedRemoved });
 });
 
 // Remove one dancer from a routine-year (links only — never dancer records).

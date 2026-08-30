@@ -488,8 +488,13 @@ subs, regionals-vs-nationals lineups). Multi-event cards now list each event
 with a checkbox (default all ticked = one paste covers everything); preview and
 apply take optional event_ids (0 = self-reported/no event; absent = all —
 backward compatible), so a round of names lands only on ticked events. Cards
-show per-event coverage (✓ / "needs dancers"), a partial badge ("1 of 2 events
-have dancers"), and sort/progress count by full coverage. Shared confirm
+show per-event coverage (✓ / "missing dancers"), a partial badge ("1 of 2 events
+have dancers"), and sort/progress count by full coverage. A "Sync dancers
+across ticked events" button (shown when the routine has any cast) unions the
+dancers linked at any ticked event onto all ticked events' awards — ADDITIVE
+ONLY, and director-tombstoned pairs (award_dancer_removals) are never
+resurrected (explicit re-add via the paste flow clears tombstones; sync
+doesn't). Activity: group_cast_synced. Shared confirm
 modal/toast extracted to public/js/ui_dialogs.js (self-injecting; roster page
 now uses it too) — group-dancers page alert()/confirm() replaced. FAQ admin §6
 updated.
