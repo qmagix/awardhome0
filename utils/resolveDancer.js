@@ -10,7 +10,7 @@ const { generateDancerId } = require('../utils.js');
 // Note for batch callers: link each award as you resolve it — a created
 // profile then wins the routine tie-break for that routine's later awards,
 // so one routine never mints two profiles.
-async function resolveOrCreateDancer(db, { name, studioId, routine }) {
+async function resolveOrCreateDancer(db, { name, studioId, routine, year }) {
   const clean = String(name || '').replace(/\s+/g, ' ').trim();
   if (!clean || !studioId) return null;
 
@@ -22,17 +22,29 @@ async function resolveOrCreateDancer(db, { name, studioId, routine }) {
   if (candidates.length > 1 && routine) {
     const { resolveRoutineKey } = require('./routineKey');
     const r = await resolveRoutineKey(db, studioId, routine);
+    // Evidence = same routine at the same studio in the SAME YEAR when the
+    // award's year is known (Q, 2026-08-30: name+routine+studio+year is much
+    // safer than dropping the year — casts and even dancers change season to
+    // season). Undated awards fall back to routine+studio.
+    const yearCond = year != null && String(year).trim() !== ''
+      ? "AND IFNULL(e.year, 'U') = ?" : '';
     const matched = [];
     for (const c of candidates) {
+      const params = [c.id, studioId, r];
+      if (yearCond) params.push(String(year));
+      const params2 = [c.id, studioId, r];
+      if (yearCond) params2.push(String(year));
       const hit = await db.get(`
         SELECT 1 FROM award_dancers ad JOIN awards a ON a.id = ad.award_id
+        LEFT JOIN events e ON e.id = a.event_id
         WHERE ad.dancer_id = ? AND a.studio_id = ?
-          AND IFNULL(a.performance_name_key, LOWER(TRIM(IFNULL(a.performance_name, '')))) = ?
+          AND IFNULL(a.performance_name_key, LOWER(TRIM(IFNULL(a.performance_name, '')))) = ? ${yearCond}
         UNION
         SELECT 1 FROM awards a2
+        LEFT JOIN events e ON e.id = a2.event_id
         WHERE a2.dancer_id = ? AND a2.studio_id = ?
-          AND IFNULL(a2.performance_name_key, LOWER(TRIM(IFNULL(a2.performance_name, '')))) = ?
-        LIMIT 1`, [c.id, studioId, r, c.id, studioId, r]);
+          AND IFNULL(a2.performance_name_key, LOWER(TRIM(IFNULL(a2.performance_name, '')))) = ? ${yearCond}
+        LIMIT 1`, [...params, ...params2]);
       if (hit) matched.push(c);
     }
     // ANY routine match wins — if several same-name candidates all carry this

@@ -17,7 +17,7 @@ async function main() {
   const db = await openDb();
 
   const rows = await db.all(`
-    SELECT a.id, a.studio_id, a.performance_name, a.notes
+    SELECT a.id, a.studio_id, a.performance_name, a.notes, e.year AS event_year
     FROM awards a JOIN events e ON a.event_id = e.id
     WHERE e.org_id = (SELECT id FROM organizations WHERE slug = 'starquest')
       AND a.dancer_id IS NULL
@@ -34,7 +34,7 @@ async function main() {
     if (!name || name.toUpperCase() === 'N/A' || !row.studio_id) { skippedNoName++; continue; }
     if (!apply) continue;
 
-    const resolved = await resolveOrCreateDancer(db, { name, studioId: row.studio_id, routine: row.performance_name });
+    const resolved = await resolveOrCreateDancer(db, { name, studioId: row.studio_id, routine: row.performance_name, year: row.event_year });
     if (!resolved) { skippedNoName++; continue; }
     if (resolved.created) createdProfiles++; else matchedExisting++;
 

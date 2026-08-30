@@ -110,6 +110,8 @@
                     <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">✓ marked complete</span>
                     <button class="btn" onclick="uncheckRoutine(this)" data-routine="<%= r.routine %>" data-year="<%= r.year || 'Undated' %>"
                       style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: var(--text-muted); padding: 0.15rem 0.5rem; font-size: 0.75rem; margin-left: 0.3rem;">Undo</button>
+                  <% } else if (r.uncredited_awards > 0 && !r.dancers && Number.isFinite(parseInt(r.year, 10)) && parseInt(r.year, 10) <= legacyCutoff) { %>
+                    <span class="badge" style="background: rgba(255,255,255,0.08); color: var(--text-muted);" title="No dancers were ever recorded and the season is several years past — retired from the check list. Adding names still works.">🗄 legacy — names never recorded</span>
                   <% } else if (r.uncredited_awards > 0) { %>
                     <a href="/manage/studio/<%= studio.id %>/group-dancers" style="text-decoration: none;">
                       <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24;"><%= r.uncredited_awards %> award<%= r.uncredited_awards === 1 ? '' : 's' %> missing dancers</span>

@@ -139,7 +139,7 @@ async function runImport() {
         // stash. Solo convention: awards.dancer_id + junction row.
         let dancerId = null;
         if (dancer) {
-          const resolved = await resolveOrCreateDancer(db, { name: dancer, studioId, routine });
+          const resolved = await resolveOrCreateDancer(db, { name: dancer, studioId, routine, year: eventYear });
           if (resolved) dancerId = resolved.id;
         }
 
@@ -163,7 +163,7 @@ async function runImport() {
         if (dancer && !existing.dancer_id) {
           const hasLink = await db.get('SELECT 1 FROM award_dancers WHERE award_id = ?', [existing.id]);
           if (!hasLink) {
-            const resolved = await resolveOrCreateDancer(db, { name: dancer, studioId, routine });
+            const resolved = await resolveOrCreateDancer(db, { name: dancer, studioId, routine, year: eventYear });
             if (resolved) {
               const removed = await db.get('SELECT 1 FROM award_dancer_removals WHERE award_id = ? AND dancer_id = ?', [existing.id, resolved.id]);
               if (!removed) {

@@ -42,11 +42,12 @@ router.use('/manage/studio/:id', async (req, res, next) => {
         WHERE a.studio_id = ? AND TRIM(IFNULL(a.performance_name, '')) != ''
         GROUP BY rn, yr, ev)
       SELECT COUNT(*) AS n FROM (
-        SELECT rn, yr FROM per_event GROUP BY rn, yr
+        SELECT rn, yr, MAX(covered) AS mx FROM per_event GROUP BY rn, yr
         HAVING MAX(groupish) = 1 AND MIN(covered) = 0) g
       WHERE NOT EXISTS (SELECT 1 FROM studio_routine_checks c
                          WHERE c.studio_id = ? AND c.routine_key = g.rn AND c.year = g.yr)
-    `, [parseInt(req.params.id, 10) || 0, parseInt(req.params.id, 10) || 0]);
+        AND NOT (g.mx = 0 AND CAST(g.yr AS INTEGER) >= 1900 AND CAST(g.yr AS INTEGER) <= ?)
+    `, [parseInt(req.params.id, 10) || 0, parseInt(req.params.id, 10) || 0, new Date().getFullYear() - LEGACY_AFTER_YEARS]);
     res.locals.missingRoutinesCount = row ? row.n : 0;
   } catch (e) { res.locals.missingRoutinesCount = 0; }
   next();
@@ -1664,6 +1665,12 @@ router.get('/my-studio', requireAuth, async (req, res) => {
 // org-published dancer (dancer_id set, the solo convention) are READ-ONLY
 // here: they show in counts/casts and feed Sync as a source, but paste/
 // sync/remove never modify them — writes only target dancer-less awards.
+// Routines with NO dancers at all retire to "legacy" after this many years
+// (Q, 2026-08-30): don't offer an easy dismiss — encourage filling names in —
+// but stop nagging about ancient awards whose names will likely never come.
+// Legacy entries stay fillable forever (show-all view + All Routines).
+const LEGACY_AFTER_YEARS = 3;
+
 const GROUP_AWARD_FILTER = `
   a.studio_id = ? AND ${routineKeySql('a')} = ?
   AND a.dancer_id IS NULL`;
@@ -1744,6 +1751,7 @@ router.get('/manage/studio/:id/routines', requireAuth, requireStudioOwner, async
 
   res.render('manage_studio_routines', {
     studio: req.studio, routines, aliases,
+    legacyCutoff: new Date().getFullYear() - LEGACY_AFTER_YEARS,
     pageTitle: `${req.studio.name} — All Routines`,
   });
 });
@@ -1918,18 +1926,27 @@ router.get('/manage/studio/:id/group-dancers', requireAuth, requireStudioOwner, 
   const checkSet = new Set(checkRows.map(c => c.routine_key + '|||' + c.year));
   routines.forEach(r => { r.checked = checkSet.has(r.routine_key + '|||' + r.year); });
 
+  // Age-based retirement: a routine with NO dancers whose year is old
+  // enough goes legacy — out of the queue and the pill, still fillable.
+  const legacyCutoff = new Date().getFullYear() - LEGACY_AFTER_YEARS;
+  routines.forEach(r => {
+    const y = parseInt(r.year, 10);
+    r.legacy = !r.checked && r.cast.length === 0 && Number.isFinite(y) && y <= legacyCutoff;
+  });
+
   // The page is a work queue: only open items by default; ?all=1 shows
-  // everything (covered + marked-complete stay editable there).
+  // everything (covered, marked-complete, and legacy stay editable there).
   const totalCount = routines.length;
-  const openRoutines = routines.filter(r => !r.covered && !r.checked);
+  const openRoutines = routines.filter(r => !r.covered && !r.checked && !r.legacy);
+  const legacyCount = routines.filter(r => r.legacy).length;
   const showAll = req.query.all === '1';
   const visibleRoutines = showAll ? routines : openRoutines;
-  visibleRoutines.sort((a, b) => (a.covered || a.checked) - (b.covered || b.checked));
+  visibleRoutines.sort((a, b) => (a.covered || a.checked || a.legacy) - (b.covered || b.checked || b.legacy));
   const doneCount = totalCount - openRoutines.length;
 
   res.render('manage_studio_group_dancers', {
     studio, routines: visibleRoutines, doneCount, totalCount,
-    openCount: openRoutines.length, showAll,
+    openCount: openRoutines.length, legacyCount, showAll,
     pageTitle: 'Check Routine Dancers'
   });
 });

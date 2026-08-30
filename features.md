@@ -537,3 +537,15 @@ studio+routine_key+year) removes what the system can't judge — e.g. a NexStar
 solo whose dancer was never published — undoable from show-all or the All
 Routines status column ("✓ marked complete" + Undo). Sidebar count pill
 excludes checked routine-years. Activity: routine_marked_complete. FAQ §6.
+
+## Legacy retirement + year-aware dancer matching (2026-08-30)
+Empty-cast routines no longer offer any dismissal (Q: encourage filling names
+in, don't make skipping easy) — the "Names unavailable" button lasted one
+deploy and is gone. Instead, a routine with NO dancers whose season is
+>= LEGACY_AFTER_YEARS (3) old retires automatically: out of the check queue
+and sidebar pill, badged "legacy — names never recorded" on show-all and All
+Routines, still fillable forever (adding names revives it). Mark complete
+remains only on cards WITH dancers. Dancer resolution
+(utils/resolveDancer.js) tie-break now requires name+routine+studio+YEAR when
+the award's year is known (undated awards fall back to routine+studio) —
+callers (StarQuest importer + repair) pass the event year.
