@@ -1888,7 +1888,7 @@ router.get('/manage/studio/:id/group-dancers', requireAuth, requireStudioOwner, 
     SELECT IFNULL(a.performance_name_key, LOWER(TRIM(IFNULL(a.performance_name, '')))) AS routine_key, IFNULL(e.year, 'Undated') AS year,
            IFNULL(e.id, 0) AS event_id, IFNULL(e.name, 'Self-reported') AS event_name,
            COUNT(DISTINCT a.id) AS award_count,
-           COUNT(DISTINCT CASE WHEN ad.award_id IS NOT NULL THEN a.id END) AS linked_awards,
+           COUNT(DISTINCT CASE WHEN ad.award_id IS NOT NULL OR a.dancer_id IS NOT NULL THEN a.id END) AS linked_awards,
            GROUP_CONCAT(DISTINCT TRIM(a.performance_name)) AS raw_names
     FROM awards a LEFT JOIN events e ON a.event_id = e.id
     LEFT JOIN award_dancers ad ON ad.award_id = a.id
