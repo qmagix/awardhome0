@@ -606,3 +606,14 @@ account enumeration). A successful reset also sets is_verified (clicking the
 emailed link proves address control — otherwise an unverified user who forgot
 their password stayed stuck) and regenerates the session so a stolen session
 can't survive the change. FAQ: dancer + studio admin.
+
+## Organizer FAQ: gold-button pricing moved private (2026-08-30)
+Removed the public pricing paragraph from "What does this cost?" (Q's call):
+the free-first-button perk, per-event pricing, and the Oct 15 market date now
+surface only where interest already exists — the claimed org's dashboard
+(manage_org.ejs Upcoming Events tab) and private email. Public FAQ keeps the
+honest business-model answer ("most features are free... sponsoring is the best
+way to help") without anchoring a price before demonstrated value, matching the
+commitment-ladder strategy in org_invite_draft.md. The integrity disclosure
+(sponsored placement never alters results, listing order, or dates) is
+unaffected — it lives in Terms §9.
