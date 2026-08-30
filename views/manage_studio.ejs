@@ -153,31 +153,64 @@
       <script>
       async function rejectMerge(sourceId) {
         if (!confirm('Are you sure? This will hide this suggestion permanently.')) return;
-        const res = await fetch('/api/reject-merge/studios', {
+        const res = await fetch('/manage/studio/<%= studio.id %>/merge-reject', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sourceId, targetId: <%= studio.id %> })
+          body: JSON.stringify({ sourceId })
         });
         if (res.ok) window.location.reload();
-        else alert('Failed to reject merge.');
+        else alert('Failed to hide the suggestion — please try again.');
       }
 
       async function acceptMerge(sourceId) {
-        if (!confirm('Are you absolutely sure? This will permanently merge their awards into your studio.')) return;
-        const res = await fetch('/api/merge/studios', {
+        if (!confirm('Ask AwardHome to merge this studio into yours? Our team double-checks every merge before it happens.')) return;
+        const res = await fetch('/manage/studio/<%= studio.id %>/merge-request', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sourceId, targetId: <%= studio.id %> })
+          body: JSON.stringify({ sourceId })
         });
+        const data = await res.json().catch(() => ({}));
         if (res.ok) {
-          alert('Merge successful!');
+          alert('Request sent! Our team reviews every merge — it will show below as Pending, and we\'ll email you as soon as it\'s done.');
           window.location.reload();
         } else {
-          const data = await res.json();
-          alert('Failed to merge: ' + (data.error || 'Unknown error'));
+          alert(data.error || 'Something went wrong sending your request — please try again.');
         }
       }
       </script>
+    <% } %>
+
+    <!-- Merge requests: every request the owner has sent, with live status -->
+    <% if (typeof mergeRequests !== 'undefined' && mergeRequests.length > 0) { %>
+      <div class="card glass-card" style="margin-bottom: 2rem;">
+        <h3 style="margin: 0 0 0.5rem 0;">🔀 Merge Requests</h3>
+        <p style="margin: 0 0 1rem 0; color: var(--text-muted); font-size: 0.9rem;">
+          Our team double-checks every merge. Pending requests are usually reviewed within a few days —
+          we'll email you the moment one is decided.
+        </p>
+        <table class="premium-table" style="width: 100%;">
+          <thead>
+            <tr><th>Studio</th><th>Requested</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <% mergeRequests.forEach(function(mr) { %>
+              <tr>
+                <td><%= mr.source_name %></td>
+                <td style="color: var(--text-muted);"><%= String(mr.created_at).slice(0, 10) %></td>
+                <td>
+                  <% if (mr.status === 'pending') { %>
+                    <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24;">Pending review</span>
+                  <% } else if (mr.status === 'approved') { %>
+                    <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">Merged</span>
+                  <% } else { %>
+                    <span class="badge" style="background: rgba(255,255,255,0.08); color: var(--text-muted);">Kept separate</span>
+                  <% } %>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
     <% } %>
 
     <!-- Analytics Quick Look -->

@@ -7,6 +7,7 @@ const { sendStudioInvite, buildStudioInvite, buildOrgInviteTemplate, sendOrgInvi
 const { refresh } = require('../utils/cache');
 const { requireAdmin, requireSuperadmin } = require('../middleware/auth');
 const { approveDancerClaim, rejectDancerClaim } = require('../utils/claims');
+const { ensureMergeRequestTable, mergeStudios, notifyMergeDecision } = require('../utils/studioMerge');
 const { FLAG_DEFS, VALID_STATES, refreshFlags } = require('../utils/featureFlags');
 const bcrypt = require('bcrypt');
 const { runBackfillForEvent } = require('../backfill_utils');
@@ -1189,6 +1190,19 @@ router.post('/admin/users/:id/toggle-role', requireSuperadmin, async (req, res) 
 
 router.get('/admin/duplicates', requireSuperadmin, async (req, res) => {
   const db = await openDb();
+  await ensureMergeRequestTable(db);
+  const ownerRequests = await db.all(`
+    SELECT mr.id, mr.created_at, u.email AS requester_email,
+           t.id AS target_id, t.name AS target_name, t.unique_id AS target_uid,
+           s.id AS source_id, s.name AS source_name, s.unique_id AS source_uid,
+           (SELECT COUNT(*) FROM awards a WHERE a.studio_id = s.id) AS source_awards
+    FROM studio_merge_requests mr
+    JOIN studios t ON mr.target_studio_id = t.id
+    JOIN studios s ON mr.source_studio_id = s.id
+    LEFT JOIN users u ON mr.requested_by = u.id
+    WHERE mr.status = 'pending'
+    ORDER BY mr.created_at ASC
+  `);
   const studios = await db.all("SELECT id, name FROM studios WHERE status = 'active' ORDER BY LOWER(name)");
 
   const groupedDuplicates = [];
@@ -1223,7 +1237,8 @@ router.get('/admin/duplicates', requireSuperadmin, async (req, res) => {
   res.render('admin_duplicates', {
     totalStudios: studios.length,
     duplicateGroupsCount: groupedDuplicates.length,
-    groupedDuplicates
+    groupedDuplicates,
+    ownerRequests
   });
 });
 
@@ -1296,31 +1311,51 @@ router.post('/api/merge/studios', requireAdmin, express.json(), async (req, res)
   if (!sourceId || !targetId || sourceId === targetId) return res.status(400).json({ error: "Invalid IDs" });
 
   try {
-    await db.run('BEGIN TRANSACTION');
-
-    // Update awards with traceability
-    await db.run(`UPDATE awards SET studio_id = ?, merged_from_studio_id = ? WHERE studio_id = ?`, [targetId, sourceId, sourceId]);
-
-    // Transfer dancer associations
-    const links = await db.all(`SELECT dancer_id FROM dancer_studios WHERE studio_id = ?`, [sourceId]);
-    for (const link of links) {
-      const exists = await db.get(`SELECT id FROM dancer_studios WHERE dancer_id = ? AND studio_id = ?`, [link.dancer_id, targetId]);
-      if (!exists) {
-        await db.run(`UPDATE dancer_studios SET studio_id = ? WHERE dancer_id = ? AND studio_id = ?`, [targetId, link.dancer_id, sourceId]);
-      } else {
-        await db.run(`DELETE FROM dancer_studios WHERE dancer_id = ? AND studio_id = ?`, [link.dancer_id, sourceId]);
-      }
-    }
-
-    // Mark source studio as merged, do NOT delete it
-    await db.run(`UPDATE studios SET status = 'merged', merged_into_id = ? WHERE id = ?`, [targetId, sourceId]);
-
-    await db.run('COMMIT');
+    await mergeStudios(db, sourceId, targetId);
+    // A direct admin merge settles any pending owner request for the pair.
+    await ensureMergeRequestTable(db);
+    await db.run(
+      `UPDATE studio_merge_requests SET status = 'approved', decided_at = CURRENT_TIMESTAMP, decided_by = ?
+       WHERE source_studio_id = ? AND target_studio_id = ? AND status = 'pending'`,
+      [req.session.user.id, sourceId, targetId]);
     res.json({ success: true });
   } catch (e) {
-    await db.run('ROLLBACK');
     res.status(500).json({ error: e.message });
   }
+});
+
+
+// ---- Owner merge-request review (queue lives on /admin/duplicates) ----
+
+router.post('/api/admin/merge-requests/:id/approve', requireAdmin, express.json(), async (req, res) => {
+  const db = await openDb();
+  await ensureMergeRequestTable(db);
+  const request = await db.get(`SELECT * FROM studio_merge_requests WHERE id = ? AND status = 'pending'`, [req.params.id]);
+  if (!request) return res.status(404).json({ error: 'No pending request with that id.' });
+
+  try {
+    await mergeStudios(db, request.source_studio_id, request.target_studio_id);
+    await db.run(
+      `UPDATE studio_merge_requests SET status = 'approved', decided_at = CURRENT_TIMESTAMP, decided_by = ? WHERE id = ?`,
+      [req.session.user.id, request.id]);
+    notifyMergeDecision(db, request.id, true);
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.post('/api/admin/merge-requests/:id/reject', requireAdmin, express.json(), async (req, res) => {
+  const db = await openDb();
+  await ensureMergeRequestTable(db);
+  const request = await db.get(`SELECT * FROM studio_merge_requests WHERE id = ? AND status = 'pending'`, [req.params.id]);
+  if (!request) return res.status(404).json({ error: 'No pending request with that id.' });
+
+  await db.run(
+    `UPDATE studio_merge_requests SET status = 'rejected', decided_at = CURRENT_TIMESTAMP, decided_by = ? WHERE id = ?`,
+    [req.session.user.id, request.id]);
+  notifyMergeDecision(db, request.id, false);
+  res.json({ success: true });
 });
 
 

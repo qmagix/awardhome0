@@ -13,6 +13,53 @@
     </div>
   </div>
 
+  <% if (typeof ownerRequests !== 'undefined' && ownerRequests.length > 0) { %>
+    <div class="glass-card" style="padding: 2rem; margin-bottom: 2rem; border: 1px solid rgba(245, 158, 11, 0.35);">
+      <h2 style="margin: 0 0 0.5rem 0; color: #fbbf24;">Owner Merge Requests (<%= ownerRequests.length %>)</h2>
+      <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+        Studio owners asked to absorb these records. Compare before approving — approval runs the merge
+        immediately and emails the owner; rejecting also emails them (gently).
+      </p>
+      <table class="premium-table" style="width: 100%;">
+        <thead>
+          <tr><th>Source (to absorb)</th><th>Into (owner's studio)</th><th>Requested by</th><th>When</th><th style="text-align: right;">Actions</th></tr>
+        </thead>
+        <tbody>
+          <% ownerRequests.forEach(function(r) { %>
+            <tr>
+              <td>
+                <a href="/dance/studio/<%= r.source_uid %>" target="_blank" style="color: var(--primary);"><%= r.source_name %></a>
+                <span class="badge" style="margin-left: 0.4rem;"><%= r.source_awards.toLocaleString() %> awards</span>
+              </td>
+              <td><a href="/dance/studio/<%= r.target_uid %>" target="_blank" style="color: var(--primary);"><%= r.target_name %></a></td>
+              <td style="color: var(--text-muted);"><%= r.requester_email || '—' %></td>
+              <td style="color: var(--text-muted);"><%= String(r.created_at).slice(0, 10) %></td>
+              <td style="text-align: right; white-space: nowrap;">
+                <a href="/admin/compare/studios?id1=<%= r.target_id %>&id2=<%= r.source_id %>" target="_blank" class="btn btn-warning" style="padding: 0.3rem 0.7rem; font-size: 0.8rem;">Compare</a>
+                <button onclick="decideMergeRequest(<%= r.id %>, 'approve', '<%= r.source_name.replace(/'/g, '') %>')" class="btn" style="background: var(--primary); border: none; color: white; padding: 0.3rem 0.7rem; font-size: 0.8rem;">Approve &amp; merge</button>
+                <button onclick="decideMergeRequest(<%= r.id %>, 'reject', '<%= r.source_name.replace(/'/g, '') %>')" class="btn" style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: var(--text-muted); padding: 0.3rem 0.7rem; font-size: 0.8rem;">Reject</button>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    <script>
+      async function decideMergeRequest(id, action, name) {
+        const msg = action === 'approve'
+          ? 'Merge "' + name + '" into the owner\'s studio now? This moves all its awards and emails the owner.'
+          : 'Reject the request for "' + name + '"? The owner is emailed that the records stay separate.';
+        if (!confirm(msg)) return;
+        const res = await fetch('/api/admin/merge-requests/' + id + '/' + action, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}',
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) location.reload();
+        else alert(data.error || 'Action failed');
+      }
+    </script>
+  <% } %>
+
   <div class="glass-card" style="padding: 2rem;">
     <p style="color: var(--text-muted); margin-bottom: 2rem;">
       The following groups contain studios where one name is an exact case-insensitive prefix of another. Review them below and use the Compare tool to merge verified duplicates.

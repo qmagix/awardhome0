@@ -94,6 +94,16 @@ async function initDb() {
       FOREIGN KEY(user_id) REFERENCES users(id),
       FOREIGN KEY(studio_id) REFERENCES studios(id)
     );
+    CREATE TABLE IF NOT EXISTS studio_merge_requests (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      target_studio_id INTEGER NOT NULL REFERENCES studios(id),
+      source_studio_id INTEGER NOT NULL REFERENCES studios(id),
+      requested_by INTEGER REFERENCES users(id),
+      status TEXT DEFAULT 'pending',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      decided_at DATETIME,
+      decided_by INTEGER REFERENCES users(id)
+    );
     CREATE TABLE IF NOT EXISTS dancer_claims (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL,

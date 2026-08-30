@@ -4,6 +4,8 @@ const { openDb } = require('../../database');
 const { requireAuth, requireStudioOwner } = require('../../middleware/auth');
 const { logStudioActivity } = require('../../utils/activity');
 const { approveDancerClaim, rejectDancerClaim, notifyRosterAttach } = require('../../utils/claims');
+const { ensureMergeRequestTable } = require('../../utils/studioMerge');
+const { sendEmail } = require('../../utils/mailer');
 const multer = require('multer');
 // CSV imports only (roster + awards). Rejections surface as 400s via the
 // central error handler (err.status = 400).
@@ -88,7 +90,19 @@ router.get('/manage/studio/:id', requireAuth, requireStudioOwner, async (req, re
     studio.join_code = newCode;
   }
 
-  const potentialDuplicates = await findPotentialDuplicates(db, studio);
+  await ensureMergeRequestTable(db);
+  const mergeRequests = await db.all(`
+    SELECT mr.id, mr.status, mr.created_at, s.name AS source_name, s.unique_id AS source_uid
+    FROM studio_merge_requests mr
+    JOIN studios s ON mr.source_studio_id = s.id
+    WHERE mr.target_studio_id = ?
+    ORDER BY mr.created_at DESC
+  `, [studio.id]);
+  // A studio with a request on file (any status) leaves the suggestion list:
+  // pending/approved live in the requests table, rejected shouldn't be re-asked.
+  const requestedIds = new Set(mergeRequests.map(r => r.source_uid));
+  const potentialDuplicates = (await findPotentialDuplicates(db, studio))
+    .filter(d => !requestedIds.has(d.unique_id));
 
   let prefs = {};
   if (studio.public_preferences) {
@@ -100,7 +114,63 @@ router.get('/manage/studio/:id', requireAuth, requireStudioOwner, async (req, re
   studio.prefs = prefs;
 
   const onboarding = await buildOnboarding(db, studio);
-  res.render('manage_studio', { studio, potentialDuplicates, onboarding });
+  res.render('manage_studio', { studio, potentialDuplicates, mergeRequests, onboarding });
+});
+
+
+// Owner asks us to merge a suggested duplicate into their studio. Never a
+// direct write — absorbing another record's awards is the rogue-studio
+// attack surface, so every request waits for admin review (see
+// /admin/duplicates). The owner sees it as Pending on their dashboard.
+router.post('/manage/studio/:id/merge-request', requireAuth, requireStudioOwner, express.json(), async (req, res) => {
+  const db = await openDb();
+  const studio = req.studio;
+  const sourceId = parseInt(req.body && req.body.sourceId, 10);
+  if (!sourceId || sourceId === studio.id) return res.status(400).json({ error: 'Invalid studio.' });
+
+  const source = await db.get('SELECT id, name, status, is_claimed, owner_id FROM studios WHERE id = ?', [sourceId]);
+  if (!source || source.status === 'merged') return res.status(404).json({ error: 'That studio record no longer exists.' });
+  if (source.owner_id) {
+    return res.status(400).json({ error: "That studio is claimed by another account, so we can't merge it automatically — email hello@awardhome.com and we'll help sort it out." });
+  }
+
+  await ensureMergeRequestTable(db);
+  const existing = await db.get(
+    `SELECT id, status FROM studio_merge_requests WHERE target_studio_id = ? AND source_studio_id = ? AND status = 'pending'`,
+    [studio.id, sourceId]);
+  if (existing) return res.json({ success: true, alreadyPending: true });
+
+  await db.run(
+    `INSERT INTO studio_merge_requests (target_studio_id, source_studio_id, requested_by) VALUES (?, ?, ?)`,
+    [studio.id, sourceId, req.session.user.id]);
+  logStudioActivity(studio.id, 'merge_requested');
+
+  // Heads-up to the review inbox — fire-and-forget.
+  sendEmail({
+    to: 'hello@awardhome.com',
+    subject: `Merge request: "${source.name}" → "${studio.name}"`,
+    html: `<p>${req.session.user.email} asked to merge studio #${sourceId} ("${source.name}") into #${studio.id} ("${studio.name}").</p>
+      <p>Review at ${require('../../config').BASE_URL}/admin/duplicates</p>`,
+  }).catch((err) => console.error('merge-request admin email failed:', err));
+
+  res.json({ success: true });
+});
+
+
+// Owner-side "Not My Studio": hides the suggestion for this studio only.
+// (The old flow pointed at an admin-gated API, which silently 403'd.)
+router.post('/manage/studio/:id/merge-reject', requireAuth, requireStudioOwner, express.json(), async (req, res) => {
+  const db = await openDb();
+  const studio = req.studio;
+  const sourceId = parseInt(req.body && req.body.sourceId, 10);
+  if (!sourceId) return res.status(400).json({ error: 'Invalid studio.' });
+
+  const rejected = studio.rejected_merges ? studio.rejected_merges.split(',') : [];
+  if (!rejected.includes(String(sourceId))) {
+    rejected.push(String(sourceId));
+    await db.run('UPDATE studios SET rejected_merges = ? WHERE id = ?', [rejected.join(','), studio.id]);
+  }
+  res.json({ success: true });
 });
 
 

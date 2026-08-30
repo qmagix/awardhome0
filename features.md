@@ -447,3 +447,21 @@ whose fictional defaults are already Peacock Cup — Angela Ng / Swanlake Dance 
 directory — the one outbound content link, kept deliberately (benefit 3 demo). `X-Robots-Tag: noindex`. Zero-events outreach
 letters link here (see org_invite_draft.md v5.2); orgs with archived events
 keep their own page as the demo link.
+
+## Owner merge requests (2026-08-29)
+"Merge into Mine" on the studio dashboard previously POSTed to the admin-only
+merge API — owners got a silent 403 (HTML error body made the client's .json()
+throw before any alert). Now owner-initiated merges are REQUESTS, reviewed by a
+human (deliberate: absorbing another record's awards is the rogue-studio attack
+surface). Flow: owner clicks Merge into Mine → row in `studio_merge_requests`
+(pending; defensive CREATE TABLE in utils/studioMerge.js + database.js) → shown
+immediately in a "Merge Requests" table on the dashboard (Pending review /
+Merged / Kept separate) and the suggestion leaves the list; heads-up email to
+hello@awardhome.com. Claimed sources are refused up front (can't absorb another
+owner's studio). Admins review at /admin/duplicates ("Owner Merge Requests"
+queue: compare link, approve-and-merge, reject) — decisions email the owner
+(utils/studioMerge.js notifyMergeDecision; rejection copy stays warm). Merge
+SQL extracted to utils/studioMerge.js mergeStudios(), shared by the admin
+compare tool (which also settles matching pending requests when used directly).
+"Not My Studio" now hits an owner-scoped endpoint (was the same silent-403
+bug). FAQ: studio admin §18.
