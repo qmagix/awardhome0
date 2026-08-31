@@ -81,8 +81,19 @@ async function scrapeEvent(url, year) {
         perfName = perfName.replace(/^"(.*)"$/, '$1').trim(); // titles arrive quoted
       }
       const studio = cell(studioIdx);
-      const dancer = dancerIdx >= 0 ? cell(dancerIdx) : '';
-      const category = categoryIdx >= 0 ? cell(categoryIdx) : '';
+      let dancer = dancerIdx >= 0 ? cell(dancerIdx) : '';
+      let category = categoryIdx >= 0 ? cell(categoryIdx) : '';
+      // Ultra's scholarship tables label the column "Dancer - Level & Age" and
+      // publish "Isabel Jones - Competitive Plus 8" in one cell. The header
+      // above matches on a SUBSTRING, so that variant was read as a plain
+      // "Dancer" column and the level+age was stored as part of the person's
+      // NAME -- 90 dancers on the platform were called things like "Ava
+      // Pracanica - Competitive Plus 8". Split on the header's own contract,
+      // and keep the level/age as the category rather than discarding it.
+      if (dancer && /Dancer\s*[-–]\s*Level/i.test(headerStr)) {
+        const m = dancer.match(/^(.*?)\s+[-–]\s+(.+)$/);
+        if (m) { dancer = m[1].trim(); if (!category) category = m[2].trim(); }
+      }
       if (!studio && !perfName && !dancer) return;
       rows.push({ section: awardType, place, entry: perfNumber, routine: perfName, studio, dancer, category });
     });
