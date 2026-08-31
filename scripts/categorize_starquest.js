@@ -99,7 +99,18 @@ function extractAwards(pdfData) {
         // word-breaks survive; whitespace is collapsed once at the end.
         const flush = () => {
           if (!currentPart.length) return;
-          const joined = currentPart.join('').replace(/\s+/g, ' ').trim();
+          // Join raw so the document's own trailing-tab word breaks survive.
+          // Where a fragment does NOT end in whitespace, the break has to be
+          // inferred: a following UPPERCASE letter starts a new word
+          // ("Lydia'lee" + "Bryant"), while a lowercase one continues the
+          // previous ("Pilato Danc" + "e Center"). Joining blindly glued the
+          // former into "Lydia'leeBryant".
+          let joined = '';
+          for (const frag of currentPart) {
+            if (joined && !/\s$/.test(joined) && /^[A-Z]/.test(frag)) joined += ' ';
+            joined += frag;
+          }
+          joined = joined.replace(/\s+/g, ' ').trim();
           if (joined) parts.push(joined);
           currentPart = [];
         };

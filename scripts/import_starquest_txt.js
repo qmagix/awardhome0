@@ -1,6 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 const { openDb } = require('../database');
+const { resolveStudio } = require('../utils/resolveStudio');
+const loosStudioMatches = new Map();
+let createdStudios = 0;
 const { normalizeName } = require('../utils/normalize_names');
 const { resolveOrCreateDancer } = require('../utils/resolveDancer');
 
@@ -27,23 +30,18 @@ async function getOrCreateEvent(orgId, eventName, year) {
 
 async function getOrCreateStudio(studioName) {
   const db = await openDb();
-  // PDF extraction leaves tabs inside studio names. The 2026-08-09 dedup pass
-  // renamed most studios tabs->spaces, kept 553 unproven ones tab-named, and
-  // merged 566 into twins (source rows keep their tab name + status='merged').
-  // So: try the raw name, then the collapsed form, and follow merges — else
-  // every tab-named studio gets recreated as a duplicate on re-import.
-  const collapsed = studioName.replace(/\s+/g, ' ').trim();
-  let studio = await db.get('SELECT id, status, merged_into_id FROM studios WHERE name = ?', [studioName]);
-  if (!studio && collapsed !== studioName) {
-    studio = await db.get('SELECT id, status, merged_into_id FROM studios WHERE name = ?', [collapsed]);
+  // Studio spelling varies between the source documents and what is already in
+  // the DB -- case, spacing and punctuation -- and an exact, case-SENSITIVE
+  // match minted a duplicate studio for every variant (2,470 duplicate awards
+  // on a StarQuest re-import). utils/resolveStudio.js walks exact -> whitespace
+  // -> case -> spacing -> punctuation, and follows merged_into_id to the live
+  // survivor so historical spellings keep resolving.
+  const { id, tier } = await resolveStudio(db, studioName, { create: true });
+  if (tier !== 'exact' && tier !== 'whitespace' && tier !== 'created') {
+    loosStudioMatches.set(tier, (loosStudioMatches.get(tier) || 0) + 1);
   }
-  if (studio && studio.status === 'merged' && studio.merged_into_id) return studio.merged_into_id;
-  if (!studio) {
-    const uniqueId = 'STD-' + require('crypto').randomUUID();
-    const res = await db.run('INSERT INTO studios (unique_id, name) VALUES (?, ?)', [uniqueId, collapsed]);
-    return res.lastID;
-  }
-  return studio.id;
+  if (tier === 'created') createdStudios++;
+  return id;
 }
 
 async function runImport() {
@@ -180,6 +178,10 @@ async function runImport() {
   }
 
   console.log(`\nImport complete! Total new awards imported: ${totalImported}`);
+  if (createdStudios) console.log(`  studios created: ${createdStudios}`);
+  for (const [tier, n] of loosStudioMatches) {
+    console.log(`  studios resolved by ${tier} match: ${n} (would have been duplicates)`);
+  }
 }
 
 runImport().catch(console.error);

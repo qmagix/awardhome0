@@ -48,7 +48,7 @@ async function main() {
   const refs = await studioRefs(db);
   const rows = await db.all(`
     SELECT id, name, owner_id FROM studios
-    WHERE name LIKE '%' || CHAR(9) || '%' OR name LIKE '%  %' OR name != TRIM(name)`);
+    WHERE IFNULL(status,'') <> 'merged' AND name LIKE '%' || CHAR(9) || '%' OR name LIKE '%  %' OR name != TRIM(name)`);
 
   const merges = [], renames = [], blocked = [];
   for (const r of rows) {
@@ -85,8 +85,13 @@ async function main() {
     for (const m of merges.concat(renames)) {
       const live = await db.get('SELECT id, owner_id FROM studios WHERE id = ?', [m.id]);
       if (!live) continue;
+      // Prefer a LIVE target. Merging into an already-merged row builds a
+      // chain, and both consumers of merged_into_id follow exactly one hop
+      // (import_starquest_txt.js:40, routes/dance/public.js:969), so a chain
+      // resolves to a dead studio.
       const target = await db.get(
-        'SELECT id FROM studios WHERE name = ? AND id <> ? ORDER BY id LIMIT 1', [m.clean, m.id]);
+        `SELECT id FROM studios WHERE name = ? AND id <> ?
+         ORDER BY (CASE WHEN IFNULL(status,'') = 'merged' THEN 1 ELSE 0 END), id LIMIT 1`, [m.clean, m.id]);
       if (!target) {
         await db.run('UPDATE studios SET name = ? WHERE id = ?', [m.clean, m.id]);
         renamedN++;
@@ -96,6 +101,12 @@ async function main() {
       mergedN++;
       m.target = target;
       for (const r of refs) {
+        if (r.table === 'awards' && r.col === 'studio_id') {
+          // record provenance exactly as utils/studioMerge.js does
+          await db.run(`UPDATE awards SET studio_id = ?, merged_from_studio_id = ? WHERE studio_id = ?`,
+            [m.target.id, m.id, m.id]);
+          continue;
+        }
         await db.run(`UPDATE OR IGNORE ${r.table} SET ${r.col} = ? WHERE ${r.col} = ?`, [m.target.id, m.id]);
         // The follow-up DELETE only exists to clear rows an OR IGNORE skipped
         // because the target already holds the equivalent link row. NEVER run
@@ -106,9 +117,35 @@ async function main() {
         if (r.table === 'awards') continue;
         await db.run(`DELETE FROM ${r.table} WHERE ${r.col} = ?`, [m.id]);
       }
-      await db.run('DELETE FROM studios WHERE id = ?', [m.id]);
+      // SOFT merge, matching utils/studioMerge.js and the rest of the
+      // codebase: the row stays with status='merged' + merged_into_id, so its
+      // public URL redirects (routes/dance/public.js) instead of 404ing, and
+      // importers resolve the old name through it
+      // (import_starquest_txt.js follows merged_into_id). Hard-deleting would
+      // throw away both behaviours.
+      await db.run(`UPDATE studios SET status = 'merged', merged_into_id = ? WHERE id = ?`, [m.target.id, m.id]);
+    }
+    // Flatten any merge chain to its terminal studio, including chains that
+    // pre-date this script. One hop is all the readers follow.
+    let flattened = 0;
+    const chained = await db.all(`
+      SELECT s.id, s.merged_into_id FROM studios s
+      JOIN studios t ON t.id = s.merged_into_id
+      WHERE s.status = 'merged' AND t.status = 'merged'`);
+    for (const c of chained) {
+      let target = c.merged_into_id, hops = 0;
+      while (hops++ < 20) {
+        const nxt = await db.get(`SELECT merged_into_id, status FROM studios WHERE id = ?`, [target]);
+        if (!nxt || nxt.status !== 'merged' || !nxt.merged_into_id || nxt.merged_into_id === target) break;
+        target = nxt.merged_into_id;
+      }
+      if (target !== c.merged_into_id) {
+        await db.run('UPDATE studios SET merged_into_id = ? WHERE id = ?', [target, c.id]);
+        flattened++;
+      }
     }
     await db.run('COMMIT');
+    if (flattened) console.log(`  flattened ${flattened} merge chain(s) to their terminal studio`);
   } catch (e) {
     await db.run('ROLLBACK');
     throw e;
