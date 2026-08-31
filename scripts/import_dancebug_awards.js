@@ -208,18 +208,32 @@ async function run() {
             const studio = await getOrCreateStudio(studioName);
             const studioId = studio ? studio.id : null;
 
+            // The dedupe key MUST include studio_id and performance_number.
+            // Two different studios routinely enter same-titled routines at one
+            // event: Believe Louisville 2022 had entry 259 "Burlesque" (Aubrey
+            // Sears, Dance Designs) and entry 330 "Burlesque" (Laney Wheeler,
+            // All About Dance). Keyed on event+category+routine alone, the
+            // second collapsed into the first, so BOTH dancers hung off one
+            // studio's award while the other studio's real placement row was
+            // left with no dancer at all -- and backfill_utils then propagated
+            // the bad pair across the rest of the event.
             let award = await db.getAsync(
-              'SELECT id FROM awards WHERE event_id = ? AND category = ? AND performance_name = ? AND IFNULL(place, "") = IFNULL(?, "")',
-              [event.id, categoryTitle, routine, 'Winner']
+              `SELECT id FROM awards WHERE event_id = ? AND category = ? AND performance_name = ?
+                 AND IFNULL(place, '') = ? AND IFNULL(studio_id, -1) = ? AND IFNULL(performance_number, '') = ?`,
+              [event.id, categoryTitle, routine, 'Winner', studioId === null ? -1 : studioId, entryNumber || '']
             );
 
             if (!award) {
               await db.runAsync(`
-                INSERT INTO awards (event_id, place, performance_name, performance_number, category, studio_id) 
+                INSERT INTO awards (event_id, place, performance_name, performance_number, category, studio_id)
                 VALUES (?, ?, ?, ?, ?, ?)
               `, [event.id, 'Winner', routine, entryNumber, categoryTitle, studioId]);
               totalAwards++;
-              award = await db.getAsync('SELECT id FROM awards WHERE event_id = ? AND category = ? AND performance_name = ? ORDER BY id DESC LIMIT 1', [event.id, categoryTitle, routine]);
+              award = await db.getAsync(
+                `SELECT id FROM awards WHERE event_id = ? AND category = ? AND performance_name = ?
+                   AND IFNULL(studio_id, -1) = ? AND IFNULL(performance_number, '') = ?
+                 ORDER BY id DESC LIMIT 1`,
+                [event.id, categoryTitle, routine, studioId === null ? -1 : studioId, entryNumber || '']);
             }
 
             // Dancers mapping

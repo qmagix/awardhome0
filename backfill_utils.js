@@ -2,6 +2,8 @@
  * Reusable auto-backfill logic for the Dance Awards Platform
  */
 
+const { isIndividualLabel } = require('./utils/soloPrimary');
+
 async function runBackfillForEvent(db, eventId) {
   let backfilledCount = 0;
 
@@ -29,13 +31,22 @@ async function runBackfillForEvent(db, eventId) {
 
     if (dancers.length === 0) continue;
 
+    // GUARD: routine title + studio is NOT a unique key for a performance. One
+    // studio can enter two same-titled solos by different dancers, and an
+    // upstream importer collapsing two studios' same-titled entries produces
+    // the same shape. Propagating a multi-dancer set onto a SOLO-labelled
+    // award asserts that several dancers performed one solo, which is never
+    // true -- it is how 232 solo awards ended up with 2-4 dancers each.
+    // Group awards are unaffected: a real cast legitimately has many dancers.
+    const ambiguous = dancers.length > 1;
+
     // 3. Find ALL awards in the event matching this routine + studio
     // We strictly ignore performance_number to allow fuzzy matching
     const targetAwards = await db.all(`
-      SELECT id 
-      FROM awards 
-      WHERE event_id = ? 
-        AND LOWER(performance_name) = LOWER(?) 
+      SELECT id, award_type, category
+      FROM awards
+      WHERE event_id = ?
+        AND LOWER(performance_name) = LOWER(?)
         AND studio_id = ?
     `, [eventId, source.performance_name, source.studio_id]);
 
@@ -43,6 +54,7 @@ async function runBackfillForEvent(db, eventId) {
     // A director's denial (award_dancer_removals) is a negative assertion —
     // backfill must never resurrect those links.
     for (const target of targetAwards) {
+      if (ambiguous && isIndividualLabel(target.award_type, target.category)) continue;
       for (const d of dancers) {
         const result = await db.run(`
           INSERT OR IGNORE INTO award_dancers (award_id, dancer_id)

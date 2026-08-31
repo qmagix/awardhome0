@@ -55,7 +55,23 @@ function extractAwards(pdfData) {
 
     rows.forEach(row => {
       row.cols.sort((a, b) => a.x - b.x);
-      
+
+      // A typographic apostrophe inside a studio name ("Chassé's Dance Co.")
+      // decodes as a CONTROL character (U+0019), and pdf2json emits it as its
+      // own text object. That phantom column shifted every column after it, so
+      // the studio's tail, the state code and the SCORE all landed in the
+      // dancer field -- "s Dance Company - Theodore, Al, 112.45, Alana
+      // McCarroll" -- while the studio was truncated to "Chassé". It invented
+      // ~340 fake dancer profiles (scores, state codes, studio fragments), 140
+      // of them with public URLs. Restore the apostrophe and rejoin the word
+      // it split, which puts the score back in its own column where the
+      // positional dancer offset already skips it.
+      for (let i = row.cols.length - 2; i >= 1; i--) {
+        if (!/^[\x00-\x1F]+$/.test(row.cols[i].text)) continue;
+        row.cols[i - 1].text = row.cols[i - 1].text + "'" + row.cols[i + 1].text;
+        row.cols.splice(i, 2);
+      }
+
       if (row.cols.length > 0) {
         const firstText = row.cols[0].text;
         

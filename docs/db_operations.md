@@ -144,6 +144,70 @@ whose label says solo but which have 2+ DIFFERENT dancers linked — e.g.
 (mis-attached dancer, or two same-titled solos collapsed into one row), not a
 missing primary. Re-run the script's dry mode to list the current count.
 
+## Two parser bugs behind the multi-dancer "solos" (2026-08-30)
+
+Q asked why 232 solo-labelled awards carried 2-4 dancers. Investigating from
+the source showed it was **two unrelated bugs**, not one.
+
+### Bug A -- collapsed awards (191 rows), `import_dancebug_awards.js`
+
+Its Choice-award dedupe keyed on `(event, category, routine, place)` and
+omitted `studio_id` and `performance_number`. Two studios routinely enter
+same-titled routines at one event. Believe Louisville 2022, verified in the raw
+HTML:
+
+    entry 259  "Burlesque"  Aubrey Sears   Dance Designs Dance Complex
+    entry 330  "Burlesque"  Laney Wheeler  All About Dance Studio
+
+The second collapsed into the first, so both dancers hung off Dance Designs'
+award -- and All About Dance's own "Burlesque" placement (7th) was left with NO
+dancer. `backfill_utils.js` then propagated the bad pair across the event,
+because it keys on `(performance_name, studio_id)`, which is NOT unique for a
+performance.
+
+Fixed at the source (dedupe now includes studio + entry number; the backfill
+refuses to propagate a multi-dancer set onto a solo-labelled award). Repaired by
+`scripts/repair_collapsed_solo_dancers.js`, which resolves by the dancer's own
+studio, then REATTACHES the displaced dancer to her own empty placement.
+
+> The reattach phase is restricted to the cross-studio case
+> (`a2.studio_id <> a.studio_id`). Dropped, the same rule matches 1,128 empty
+> awards and starts asserting links from thin evidence -- the very over-reach
+> that caused the bug. It is 141 with the restriction.
+
+### Bug B -- the Showstopper apostrophe, and ~340 fake dancers
+
+`extract_showstopper_pdfs.js`. A typographic apostrophe inside a studio name
+decodes as control char **U+0019**, which pdf2json emits as its own text object.
+The phantom column shifted every column after it, and the parser took dancers
+*positionally* (`routineColIndex + 2`) while its own comment said "everything
+after the score". Raw PDF row:
+
+    col[2] "Glimpse of Us - Chassé"  col[3] "\u0019"
+    col[4] "s Dance Company - Theodore, Al"  col[5] " 112.45"
+
+So the studio was truncated to "Chassé" and the studio tail, the STATE CODE and
+the SCORE all became dancer names. Result: **5 phantom studios** (America,
+Bianca, Chassé, Dan, GG) holding 65 awards, and **80 fake dancer profiles** --
+71 of them with public `unique_id` URLs. Real people they were not.
+
+Fixed by merging the phantom column back into an apostrophe. Repaired by
+`scripts/repair_showstopper_apostrophe.js`: reconstructs the true studio from
+the corruption's own signature (phantom + `'` + tail), renames or merges the 5
+studios, and deletes the fakes.
+
+> Scoping caution kept in the script: a 2-letter name is only junk when it sits
+> on an award that also carries a tail fragment -- **"Wu" is a real dancer**.
+> Purely numeric names are swept globally, since no person is named "112.45".
+
+### What is deliberately NOT auto-fixed
+
+**109 awards remain** with several linked dancers who genuinely share the
+award's studio (mostly KAR, e.g. "Paquita" / "Fairy Doll" ballet variations with
+3 linked dancers). The source cannot disambiguate these by studio, so they are
+reported and left alone. Re-run either repair script's dry mode for the live
+list.
+
 ## StarQuest notes-dancer repair (2026-08-29)
 
 The original StarQuest importer stashed published dancer names in awards.notes
