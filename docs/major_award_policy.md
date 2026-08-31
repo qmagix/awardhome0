@@ -68,6 +68,35 @@ Two concrete failure modes:
 
 ---
 
+## 2b. Why a cross-org rule cannot work — verified naming traps
+
+Website research on 2026-08-30 (sources in `org_top_awards.md`) confirmed that
+the most award-sounding strings in this industry are usually **score bands** —
+tiers every entry receives — and that identical words carry opposite meanings
+across organizations:
+
+| String | Where | What it ACTUALLY is |
+|---|---|---|
+| `First Place` | **KAR**, **Ultra** | The **lowest** adjudication band. Ultra's rules: "*There may be multiple* Elite Platinum, Elite Top First Place, Top First Place, and First Place awards in each age group and category." |
+| `Top First Place`, `Elite Top First Place`, `Elite Platinum` | KAR, Ultra | Higher bands — still bands, not ranks |
+| `Vibe Award` | **Hollywood Vibe** | Top score band (100–97.5%), not an honor |
+| `Flawless Gem`, `Crystal Diamond`, `Diamond`, `Sapphire`, `Emerald`, `Ruby` | **Inspire** | Bands — and Inspire's own prose calls them "awards" |
+| `YOU ROCKED JUMP!`, `DJ'S PICK!!`, `ON THE EDGE!`, `STOP THE CLOCK!`, `Judge's Pick` | JUMP / NUVO / RADIX / 24SEVEN / TDA | Each is simply the 291–300 band |
+| `Palladium`, `High Gold`, `Gold`, `High Silver` | all DanceOne + TDA | Bands |
+| `1st Place` | **Tremaine** | A **score band** (97–100) — many exist per event, and placements are per narrow style category, not division overalls |
+| `Gold Medal` | **ADC\|IBC** | **1st place of the whole age division** — one per division |
+| `Gold` | **UBC** | The **third tier down** (below UBC Platinum and High Gold), unbounded count, awarded by score threshold |
+
+That last pair is the whole argument in two rows: **an ADC|IBC "Gold" is the
+division winner; a UBC "Gold" is a mid-tier participation medal.** No keyword
+rule can tell them apart — only per-org encoding can.
+
+Equally important, the reverse error: **huge row counts that look like awards
+but are opportunities.** JUMP's 50,636 and 24SEVEN's 42,975 `SCHOLARSHIP` rows
+are class/workshop scholarships (VIP, Breakout Artist, Non-Stop Dancer), not
+routine placements — the qualifying path to a title elsewhere. Starpower's
+16,219 `Power Pak Invites` are invitations.
+
 ## 3. The recommended model (three tiers)
 
 Grounded in what actually distinguishes achievements at these events (Q's
@@ -100,31 +129,35 @@ rules present them as distinctions — not participation or invitation rows.
 
 ## 4. Per-competition recommendation
 
-Status: **encoded** = `is_top_award` already set for those rows; **ready** =
-rules documented with high confidence, needs encoding; **verify** = awaiting
-website confirmation (research in flight 2026-08-30).
+Status: **verified** = award rules read from the org's own website 2026-08-30
+(✔ in the table); **encoded** = `is_top_award` already set for those rows;
+**ready** = rules documented with high confidence, needs encoding; **verify** =
+website confirmation still outstanding.
 
-| Competition | Tier 1 (headline) | Tier 2 (overall placements) | Tier 3 (special) | Status |
+| Competition | Tier 1 (headline) | Tier 2 (division overalls, 1st–3rd) | Tier 3 (special) | Status |
 |---|---|---|---|---|
-| **KAR** | National Grand Champion (`place='Winner'` only); National/Regional Title — Mr./Miss Dance (Mini/Petite/Junior/Teen/flagship) | `Top <Level> <Size> <Age>` with place 1st–3rd (regional & finals high point) | Studio of the Year, Choreographer of the Year, Future Star, Judges' Choice | encoded (1,138) |
-| **Rainbow** | National title winners | `Top <Level> Starz <Size> <Age>` 1st–3rd | Judges' Choice | ready |
-| **Starpower** | Mr./Miss titles; national champions | Division tables (`<age> Level <n> Solos`) 1st–3rd | named specials per rules | encoded (1,824) — **exclude Power Pak Invites** |
-| **Believe / Revolution / Imagine / DreamMaker** (Star Dance Alliance siblings) | titles; national champions | `Level <n> <age> Solo` division tables 1st–3rd | named specials | Believe/Imagine partly encoded; **exclude Discovery Spotlight & Power Pak Invites** |
-| **NexStar** | Premier/Elite Title — Mr./Miss Nexstar (branded titles) | `SDA Regional Champion — …` / Grand Lines & Production champions | Costume Award etc. only if rules frame them as honors | **not encoded** (heuristic currently claims 2,489) |
-| **Showstopper** | national titles | `High Score` 1st–3rd | — | verify |
-| **StarQuest** | `Title` rows | `Overall` rows 1st–3rd (34,186 rows — the core competitive stat) | Odyssey Awards (Teen/Junior/Senior) | encoded (1,834) |
-| **NYCDA** | `Outstanding Dancer` (+ Runner-Up as Tier 2) | `High Score` 1st–3rd | `Critics' Choice Winner` | encoded (1,721) |
-| **Spotlight** | national titles | `Overall` 1st–3rd | — | verify |
-| **YAGP** | Grand Prix; top-3 per age division | classical/contemporary placements 1st–3rd | Outstanding Choreographer/Teacher/School | ready |
-| **Encore** | "Mic Drop" (Elite) + Grand champions | overall placements 1st–3rd | named specials | ready |
-| **ADC\|IBC** | **Grand Prix Recipient** (per age division) | Gold/Silver/Bronze medals — **confirm whether by rank or score threshold** | Fernando Bujones Memorial, Traditional Excellence, Outstanding International Dancer | verify |
-| **UBC** | Grand Prix Finals 1st place | division 1st–3rd (INT/COM are levels, not awards) | Rising Star, Aspire, Legacy | verify |
-| **Hollywood Vibe** | — | **OVERALL tables (1ST–3RD OVERALL)** — outrank category placements | Specialty judge awards; scholarships incl. Dancer of the Year | verify |
-| **JUMP / NUVO / RADIX / 24SEVEN** (DanceOne) | Best of JUMP / Best NU Group / equivalents per age division | HIGH SCORE by age & performance, 1st–3rd | Best in Studio; **treat the 50k+ `SCHOLARSHIP` rows as opportunities, not placements** | verify |
-| **Inspire** | `TITLE` — Title Winner (Miss/Mr) | overall placements 1st–3rd | — | verify |
-| **Tremaine** | **D.O.T.Y. — Dancer of the Year** | overall placements 1st–3rd | — | verify |
-| **The Dance Awards** | **Best Dancer** (winner/2nd/3rd + Top-N finalists); Studio of the Year | High Score by age/performance 1st–3rd | Specialty awards | verify |
-| **Ultra / Refresh** (KAR family, DanceBug) | titles if any | KAR-style `Top …` division tables 1st–3rd | — | **no rules research on file** — verify |
+| **KAR** | National Grand Champion (`place='Winner'`); Mr./Miss Dance titles (National & Regional) | `Top <Level> <Size> <Age>` high-point tables | Studio/Choreographer of the Year, Future Star, Judges' Choice | encoded (1,138) — bands `First Place`→`Elite Ultimate Performance` excluded |
+| **Rainbow** | National titles | `Top <Level> Starz <Size> <Age>` | Judges' Choice | ready |
+| **Starpower** | Mr./Miss titles; national champions | division tables (`<age> Level <n> Solos`) | named specials | encoded (1,824) — **exclude `Power Pak Invites`** |
+| **Believe / Revolution / Imagine / DreamMaker** | titles; national champions | `Level <n> <age> Solo` tables | named specials | partly encoded — **exclude `Discovery Spotlight`, `Power Pak Invites`** |
+| **NexStar** | Premier/Elite Title — Miss/Mr Nexstar | `SDA Regional Champion — …`, Grand Lines/Production champions | Costume Award only if rules frame it as an honor | **not encoded** (heuristic claims 2,489) |
+| **Showstopper** | national titles | `High Score` | — | verify |
+| **StarQuest** | `Title` | `Overall` (34,186 rows — the core competitive stat) | Odyssey Awards | encoded (1,834) |
+| **NYCDA** | `Outstanding Dancer` (Runner-Up = Tier 2) | `High Score` | `Critics' Choice Winner` | encoded (1,721) |
+| **Spotlight** | national titles | `Overall` | — | verify |
+| **YAGP** | Grand Prix; top-3 per age division | classical/contemporary placements | Outstanding Choreographer/Teacher/School | ready |
+| **Encore** | "Mic Drop" (Elite) + Grand champions | overall placements | named specials | ready |
+| **ADC\|IBC** ✔ | **ADC Grand Prix** per age division (finals only) | **`GOLD`/`SILVER`/`BRONZE MEDAL` = 1st/2nd/3rd of the division** (then 4th, 5th, Top 25/Top 10 = honorable mention); ensembles 1st–5th | Fernando Bujones Living Memorial, Traditional Excellence, Avant Garde, Jury Encouragement, Outstanding International Dancer/Choreographer/Coach/School, Top Scoring Ensemble | verified — **semi-finals are an audition tour, per-category placements only** |
+| **UBC** ✔ | **The Grand UBC Award** (1 Junior + 1 Senior per event; must enter classical AND contemporary) | "high score awards … top scores in each **category** within an age division" — category-level, not division-wide | none named (discretionary list only) | verified — ⚠️ **all medals are score thresholds; `Gold` ≠ 1st. Doc corrected: "Grand Prix" is the finals EVENT name, not an award** |
+| **JUMP / NUVO / RADIX / 24SEVEN** ✔ | RADIX only: **Elite Protégé** (at its own THE ONE Nationals) — JUMP/NUVO/24SEVEN have **no title**; their VIP/Breakout/Non-Stop scholarships qualify dancers for Best Dancer at TDA | **`HIGH SCORE BY AGE`** 1st–3rd (solos published 10 deep) — division-wide | Best of JUMP / Best Nu Group / Best of RADIX / 11 O'Clock Number; Best in Studio / Studio Pick / Standout / Showcase | verified — **exclude the 50k+ `SCHOLARSHIP` rows and every band name** |
+| **The Dance Awards** ✔ | **Best Dancer** (Winner / 1st & 2nd Runner-Up, per age × gender); **Studio of the Year** (Las Vegas only) | "**Overall** … High Scores … 1st–5th place" by age division | Best Performance (+ nominees), Outstanding Technical Achievement, Best Choreographer, Best {genre} Performance, Costume Design, People's Choice, Studio Encore, per-genre Studio Awards | verified |
+| **Hollywood Vibe** ✔ | **Dancer of the Year** (regional, per convention level); **National Dancer of the Year** at Hollywood Invitational | **`Overall High Score`** Solo/Duo-Trio/Groups — Top 3 with 5+ entries, Top 5 with 10+ | Judges Specialty: Outstanding Choreography, Most Entertaining, Best Costume, Best Direction; nationals **Battle of the Stars** | verified — ⚠️ `Vibe Award` is the top BAND; category trophies are narrow-category |
+| **Inspire** ✔ | **Title / Title Runner-Up** (Miss/Mr; runners-up also qualify for National Title) | **`Overall Awards`** — depth set by entry count (Top 20/18/15/12/10/8/5/3/1) | Judge's Choice, `Top <Genre> Performance` ×8, Top Score of the Session, Golden Egg (+Wild Cards), studio awards | verified — ⚠️ gemstone bands are called "awards" by Inspire |
+| **Tremaine** ✔ | **D.O.T.Y.** (10/year, audition+interview, finals only); **Performance of the Year** | ⚠️ placements are per narrow style category. The division-wide honors are **High Score** and **Judges Ovation**; nationals adds **GOLD/SILVER/BRONZE National High Score** (true ranks) | T.O.T.Y., Entertainer of the Year, Judge's Choice Ovation, Shining Star, National Freestyler | verified — ⚠️ **`1st Place` is a score band (97–100)** |
+| **Ultra** ✔ | **Icon of the Year** (per level × age; finalists qualify for KAR National Finals Title) | **`Overall High Point`** → `Top <Level> <Type> <Age>`; observed depth solos 10 / duet-trio 5 / groups 3 | Supercharged Performance, Ultimate Improv Champion, HDE All Stars, Headshot | verified — ⚠️⚠️ **`First Place` / `Top First Place` / `Elite Top First Place` / `Elite Platinum` are BANDS** |
+| **Refresh** ✔ | **SQUAD** (title; finalists qualify for KAR National Finals Title) | **`Overall High Point`** — published depth: **Top 10 solos (Top 15 in 40+ divisions), Top 5 duet/trios, Top 5 groups** | Spirit of Refresh, Legacy, Visual Impact, Choreography, Technical Excellence, Studio awards | verified — ⚠️ bands unpublished; `Foundation/Progressive/Elite` are LEVELS |
+
+✔ = award rules verified against the organization's own website on 2026-08-30.
 
 ---
 

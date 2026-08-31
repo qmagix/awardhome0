@@ -423,58 +423,289 @@ Senior 16-19. **Sources:** epicdanceinc.com/rules. **Confidence:** high.
    Epic → Studio Overall; Overall 1st places.
 
 ## ADC IBC (Youth International Ballet Competition — adcibc.com)
-- **Top award: ADC|IBC Grand Prix Recipient** (one per age division — Primary/Junior/Senior — highest-scoring gold medalist; imported as place='GRAND PRIX RECIPIENT', is_first_place=1).
-- Solo ladder per gender×division: Gold Medal > Silver > Bronze > 4th > 5th, then Top 25 (female) / Top 10 (senior male) — Top-N are placements-of-honor, NOT podium.
-- Ensemble division (Classical Pas de Deux / Duet|Trio / Large Ensemble): 1st-5th Place; routine names preserved in performance_name, dancers via award_dancers.
-- Special awards: jury awards, Traditional Excellence, Outstanding International Dancer, Fernando Bujones Memorial Award (prestigious honoree) imported; Outstanding School = studio-level award; choreographer/coach/photographer awards not imported (not dancer awards).
-- Site publishes World Finals only (St. Petersburg FL); ~10 regional semi-finals per season unpublished — that's the outreach ask. Archives back to 2006 on the site.
+- **Top award: ADC Grand Prix** — one per age division, FINALS ONLY. Senior (15-21) $2,000,
+  Junior (12-14) $1,000, Primary (9-11) $500. Published in results as "ADC|IBC Grand Prix Recipient".
+- **Finals ladder ranks the WHOLE age division** (male/female ranked separately), under
+  "ST. PETERSBURG FINALS / TOP PLACEMENTS": `GOLD MEDAL` → `SILVER MEDAL` → `BRONZE MEDAL`
+  → `4TH PLACE` → `5TH PLACE` → flat honorable-mention band `TOP 25` (female) / `TOP 10`
+  (smaller male divisions).
+- ⚠️ **ADC medals are RANK, not score bands**: Gold = 1st, Silver = 2nd, Bronze = 3rd — one
+  each per division. (Contrast UBC below, where Gold is the *third* tier and unbounded.)
+  No score-threshold table is published; the only sharing clause is discretionary ("The Jury
+  reserves the right … to divide any award between more than one competitor").
+- Ensemble divisions rank `1ST`–`5TH PLACE` in CLASSICAL PAS DE DEUX / DUET|TRIO / LARGE ENSEMBLE.
+- **Semi-finals are an audition tour**, not a ranking of the division: placements are per
+  category (classical vs contemporary, scored separately); ~15-30 soloists per city advance.
+- Special awards (finals, all discretionary): Top Scoring Ensemble Division ($1,000), Round I
+  Jury Award, Traditional Excellence, Avant Garde, Jury Encouragement, Outstanding International
+  Dancer, Outstanding Choreographer, Outstanding Coach, Outstanding School, and the
+  **Fernando Bujones Living Memorial Award** (package >$1,000 + direct finals entry next year).
+  2026 results also show a SMACK Arts Photographer Award (not a dancer award).
+- Site publishes World Finals only; ~10 regional semi-finals per season unpublished — the outreach ask.
+- **Sources:** adcibc.com/awards-prizes, /rules-regulations-2027, /semi-finals-format,
+  /finals-format, /how-to-join, /2026-winners (verified 2026-08-30).
+- **Confidence:** high. Not verified: numeric score thresholds (none published), the full
+  semi-final award schedule, whether Top 25/Top 10 band size is fixed by rule or entry count.
+
+---
 
 ## Universal Ballet Competition (UBC — universalballetcompetition.com)
-- **Top award: Grand Prix Finals 1st place** per division; regional 1st places qualify dancers to the Finals (season ends with GRAND PRIX FINALS each May).
-- Placement ladder is numeric (1..12) inside each division×level×genre section, e.g. "SENIOR COM CLASSICAL", "JUNIOR INT CONTEMPORARY". **INT = Intermediate, COM = Competitive** — these are skill levels, NOT awards; PRE-COMPETITIVE is the entry level.
-- Group sections: DUO/TRIO, PDD (Pas de Deux), ENSEMBLE. Ensembles are studio-level (no dancer names published); duo/trio/PDD list every dancer.
-- "Additional Awards" per event: Rising Star / Aspire / Legacy (dancer honors), Outstanding Choreographer / Classical Coach / Contemporary Coach (people-and-school honors, imported at studio level).
-- Data source: the registration backend (api.reg.universalballetcompetition.com/public/results.cfm?event_id=N) publishes EVERY event including regionals — unlike ADC IBC, no outreach ask needed for regional data. Dates come from scripts/seed/ubc_events.json (site + Wayback index snapshots). Archive reaches 2019 (ids 8-28) if we want more history.
+- **Top award: "The Grand UBC Award"** — one Junior + one Senior per event, judge-selected,
+  "deemed to have surpassed all other dancers in their division in both classical ballet and
+  contemporary dance categories"; a dancer must enter BOTH a classical and a contemporary solo
+  to qualify. ⚠️ **Correction (2026-08-30):** this file previously said "Top award: Grand Prix
+  Finals 1st place". Wrong — **"Grand Prix" is the NAME OF THE FINALS EVENT**, not an award.
+- ⚠️ **UBC medals are SCORE THRESHOLDS, not ranks.** "Each competitor will receive a medal for
+  their adjudicated scores" — every dancer gets one and unlimited dancers share a tier.
+  Out of 300, cutoffs differ by level (Intermediate / Competitive):
+  UBC Platinum 276-300 / 282-300 · High Gold 265-275 / 270-281 · Gold 255-264 / 260-269 ·
+  High Silver 244-254 / 250-259 · Silver 228-243 / 235-249. ("Bronze" is named in prose but
+  has NO published row.) **A UBC "Gold" is the third tier down — NOT a first place.**
+- **The ranking layer is separate:** "high score awards will be given to the top scores in each
+  category within an age division" — inside category × level × age, NOT division-wide. Depth is
+  unstated ("top scores"); results exports rank 15+ deep. A dancer can't take both 1st and 2nd
+  in one category (highest solo counts).
+- INT = Intermediate, COM = Competitive: skill LEVELS, never awards. Age divisions:
+  Pre-Competitive 7-8, Primary 9-11, Junior 12-14, Senior 15-21.
+- Finals gating (the two official pages disagree — flag both): /rules says "high gold or UBC
+  Platinum" qualifies; /grand-prix says "Platinum or above". Intermediate soloists may not
+  qualify for finals (finals solo sections are all COM).
+- Named specials: **NOT FOUND** — only a discretionary list (cash, scholarships, contracts…).
+  Data source: the registration backend publishes every event incl. regionals, so no outreach
+  ask is needed for regional data.
+- **Sources:** universalballetcompetition.com/rules/, /grand-prix/, /sponsors/, and the public
+  results export api.reg.universalballetcompetition.com (verified 2026-08-30).
+- **Confidence:** high on rules; medium on finals-specific awards (finals page lists none).
+  Not verified: Bronze score range, whether the Grand UBC Award is given at regionals too,
+  depth of "high score awards".
 
-## Hollywood Vibe (hollywoodvibe.com)
-- **Top awards: the OVERALL tables** ("1ST OVERALL".."5TH OVERALL") — these rank across styles within an age×size group and outrank a category placement. Imported with award_type='OVERALL'; 1ST OVERALL is marked is_first_place.
-- Category placements ("1st".."10th") sit in very narrow categories (age × style × size, e.g. "MINI CONTEMPORARY SOLO"), and a category awards **1, 3 or 5 places** depending on entry count — so a lone 1st is the norm, not a data error. Some events publish a second table further down for 6th-10th.
-- **SPECIALTY judge awards**: Most Entertaining, Best Costume, Outstanding Choreography, Best Direction, plus per-judge "Specialty Award" (award_type='SPECIALTY').
-- **Scholarships carry dancer names** (award_type='SCHOLARSHIP') — Excellence, Hollywood Vibe, Team Hollywood Vibe, Millennium, Grand Prize, Dancer of the Year, CLI Summer Intensive / Conservatory, LA Agency Finalists, Studio Excellence. These are the only Hollywood Vibe rows with dancers; competition results publish routine + studio only.
-- Levels appear in the category string: INTERMEDIATE / COMPETITIVE are skill levels, NOT awards. Published typos exist in the source (INTERMEDAITE, JUNOIR, DUO/TIRO, PRODUCITON) and are handled at import.
+---
 
-## JUMP Dance Convention (jumptour.com)
-- JUMP is a **convention**, so its published results mix competition placements with a very large scholarship programme — and roughly three quarters of its rows name a dancer, which is unusually rich for us.
-- **Top awards: SPECIAL AWARDS** — "Best of JUMP" (per age division) is the headline honour, alongside "Best in Studio". Imported with award_type='SPECIAL', the award name in `place`.
-- **Placements**: HIGH SCORE BY AGE and HIGH SCORE BY PERFORMANCE, 1st..10th, in categories shaped "Age : Type" (e.g. "Teen : Solo", "JUMPstart : Jazz"). Solo rows name the dancer; group rows are studio-level. JUMPstart is JUMP's youngest division, not an award.
-- **Scholarships** (award_type='SCHOLARSHIP'): "<Age> JUMP VIP" plus per-class scholarships (TAP / BALLET / HIP-HOP & JAZZ FUNK / JAZZ, CONTEMP. & LYRICAL). Places are **WINNER** and **RUNNER-UP** — these are scholarship outcomes, NOT competition placements, so they should not be ranked against 1st/2nd/3rd.
-- Source is clean HTML tables at jumptour.com/results/?id=N; the event index at /past-seasons/ lists every season at once (its ?season= parameter is ignored server-side). Seasons reach back to 2019-2020 if we ever want more history.
+## Hollywood Vibe (hollywoodvibe.com) — verified 2026-08-30
+- **Tier 1 — "Dancer of the Year"**: judge-selected per Junior/Pre-Teen/Teen/Senior convention
+  level, based on workshop work AND competition performance (independents ineligible at
+  regionals). At finals it becomes **National Dancer of the Year** (regional scholarship winners
+  are invited; scored 33% solo / 33% class etiquette / 33% audition, then a two-round dance-off).
+- **Tier 2 — "Overall High Score"** (Solo / Duo-Trio / Groups, per age division): **Top 3 awarded
+  with 5+ entries, Top 5 with 10+**. Must be contested. A soloist winning Overall High Score in
+  one city may not re-compete that solo in another regional.
+  ⚠️ Distinct from **category trophies** (1st-3rd per age × performance category, needing 5+
+  entries) — those are narrow-category placements, NOT division overalls.
+- **Tier 3 — "Judges Specialty Awards"**: Outstanding Choreography, Most Entertaining, Best
+  Costume, Best Direction (group routines). Scholarship track (separate audition): LA Agency
+  Award, Team Hollywood Vibe, National Finals, Hollywood Vibe, Excellence, CLI Conservatory.
+- ⚠️ **BANDS (exclude) — and the top one is named like an award:** **`Vibe Award` 100-97.5%**,
+  Platinum 97-94.5, High Gold 94-91.5, Gold 91-88.5, High Silver 88-85.5, Silver 85-82,
+  Bronze 81-79. Gold-and-higher qualifies for finals. "Medals are awarded to soloists indicating
+  their score" — medals here are bands, not ranks.
+- **Nationals = Hollywood Invitational** (Orlando + San Diego): National Dancer of the Year,
+  **Battle of the Stars** (top group per age division; winner $2,500), LA Agency Award final,
+  Pathways in Motion, Film Festival, Spotlight Battle, Closing Night Gala.
+- Age divisions: Mini 5-7, Junior 8-10, PreTeen 11-12, Teen 13-14, Senior 15-18, Pro-Am 19+.
+- **Sources:** hollywoodvibe.com/competition/, /scholarships/, /faq/; hollywoodinvitational.com
+  /pages/dancer-of-the-year, /pages/battle-of-the-stars (verified 2026-08-30).
+- **Confidence:** high. Not verified: cash amounts ("may vary"), whether Judges Specialty Awards
+  run at nationals under the same names (results page not yet posted).
+- Platform: MyDanceRegister.
 
-## NUVO Dance Convention (gonuvo.com)
-- DanceOne sibling of JUMP — identical results anatomy and award vocabulary. **Top awards: SPECIAL AWARDS** — "Best NU Group" per age division (their Best-of-JUMP analogue), plus "Studio Pick"; **NUbie is the youngest age division** (their JUMPstart), not an award.
-- Placements: HIGH SCORE BY AGE / BY PERFORMANCE, 1st..10th, categories "Age : Type". Scholarships: "<Age> NUVO" honors + per-class scholarships (incl. BALLROOM — a class JUMP doesn't run); places are WINNER / RUNNER-UP (scholarship outcomes, not competition placements). Class-scholarship tables add a Faculty column (the presenting teacher — not imported).
-- Shared tooling: scripts/lib/danceone.js + danceone_import.js drive both brands (and future DanceOne siblings like 24SEVEN); per-org scripts are thin configs. Seasons reach 2019-2020 on the site.
+---
 
-## RADIX Dance Convention (radixdance.com)
-- Third DanceOne sibling (JUMP/NUVO) — identical anatomy via the shared libs. **Youngest age division: Rookie** (their JUMPstart/NUbie). Top awards: SPECIAL AWARDS per age division + Studio Pick; scholarships WINNER / RUNNER-UP are scholarship outcomes, not placements.
-- NOTE the DanceOne brands share one results backend — each brand's site will serve ANY event id, so scrapers must only fetch ids listed on that brand's own /past-seasons/ index (the shared loadIndex does this; the three indexes were verified disjoint: 0 id overlap).
+## DanceOne conventions — JUMP / NUVO / RADIX / 24SEVEN (verified 2026-08-30)
 
-## 24SEVEN Dance Convention (24sevendance.com)
-- Fourth DanceOne sibling — identical anatomy via the shared libs. **Youngest age division: Sidekick** (their JUMPstart/NUbie/Rookie). Top awards: the **"11 O'Clock" awards** per age division (their Best-of-JUMP analogue — the routine good enough to close the 11pm show) plus Studio Showcase; scholarship places WINNER / RUNNER-UP are scholarship outcomes, not placements. Org slug is 'twentyfourseven' (slugs must not start with a digit for URL hygiene).
+**One shared anatomy, four brand vocabularies.** All four publish the same
+"PLACEMENT AWARDS" structure; only the names change.
 
-## Inspire National Dance Competition (inspirendc.com)
-- Southeast-US circuit; results via their DanceComp Genie portal (PDF books + "Title Result" HTML reports). **Top awards: TITLE** ("Title Winner (Miss/Mr./Non-Binary)" per age~level~size section, runner-ups marked) and, at Nationals only, **CRYSTAL SHOWCASE** — invited top-routine showdown rounds ("Crystal Showcase S/D/T", "Group Crystal Showcase"); a Showcase 1ST is the flagship win.
-- Placements ("Overall Awards"): per-section 1ST..12TH incl. blank-cell ties, sections `Size ~ Age ~ Level` (levels Recreational / Competition / Competition Elite / Inspiring Gem / Pro-Am — class levels, not awards). TOP SCORE = per-session high score (11 & Under / 12 & Up). Medal bands (Crystal Diamond, Flawless Gem) are adjudication tiers, never awards.
-- PHOTOGENIC / pageant-day awards (Miss/Mister <City>, N-Year-Old Miss, Natural Beauty, Fresh Face, Best Smile...) name a dancer with no studio — the importer links them through the event's own rosters. STUDIO AWARD = Studio of Excellence per level + Inspirational Studio Award. COSTUME = costume winners by entry number.
-- The ONLY imported org publishing full group rosters (Performers column) — every group award carries its complete dancer list via award_dancers.
+- **Tier 2 — division-wide overalls (`HIGH SCORE BY AGE` in our data):** "a competitive 1st,
+  2nd or 3rd Place award … to the highest scoring Solo, Duo/Trio, Group, Line, Extended Line
+  and Production, in each of the [youngest], Mini, Junior, Teen, Senior, and Open age
+  categories." Solos are published **10 deep**; groups 3 deep. Top-10 soloists are recognized
+  on stage.
+- **Narrower style tier (`HIGH SCORE BY PERFORMANCE`):** same 1st/2nd/3rd but per style
+  (Jazz, Ballet, Tap, …) within an age division — a category ranking, not a division overall.
+  RADIX combines ages here (Rookie, Mini/Junior, Teen/Senior).
+- **Judges'-choice routine award (Tier 3):** JUMP **Best of JUMP** · NUVO **Best Nu Group**
+  (their own page also writes "Best of Nu Group" — inconsistent) · RADIX **Best of RADIX** ·
+  24SEVEN **11 O'Clock Number**. All "most technical AND entertaining", by judge consensus.
+- **Per-studio award (Tier 3):** Best in Studio / Studio Pick / Studio Standout / Studio
+  Showcase (+ 24SEVEN's **Well-Rounded Studio Award**). Needs ≥15 entries (≥7 groups); may or
+  may not be the studio's highest score.
+- ⚠️ **ADJUDICATION BANDS — NEVER awards, and they read like awards:**
+  **YOU ROCKED JUMP!** (JUMP) · **DJ'S PICK!!** (NUVO) · **ON THE EDGE!** (RADIX) ·
+  **STOP THE CLOCK!** (24SEVEN) — each is simply the 291-300 band. Below them:
+  Palladium 282-290 (new this season, all four), High Gold 273-281, Gold 264-272,
+  High Silver 255-263. Anything matching these names is a score tier every entry receives.
+- ⚠️ **The huge `SCHOLARSHIP` row counts are NOT routine awards** (JUMP 50,636; 24SEVEN 42,975).
+  They are class/workshop scholarships attaching to dancers: VIP (JUMP), Breakout Artist
+  (NUVO), Non-Stop Dancer (24SEVEN), Protégé (RADIX), plus Class/Rockstar/StandOut/Die Hard/
+  Cutting Edge/Choice Artist/High 5/Weekend Warrior. **No Mr./Miss titles exist at JUMP, NUVO
+  or 24SEVEN** — the top scholarship tier is the qualifying path to a title elsewhere.
+- **Season enders differ:** JUMP, NUVO and 24SEVEN end at **The Dance Awards** (their
+  Winner/Runner-Up scholarship holders qualify for Best Dancer). **RADIX ends at its own
+  THE ONE Nationals** (theonenationals.com) with **Elite Protégé** 1st-4th, **THE FINAL CUT
+  (Top 6)**, **Top 15**, **BEST IN SHOW**, **BEST OF RADIX** by division, and
+  **[Age] NATIONAL TOP SOLOIST**.
+- Solo lockout (all four): a soloist taking 1st Place in one city may not compete that solo at
+  another city of the same brand that season — relevant to any repeat-placement weighting.
+- **Sources:** jumptour.com/competition-info/ + /scholarship-info/ + /results/?id=2306;
+  gonuvo.com/competition-info/ + /scholarship-info/; radixdance.com/competition-info/ +
+  /protege-info/ + /scholarship-info/ + /2025-nationals-winners/;
+  24sevendance.com/competition-info/ + /scholarship-info/ (verified 2026-08-30).
+- **Confidence:** high for regionals. Medium for RADIX Nationals (names taken from a results
+  page; the rulebook lives on theonenationals.com). NUVO/24SEVEN results labels unverified
+  (JS-loaded index).
+
+---
+
+## Inspire National Dance Competition (inspirendc.com) — verified 2026-08-30
+- **Tier 1 — "Title Competition"** (Miss/Mr): open to all levels, males judged separately;
+  regional winners get Trophy + Tiara (Miss) / Crown (Mr) + scholarships. Scored On-Stage
+  Introduction 30% + Solo 70%. Winners AND runners-up qualify for the **National Title**
+  (Audition 30% + Solo 70%). Labels in results: `Title`, `Title Runner-Up` — no branded
+  "Miss Inspire" string exists. "The Title competition… does not impact overall scores."
+- **Tier 2 — "Overall Awards"**: top-scoring entries per level × age × entry type. **Depth is
+  the director's call by entry count — Top 20, 18, 15, 12, 10, 8, 5, 3, or 1st only.** Only a
+  dancer's top-scoring solo may place. Inspiring GEMS (adaptive) and Pro/Am are excluded from
+  overalls; Vocal has its own.
+- **Tier 3:** Judge's Choice & Choreography Awards; **Top Performers by Age & Genre** (8 named
+  `Top <Genre> Performance` awards, 5+ entries); Top Score of the Session; **Golden Egg Award**
+  (+ Wild Cards); Inspire All-Stars; Photogenic / Face of Inspire; Costume Award. Studio awards:
+  Studio of Excellence, Most Entertaining Studio, Studio Spirit, Studio Sportsmanship.
+- ⚠️ **BANDS (exclude) — Inspire's own prose calls them "awards"**, and `Flawless Gem` reads
+  like an honor: Flawless Gem / Crystal Diamond / Diamond / Sapphire / Emerald / Ruby, with
+  different score ranges per level (out of 300; e.g. Comp Elite Flawless Gem 295-300, Crystal
+  Diamond 282-294.9). Crystal Diamond/Diamond/Sapphire qualifies a routine for Nationals.
+- **Levels:** Recreational / Competition / Competition Elite (+ Inspiring GEMS, Pro/Am) —
+  levels, not awards. Ages: Mini 6&U, Petite 7-8, Junior 9-11, Teen 12-14, Senior 15-19, Adult 20+.
+- **Nationals-only:** National Title; **Crystal Showcase** + Championship (top 3-6 solos, 2-4
+  duo/trios, 3-5 groups invited back); Top Score of the Showcase; **Golden Ticket** (+ Wild
+  Cards) — the nationals analogue of the regional Golden Egg; Inspire Improv; All-Star classes.
+- **Sources:** inspirendc.com/rules/, /nationals/, /all-stars/, /face-of-inspire/ (verified
+  2026-08-30; site 403s generic fetchers — use a browser user-agent). Platform: DanceCompGenie.
+- **Confidence:** high. Not verified: which Title age groups carry scholarships; cash amounts;
+  per-event overall depth (director's determination, not a fixed table).
+
+---
 
 ## Tremaine Dance Conventions & Competitions (tremainedance.com)
-- Winter tour = Semi-Finals per city (Oct–May, ~22 cities), Summer = National Finals + summer competitions. **Top awards: D.O.T.Y.** — "Dancer of the Year" per division (Pre-Pro/Senior/Teen/Pre-Teen/Junior; per-season pseudo-events "D.O.T.Y. <season>", archive reaches 1993-94) — and at Nationals the **NF Gold/Silver/Bronze medals** ("JR NF Solo Gold"): real overall awards, top of the finals hierarchy.
-- Semis placements: 1ST–4TH per Age (PT/JR/TN/SR) ~ Category (Solo/Duo-Trio/Group/Line/Production) ~ Style; per-division HIGH SCORE and JUDGES' OVATION (pre-2020: BEST SHOWMANSHIP); "Nationals Qualifier" rows + '**'-starred placing routines = finals invites (award_type NATIONALS QUALIFIER); Faculty Show Invitee and I.D.A. Winner are honors, not placements.
-- No group rosters published; dancer names only for independents ("Independent - <name>") and D.O.T.Y. titles.
-- 49 events (COVID-era 2020-21 + parts of 2021-22/2022-23 winters) are permanently lost (deleted, never archived) — partnership ask material.
+- **Top awards (both FINALS ONLY):**
+  1. **Dancers of the Year (D.O.T.Y.)** — 10 titles per year at National Finals across five
+     TITLE age divisions (Junior 7-10, Pre-Teen 11-13, Teen 14-15, Senior 16-18, Pre-Pro 18-21;
+     these differ from competition divisions). Won by audition + cuts + personal interview,
+     NOT by competition score. Prerequisite: qualified at a Semi-Final or named MVP Dancer.
+  2. **Tremaine Performance of the Year** — top 15 highest-scoring routines from different
+     studios perform at the Gala; celebrity honorees pick the winner.
+- ⚠️ **"1st Place" at Tremaine is a SCORE BAND, not a rank**: 1st 97-100, 2nd 93-96.99,
+  3rd 89-92.99, 4th 85-88.99 (100 pts/judge: 40 technique, 25 choreography/musicality,
+  10 costuming, 25 overall). Many 1st Places exist per event.
+- **Placements are per NARROW category** — Age Division × Category Size × Dance Style — so they
+  are NOT division-wide overalls. The division-wide honors are **High Score** and **Judges
+  Ovation** plaques (per age division × category size, style-agnostic).
+- **National Finals adds a true rank ladder:** GOLD / SILVER / BRONZE National High Score
+  (highest / 2nd / 3rd scoring number per age division — 1 solo, 1 duo/trio, 1 group-line-production),
+  with monetary prizes; Gold soloists perform in the Faculty Show.
+- Other named awards: Teacher of the Year (T.O.T.Y.), Entertainer of the Year + Legendary
+  Entertainer of the Year, National Judge's Choice Ovation, Shining Star Award (studio etiquette),
+  National Freestyler of the Year; scholarships (MVP National, Freestyle Face-Off, Tap, Hip Hop,
+  Mini Room, Parent Forum, Convention, Year-Long Convention).
+- **Three separate competitions**: Semi-Finals (Oct-May; 1st-4th trophies, High Score, Judges
+  Ovation; qualifying = place 1st-4th, or High Score/Judges Ovation, or score ≥96.0),
+  Summer Competitions (June-July; trophies + registration credits, explicitly a dead end —
+  "Winners do not qualify for any other competition"), and National Finals (Orlando, July).
+- Importer note: the rules page lists FOUR competition age divisions (Junior, Pre-Teen, Teen,
+  Senior); a winners page lists three — the rules page is authoritative, the winners page stale.
+- **Sources:** tremainedance.com/registration-info/competition-information/, /national_finals/,
+  /winners/how-to-audition/, /scholarship-info/, /winners/toty/, /winners/entertainers-of-the-year/
+  (verified 2026-08-30).
+- **Confidence:** high. Not verified: the 2026 finals winners PDF is image-only (couldn't confirm
+  how names render in published results); monetary amounts never stated.
 
-## The Dance Awards (thedanceawards.com)
-- Break The Floor's season-ending championship (family of JUMP/NUVO/24SEVEN — many competitors share profiles with those imports). **Top award: BEST DANCER** — the industry's flagship title, per Age ~ Gender: 1ST = the titleholder, 2ND/3RD runners-up, Top 10/11/12/20-style rows are finalist tiers (real honors, not placements-in-disguise). STUDIO OF THE YEAR is the flagship studio title (hall-of-fame.json caches winner photos).
-- BEST PERFORMANCE = routine placements per age; HIGH SCORE BY AGE / BY PERFORMANCE mirror the DanceOne vocabulary; SPECIALTY rows carry their real award name in age_division (Best Performance by Genre + genre, Outstanding Technical Achievement, Best <style> Studio, People's Choice; choreographer/director credits live in the txt notes only); SCHOLARSHIP = named class scholarships.
-- Source is static JSON behind their Angular SPA (content/json/all-results.json) — full 2011–2026 history, refresh with scrape_thedanceawards_to_txt.js --refresh after each summer finale.
+---
+
+## The Dance Awards (thedanceawards.com) — verified 2026-08-30
+Break The Floor's season-ending championship; the finals for JUMP / NUVO / 24SEVEN (NOT RADIX).
+- **Tier 1 — "Best Dancer"** (called "the National Best Dancer Title"). Entry requires a
+  qualifying convention scholarship (JUMP VIP, NUVO Breakout, 24SEVEN Non-Stop, winner or
+  runner-up). Rounds: Top 10 per age division per gender → Best Dancer Dance-Off → Top 3 →
+  Solo Dance-Off. Results publish **Winner / 1st Runner-Up / 2nd Runner-Up** per
+  Senior/Teen/Junior/Mini × Female/Male. Also **Studio of the Year** ($25,000, **Las Vegas
+  only**): 12 nominated routines, top-5 studios re-compete in a Dance-Off.
+- **Tier 2 — overalls, and TDA does use the word:** "**Overall** PeeWee, Mini, Junior, Teen,
+  Senior & Open High Scores will receive a competitive **1st, 2nd, 3rd, 4th or 5th place**
+  award" (by age division). A separate by-performance-division table ranks per style 1st-5th
+  (solos/duo-trios excluded; Open not eligible).
+- **Tier 3 — specialty awards:** Best Performance Awards/Nominees (top five overall high scores
+  among Group/Line/Extended Line/Production per age), PeeWee & Open Best Performance,
+  Outstanding Technical Achievement, Most Professional Studio, Best Choreographer (Teen/Senior
+  winner becomes a Capezio A.C.E. finalist), Best {genre} Performance, Best Production
+  Performance, Outstanding Achievement in Costume Design, People's Choice, Studio Encore,
+  and per-genre **Studio Awards** ("Best Tap Studio", "Best Jazz Studio", … min combined 870).
+- ⚠️ **Bands (exclude):** Judge's Pick 291-300, Palladium 282-290.5, High Gold 273-281,
+  Gold 264-272, High Silver 255-263, Silver 231-245, Bronze 216-230. Four judges, lowest dropped.
+  A video-only **Pre-Qualifying Competition** awards bands only.
+- **Sources:** thedanceawards.com/content/pages/{competition-info,awards-and-categories,
+  best-dancer,studio-awards,studio-of-the-year}.html (verified 2026-08-30).
+- **Confidence:** medium-high on names/structure. Prize amounts unreadable (Angular bindings);
+  the awards page carries stale year references (2018/2019) — treat non-structural details as dated.
+
+
+---
+
+## Ultra Dance Tour (ultradancetour.com) — verified 2026-08-30 (first research on file)
+KAR-family: routines at Ultra regionals are eligible for **any KAR National Finals**.
+- **Tier 1 — "Icon of the Year"** (title): open to all levels; regional Finalists get a
+  commemorative gift, the highest-scoring Finalist the award. Results render per level × age:
+  `Competitive Mini Icon of the Year`, `Competitive Plus Teen Icon of the Year`, with placements
+  `Winner` / `Finalist`. **Finalists qualify to compete for Title at any KAR National Finals.**
+- **Tier 2 — "Overall High Point Awards"**, ranked across categories within level × entry-type ×
+  age: results headings are `Top Competitive Solo 9 - 11`, `Top Ultra Competitive Large Group
+  12 - 14`, `Top Ultra Competitive Production`, rows `1st`/`2nd`/`3rd`… **Observed depth: solos
+  10, duet/trios 5, groups 3** (scaled down in small divisions; depth is not published in rules).
+  Rules: "Ties will not be broken during the General Placement Awards. Ties will however be
+  broken for the Overall High Point Awards."
+- **Tier 3:** Supercharged Performance Award (highest-scoring group per level; feeds the
+  season-end Supercharged Performance of the Season), Dancer Headshot Award, Ultra's Ultimate
+  Improv Challenge (`12 & Under` / `13 & Above Ultimate Improv Champion`), Hollywood Dance
+  Experience "All Star Dancers" (top 5 soloists per division per level → $500 scholarship).
+  Observed in results but NOT in the rules: `IDA People's Choice Award`, `IDA Outstanding
+  Performance Winners` (Best Jazz/Hip Hop/Tap/Lyrical/Ballet/Novelty Performance),
+  `Competitive Power Performance`, `<Level> Powerhouse Studio`.
+- ⚠️⚠️ **BANDS (exclude) — the KAR trap, verbatim in Ultra's rules:** "**Elite Platinum, Elite
+  Top First Place, Top First Place, and First Place** awards will be decided by the judges based
+  on a predetermined range of points… **There may be multiple** Elite Platinum, Elite Top First
+  Place, Top First Place, and First Place awards in each age group and category."
+  So `First Place` at Ultra is the LOWEST band, and `Top First Place` is also a band — never a rank.
+- **Levels:** Competitive, Competitive+, Ultra Competitive. **Ultra Battlegrounds** ("Super
+  Regional") adds Amped Award, Electrifying Performer Award, Powerhouse Educator Award.
+  No nationals of its own.
+- **Sources:** ultradancetour.com/competition/rules, /competition/results/2026/100, /about.
+- **Confidence:** high. Not verified: published overall depth (inferred from results), what
+  "IDA" stands for, band score ranges. (Ultra serves its own results — no DanceBug evidence.)
+
+---
+
+## Refresh Dance Competition (refreshdance.com) — verified 2026-08-30 (first research on file)
+KAR-family, confirmed verbatim: "If you already have a KAR Productions account… log in using
+your existing KAR credentials"; routines are eligible for **KAR or Rainbow National Finals**.
+Rules text is near-identical to Ultra's, sentence for sentence.
+- **Tier 1 — "SQUAD"** (title): "Refresh's exclusive title competition… evaluated using a
+  separate score sheet in addition to their regular solo adjudication." Open to all levels;
+  highest-scoring Finalist gets the SQUAD jacket; **Finalists qualify for Title at any KAR
+  National Finals.** Results: `kind: "TITLE"`, divisions `Foundation Mini` … `Elite Senior`,
+  placements `<Level> <Age> SQUAD` (winner) and `Finalist`.
+- **Tier 2 — "Overall High Point Awards"**, with depth PUBLISHED: **Top 10 solos per age
+  division and level (Top 15 where a division has 40+ entries), Top 5 duet/trios, Top 5 groups.**
+  Elite level groups its youngest as 8 & under (Petite). Results feed: `kind: "OVERALL"`,
+  `name: "Overall High Point"`, `ranked: true`, divisions `Top Foundation Solo 9 - 11`,
+  `Top Elite Production`, placements `1st`…`10th`.
+- **Tier 3:** Spirit of Refresh Award ($1,000 studio), Legacy Award (educator, 20+ years),
+  Refresh Visual Impact Award (photogenic), Choreography Awards ($500/age division),
+  Technical Excellence Awards (Elite only), Studio Technical Excellence, Choreography
+  Excellence, Performance / Artistic Merit / Teacher Recognition awards. No cash at Foundation.
+- ⚠️ **BANDS: NOT PUBLISHED.** Rules say only "each entry will receive an award based on their
+  achievement level" — the levels are never named on the site. **Do not assume KAR/Ultra band
+  names apply**; treat any band-like string in Refresh data as unverified.
+- ⚠️ **Foundation / Progressive / Elite are skill LEVELS**, not bands or placements — so
+  `Top Foundation Solo 9 - 11` is a genuine overall ranking.
+- **Sources:** refreshdance.com/rules (React SPA — text extracted from its JS bundle),
+  /cash-prizes, /awards, and the public results API /api/v1/competitions/23/awards.
+- **Confidence:** high, except adjudication bands (unpublished).
