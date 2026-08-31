@@ -5,7 +5,7 @@ const { requireAuth, requireStudioOwner } = require('../../middleware/auth');
 const { logStudioActivity } = require('../../utils/activity');
 const { approveDancerClaim, rejectDancerClaim, notifyRosterAttach } = require('../../utils/claims');
 const { ensureMergeRequestTable } = require('../../utils/studioMerge');
-const { isMajorAward, majorAwardSql, PRESTIGE_TERMS, STAGE_TERMS } = require('../../utils/majorAward');
+const { isMajorAward, majorAwardSql, PRESTIGE_TERMS, STAGE_TERMS, curatedOrgIds, isMajorAwardCurated } = require('../../utils/majorAward');
 const { WEIGHTS, DEFAULT_WEIGHT, awardTerm, weightsForStudio, weightOf, ensureAwardWeightTable } = require('../../utils/awardWeights');
 const { canonicalizeRoutine, routineKeySql, ensureRoutineAliasTable, ensureRoutineChecksTable, resolveRoutineKey, resweepStudioKeys } = require('../../utils/routineKey');
 const { ensureCastInviteTables, newInviteToken, inviteExpiry, sendCastInviteEmail } = require('../../utils/castInvites');
@@ -1386,6 +1386,7 @@ router.get('/manage/studio/:id/history', requireAuth, requireStudioOwner, async 
   });
 
   const ownerWeights = await weightsForStudio(db, req.studio.id);
+  const curatedSet = new Set(await curatedOrgIds(db));
   const orgsMap = {};
 
   for (const award of awards) {
@@ -1398,6 +1399,9 @@ router.get('/manage/studio/:id/history', requireAuth, requireStudioOwner, async 
         total_awards_all_time: 0,
         first_places_all_time: 0,
         major_awards_all_time: 0,
+        other_major_all_time: 0,
+        division_placements_all_time: 0,
+        curated: curatedSet.has(award.org_id),
         highlights_all_time: 0
       };
     }
@@ -1407,8 +1411,10 @@ router.get('/manage/studio/:id/history', requireAuth, requireStudioOwner, async 
 
     // Shared definition (utils/majorAward.js) — this used to be a
     // hand-duplicated variant of the public studio page's SQL and drifted.
-    const isMajor = isMajorAward(award);
+    const isMajor = isMajorAwardCurated(award, curatedSet);
     if (isMajor) org.major_awards_all_time++;
+    if (isMajor && !award.is_first_place) org.other_major_all_time++;
+    if (award.top_award_tier === 2) org.division_placements_all_time++;
     // Private, owner-weighted view — never leaves this page (the public
     // figure above stays the platform rule).
     if (award.is_first_place && weightOf(ownerWeights, award) >= 2) org.highlights_all_time++;

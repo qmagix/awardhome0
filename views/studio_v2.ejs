@@ -197,7 +197,11 @@
             <div class="v2-org-card">
               <div class="v2-o-count"><%= org.total_awards_all_time.toLocaleString() %></div>
               <div class="v2-o-name"><%= org.name %></div>
-              <div class="v2-o-sub"><%= org.first_places_all_time %> first places<% if (org.major_awards_all_time > 0) { %> &middot; <%= org.major_awards_all_time %> major<% } %></div>
+              <%# First places and OTHER major awards: an overall 1st is itself the
+    regional/national champion, so it belongs in the first-place figure —
+    "other major" then adds titles, champions, specials and 2nd/3rd overalls
+    without double-counting anything. %>
+              <div class="v2-o-sub"><%= org.first_places_all_time %> first places<% if (org.other_major_all_time > 0) { %> &middot; <%= org.other_major_all_time %> other major award<%= org.other_major_all_time === 1 ? '' : 's' %><% } %></div>
               <% if (i === 0 && circuit.length > 1) { %><span class="v2-o-tag">Home circuit</span><% } %>
             </div>
           <% }); %>

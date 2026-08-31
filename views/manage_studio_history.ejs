@@ -112,7 +112,14 @@
                       style="background: none; border: none; color: var(--primary); cursor: pointer; padding: 0 0 0 0.15rem; font-size: 0.85rem; line-height: 1;">&#9432;</button>
                   </div>
                   <div style="font-size: 1.5rem; font-weight: bold; color: #aa8529;"><%= org.major_awards_all_time %></div>
+                  <% if (!org.curated) { %><div style="font-size: 0.65rem; color: var(--text-muted);" title="This competition's own award rules aren't encoded yet, so this is a provisional keyword estimate">provisional</div><% } %>
                 </div>
+                <% if (org.division_placements_all_time > 0) { %>
+                  <div title="Division-wide overall placements (1st-3rd) — an overall 1st is the regional or national champion. Included in Major Awards.">
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">Division Placements</div>
+                    <div style="font-size: 1.5rem; font-weight: bold; color: #aa8529;"><%= org.division_placements_all_time %></div>
+                  </div>
+                <% } %>
                 <% if (org.highlights_all_time > 0) { %>
                   <div title="Your own emphasis — private to this page, and it shapes your AI summaries. Never shown publicly.">
                     <div style="font-size: 0.8rem; color: var(--text-muted);">Your Highlights 🔒</div>
@@ -483,10 +490,15 @@ function copySummary(event) {
       <button onclick="document.getElementById('majorInfoModal').style.display='none'" class="btn" style="background: rgba(255,255,255,0.1); color: white; padding: 0.25rem 0.7rem;">&#10005;</button>
     </div>
     <p style="color: var(--text-muted); line-height: 1.6; margin: 1rem 0 0;">
-      A <strong style="color: #aa8529;">Major Award</strong> is a <strong>first place</strong> that is also a
-      <strong>prestige award</strong> — a title, scholarship, invitation, Dancer of the Year and the like —
-      won at a <strong>national, finals, or grand</strong> stage (either in the award's own name or the event's).
-      Everything else still counts in Total Awards and 1st Places.
+      Where we've encoded a competition's own published rules, a
+      <strong style="color: #aa8529;">Major Award</strong> is one of three things: a
+      <strong>headline win</strong> (grand champion, Mr./Miss title, Grand Prix, Dancer of the Year), a
+      <strong>division overall placement</strong> (1st-3rd across a whole division — an overall 1st is
+      effectively the regional or national champion), or a <strong>named special award</strong>
+      (judges' honors like Odyssey or Best of JUMP). Adjudication bands (Platinum, High Gold, and
+      confusingly-named ones like KAR's "First Place"), narrow-category placements, and invitations
+      never count. For competitions we haven't encoded yet, the figure is a provisional keyword
+      estimate and is labelled as such.
     </p>
     <p style="color: var(--text-muted); font-size: 0.88rem; line-height: 1.6; margin: 0.75rem 0 0;">
       This figure also appears on your <strong>public studio page</strong>, so the definition is the same for

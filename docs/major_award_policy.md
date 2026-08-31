@@ -217,7 +217,17 @@ trustworthy:
 | Karen's School of Dance | 1,414 | **0** | 52 | 522 | 29 |
 | Studio L Hoboken | 1,144 | 48 | 154 | 202 | 1 |
 
-**The open decision — what "Major Awards" should mean publicly:**
+**DECIDED 2026-08-30 (Q):** Major Awards = **T1 + T2 + T3** — overall
+placements are genuinely competitive, so they count. And the public pairing is
+**"first places" + "other major awards"**, not "first places + major": an
+overall 1st IS the regional or national champion, so it belongs in the
+first-place figure, and calling a number "major" while excluding it reads
+wrong. "Other major awards" then adds titles, grand champions, named specials
+and 2nd/3rd overalls — **nothing is double-counted**. The owner's Organization
+History page additionally breaks out **Division Placements** (T2) and labels
+uncurated orgs' figures "provisional".
+
+Original options considered:
 
 - **T1 + T3 only** (~80-155 per big studio): "major" keeps its headline meaning
   — grand champions, titles, named honors. **Recommended.**

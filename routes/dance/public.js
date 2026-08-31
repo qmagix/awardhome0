@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { majorAwardSql } = require('../../utils/majorAward');
+const { majorAwardSql, curatedOrgIds, majorAwardSqlCurated, divisionPlacementSql } = require('../../utils/majorAward');
 const { openDb } = require('../../database');
 const { logStudioActivity } = require('../../utils/activity');
 const { cached } = require('../../utils/cache');
@@ -1073,11 +1073,15 @@ router.get('/dance/studio/:id', profileLimiter, async (req, res) => {
   }
 
   // 4. Orgs History Aggregation
+  // Curated orgs use their encoded hierarchy; others fall back to keywords.
+  const curatedIds = await curatedOrgIds(db);
   const orgsRaw = await db.all(`
     SELECT o.id as org_id, o.name as org_name, o.logo_url, e.year, e.id as event_id, e.name as event_name, 
            COUNT(*) as total_awards, 
            SUM(CASE WHEN a.is_first_place = 1 THEN 1 ELSE 0 END) as first_places,
-           SUM(CASE WHEN ${majorAwardSql('a', 'e')} THEN 1 ELSE 0 END) as major_awards
+           SUM(CASE WHEN ${majorAwardSqlCurated(curatedIds, 'a', 'e')} THEN 1 ELSE 0 END) as major_awards,
+           SUM(CASE WHEN ${majorAwardSqlCurated(curatedIds, 'a', 'e')} AND IFNULL(a.is_first_place,0) != 1 THEN 1 ELSE 0 END) as other_major_awards,
+           SUM(CASE WHEN ${divisionPlacementSql('a')} THEN 1 ELSE 0 END) as division_placements
     FROM awards a
     JOIN events e ON a.event_id = e.id
     JOIN organizations o ON e.org_id = o.id
@@ -1088,18 +1092,21 @@ router.get('/dance/studio/:id', profileLimiter, async (req, res) => {
   const orgsMap = {};
   for (const row of orgsRaw) {
     if (!orgsMap[row.org_id]) {
-      orgsMap[row.org_id] = { id: row.org_id, name: row.org_name, logo_url: row.logo_url, years: {}, total_awards_all_time: 0, first_places_all_time: 0, major_awards_all_time: 0 };
+      orgsMap[row.org_id] = { id: row.org_id, name: row.org_name, logo_url: row.logo_url, years: {}, total_awards_all_time: 0, first_places_all_time: 0, major_awards_all_time: 0, other_major_all_time: 0, division_placements_all_time: 0, curated: curatedIds.includes(row.org_id) };
     }
     const org = orgsMap[row.org_id];
     org.total_awards_all_time += row.total_awards;
     org.first_places_all_time += row.first_places;
     org.major_awards_all_time += row.major_awards;
+    org.other_major_all_time += row.other_major_awards;
+    org.division_placements_all_time += row.division_placements;
 
-    if (!org.years[row.year]) org.years[row.year] = { total_awards: 0, first_places: 0, major_awards: 0, eventsMap: {} };
+    if (!org.years[row.year]) org.years[row.year] = { total_awards: 0, first_places: 0, major_awards: 0, division_placements: 0, eventsMap: {} };
     const yr = org.years[row.year];
     yr.total_awards += row.total_awards;
     yr.first_places += row.first_places;
     yr.major_awards += row.major_awards;
+    yr.division_placements += row.division_placements;
 
     yr.eventsMap[row.event_id] = { name: row.event_name, total_awards: row.total_awards, first_places: row.first_places, major_awards: row.major_awards };
   }

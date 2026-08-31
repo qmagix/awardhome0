@@ -45,4 +45,46 @@ function majorAwardSql(a = 'a', e = 'e') {
   return `(${a}.is_first_place = 1 AND (${prestige}) AND ((${stage}) OR LOWER(${e}.name) LIKE '%national%' OR LOWER(${e}.name) LIKE '%final%'))`;
 }
 
-module.exports = { isMajorAward, majorAwardSql, PRESTIGE_TERMS, STAGE_TERMS };
+// ---- Curation-first (2026-08-30) ----
+// Where an org's published hierarchy has been ENCODED (scripts/
+// encode_top_awards.js sets is_top_award + top_award_tier), that is the
+// truth. The keyword heuristic above survives only as a labelled fallback
+// for orgs not yet encoded — it cannot tell an ADC|IBC "Gold Medal" (1st of
+// the division) from a UBC "Gold" (third tier, unbounded). See
+// docs/major_award_policy.md.
+//
+// Major = T1 headline + T2 division overalls + T3 named specials (Q's call
+// 2026-08-30: overalls are genuinely competitive). T2 is ALSO published on
+// its own as "division placements".
+
+let curatedCache = { at: 0, ids: [] };
+async function curatedOrgIds(db) {
+  if (Date.now() - curatedCache.at < 300000) return curatedCache.ids;
+  const rows = await db.all(`
+    SELECT o.id FROM organizations o
+    WHERE EXISTS (SELECT 1 FROM events e JOIN awards a ON a.event_id = e.id
+                  WHERE e.org_id = o.id AND a.is_top_award = 1)`);
+  curatedCache = { at: Date.now(), ids: rows.map(r => r.id) };
+  return curatedCache.ids;
+}
+
+// SQL predicate: curated orgs use their encoding, the rest fall back.
+function majorAwardSqlCurated(curatedIds, a = 'a', e = 'e') {
+  if (!curatedIds || !curatedIds.length) return majorAwardSql(a, e);
+  const list = curatedIds.filter(Number.isInteger).join(',');
+  return `(CASE WHEN ${e}.org_id IN (${list}) THEN ${a}.is_top_award = 1
+                ELSE ${majorAwardSql(a, e)} END)`;
+}
+
+// Tier 2 only — the "division placements" figure.
+const divisionPlacementSql = (a = 'a') => `(${a}.top_award_tier = 2)`;
+
+function isMajorAwardCurated(award, curatedIdSet) {
+  if (curatedIdSet && award && curatedIdSet.has(award.org_id)) return award.is_top_award === 1;
+  return isMajorAward(award);
+}
+
+module.exports = {
+  isMajorAward, majorAwardSql, PRESTIGE_TERMS, STAGE_TERMS,
+  curatedOrgIds, majorAwardSqlCurated, divisionPlacementSql, isMajorAwardCurated,
+};

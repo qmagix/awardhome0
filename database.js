@@ -631,6 +631,7 @@ async function initDb() {
   // scripts/encode_top_awards.js. Lets the platform change what counts as
   // "major" without re-encoding. See docs/major_award_policy.md.
   try { await db.exec('ALTER TABLE awards ADD COLUMN top_award_tier INTEGER'); } catch(e) {}
+  try { await db.exec('CREATE INDEX IF NOT EXISTS idx_awards_top ON awards(is_top_award, event_id)'); } catch(e) {}
   try { await db.exec('CREATE INDEX IF NOT EXISTS idx_awards_studio_perfkey ON awards(studio_id, performance_name_key)'); } catch(e) {}
   try { await db.exec('ALTER TABLE studios ADD COLUMN instagram_handle TEXT'); } catch(e) {}
   try { await db.exec('ALTER TABLE studios ADD COLUMN tiktok_handle TEXT'); } catch(e) {}
