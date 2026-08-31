@@ -101,13 +101,18 @@ function parsePDF(filePath) {
                 //
                 // Longer alternatives must stay ahead of the bare ordinals, or
                 // "1st" wins the alternation again.
-                const placementMatch = line.match(/^(1st Runner Up|2nd Runner Up|3rd Runner Up|4th Runner Up|5th Runner Up|1st Run Up|2nd Run Up|3rd Run Up|4th Run Up|5th Run Up|WINNER|Mister|Miss|Mr\.?|1st|2nd|3rd|\d+th|DIAMOND|RUBY|EMERALD|SAPPHIRE|CRYSTAL)\s+(.+)$/i);
+                // Runner-up is written at least three ways across the PDFs --
+                // "1st Runner Up", "1st Runner-Up", "1st Run Up" -- so match the
+                // shape rather than enumerating permutations and missing the
+                // next one. It MUST precede the bare ordinals in the
+                // alternation, or "1st" wins and the tail becomes a data token.
+                const placementMatch = line.match(/^(\d(?:st|nd|rd|th)\s+Run(?:ner)?[-\s]?Up|WINNER|Mister|Miss|Mr\.?|1st|2nd|3rd|\d+th|DIAMOND|RUBY|EMERALD|SAPPHIRE|CRYSTAL)\s+(.+)$/i);
                 if (placementMatch) {
-                    // Normalise the abbreviation, and record a title winner the
+                    // Normalise to one spelling, and record a title winner the
                     // same way the other PDF layouts already do (place=WINNER),
                     // so downstream "only the winner counts" rules see it.
                     let place = placementMatch[1];
-                    if (/^(\d)(st|nd|rd|th) Run Up$/i.test(place)) place = place.replace(/Run Up$/i, 'Runner Up');
+                    if (/Up$/i.test(place)) place = place.replace(/^(\d(?:st|nd|rd|th))\s+Run(?:ner)?[-\s]?Up$/i, '$1 Runner Up');
                     else if (/^(Miss|Mister|Mr\.?)$/i.test(place)) place = 'WINNER';
                     let rest = placementMatch[2];
                     
