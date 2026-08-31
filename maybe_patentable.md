@@ -205,7 +205,24 @@ free-standing greeting artifact.
 standalone filing — it is an embodiment cluster on the same artifact family as
 64/142,611. Per the queue rule, file or consciously waive BEFORE shipping.
 
-### A11. Incentive-compatible private weighting that yields a public classification signal (BUILT 2026-08-30, not yet deployed)
+### A11. Incentive-compatible private weighting that yields a public classification signal (DEPLOYED 2026-08-30 — PUBLIC DISCLOSURE DATE)
+**Disclosed 2026-08-30 by the push+deploy of commit `a0b8f44`, without a
+pre-filing decision having been made.** The item was flagged "file or
+consciously waive before deploying" and that gate was not closed first — the
+deploy carried it. Two independent disclosures happened in the same push:
+the running feature at awardhome.com, and this file's own description of the
+claimable shape (the repo `qmagix/awardhome0` is **PUBLIC**). US grace period:
+any US filing covering A11 must be made by **2027-08-30**. Foreign
+(absolute-novelty) rights: largely forfeited as of that date. Same posture Q
+accepted deliberately for [A9] — the difference is that this one was not a
+decision, so it is worth deciding now whether A11 goes into the P2 filing
+before the deadline rather than by default.
+
+⚠ **Standing hazard this exposed:** `maybe_patentable.md` lives in a PUBLIC
+repo, so every entry in it is published the moment it is pushed — this file
+is a disclosure channel, not a private drawer. Anything intended to stay
+unpublished until filing must not be committed here.
+
 Q's design. Each studio owner privately weights the award types in their own
 history (Not notable / Normal / Notable / Headline). Three properties make the
 combination interesting:
