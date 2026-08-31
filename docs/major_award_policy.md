@@ -117,6 +117,11 @@ Critics' Choice, Fernando Bujones Memorial Award). Major *only* where the org's
 rules present them as distinctions — not participation or invitation rows.
 
 **Never major:**
+- **title runner-ups** at commercial competitions — the title contest is
+  usually a paid add-on entry, so "1st runner-up" often reflects who paid to
+  compete rather than a scarce win (Q, 2026-08-30). Only the title WINNER
+  counts. This does NOT extend to ranked placements: a ballet Silver or a
+  2nd overall beat a field and still count;
 - adjudication bands (Platinum/High Gold/Gold; KAR's First Place → Elite
   Ultimate Performance ladder) — these are score tiers every entry receives;
 - category placements inside a narrow style bracket (1st in Teen Lyrical Solo);
@@ -328,10 +333,18 @@ ladder is prestigious — "very hard to get into top 25 nationally".
   (17,906) — Top 24 sits below the community's bar per Q; T3 = Outstanding
   Choreographer/Teacher/School (634).
 
-**Runner-ups: one consistent decision still open.** Title/honour runner-ups are
-excluded everywhere (KAR, Starpower, NYCDA, DanceOne) — at the conventions they
-outnumber winners ~4:1 and would dominate the figure. One call would settle it
-across all orgs.
+**Runner-ups: DECIDED 2026-08-30 (Q) — title runner-ups do NOT count.**
+"Often a paid participation honour, especially in regionals; only first place
+(winner) counts in the cases of titles in commercial dance competitions."
+Verified: zero runner-up rows are flagged anywhere, including NYCDA's 4,959
+`Runner-Up` rows.
+
+⚠️ **This applies to TITLES at commercial competitions, not to competitive
+placements.** A ballet 2nd or 3rd is a ranked result against a national field,
+not a paid title honour, so ADC|IBC's Silver/Bronze and YAGP's 2nd/3rd remain
+counted (5,344 rows). The distinction to preserve in any future rule: a title
+runner-up is a purchased entry into a title contest; a placement runner-up beat
+everyone else but one.
 
 ### The "no dancer name" bug — not the scraper
 
