@@ -140,6 +140,48 @@ const RULES = {
       sql: `(LOWER(a.award_type) LIKE '%critics%' OR LOWER(a.award_type) LIKE '%judges%pick%'
              OR LOWER(a.award_type) LIKE '%class act%' OR LOWER(a.award_type) LIKE '%good sport%')` },
   ],
+  // ---- Batch 3 (2026-08-30) ----
+  // DanceOne conventions: the convention's own dancer title (Non-Stop Dancer /
+  // VIP / Breakout Artist / Protege) is filed under award_type='SCHOLARSHIP'
+  // with place WINNER/RUNNER-UP. Q: winning it "is a major title" — so the
+  // blanket "scholarship rows aren't awards" rule was too broad. Class
+  // scholarships ("High Five in Jazz") remain excluded.
+  ...['jump', 'nuvo', 'radix', 'twentyfourseven'].reduce((acc, org) => {
+    acc[org] = [
+      { tier: 'T1', name: 'Convention dancer title — WINNER',
+        sql: `LOWER(a.award_type) = 'scholarship' AND a.place = 'WINNER'
+              AND (LOWER(a.category) LIKE '%non-stop dancer%' OR LOWER(a.category) LIKE '%vip%'
+                   OR LOWER(a.category) LIKE '%breakout%' OR LOWER(a.category) LIKE '%protege%'
+                   OR LOWER(a.category) LIKE '%prot\u00e9g%')` },
+      // Runner-ups deliberately NOT encoded, for consistency with KAR /
+      // Starpower / NYCDA title runner-ups. They outnumber winners ~4:1 and
+      // would dominate the figure. Pending one decision across all orgs.
+      { tier: 'T2', name: 'High score by age (division-wide), places 1st-3rd',
+        sql: `IFNULL(a.award_type,'') = '' AND a.place IN ('1st','2nd','3rd')` },
+      { tier: 'T3', name: 'SPECIAL judges awards (Best of JUMP / Best Nu Group / 11 O\'Clock etc.)',
+        sql: `LOWER(a.award_type) = 'special'` },
+    ];
+    return acc;
+  }, {}),
+  // Ballet: a single elite level per age band and a national field, so Q rates
+  // the whole published ladder as major — "very hard to get into top 25".
+  adcibc: [
+    { tier: 'T1', name: 'Gold/Silver/Bronze medal + 1st-3rd (division podium)',
+      sql: `(UPPER(a.place) LIKE '%MEDAL%' OR UPPER(a.place) LIKE '1ST%'
+             OR UPPER(a.place) LIKE '2ND%' OR UPPER(a.place) LIKE '3RD%')` },
+    { tier: 'T2', name: 'Rest of the finals ladder (4th, 5th, Top 10/15/25)',
+      sql: `(UPPER(a.place) LIKE '4TH%' OR UPPER(a.place) LIKE '5TH%' OR UPPER(a.place) LIKE 'TOP %')` },
+  ],
+  yagp: [
+    { tier: 'T1', name: 'Podium — 1st/2nd/3rd (incl. ties)',
+      sql: `(UPPER(a.place) LIKE '1ST PLACE%' OR UPPER(a.place) LIKE '2ND PLACE%'
+             OR UPPER(a.place) LIKE '3RD PLACE%')` },
+    // Q: "top 3 or top 12 are regarded as majors" — Top 24 sits below that bar.
+    { tier: 'T2', name: 'Top 3 / Top 6 / Top 12 rankings',
+      sql: `UPPER(a.place) IN ('TOP 3','TOP 6','TOP 12')` },
+    { tier: 'T3', name: 'Named specials (Outstanding Choreographer/Teacher/School)',
+      sql: `(LOWER(IFNULL(a.award_type,'')) LIKE '%outstanding%' OR LOWER(IFNULL(a.category,'')) LIKE '%outstanding%')` },
+  ],
 };
 
 async function main() {

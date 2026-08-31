@@ -301,3 +301,49 @@ changes, confirming the match.
 | The Element Dance Center | 3,900 | 464 | 718 (7) | 921 |
 | Studio 19 Dance Complex | 4,689 | 1,054 | 394 (124) | 622 |
 | Club Dance Studio | 4,693 | 680 | 71 (0) | 84 |
+
+
+---
+
+## 8. Batch 3 + a data bug (2026-08-30)
+
+**15 of 26 orgs encoded — 81% of all awards.**
+
+**Convention dancer titles are majors (Q).** At the DanceOne conventions the
+title lives under `award_type='SCHOLARSHIP'` with `place='WINNER'` and the name
+in `category` (`Mini Non-Stop Dancer`, `… VIP`, `… Breakout Artist`,
+`… Protege`). My earlier blanket "the 50k SCHOLARSHIP rows aren't awards" was
+too broad: the class scholarships ("High Five in Jazz/Ballet/Hip-Hop") are
+opportunities, but winning the convention's dancer title is a headline win.
+Encoded T1: JUMP 4,671 · NUVO 4,766 · RADIX 3,415 · 24SEVEN 4,902.
+Their high-score placements 1st-3rd are T2 (Q: a 2nd in Solo at a convention is
+"very competitive"), and SPECIAL judges' awards (Best of JUMP etc.) are T3.
+
+**Ballet is judged on a different scale (Q).** ADC|IBC and YAGP run a single
+elite level per age band against a national field, so the whole published
+ladder is prestigious — "very hard to get into top 25 nationally".
+- **ADC|IBC**: T1 = Gold/Silver/Bronze medal + 1st-3rd (123); T2 = the rest of
+  the finals ladder — 4th, 5th, Top 10/15/25 (360). All 483 awards count.
+- **YAGP**: T1 = 1st/2nd/3rd incl. ties (7,369); T2 = Top 3 / Top 6 / Top 12
+  (17,906) — Top 24 sits below the community's bar per Q; T3 = Outstanding
+  Choreographer/Teacher/School (634).
+
+**Runner-ups: one consistent decision still open.** Title/honour runner-ups are
+excluded everywhere (KAR, Starpower, NYCDA, DanceOne) — at the conventions they
+outnumber winners ~4:1 and would dominate the figure. One call would settle it
+across all orgs.
+
+### The "no dancer name" bug — not the scraper
+
+Reported: 24SEVEN 2023 Santa Clara, Mini Solo 5th, "Fierce And Free" showed no
+dancer. The award **did** carry `dancer_id = 348123` — but that dancer row no
+longer exists. A **stale pointer** is worse than an uncredited award: the award
+looks credited, so it never appears in Check Routine Dancers and nobody is
+prompted to fix it.
+
+`scripts/repair_stale_dancer_pointers.js --apply` cleared **51** such pointers
+(10 deleted dancer ids) across RADIX 20, JUMP 11, 24SEVEN 9, NUVO 6, UBC 4,
+The Dance Awards 1. Those routines now show honestly as missing dancers and can
+be filled by an owner — or by re-running the org's importer, since the source
+files still hold the names. Cause: historic delete paths that didn't repoint
+the legacy column (today's merge tools all do — fixed 2026-08-30).
