@@ -245,15 +245,78 @@ Volume across ~305 regional events:
 | Artistic Excellence Award | 240 | 0.8 |
 | Golden Tickets - `<Level> <Age>` | ~150-250 each | — |
 
-Tiering status: Excellence in Choreography counts as T3 via the platform-wide
-choreography rule (Q's ruling — choreography awards are rare by design).
-Costume Award stays T3. **The rest are NOT yet tiered** — classifying them
-needs NexStar's published rules, and the selectivity numbers above are the
-sanity check: "Nominees" is by name not a win, Golden Tickets reads as a
-nationals invitation (the Rainbow "All Stars" precedent says invitations are
-opportunities, not placements), and Power Pak at 23/event looks like a
-program handout rather than a scarce honour. Do not tier any of them on the
-name alone — that is exactly the §2b naming trap.
+**The layout IS the classifier — NexStar's most useful structural fact.** Their
+booklets are self-documenting: a **scored** award prints a `Place` column; a
+**discretionary / invitation** item prints only `Routine Name | Studio`. This
+is a per-award primary-source signal that does not depend on the prose rules —
+which matters, because the current rulebook covers this whole population with
+one catch-all sentence: *"Special awards, scholarships and other accolades will
+be awarded throughout each event."* It is also exactly the distinction the
+extractor bug erased, which is why the specials could not be tiered until the
+fix restored it.
+
+**Tiering (researched 2026-08-30 against the rulebooks + the booklets):**
+
+| award | verdict | tier |
+|---|---|---|
+| SDA Regional Champion, Premier/Elite Title | competitive, scored | T1 (already) |
+| Division tables (size + level/age) | competitive, scored | T2 (already) |
+| Costume Award | named special, scored | T3 (already) |
+| **Excellence in Technique Award** | competitive, scored, ~1 per age band | **T3 (added)** |
+| **Artistic Excellence Award**, **WOW! Award** | judge-created, ~1/event | **T3 (added)** |
+| Excellence in Choreography / Entertainment | named special but **~19/event** | choreography T3 by Q's ruling; entertainment uncounted — see caution |
+| Power Pak (+ its scholarships) | **invitation to a paid intensive** | not counted |
+| WDP / DancerPalooza / Wild One / Wild About You | scholarships ("given to deserving dancers") | not counted |
+| Battle on the Seas, Discovery Spotlight | opportunity | not counted |
+| Golden Tickets | merit-gated nationals **invitation** | not counted (Rainbow "All Stars" precedent) |
+| Cover Model, People's Choice **Nominees** | **nomination only**, pre-outcome | not counted |
+
+The load-bearing quotes: *"Power Pak **Invitations** will be given to deserving
+dancers…"* (attending costs $1,000+ with a $500 deposit — an invitation to buy
+a place, not a win); *"Special Award Ribbons will be **created by the judges**"*
+(the umbrella over WOW!/Artistic Excellence); and, from NexStar's own social
+post, *"IF YOU RECEIVED A COVER MODEL NOMINATION … **but you aren't finished
+yet!**"* — nominees then mail in headshots for one national winner.
+
+⚠ **Open question for Q — the choreography ruling's premise does not hold
+here.** The ruling ("all choreography awards count; each level usually has at
+most one, sometimes the whole event has one or two") was given on the
+understanding that they are scarce. NexStar's rules do promise 2 per event, but
+the booklets show **~19 per event**, and its identical sibling *Excellence in
+Entertainment* (~19/event) is not counted. So NexStar currently counts 3,034
+choreography awards while excluding an equally-sized twin. Options: keep as-is,
+drop NexStar's from the choreography rule, or count both. Not decided
+unilaterally — the ruling is Q's.
+
+⚠ **Excellence in Technique is being retired** — absent from the 2026 rules;
+volume collapsed from ~58 (2025) to 2 (2026). Historical rows still count.
+
+**Level vocabulary — three renamings of ONE ladder** (confirmed against our own
+rows):
+
+| seasons | beginner | intermediate | advanced |
+|---|---|---|---|
+| 2021-22 | Novice | Intermediate | Advanced |
+| 2023-25 | Level 1 | Level 2 | Level 3 |
+| 2026 | Showcase | Competitive | Elite |
+
+- **Shining Stars / Super Stars are NOT skill levels or studio choices** — they
+  are score-determined subdivisions of **Level 2 only** (2023+): **≥287.0 →
+  Shining Stars, ≤286.99 → Super Stars.** Shining Stars is the *higher* band,
+  which is counterintuitive and easy to rank backwards.
+- **"Inspiring Stars" is UNVERIFIED** — in no NexStar/SDA rulebook 2021-2026,
+  and only 122 rows here (vs 16,140 Super Stars). It occupies the level slot,
+  but do not assume it maps to Level 1.
+
+⚠ **Name collision:** `nexstardancecomp.com` is an unrelated organization
+(NexStar Dance Competition presented by Rhythm Dance Group, Morrisville NC —
+Indian classical/Bollywood/folk). Never merge it into org 13.
+
+**Known residue (59 rows, 0.05%):** a few section titles rendered side-by-side
+on one PDF row still merge into one string ("Excellence in
+ChoreographyExcellence in Entertainment", banner text prefixed onto a division
+name). Left as-is: 20 of them lose a T2 they should have, which is below the
+noise floor of this dataset and not worth a riskier extractor change.
 
 **Sources:** nexstarcompetition.com/dance-competition-rules (2025-26), NexStar 2023 Rules
 PDF. **Confidence:** high structure; medium current thresholds.

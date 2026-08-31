@@ -102,15 +102,55 @@ const RULES = {
     // real total — which is the same keyword-vs-shape trap already fixed for
     // the other orgs. All 193 types this adds were reviewed as genuine
     // division tables (including the Vocal Groups divisions).
+    // The size-token match needs the invitation guard: "Golden Tickets - Grand
+    // Lines 12 & O" contains "Lines" and DOES carry a place, so without it 5
+    // nationals invitations were counted as division placements.
     { tier: 'T2', name: 'Division tables (size + level/age), places 1-3',
       sql: `(LOWER(a.award_type) LIKE 'solo%' OR LOWER(a.award_type) LIKE 'duet%'
              OR LOWER(a.award_type) LIKE 'trio%' OR LOWER(a.award_type) LIKE '%groups%'
              OR LOWER(a.award_type) LIKE '%lines%' OR LOWER(a.award_type) LIKE '%production%'
              OR LOWER(a.award_type) LIKE '%level%')
             AND LOWER(a.award_type) NOT LIKE '%champion%'
-            AND LOWER(a.award_type) NOT LIKE '%title%' AND a.place IN ('1','2','3')` },
+            AND LOWER(a.award_type) NOT LIKE '%title%'
+            AND LOWER(a.award_type) NOT LIKE '%golden ticket%'
+            AND LOWER(a.award_type) NOT LIKE '%battle on the seas%'
+            AND a.place IN ('1','2','3')` },
     { tier: 'T3', name: 'Costume Award (named special)',
       sql: `LOWER(a.award_type) LIKE '%costume award%' AND a.place IN ('1','Winner')` },
+    // ---- The recovered named specials (2026-08-30 research) ----
+    // NexStar's booklets are self-classifying: a SCORED award prints a Place
+    // column, a discretionary/invitation item prints only "Routine Name |
+    // Studio". That layout split is the same one the extractor bug erased, so
+    // the fix restored the evidence needed to tier these correctly.
+    //
+    // Counted — scarce and merit-decided:
+    { tier: 'T3', name: 'Excellence in Technique Award (scored, ~1 per age band)',
+      sql: `LOWER(a.award_type) LIKE '%excellence in technique%'` },
+    // The 'battle on the seas' guard excludes the 3 rows whose section title
+    // merged with the next one ("Artistic Excellence AwardBattle on the Seas -
+    // Group") — see the known-residue note in docs/org_top_awards.md.
+    { tier: 'T3', name: 'Artistic Excellence / WOW! Award (judge-created, ~1 per event)',
+      sql: `(LOWER(a.award_type) LIKE '%artistic excellence%' OR LOWER(a.award_type) LIKE 'wow!%')
+            AND LOWER(a.award_type) NOT LIKE '%battle on the seas%'` },
+    //
+    // NOT counted, and deliberately so — these are the place-less tables, and
+    // NexStar's own rulebook says what they are:
+    //   Power Pak (~23/event, the least selective item in the org): "Power Pak
+    //     INVITATIONS will be given to deserving dancers…" — an invitation to
+    //     a paid intensive ($1,000+, $500 deposit), not a win. Same for the
+    //     Power Pak / WDP / DancerPalooza / Wild One / Wild About You
+    //     scholarships ("WILD Scholarships will be given to deserving
+    //     dancers"), Battle on the Seas, and Discovery Spotlight.
+    //   Golden Tickets: merit-gated invitation to nationals — the Rainbow "NYC
+    //     All Stars" precedent already ruled invitations are opportunities,
+    //     not placements.
+    //   Cover Model / People's Choice: NOMINATIONS. NexStar's own words —
+    //     "IF YOU RECEIVED A COVER MODEL NOMINATION … but you aren't finished
+    //     yet!" — recipients then mail in headshots for one national winner.
+    //     A nominee is pre-outcome by definition.
+    // No UNFLAG rules are needed: nothing above flags them, and NexStar is a
+    // curated org so the keyword fallback (which WOULD catch "scholarship"
+    // and "invitation") never runs for it.
   ],
   rainbow: [
     // DOY winner repeats the award name in `place`; 14,537 rows are Finalists.

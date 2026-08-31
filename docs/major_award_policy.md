@@ -487,3 +487,44 @@ orgs. Now matched by routine-size shape; all 193 newly-included types were
 reviewed as genuine division tables.
 
 NexStar major awards after both fixes: **48,410** (was 31,726).
+
+**What the fix made knowable.** The bug had erased the single most useful
+signal NexStar publishes. Their booklets are self-classifying: a **scored**
+award prints a `Place` column, a **discretionary or invitation** item prints
+only `Routine Name | Studio`. That is a per-award primary-source classifier
+that does not depend on prose rules — which matters, since the current rulebook
+disposes of this entire population with one sentence ("Special awards,
+scholarships and other accolades will be awarded throughout each event").
+Restoring the layout restored the evidence, and the specials could then be
+tiered from NexStar's own words rather than from their names:
+
+- **Counted (T3):** Excellence in Technique Award (scored, ~1 per age band);
+  Artistic Excellence Award and WOW! Award (~1/event, covered by the rulebook's
+  *"Special Award Ribbons will be created by the judges"*).
+- **Not counted — invitations:** Power Pak is *"Power Pak **Invitations** will
+  be given to deserving dancers"*, and attending costs $1,000+ with a $500
+  deposit. At ~23/event it is the least selective item in the org. Golden
+  Tickets is a merit-gated nationals invitation — the Rainbow "NYC All Stars"
+  ruling already settled that invitations are opportunities, not placements.
+  Same for the WDP / DancerPalooza / Wild One / Wild About You scholarships
+  (*"WILD Scholarships will be given to deserving dancers"*), Battle on the
+  Seas, and Discovery Spotlight.
+- **Not counted — nominations:** Cover Model and People's Choice **Nominees**.
+  NexStar's own post: *"IF YOU RECEIVED A COVER MODEL NOMINATION … but you
+  aren't finished yet!"* — nominees mail in headshots for one national winner.
+  A nominee is pre-outcome by definition.
+
+NexStar majors after tiering the specials: **49,537** (T1 6,270 / T2 38,530 /
+T3 4,737).
+
+**⚠ One ruling now rests on a premise the evidence contradicts.** "All
+choreography awards count as major" was given because they are rare — *"each
+level usually at most has one only, sometimes the whole event only has one or
+two."* True at the orgs it was drawn from, and NexStar's rules do promise 2 per
+event; but NexStar's booklets show **~19 per event**, and its structurally
+identical sibling *Excellence in Entertainment* (~19/event) is not counted. So
+NexStar currently contributes 3,034 choreography majors while an equal-sized
+twin contributes none. Left as-is because the ruling is Q's to revise — the
+options are keep, drop NexStar's from the rule, or count both. Flagged rather
+than silently "corrected", which is the failure mode this whole document
+exists to prevent.
