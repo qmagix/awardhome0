@@ -257,13 +257,25 @@ const RULES = {
   ],
 };
 
-// Applied to EVERY encoded org, after its own rules.
+// Applied to EVERY encoded org, after its own rules — except where an org is
+// listed in `skipOrgs`, because a common rule's PREMISE can fail at one org.
+// (An UNFLAG in the org's own array cannot express this: common rules run
+// last, so they would just re-flag the rows.)
 const COMMON_RULES = [
   // Q, 2026-08-30: choreography awards are genuinely rare — usually at most
   // one per level, sometimes one or two in a whole event — so they count
   // regardless of how the org files the `place` (Winner / blank / 1 / the
   // award name itself).
-  { tier: 'T3', name: 'Choreography award (any place — rare by design)',
+  //
+  // skipOrgs nexstar (Q, 2026-08-30): the rarity premise does NOT hold there.
+  // NexStar's rules promise 2 per event but its booklets award ~19 — 3,034
+  // rows — and its structurally identical sibling "Excellence in
+  // Entertainment" (~19/event) was never counted. Q: "nexstar choreography is
+  // not as significant then… let's remove that from top_award." Excluding it
+  // also makes the two siblings consistent instead of counting one twin and
+  // not the other. Check volume-per-event before adding an org here or
+  // assuming this rule applies to a new one.
+  { tier: 'T3', name: 'Choreography award (any place — rare by design)', skipOrgs: ['nexstar'],
     sql: `LOWER(IFNULL(a.award_type,'') || ' ' || IFNULL(a.category,'')) LIKE '%choreograph%'` },
 ];
 
@@ -288,6 +300,10 @@ async function main() {
     }
 
     for (const r of [...rules, ...COMMON_RULES]) {
+      if (r.skipOrgs && r.skipOrgs.includes(slug)) {
+        console.log(`  ${'SKIP'.padEnd(6)} ${'—'.padStart(7)}          — ${r.name} (not applied to ${slug})`);
+        continue;
+      }
       const set = r.tier === 'UNFLAG' ? 0 : 1;
       const count = await db.get(
         `SELECT COUNT(*) n FROM awards a JOIN events e ON e.id = a.event_id

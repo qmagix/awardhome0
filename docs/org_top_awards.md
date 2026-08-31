@@ -264,7 +264,7 @@ fix restored it.
 | Costume Award | named special, scored | T3 (already) |
 | **Excellence in Technique Award** | competitive, scored, ~1 per age band | **T3 (added)** |
 | **Artistic Excellence Award**, **WOW! Award** | judge-created, ~1/event | **T3 (added)** |
-| Excellence in Choreography / Entertainment | named special but **~19/event** | choreography T3 by Q's ruling; entertainment uncounted — see caution |
+| Excellence in Choreography / Entertainment | named special but **~19/event** | **neither counted** — Q removed choreography 2026-08-30 once the volume was known |
 | Power Pak (+ its scholarships) | **invitation to a paid intensive** | not counted |
 | WDP / DancerPalooza / Wild One / Wild About You | scholarships ("given to deserving dancers") | not counted |
 | Battle on the Seas, Discovery Spotlight | opportunity | not counted |
@@ -278,15 +278,15 @@ a place, not a win); *"Special Award Ribbons will be **created by the judges**"*
 post, *"IF YOU RECEIVED A COVER MODEL NOMINATION … **but you aren't finished
 yet!**"* — nominees then mail in headshots for one national winner.
 
-⚠ **Open question for Q — the choreography ruling's premise does not hold
-here.** The ruling ("all choreography awards count; each level usually has at
-most one, sometimes the whole event has one or two") was given on the
-understanding that they are scarce. NexStar's rules do promise 2 per event, but
-the booklets show **~19 per event**, and its identical sibling *Excellence in
-Entertainment* (~19/event) is not counted. So NexStar currently counts 3,034
-choreography awards while excluding an equally-sized twin. Options: keep as-is,
-drop NexStar's from the choreography rule, or count both. Not decided
-unilaterally — the ruling is Q's.
+✔ **Resolved 2026-08-30 — NexStar choreography no longer counts.** The
+platform-wide "all choreography awards count" ruling assumed rarity ("each
+level usually at most has one only"). NexStar's rules promise 2/event but its
+booklets award **~19**, and its identical sibling *Excellence in Entertainment*
+(~19/event) was never counted — so NexStar counted one twin and not the other.
+Q: *"nexstar choreography is not as significant then… let's remove that from
+top_award."* Implemented as `skipOrgs: ['nexstar']` on the common rule in
+scripts/encode_top_awards.js. NexStar majors 49,537 → 46,503; every other org
+keeps its choreography awards (11,039 platform-wide).
 
 ⚠ **Excellence in Technique is being retired** — absent from the 2026 rules;
 volume collapsed from ~58 (2025) to 2 (2026). Historical rows still count.

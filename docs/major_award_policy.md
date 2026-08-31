@@ -517,14 +517,25 @@ tiered from NexStar's own words rather than from their names:
 NexStar majors after tiering the specials: **49,537** (T1 6,270 / T2 38,530 /
 T3 4,737).
 
-**⚠ One ruling now rests on a premise the evidence contradicts.** "All
-choreography awards count as major" was given because they are rare — *"each
-level usually at most has one only, sometimes the whole event only has one or
-two."* True at the orgs it was drawn from, and NexStar's rules do promise 2 per
-event; but NexStar's booklets show **~19 per event**, and its structurally
-identical sibling *Excellence in Entertainment* (~19/event) is not counted. So
-NexStar currently contributes 3,034 choreography majors while an equal-sized
-twin contributes none. Left as-is because the ruling is Q's to revise — the
-options are keep, drop NexStar's from the rule, or count both. Flagged rather
-than silently "corrected", which is the failure mode this whole document
-exists to prevent.
+**A ruling revised on evidence — NexStar choreography removed (Q, 2026-08-30).**
+"All choreography awards count as major" was given because they are rare —
+*"each level usually at most has one only, sometimes the whole event only has
+one or two."* True at the orgs it was drawn from. NexStar's rules do promise 2
+per event, but its booklets award **~19** (3,034 rows), while its structurally
+identical sibling *Excellence in Entertainment* (~19/event) was never counted —
+so NexStar was counting one twin and not the other. Shown the volume, Q:
+*"nexstar choreography is not as significant then… let's remove that from
+top_award."*
+
+Implemented as a per-org opt-out on the common rule (`skipOrgs: ['nexstar']`)
+rather than an UNFLAG in NexStar's own array — common rules run LAST, so an
+UNFLAG there would simply be re-flagged. NexStar majors 49,537 → **46,503**
+(T3 4,737 → 1,703). Every other org is untouched: 11,039 choreography awards
+still count platform-wide, and the SDA siblings (Starpower, Revolution,
+Believe, Imagine, DreamMaker) keep counting choreography AND entertainment
+together through their own rule, which is internally consistent.
+
+**The transferable lesson:** a rule can be right in general and wrong at one
+org, and the tell is volume-per-event, not the award's name. Before applying
+this rule to a newly-encoded org, check its per-event count — that is now
+written into the rule's own comment.
