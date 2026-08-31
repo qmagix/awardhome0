@@ -154,6 +154,25 @@ const RULES = {
       // Runner-ups deliberately NOT encoded, for consistency with KAR /
       // Starpower / NYCDA title runner-ups. They outnumber winners ~4:1 and
       // would dominate the figure. Pending one decision across all orgs.
+      // Each convention also has ONE scarce named dancer honour beyond its
+      // qualifying title — JUMP "Rock Star Dancer", NUVO "Die Hard Dancer",
+      // RADIX "Choice Artist", 24SEVEN "Weekend Warrior" — all ~8-11 per
+      // event (Q: Rock Star Dancer is a major). The genre class scholarships
+      // they sit beside run 20-77 per event ("StandOut in Tap", "BALLET",
+      // "Cutting Edge in Jazz…") and stay out. Distinguished by shape: a
+      // genre-named scholarship is a class award; a person-named one is an
+      // honour.
+      { tier: 'T3', name: 'Named dancer honour (Rock Star / Die Hard / Choice Artist / Weekend Warrior)',
+        sql: `LOWER(a.award_type) = 'scholarship' AND a.place = 'WINNER'
+              AND TRIM(IFNULL(a.category,'')) != ''
+              AND LOWER(a.category) NOT LIKE '% in %'
+              AND LOWER(a.category) NOT LIKE '%jazz%' AND LOWER(a.category) NOT LIKE '%ballet%'
+              AND LOWER(a.category) NOT LIKE '%tap%' AND LOWER(a.category) NOT LIKE '%hip%'
+              AND LOWER(a.category) NOT LIKE '%ballroom%' AND LOWER(a.category) NOT LIKE '%contemp%'
+              AND LOWER(a.category) NOT LIKE '%lyrical%' AND LOWER(a.category) NOT LIKE '%musical theatre%'
+              AND LOWER(a.category) NOT LIKE '%non-stop dancer%' AND LOWER(a.category) NOT LIKE '%vip%'
+              AND LOWER(a.category) NOT LIKE '%breakout%' AND LOWER(a.category) NOT LIKE '%protege%'
+              AND LOWER(a.category) NOT LIKE '%prot\u00e9g%'` },
       { tier: 'T2', name: 'High score by age (division-wide), places 1st-3rd',
         sql: `IFNULL(a.award_type,'') = '' AND a.place IN ('1st','2nd','3rd')` },
       { tier: 'T3', name: 'SPECIAL judges awards (Best of JUMP / Best Nu Group / 11 O\'Clock etc.)',

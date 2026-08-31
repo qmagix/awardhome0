@@ -400,3 +400,35 @@ itself) — Rainbow alone had 633 rows of which only 27 were counted before.
 
 **Coverage: 16 of 26 orgs, 83% of all awards.**
 Platform tiers: T1 72,262 · T2 361,412 · T3 55,239.
+
+
+---
+
+## 10. Named dancer honours at the conventions (2026-08-30)
+
+Q: "Rock Star Dancer in JUMP should be a major as well."
+
+Looking at it revealed that each DanceOne convention has exactly ONE scarce
+named dancer honour sitting beside its qualifying title, and all four were
+uncounted:
+
+| org | honour | volume | qualifying title (already T1) |
+|---|---|---|---|
+| JUMP | **Rock Star Dancer** | 1,210 (~8.5/event) | JUMP VIP |
+| NUVO | **Die Hard Dancer** | 1,483 (~10.7/event) | BreakOut Artist |
+| RADIX | **Choice Artist** | 1,202 (~10.5/event) | Protégé |
+| 24SEVEN | **Weekend Warrior** | 1,273 (~9.9/event) | Non-Stop Dancer |
+
+All four now count as T3. The ruling was applied to the exact siblings of the
+award Q named, since the four conventions share one anatomy.
+
+**The distinguishing shape — genre vs. person.** These honours live in the same
+`award_type='SCHOLARSHIP'` bucket as the class scholarships, but the two are
+told apart by how they're named:
+- **Genre-named = class scholarship, excluded**: "StandOut in Tap", "Cutting
+  Edge in Jazz & Contemporary", "High Five in Ballet", "JAZZ, CONTEMP. &
+  LYRICAL", "BALLROOM". Volume 20-77 per event.
+- **Person-named = honour, counted**: Rock Star Dancer, Die Hard Dancer,
+  Choice Artist, Weekend Warrior. Volume 8-11 per event.
+
+Verified after encoding: 0 genre class scholarships are counted.
