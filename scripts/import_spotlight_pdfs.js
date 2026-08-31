@@ -83,10 +83,32 @@ function parsePDF(filePath) {
                     continue;
                 }
 
-                // Check if it's an award row
-                const placementMatch = line.match(/^(1st Runner Up|2nd Runner Up|3rd Runner Up|4th Runner Up|5th Runner Up|WINNER|1st|2nd|3rd|\d+th|DIAMOND|RUBY|EMERALD|SAPPHIRE|CRYSTAL)\s+(.+)$/i);
+                // Check if it's an award row.
+                //
+                // Two additions here, both found 2026-08-30 by reading the PDFs:
+                //
+                // 1. Spotlight abbreviates "1st Runner Up" as "1st Run Up".
+                //    Without those alternatives the regex matched only "1st",
+                //    leaving "Run Up" as the first token -- which the Title
+                //    Winner branch below took as the STUDIO, fusing the real
+                //    studio into the dancer name ("Dance Images West ARIANA
+                //    CAMPBELL"). It also recorded a runner-up as place "1st",
+                //    i.e. as a first-place WIN.
+                // 2. The actual title winner's placement is "Miss" / "Mr" /
+                //    "Mister", which appeared nowhere in this pattern -- so
+                //    every real title winner was SILENTLY DROPPED. 184 of them
+                //    across the 268 result PDFs.
+                //
+                // Longer alternatives must stay ahead of the bare ordinals, or
+                // "1st" wins the alternation again.
+                const placementMatch = line.match(/^(1st Runner Up|2nd Runner Up|3rd Runner Up|4th Runner Up|5th Runner Up|1st Run Up|2nd Run Up|3rd Run Up|4th Run Up|5th Run Up|WINNER|Mister|Miss|Mr\.?|1st|2nd|3rd|\d+th|DIAMOND|RUBY|EMERALD|SAPPHIRE|CRYSTAL)\s+(.+)$/i);
                 if (placementMatch) {
-                    const place = placementMatch[1];
+                    // Normalise the abbreviation, and record a title winner the
+                    // same way the other PDF layouts already do (place=WINNER),
+                    // so downstream "only the winner counts" rules see it.
+                    let place = placementMatch[1];
+                    if (/^(\d)(st|nd|rd|th) Run Up$/i.test(place)) place = place.replace(/Run Up$/i, 'Runner Up');
+                    else if (/^(Miss|Mister|Mr\.?)$/i.test(place)) place = 'WINNER';
                     let rest = placementMatch[2];
                     
                     rest = rest.replace(/\u00A0/g, '   '); // replace non-breaking spaces
