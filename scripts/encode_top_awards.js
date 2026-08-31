@@ -43,25 +43,41 @@ const RULES = {
              OR LOWER(a.award_type) LIKE '%convention scholarship%'
              OR LOWER(a.award_type) LIKE '%all star dancers invitation%')` },
   ],
-  starpower: [
-    { tier: 'T1', name: 'SDA Champion (division champion)',
-      sql: `LOWER(COALESCE(NULLIF(a.award_type,''), a.category)) LIKE '%sda champion%'` },
-    { tier: 'T1', name: 'Performance of the Year',
-      sql: `LOWER(COALESCE(NULLIF(a.award_type,''), a.category)) LIKE '%performance of the year%'` },
-    // Title rows carry the whole contest: place '1' is the title winner,
-    // '2'/'3' are runner-ups (verified in the data) — only the winner is T1.
-    { tier: 'T1', name: 'Title WINNER only (place 1; runner-ups excluded)',
-      sql: `(LOWER(COALESCE(NULLIF(a.award_type,''), a.category)) LIKE '%miss star%'
-             OR LOWER(COALESCE(NULLIF(a.award_type,''), a.category)) LIKE '%mr star%'
-             OR LOWER(COALESCE(NULLIF(a.award_type,''), a.category)) LIKE '% title%')
-            AND a.place = '1'` },
-    { tier: 'T2', name: `Division tables (Level rows), places ${SP_T2_PLACES}`,
-      sql: `LOWER(COALESCE(NULLIF(a.award_type,''), a.category)) LIKE '%level%'
-            AND a.place IN (${SP_T2_PLACES})` },
-    { tier: 'UNFLAG', name: 'Invitations & spotlight callbacks (opportunities, not placements)',
-      sql: `(LOWER(COALESCE(NULLIF(a.award_type,''), a.category)) LIKE '%power pak invite%'
-             OR LOWER(COALESCE(NULLIF(a.award_type,''), a.category)) LIKE '%discovery spotlight%')` },
-  ],
+  // ---- Star Dance Alliance family: Starpower, Revolution, Believe, Imagine,
+  // DreamMaker. One anatomy, one rule set — encoding them separately is how
+  // Believe ended up with champions encoded but its overall placements
+  // missing (and, because ANY curation makes an org "curated", the keyword
+  // fallback stopped covering it too — silent loss).
+  ...['starpower', 'revolution', 'believe', 'imagine', 'dreammaker'].reduce((acc, org) => {
+    const name = `LOWER(COALESCE(NULLIF(a.award_type,''), a.category))`;
+    acc[org] = [
+      { tier: 'T1', name: 'SDA Champion (place 1 or Winner)',
+        sql: `${name} LIKE '%champion%' AND a.place IN ('1','Winner')` },
+      { tier: 'T1', name: 'Performance of the Year',
+        sql: `${name} LIKE '%performance of the year%'` },
+      { tier: 'T1', name: 'Title WINNER only (place 1; runner-ups excluded)',
+        sql: `${name} LIKE '%title%' AND a.place = '1'` },
+      // Division tables are identified by SHAPE, not by the word "level":
+      // these orgs also name levels "Competitive", and size groups like
+      // "12 & Over Grand Lines" carry no level word at all.
+      { tier: 'T2', name: 'Division overall tables (size + age/level), places 1-3',
+        sql: `a.place IN ('1','2','3')
+              AND (${name} LIKE '%solo%' OR ${name} LIKE '%duet%' OR ${name} LIKE '%trio%'
+                   OR ${name} LIKE '%group%' OR ${name} LIKE '%line%' OR ${name} LIKE '%production%')
+              AND ${name} NOT LIKE '%champion%' AND ${name} NOT LIKE '%title%'
+              AND ${name} NOT LIKE '%costume%' AND ${name} NOT LIKE '%outstanding%'
+              AND ${name} NOT LIKE '%power pak%' AND ${name} NOT LIKE '%discovery%'
+              AND ${name} NOT LIKE '%palooza%' AND ${name} NOT LIKE '%voucher%'` },
+      { tier: 'T3', name: 'Named specials: Choreography / Entertainment / Costume / Outstanding-genre',
+        sql: `(${name} LIKE '%choreography%' OR ${name} LIKE '%entertainment%'
+               OR ${name} LIKE '%costume%' OR ${name} LIKE '%outstanding%')
+              AND a.place IN ('1','Winner')` },
+      { tier: 'UNFLAG', name: 'Power Pak invitations, Discovery Spotlight, vouchers',
+        sql: `(${name} LIKE '%power pak%' OR ${name} LIKE '%discovery spotlight%'
+               OR ${name} LIKE '%palooza%' OR ${name} LIKE '%voucher%')` },
+    ];
+    return acc;
+  }, {}),
   // ---- Batch 2 (2026-08-30): NexStar, Rainbow, Revolution, StarQuest, NYCDA ----
   // Every rule below was checked against the org's real rows first; the
   // recurring trap is that a "champion"/"title"/"DOY" award_type names the
@@ -90,24 +106,6 @@ const RULES = {
       sql: `LOWER(a.award_type) LIKE '%judges choice%'` },
     { tier: 'UNFLAG', name: 'NYC All Stars invitations (opportunity, not a placement)',
       sql: `LOWER(a.award_type) LIKE '%all stars%'` },
-  ],
-  revolution: [
-    { tier: 'T1', name: 'SDA Champion (place 1 or Winner)',
-      sql: `LOWER(COALESCE(NULLIF(a.award_type,''), a.category)) LIKE '%champion%' AND a.place IN ('1','Winner')` },
-    { tier: 'T1', name: 'Title winner only',
-      sql: `LOWER(COALESCE(NULLIF(a.award_type,''), a.category)) LIKE '%title%' AND a.place = '1'` },
-    { tier: 'T2', name: 'Division tables (Level rows), places 1-3',
-      sql: `LOWER(COALESCE(NULLIF(a.award_type,''), a.category)) LIKE '%level%'
-            AND LOWER(COALESCE(NULLIF(a.award_type,''), a.category)) NOT LIKE '%champion%'
-            AND a.place IN ('1','2','3')` },
-    { tier: 'T3', name: 'Choreography / Entertainment awards (winners)',
-      sql: `(LOWER(COALESCE(NULLIF(a.award_type,''), a.category)) LIKE '%choreography%'
-             OR LOWER(COALESCE(NULLIF(a.award_type,''), a.category)) LIKE '%entertainment%')
-            AND a.place = 'Winner'` },
-    { tier: 'UNFLAG', name: 'Discovery Spotlight callbacks & Dancer Palooza vouchers',
-      sql: `(LOWER(COALESCE(NULLIF(a.award_type,''), a.category)) LIKE '%discovery spotlight%'
-             OR LOWER(COALESCE(NULLIF(a.award_type,''), a.category)) LIKE '%palooza%'
-             OR LOWER(COALESCE(NULLIF(a.award_type,''), a.category)) LIKE '%voucher%')` },
   ],
   starquest: [
     // Title rows include runner-ups whose place strings carry tab damage
@@ -184,6 +182,16 @@ const RULES = {
   ],
 };
 
+// Applied to EVERY encoded org, after its own rules.
+const COMMON_RULES = [
+  // Q, 2026-08-30: choreography awards are genuinely rare — usually at most
+  // one per level, sometimes one or two in a whole event — so they count
+  // regardless of how the org files the `place` (Winner / blank / 1 / the
+  // award name itself).
+  { tier: 'T3', name: 'Choreography award (any place — rare by design)',
+    sql: `LOWER(IFNULL(a.award_type,'') || ' ' || IFNULL(a.category,'')) LIKE '%choreograph%'` },
+];
+
 async function main() {
   const apply = process.argv.includes('--apply');
   const only = (process.argv.find(x => x.startsWith('--org=')) || '').split('=')[1];
@@ -204,7 +212,7 @@ async function main() {
          WHERE id IN (SELECT a.id FROM awards a JOIN events e ON e.id = a.event_id WHERE e.org_id = ?)`, [org.id]);
     }
 
-    for (const r of rules) {
+    for (const r of [...rules, ...COMMON_RULES]) {
       const set = r.tier === 'UNFLAG' ? 0 : 1;
       const count = await db.get(
         `SELECT COUNT(*) n FROM awards a JOIN events e ON e.id = a.event_id
@@ -228,6 +236,18 @@ async function main() {
       const total = after.reduce((s2, x) => s2 + x.n, 0);
       console.log(`  => now flagged: ${total} (was ${before.n}) — ` + after.map(x => `T${x.t}:${x.n}`).join(' '));
     }
+  }
+  // Safety net: an org with ANY flagged row counts as curated, so the keyword
+  // fallback stops applying to it. If it has no rules here, it is running on
+  // stale partial curation and is silently under-counting.
+  const orphans = await db.all(`
+    SELECT o.slug, COUNT(*) n FROM awards a JOIN events e ON e.id = a.event_id
+    JOIN organizations o ON o.id = e.org_id
+    WHERE a.is_top_award = 1 GROUP BY o.slug`);
+  const unruled = orphans.filter(o => !RULES[o.slug]);
+  if (unruled.length) {
+    console.log('\n⚠️  CURATED BUT NOT ENCODED HERE (running on stale partial curation):');
+    for (const o of unruled) console.log(`   ${o.slug}: ${o.n} flagged rows, no rules in this script`);
   }
   if (!apply) console.log('\nDry run — re-run with --apply to write.');
 }

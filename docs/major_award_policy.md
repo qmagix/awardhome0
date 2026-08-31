@@ -347,3 +347,43 @@ The Dance Awards 1. Those routines now show honestly as missing dancers and can
 be filled by an owner — or by re-running the org's importer, since the source
 files still hold the names. Cause: historic delete paths that didn't repoint
 the legacy column (today's merge tools all do — fixed 2026-08-30).
+
+
+---
+
+## 9. Star Dance Alliance family + choreography (2026-08-30)
+
+**A systemic bug, found from one report.** Q: "under Believe, 1st overall
+should be counted as major, currently not." Cause: Believe had 241 legacy
+flagged rows (SDA Champions only). Since **any** curation makes an org
+"curated", the keyword fallback stopped applying to it — so everything
+unencoded silently vanished from its numbers. Partial curation was worse than
+none. The encoder now prints a **⚠️ CURATED BUT NOT ENCODED HERE** warning for
+any org with flagged rows but no rules, so this can't recur silently.
+
+Fixed by unifying the five Star Dance Alliance siblings (Starpower, Revolution,
+Believe, Imagine, DreamMaker) onto ONE generated rule set — they share an
+anatomy, and encoding them separately is exactly how the gap appeared.
+
+**Division tables are now matched by SHAPE, not by the word "level":** these
+orgs also name a level "Competitive" (`Competitive 15-19 Solo`) and some size
+groups carry no level word at all (`12 & Over Grand Lines`). The rule is now
+"place 1-3 + a size word (solo/duet/trio/group/line/production), minus
+champions, titles, costumes, outstanding-genre, invitations and vouchers".
+
+| org | T1 | T2 | T3 |
+|---|---:|---:|---:|
+| Starpower | 8,181 | 43,538 | 11,490 |
+| Believe | 3,726 | 20,093 | 4,090 |
+| Imagine | 7,699 | 28,975 | 5,457 |
+| DreamMaker | 1,322 | 5,838 | ~1,000 |
+
+**Choreography awards are now a UNIVERSAL rule** applied to every encoded org
+(Q: "very rare — each level usually at most one, sometimes the whole event only
+has one or two"). Platform-wide there are 11,158 such rows across ~4,200
+events (≈2.7 per event), which matches that description. They count regardless
+of how an org files the `place` (`Winner`, blank, `1`, `–`, or the award name
+itself) — Rainbow alone had 633 rows of which only 27 were counted before.
+
+**Coverage: 16 of 26 orgs, 83% of all awards.**
+Platform tiers: T1 72,262 · T2 361,412 · T3 55,239.
