@@ -84,14 +84,30 @@ const RULES = {
   // whole CONTEST — winners, runner-ups and often the entire finalist field
   // share the type, separated only by `place`.
   nexstar: [
-    // place '1' rows carry a routine name (the actual champion); the 15,758
-    // NULL-place rows (~52/event) are the qualifier list, not winners.
+    // place '1' rows carry a routine name (the actual champion); only 64
+    // NULL-place rows remain under a champion type. (An earlier version of
+    // this comment claimed 15,758 "qualifier list" rows — those were never
+    // qualifiers. They were the named-special awards that the PDF extractor
+    // mis-filed under the preceding champion section; see the 2026-08-30
+    // extractor fix and scripts/reconcile_nexstar_awards.js.)
     { tier: 'T1', name: 'SDA Regional/Grand Champion (place 1 or Winner only)',
       sql: `LOWER(a.award_type) LIKE '%champion%' AND a.place IN ('1','Winner')` },
     { tier: 'T1', name: 'Premier/Elite Title — Miss/Mr Nexstar, winner only',
       sql: `LOWER(a.award_type) LIKE '%title%' AND a.place = '1'` },
-    { tier: 'T2', name: 'Division tables (Level/age), places 1-3',
-      sql: `LOWER(a.award_type) LIKE '%level%' AND LOWER(a.award_type) NOT LIKE '%champion%'
+    // Match the division tables by SHAPE (routine-size token), not by the
+    // word "level": NexStar names half its divisions by skill word instead
+    // ("Solos - Advanced Senior (15-19)", "Small Groups - Novice Petite"),
+    // and by brand tier ("Super Stars Solos - ...", "... - Inspiring Stars").
+    // The old '%level%' rule silently missed 13,785 placements — 36% of the
+    // real total — which is the same keyword-vs-shape trap already fixed for
+    // the other orgs. All 193 types this adds were reviewed as genuine
+    // division tables (including the Vocal Groups divisions).
+    { tier: 'T2', name: 'Division tables (size + level/age), places 1-3',
+      sql: `(LOWER(a.award_type) LIKE 'solo%' OR LOWER(a.award_type) LIKE 'duet%'
+             OR LOWER(a.award_type) LIKE 'trio%' OR LOWER(a.award_type) LIKE '%groups%'
+             OR LOWER(a.award_type) LIKE '%lines%' OR LOWER(a.award_type) LIKE '%production%'
+             OR LOWER(a.award_type) LIKE '%level%')
+            AND LOWER(a.award_type) NOT LIKE '%champion%'
             AND LOWER(a.award_type) NOT LIKE '%title%' AND a.place IN ('1','2','3')` },
     { tier: 'T3', name: 'Costume Award (named special)',
       sql: `LOWER(a.award_type) LIKE '%costume award%' AND a.place IN ('1','Winner')` },

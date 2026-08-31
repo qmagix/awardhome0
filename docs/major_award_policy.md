@@ -432,3 +432,58 @@ told apart by how they're named:
   Choice Artist, Weekend Warrior. Volume 8-11 per event.
 
 Verified after encoding: 0 genre class scholarships are counted.
+
+---
+
+## 11. The NexStar extraction defect — 21% of an org was mis-labelled (2026-08-30)
+
+Q, reading the April 12 2025 San Jose results: *"nexstar has serious parsing
+errors … 'SDA Regional Champion - Level 3 12 & Over Grand Lines' only has one
+entry first place, after it in the PDF is Artistic Excellence Award, then
+Battle on the Seas - Group, etc, but the latter ones all wrong classified into
+'SDA Regional Champion' category."*
+
+Confirmed and fixed. It was an **extraction** bug, not an import bug — the
+corruption was already present in the reviewed txt files.
+
+**Root cause.** `scripts/extract_nexstar_pdfs.js` recognised a results table
+only when the header row began with `Place`. NexStar's named-special tables
+award recipients rather than ranking them, so their header is just
+`Routine Name | Studio` — no place column at all. Those headers were never
+recognised, with two consequences:
+
+1. The header line itself parsed as a **data row**, importing 412 awards whose
+   routine was literally "Routine Name" and studio "Studio".
+2. `currentSection` only advances when a header is recognised, so every real
+   winner underneath **inherited the previous section's title**. On event 3253
+   that put 57 unrelated awards under one Grand Lines champion heading.
+
+**Scale.** 5,502 header artifacts and 25,981 mis-labelled awards — 21% of the
+123k NexStar rows. 114 award types had never appeared in the database at all:
+Artistic Excellence Award, Battle on the Seas, Cover Model, Excellence in
+Choreography / Entertainment, Power Pak, Golden Tickets, and the DancerPalooza
+/ WDP / Wild One scholarships.
+
+**The repair** (`scripts/reconcile_nexstar_awards.js`) corrects award types
+**in place** rather than delete-and-reinsert, so award ids and everything
+hanging off them survive. Applied: 25,981 types corrected, 714 stale artifact
+rows deleted (0 carried user data), 3,873 recovered awards inserted. The
+reconciler now reports a fully clean, idempotent state.
+
+**Why this section belongs in the award-policy doc.** The corrupted data had
+already been written *into this policy*. The NexStar encoding rule carried the
+comment *"the 15,758 NULL-place rows (~52/event) are the qualifier list, not
+winners"* — a conclusion drawn from reading the corrupt rows. The real figure
+is **64**. There was never a qualifier list; those rows were the named-special
+awards, mis-filed. A curation decision that reads bad data inherits the bad
+data's shape, and nothing downstream flags it.
+
+**Second bug found while re-encoding.** The T2 division rule matched on the
+word `level`, but NexStar names half its divisions by skill word ("Solos -
+Advanced Senior (15-19)") or brand tier ("Super Stars Solos - …", "… -
+Inspiring Stars"). That silently missed **13,785 division placements**, 36% of
+the true total — the same keyword-vs-shape trap already fixed for the other
+orgs. Now matched by routine-size shape; all 193 newly-included types were
+reviewed as genuine division tables.
+
+NexStar major awards after both fixes: **48,410** (was 31,726).
