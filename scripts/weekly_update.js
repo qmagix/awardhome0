@@ -263,6 +263,17 @@ async function runPipeline(opts) {
       { cwd: ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
     if (lb.status !== 0) failures.push(`backfill_legacy_dancer_links: exit ${lb.status} — ${(lb.stderr || '').trim().split('\n').pop()}`);
 
+    // The mirror of the above: promote a SOLO's junction link into the legacy
+    // primary column. Several importers write only the junction, which left
+    // 79k solos with no primary dancer — they showed under "Group Dancers" in
+    // the awards editor and rendered blank wherever a query joins
+    // awards.dancer_id. The importers now double-write; this keeps any
+    // regression (or a newly-added org) from accumulating silently.
+    console.log(`[backfill] promoting solo junction links to the primary column...`);
+    const sp = spawnSync('node', [path.join(__dirname, 'backfill_solo_primary_dancer.js'), '--apply'],
+      { cwd: ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+    if (sp.status !== 0) failures.push(`backfill_solo_primary_dancer: exit ${sp.status} — ${(sp.stderr || '').trim().split('\n').pop()}`);
+
     console.log(`[backfill] linking dancers on ${newIds.length} new events...`);
     const bf = spawnSync('node', [path.join(__dirname, 'run_backfill.js'), ...newIds.map(String)],
       { cwd: ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });

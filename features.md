@@ -147,6 +147,27 @@ The registry lives in `utils/cardDesign.js` — future designs are added there a
   removal deletes links only, never dancer records. Activity `group_cast_added` feeds the
   featured engine + onboarding. FAQ §8b documents it for owners.
 
+## 2b-i. Solo "Primary Dancer" — the two-table convention (2026-08-30)
+- Dancers reach an award two ways: the canonical `award_dancers` junction, and the legacy 1:1
+  `awards.dancer_id`. **Solos are written to BOTH by convention** — many surfaces still read the
+  legacy column, including the awards editor's "Primary Dancer" column, Hall of Fame, and the
+  card queries. Groups use the junction ONLY (never the legacy column).
+- Five importers had been writing the junction only, leaving **79,181 solos with no primary
+  dancer**: their dancer appeared under "Group Dancers" in the editor, and rendered blank
+  anywhere a query joined `a.dancer_id`. Fixed at the source (all five now call
+  `setSoloPrimary()` after linking a cast), repaired by
+  `scripts/backfill_solo_primary_dancer.js`, and swept weekly. Blank-dancer solo/title awards
+  went 79,538 -> 357.
+- **`utils/soloPrimary.js` holds the single definition of "belongs to one dancer"**, used by the
+  backfill, the importers, and the editor so they cannot drift. Identification is POSITIVE — the
+  label (`award_type` + `category`, never `performance_name`) must say solo/title and carry no
+  duo/trio/group/line wording. It is deliberately NOT inferred from "one linked dancer", because
+  1,874 group-worded awards have exactly one link (a partly-entered cast) and promoting those
+  would turn real groups into solos.
+- The awards editor is also **defensive**: for a solo with exactly one linked dancer and no
+  stored primary, it displays that dancer as Primary marked "(linked)", so the page is right for
+  any row the weekly sweep hasn't reached yet without pretending the column is populated.
+
 ## 2c. Link Provenance & Removal Tombstones (three-source reconciliation)
 - **The model:** dancer↔award links are sourced assertions. `award_dancers.source` records who
   asserted each link (`import` — scrapers/org data, the ADD COLUMN default so importers need no

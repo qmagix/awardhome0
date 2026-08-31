@@ -7,6 +7,7 @@ const { approveDancerClaim, rejectDancerClaim, notifyRosterAttach } = require('.
 const { ensureMergeRequestTable } = require('../../utils/studioMerge');
 const { isMajorAward, majorAwardSql, PRESTIGE_TERMS, STAGE_TERMS, curatedOrgIds, isMajorAwardCurated } = require('../../utils/majorAward');
 const { WEIGHTS, DEFAULT_WEIGHT, awardTerm, weightsForStudio, weightOf, ensureAwardWeightTable } = require('../../utils/awardWeights');
+const { isIndividualLabel } = require('../../utils/soloPrimary');
 const { canonicalizeRoutine, routineKeySql, ensureRoutineAliasTable, ensureRoutineChecksTable, resolveRoutineKey, resweepStudioKeys } = require('../../utils/routineKey');
 const { ensureCastInviteTables, newInviteToken, inviteExpiry, sendCastInviteEmail } = require('../../utils/castInvites');
 const { sendEmail } = require('../../utils/mailer');
@@ -1742,10 +1743,29 @@ router.get('/manage/studio/:id/awards', requireAuth, requireStudioOwner, async (
     groupedDancers[row.award_id].push({ id: row.dancer_id, name: row.name });
   }
 
+  // Defensive display: "Primary Dancer" reads the legacy awards.dancer_id,
+  // "Group Dancers" reads the junction — so a solo linked only through the
+  // junction showed its dancer under GROUP dancers, which reads as a data
+  // error to the studio. scripts/backfill_solo_primary_dancer.js repairs the
+  // stored column and the importers now double-write, but this keeps the page
+  // honest for any row the sweep hasn't reached yet (or a newly-added org).
+  // Same positive-identification rule as the backfill: the label must say
+  // solo/title, and there must be exactly ONE linked dancer — a group with a
+  // partly-entered cast must never be re-presented as a solo.
+  for (const award of awards) {
+    if (award.dancer_name) continue;
+    const linked = groupedDancers[award.id];
+    if (!linked || linked.length !== 1) continue;
+    if (!isIndividualLabel(award.award_type, award.category)) continue;
+    award.dancer_name = linked[0].name;
+    award.primary_derived = true;   // view marks it, so it isn't mistaken for stored data
+    delete groupedDancers[award.id]; // and it stops double-listing in both columns
+  }
+
   const currentView = req.query.view || 'events';
   const currentSort = req.query.sort || 'name';
 
-  res.render('manage_studio_awards', { 
+  res.render('manage_studio_awards', {
     studio, 
     awards, 
     studioDancers, 

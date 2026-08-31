@@ -250,7 +250,7 @@
               </thead>
               <tbody>
                 <% groupAwards.forEach(function(award) { %>
-                  <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                  <tr data-award-id="<%= award.id %>" style="border-bottom: 1px solid rgba(255,255,255,0.1);">
                     <% if (currentView !== 'events') { %>
                     <td>
                       <span style="font-weight: 500;"><%= award.event_name %></span>
@@ -298,6 +298,11 @@
                     <td>
                       <% if (award.dancer_name) { %>
                         <span style="color: var(--primary);"><%= award.dancer_name %></span>
+                        <% if (award.primary_derived) { %>
+                          <%# shown from the solo's single linked dancer; the stored
+                              primary column is still empty until the weekly sweep %>
+                          <span title="Shown from this solo's linked dancer. Being saved to the award on the next nightly update." style="color: var(--text-muted); font-size: 0.7rem; margin-left: 0.25rem;">(linked)</span>
+                        <% } %>
                       <% } else { %>
                         <span style="color: var(--text-muted);">-</span>
                       <% } %>

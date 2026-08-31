@@ -242,6 +242,18 @@ async function main() {
         ids.awards.push(gaw.lastID);
         const rosterDancer = await db.run("INSERT INTO dancers (unique_id, name) VALUES ('smoke-dancer-1', 'Smoke Dancer One')");
         await db.run('INSERT INTO dancer_studios (dancer_id, studio_id) VALUES (?, ?)', [rosterDancer.lastID, s1.lastID]);
+        // A SOLO linked only through the junction (no awards.dancer_id) — the
+        // exact shape five importers produced, which made the dancer show
+        // under "Group Dancers". And a GROUP with one linked dancer (a partly
+        // entered cast), which must NOT be promoted to a solo.
+        const soloAw = await db.run("INSERT INTO awards (event_id, studio_id, performance_name, award_type, category, place, award_class) VALUES (?, ?, 'Smoke Solo Routine', '', 'Teen Advanced Solos', '1st', 'adjudication')", [event.id, s1.lastID]);
+        ids.awards.push(soloAw.lastID);
+        await db.run('INSERT INTO award_dancers (award_id, dancer_id, source) VALUES (?, ?, ?)', [soloAw.lastID, rosterDancer.lastID, 'import']);
+        const partialGroupAw = await db.run("INSERT INTO awards (event_id, studio_id, performance_name, award_type, category, place, award_class) VALUES (?, ?, 'Smoke Partial Group', '', 'Teen Small Groups', '2nd', 'adjudication')", [event.id, s1.lastID]);
+        ids.awards.push(partialGroupAw.lastID);
+        await db.run('INSERT INTO award_dancers (award_id, dancer_id, source) VALUES (?, ?, ?)', [partialGroupAw.lastID, rosterDancer.lastID, 'import']);
+        ids.soloAwardId = soloAw.lastID;
+        ids.partialGroupAwardId = partialGroupAw.lastID;
         const cl = await db.run("INSERT INTO studio_claims (user_id, studio_id, proof_text, status) VALUES (?, ?, 'smoke-fixture', 'pending')", [u2.lastID, s2.lastID]);
         ids.claims.push(cl.lastID);
 
@@ -284,6 +296,30 @@ async function main() {
         const awHtml = await awRes.text();
         check(awRes.status === 200 && awHtml.includes('Studio Awards'),
           'awards editor groups placeless awards as "Studio Awards"', 'status ' + awRes.status);
+
+        // A junction-only SOLO must render its dancer as PRIMARY (marked
+        // "(linked)" since the stored column is still empty), while a GROUP
+        // with a partly-entered cast must be left in the group column — the
+        // asymmetry is the whole safety rule of utils/soloPrimary.js.
+        const awAll = await fetch(BASE + `/manage/studio/${s1.lastID}/awards?year=all`, { headers: { Cookie: owner.cookie } });
+        const awAllHtml = await awAll.text();
+        // Slice the exact <tr> by data-award-id rather than guessing a
+        // character window: the Type & Category cell carries long inline
+        // styles, so an offset-based window silently misses the cell.
+        const rowFor = (id) => {
+          const start = awAllHtml.indexOf(`data-award-id="${id}"`);
+          if (start === -1) return '';
+          const end = awAllHtml.indexOf('</tr>', start);
+          return awAllHtml.slice(start, end === -1 ? undefined : end);
+        };
+        const soloRow = rowFor(ids.soloAwardId);
+        const groupRow = rowFor(ids.partialGroupAwardId);
+        check(awAll.status === 200 && soloRow.includes('Smoke Dancer One') && soloRow.includes('(linked)'),
+          'junction-only solo shows its dancer as Primary, marked "(linked)"',
+          'status ' + awAll.status + ' rowFound=' + !!soloRow);
+        check(groupRow.includes('Smoke Dancer One') && !groupRow.includes('(linked)'),
+          'partly-cast GROUP keeps its dancer in the group column, NOT promoted',
+          'rowFound=' + !!groupRow);
 
         // Group Routine Dancers: page renders, preview classifies against
         // the roster without writing, apply links the confirmed cast.

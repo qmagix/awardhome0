@@ -99,6 +99,51 @@ Each run first sweeps its own earlier rows that later became orphaned or
 double-listing (self-healing). Run on prod once after deploying: same script,
 same flags (data parity by identical script runs).
 
+## Solo primary-dancer backfill (2026-08-30) — the MIRROR direction
+
+`node scripts/backfill_solo_primary_dancer.js [--apply]` promotes a SOLO's
+junction link into the legacy primary column (`award_dancers` ->
+`awards.dancer_id`). This is the mirror of the backfill above, which only ever
+ran legacy -> junction; nothing ran the reverse, so **79,181 solos had a
+junction row and no primary dancer**.
+
+**Symptom** (reported by Q on `/manage/studio/842/awards`): those dancers
+appeared under "Group Dancers" instead of "Primary Dancer", because the two
+columns read two different tables. Not merely cosmetic — public queries that
+join `a.dancer_id` (Hall of Fame, card surfaces) rendered a blank dancer for
+them. Solo/title awards with a linked dancer but blank `dancer_name` went from
+79,538 to 357.
+
+**Cause was NOT owner editing** (only 6 of 67,574 rows carried
+`source='studio_owner'`). Five importers wrote the junction only and never the
+legacy column: `import_showstopper_txt.js`, `import_starpower_awards.js`,
+`import_nycda_txt.js`, `import_revolution_awards.js`, and
+`import_dancebug_awards.js` (the shared DanceBug importer behind Imagine,
+Believe, DreamMaker and Rainbow). All five now call `setSoloPrimary()` from
+`utils/soloPrimary.js` once per award, after linking its cast.
+
+**The safety rule — read this before widening the script.** Identification is
+POSITIVE: the award's own label (`award_type` + `category`, never
+`performance_name`) must say solo or title, and must contain no
+duo/duet/trio/group/line/production/ensemble/team/quartet wording. It is NEVER
+inferred from "there happens to be exactly one linked dancer", because 1,874
+group-worded awards also have exactly one link — a group whose cast is only
+partly entered. Promoting those would silently turn real groups into solos,
+which is worse than the bug being fixed. Verified after the run: zero
+group-worded awards gained a primary (the single pre-existing "Rising Starz
+Solo & Duet/Trio & ... HDE All Stars" row was untouched, byte-identical).
+
+Also skipped: director-denied pairs (`award_dancer_removals`) and links to
+deleted dancers. Idempotent, dry-run by default, honors `DB_PATH`, and runs
+weekly in `scripts/weekly_update.js` so a regression or a newly-added org
+cannot accumulate silently.
+
+**232 rows need human review, and the script will never touch them:** awards
+whose label says solo but which have 2+ DIFFERENT dancers linked — e.g.
+"Fabulous" -> Kenzie Sagerman | Olivia Altieri. These are real data errors
+(mis-attached dancer, or two same-titled solos collapsed into one row), not a
+missing primary. Re-run the script's dry mode to list the current count.
+
 ## StarQuest notes-dancer repair (2026-08-29)
 
 The original StarQuest importer stashed published dancer names in awards.notes

@@ -4,6 +4,7 @@ const { fetchWithCache } = require('./fetch_cache');
 const { promisify } = require('util');
 const crypto = require('crypto');
 const { generateDancerId, generateStudioId } = require('../utils');
+const { setSoloPrimary } = require('../utils/soloPrimary');
 // Promisify SQLite methods
 const db = new sqlite3.Database(process.env.DB_PATH || require('path').join(__dirname, '..', 'database.sqlite'));
 db.runAsync = promisify(db.run.bind(db));
@@ -238,6 +239,11 @@ async function run() {
                   await db.runAsync('INSERT OR IGNORE INTO dancer_studios (dancer_id, studio_id, status) VALUES (?, ?, ?)', [dancer.id, studioId, 'active']);
                 }
               }
+              // Solos double-write the legacy primary column by convention: the
+              // awards editor's "Primary Dancer", Hall of Fame and the card
+              // queries all read awards.dancer_id. Junction-only writes are
+              // what left these solos showing a blank dancer there.
+              await setSoloPrimary(db, award.id, { awardType: null, category: categoryTitle });
             }
           }
         }

@@ -3,6 +3,7 @@ const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
 const { promisify } = require('util');
 const { generateDancerId, generateStudioId } = require('../utils');
+const { setSoloPrimary } = require('../utils/soloPrimary');
 
 const db = new sqlite3.Database(process.env.DB_PATH || require('path').join(__dirname, '..', 'database.sqlite'));
 db.runAsync = promisify(db.run.bind(db));
@@ -116,6 +117,11 @@ async function processFile(filePath, filename, folderYear, orgId) {
         await db.runAsync('INSERT OR IGNORE INTO dancer_studios (dancer_id, studio_id, status) VALUES (?, ?, ?)', [dancer.id, studioId, 'active']);
       }
     }
+    // Solos double-write the legacy primary column by convention — many
+    // surfaces still read awards.dancer_id (the awards editor's "Primary
+    // Dancer", Hall of Fame, card queries). Writing only the junction is what
+    // left 22,430 Showstopper solos with a blank dancer there.
+    await setSoloPrimary(db, awardId, { awardType, category: finalCategory });
   }
 }
 
