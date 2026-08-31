@@ -443,13 +443,18 @@ async function loadUpcomingFiltered(db, req) {
     params.push(userId);
   }
 
+  // Order strictly by what the card SHOWS: start date, then end date, then
+  // org. Sorting ties by org name alone was deterministic but looked random
+  // on screen — a run of same-start-date events rendered "07/05 – 07/10",
+  // "07/05 – 07/11", "07/05 – 07/09", because the tie-break (org name) is not
+  // what the eye tracks in a list of date ranges.
   let rows = await db.all(`
     SELECT ue.*, o.name AS org_name, o.website AS org_website,
            COALESCE(o.is_sponsor, 0) AS org_sponsored
     FROM org_upcoming_events ue
     JOIN organizations o ON o.id = ue.org_id
     WHERE ${where.join(' AND ')}
-    ORDER BY ue.start_date ASC, o.name ASC
+    ORDER BY ue.start_date ASC, COALESCE(ue.end_date, ue.start_date) ASC, o.name ASC
   `, params);
 
   if (near) {
@@ -459,9 +464,13 @@ async function loadUpcomingFiltered(db, req) {
     }
     // radius keeps un-geocoded rows visible (distance simply unknown)
     rows = rows.filter(r => r.distance === null || r.distance <= radius);
-    // month grouping stays; within a month, closest first
+    // month grouping stays; within a month, closest first — then date, so
+    // equal-distance events still read in date order rather than arbitrarily
     rows.sort((a, b) => a.start_date.slice(0, 7).localeCompare(b.start_date.slice(0, 7))
-      || (a.distance ?? 1e9) - (b.distance ?? 1e9));
+      || (a.distance ?? 1e9) - (b.distance ?? 1e9)
+      || a.start_date.localeCompare(b.start_date)
+      || String(a.end_date || a.start_date).localeCompare(String(b.end_date || b.start_date))
+      || String(a.org_name || '').localeCompare(String(b.org_name || '')));
   }
 
   if (userId) {
