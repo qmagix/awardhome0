@@ -182,3 +182,53 @@ website confirmation still outstanding.
 Major Award counts materially (both directions, per §2). Recommend encoding
 the top orgs first, comparing before/after per studio, and announcing the
 change — the counts are on public studio pages.
+
+
+---
+
+## 6. Encoding log & the "what counts as major" decision (2026-08-30)
+
+**KAR and Starpower encoded** via `scripts/encode_top_awards.js` (idempotent;
+resets an org before applying its rules, so editing a rule can only produce
+exactly what the rules say). A new `awards.top_award_tier` column records
+WHICH tier each row is, so the platform can change what counts as "major"
+later without re-encoding.
+
+| | heuristic (today) | T1 headline | T2 division overalls 1st-3rd | T3 specials |
+|---|---:|---:|---:|---:|
+| KAR | 2 | 7,074 | 57,592 | 1,692 |
+| Starpower | 3,253 | 6,845 | 29,346 | — |
+
+Corrections made while encoding — both found by checking the data against the
+published rules, and both a warning that existing curation is not automatically
+trustworthy:
+- **584 KAR rows flagged `is_top_award` were `Elite Ultimate Performance`** —
+  which our own research says is the TOP ADJUDICATION BAND, not an award. A
+  previous curation pass had marked the band as a top award. Unflagged.
+- **Starpower title rows carry the whole contest**: place `1` is the title
+  winner, `2`/`3` are runner-ups. The first pass counted runner-ups as title
+  winners (7,857 → 3,242 after the fix).
+
+**Per-studio effect** (KAR + Starpower awards only):
+
+| studio | awards | heuristic | T1 | T2 | T3 |
+|---|---:|---:|---:|---:|---:|
+| Triple Threat Performing Arts | 1,708 | 10 | 114 | 611 | 26 |
+| Karen's School of Dance | 1,414 | **0** | 52 | 522 | 29 |
+| Studio L Hoboken | 1,144 | 48 | 154 | 202 | 1 |
+
+**The open decision — what "Major Awards" should mean publicly:**
+
+- **T1 + T3 only** (~80-155 per big studio): "major" keeps its headline meaning
+  — grand champions, titles, named honors. **Recommended.**
+- **T1 + T2 + T3** (~350-750 per big studio): matches the view that overall
+  placements are the truly competitive results, but makes a third to a half of
+  a studio's awards "major", which dilutes the word.
+- **Suggested resolution:** publish BOTH — "Major Awards" = T1+T3, and a
+  separate "Division placements" figure = T2. That honors the fact that
+  overalls are where the real competition happens without making "major" mean
+  "roughly everything". The tier column makes this purely a display choice.
+
+Nothing user-visible has changed yet: `utils/majorAward.js` still drives the
+public figure, and it does not read `is_top_award`. Switching it is the next
+step, after the T1/T2/T3 display decision.
