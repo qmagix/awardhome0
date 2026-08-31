@@ -280,6 +280,15 @@ async function runPipeline(opts) {
     const am = spawnSync('node', [path.join(__dirname, 'auto_merge_dancer_profiles.js'), '--apply'],
       { cwd: ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
     if (am.status !== 0) failures.push(`auto_merge_dancer_profiles: exit ${am.status} — ${(am.stderr || '').trim().split('\n').pop()}`);
+
+    // Results-table HEADER rows imported as awards ("Routine Name", "Studio").
+    // Any extractor can start emitting these after an org changes its PDF
+    // layout, and a single survivor is a fake award on a public page — the
+    // NexStar case reached 5,502 before anyone noticed. Cheap and idempotent.
+    console.log(`[backfill] purging header-row artifact awards...`);
+    const ha = spawnSync('node', [path.join(__dirname, 'purge_header_artifact_awards.js'), '--apply'],
+      { cwd: ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+    if (ha.status !== 0) failures.push(`purge_header_artifact_awards: exit ${ha.status} — ${(ha.stderr || '').trim().split('\n').pop()}`);
   }
 
   // ---- Summary ----

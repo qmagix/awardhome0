@@ -220,6 +220,41 @@ only, 295-300). This ladder is also the best proxy for Starpower/Believe pins.
 (2023 naming: Novice/Intermediate/Level 3 — treat as equivalent). Ages Mini 5&U → Senior
 15-19, 20&Over; Grand Line 11&U / 12&O.
 
+**Named specials — RECOVERED 2026-08-30.** Until the extractor fix (see
+docs/major_award_policy.md §11) these 114 award types were invisible: their
+results tables have no place column, so the extractor mis-filed every one of
+them under whichever ranked section preceded them. They are now imported under
+their real names, all with NULL place (recipients, not ranked placements).
+Volume across ~305 regional events:
+
+| award | rows | ~per event |
+|---|---|---|
+| Power Pak | 6,911 | 23 |
+| Excellence in Choreography | 3,001 | 10 |
+| Excellence in Entertainment | 2,979 | 10 |
+| DancerPalooza $150 Scholarship | 965 | 3 |
+| Wild One Scholarship | 928 | 3 |
+| Battle on the Seas (Solo 862 / Group 439) | 1,301 | 4 |
+| Cover Model | 855 | 3 |
+| Discovery Spotlight | 516 | 2 |
+| WDP $100 Scholarship | 493 | 2 |
+| Power Pak $250 / $100 Scholarship | 800 | 3 |
+| Wild About You Award | 424 | 1.4 |
+| WOW! Award | 422 | 1.4 |
+| People's Choice **Nominees** | 364 | 1.2 |
+| Artistic Excellence Award | 240 | 0.8 |
+| Golden Tickets - `<Level> <Age>` | ~150-250 each | — |
+
+Tiering status: Excellence in Choreography counts as T3 via the platform-wide
+choreography rule (Q's ruling — choreography awards are rare by design).
+Costume Award stays T3. **The rest are NOT yet tiered** — classifying them
+needs NexStar's published rules, and the selectivity numbers above are the
+sanity check: "Nominees" is by name not a win, Golden Tickets reads as a
+nationals invitation (the Rainbow "All Stars" precedent says invitations are
+opportunities, not placements), and Power Pak at 23/event looks like a
+program handout rather than a scarce honour. Do not tier any of them on the
+name alone — that is exactly the §2b naming trap.
+
 **Sources:** nexstarcompetition.com/dance-competition-rules (2025-26), NexStar 2023 Rules
 PDF. **Confidence:** high structure; medium current thresholds.
 
