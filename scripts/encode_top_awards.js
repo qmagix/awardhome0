@@ -121,9 +121,17 @@ const RULES = {
              OR LOWER(a.award_type) LIKE '%studio of excellence%')` },
   ],
   nycda: [
-    // NOTE: `Outstanding Dancer` (10,307 rows, ~143/event, no place, no
-    // routine) is the CONTESTANT FIELD of that competition, not winners —
-    // deliberately NOT encoded until the winner rows can be identified.
+    // `award_type = 'Outstanding Dancer'` is a SECTION HEADER, not the award:
+    // the real name sits in `category`. The section mixes the convention
+    // honour itself ("<Age> Outstanding Dancers" — a cohort per age division,
+    // ~13/event, which Q confirms is a genuine convention placement and a
+    // well-regarded honour) with summer-intensive SCHOLARSHIPS (Tap, Ballet,
+    // Hip-Hop, Future Star, Steps…), which are opportunities and stay out.
+    { tier: 'T3', name: 'Outstanding Dancer / Outstanding Artist / Rising Star (convention honours)',
+      sql: `LOWER(a.award_type) = 'outstanding dancer'
+            AND (LOWER(a.category) LIKE '%outstanding dancer%'
+                 OR LOWER(a.category) LIKE '%outstanding artist%'
+                 OR LOWER(a.category) LIKE '%rising star award%')` },
     { tier: 'T2', name: 'High Score placements 1st-3rd (division-wide)',
       sql: `LOWER(a.award_type) = 'high score' AND a.place IN ('1st','2nd','3rd')` },
     { tier: 'T2', name: 'Overall 1st',

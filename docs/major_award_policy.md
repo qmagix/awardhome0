@@ -257,7 +257,7 @@ still use the labelled-provisional keyword fallback.
 | Rainbow | 2,407 | 24,945 | 5,748 |
 | Revolution | 8,905 | 21,808 | 3,923 |
 | StarQuest | 1,429 | 16,975 | 2,547 |
-| NYCDA | — | 11,494 | 1,781 |
+| NYCDA | — | 11,494 | 3,333 |
 
 **The recurring trap in this batch:** a `champion` / `title` / `DOY`
 award_type names the whole CONTEST — winner, runner-ups and often the entire
@@ -275,10 +275,17 @@ checked against real rows first:
   `Dancer Palooza $150 Voucher`). Only the specials encoded.
 - **StarQuest** — title runner-up places carry tab damage (`"1st\tRunner Up"`);
   `place='1'` is the winner.
-- **NYCDA** — ⚠️ `Outstanding Dancer` (10,307 rows, ~143/event, no place, no
-  routine name) is the CONTESTANT FIELD of that competition, not winners.
-  **Deliberately NOT encoded** until the winner rows can be identified — NYCDA's
-  headline award is therefore still missing from its numbers. Next research task.
+- **NYCDA** — `award_type = 'Outstanding Dancer'` is a SECTION HEADER, not the
+  award: the real name is in `category`. The section mixes the convention
+  honour itself (`<Age> Outstanding Dancers`, ~13/event — Q confirms this is a
+  genuine convention placement and a well-regarded honour) with summer-intensive
+  SCHOLARSHIPS (Tap, Ballet, Hip-Hop, Future Star, Steps…), which are
+  opportunities and stay out. Encoded as T3: Outstanding Dancers + Outstanding
+  Artist + Rising Star Award = 1,552 rows.
+  Still out, pending a decision: 4,829 `Runner-Up` rows (`<Age> Runners-Up`) —
+  the named second tier of the same honour. Say the word to include them.
+  Also note these rows carry **no dancer links** (0 distinct dancer_id), a
+  separate data-completeness gap worth a look.
 
 **Prior human curation was preserved, not overwritten**: it was inspected first
 (NYCDA `Critics' Choice` + `Overall 1st`, StarQuest Odyssey/Apogee, Believe and
