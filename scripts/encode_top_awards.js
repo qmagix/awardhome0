@@ -62,6 +62,76 @@ const RULES = {
       sql: `(LOWER(COALESCE(NULLIF(a.award_type,''), a.category)) LIKE '%power pak invite%'
              OR LOWER(COALESCE(NULLIF(a.award_type,''), a.category)) LIKE '%discovery spotlight%')` },
   ],
+  // ---- Batch 2 (2026-08-30): NexStar, Rainbow, Revolution, StarQuest, NYCDA ----
+  // Every rule below was checked against the org's real rows first; the
+  // recurring trap is that a "champion"/"title"/"DOY" award_type names the
+  // whole CONTEST — winners, runner-ups and often the entire finalist field
+  // share the type, separated only by `place`.
+  nexstar: [
+    // place '1' rows carry a routine name (the actual champion); the 15,758
+    // NULL-place rows (~52/event) are the qualifier list, not winners.
+    { tier: 'T1', name: 'SDA Regional/Grand Champion (place 1 or Winner only)',
+      sql: `LOWER(a.award_type) LIKE '%champion%' AND a.place IN ('1','Winner')` },
+    { tier: 'T1', name: 'Premier/Elite Title — Miss/Mr Nexstar, winner only',
+      sql: `LOWER(a.award_type) LIKE '%title%' AND a.place = '1'` },
+    { tier: 'T2', name: 'Division tables (Level/age), places 1-3',
+      sql: `LOWER(a.award_type) LIKE '%level%' AND LOWER(a.award_type) NOT LIKE '%champion%'
+            AND LOWER(a.award_type) NOT LIKE '%title%' AND a.place IN ('1','2','3')` },
+    { tier: 'T3', name: 'Costume Award (named special)',
+      sql: `LOWER(a.award_type) LIKE '%costume award%' AND a.place IN ('1','Winner')` },
+  ],
+  rainbow: [
+    // DOY winner repeats the award name in `place`; 14,537 rows are Finalists.
+    { tier: 'T1', name: 'Dancer of the Year winner (place repeats the title)',
+      sql: `LOWER(a.award_type) LIKE '%doy%' AND LOWER(TRIM(a.place)) = LOWER(TRIM(a.award_type))` },
+    { tier: 'T2', name: 'Overall high point — Top <Level> Starz <Size> <Age>, places 1st-3rd',
+      sql: `LOWER(a.award_type) LIKE 'top %' AND a.place IN ('1st','2nd','3rd')` },
+    { tier: 'T3', name: "Judges' Choice",
+      sql: `LOWER(a.award_type) LIKE '%judges choice%'` },
+    { tier: 'UNFLAG', name: 'NYC All Stars invitations (opportunity, not a placement)',
+      sql: `LOWER(a.award_type) LIKE '%all stars%'` },
+  ],
+  revolution: [
+    { tier: 'T1', name: 'SDA Champion (place 1 or Winner)',
+      sql: `LOWER(COALESCE(NULLIF(a.award_type,''), a.category)) LIKE '%champion%' AND a.place IN ('1','Winner')` },
+    { tier: 'T1', name: 'Title winner only',
+      sql: `LOWER(COALESCE(NULLIF(a.award_type,''), a.category)) LIKE '%title%' AND a.place = '1'` },
+    { tier: 'T2', name: 'Division tables (Level rows), places 1-3',
+      sql: `LOWER(COALESCE(NULLIF(a.award_type,''), a.category)) LIKE '%level%'
+            AND LOWER(COALESCE(NULLIF(a.award_type,''), a.category)) NOT LIKE '%champion%'
+            AND a.place IN ('1','2','3')` },
+    { tier: 'T3', name: 'Choreography / Entertainment awards (winners)',
+      sql: `(LOWER(COALESCE(NULLIF(a.award_type,''), a.category)) LIKE '%choreography%'
+             OR LOWER(COALESCE(NULLIF(a.award_type,''), a.category)) LIKE '%entertainment%')
+            AND a.place = 'Winner'` },
+    { tier: 'UNFLAG', name: 'Discovery Spotlight callbacks & Dancer Palooza vouchers',
+      sql: `(LOWER(COALESCE(NULLIF(a.award_type,''), a.category)) LIKE '%discovery spotlight%'
+             OR LOWER(COALESCE(NULLIF(a.award_type,''), a.category)) LIKE '%palooza%'
+             OR LOWER(COALESCE(NULLIF(a.award_type,''), a.category)) LIKE '%voucher%')` },
+  ],
+  starquest: [
+    // Title rows include runner-ups whose place strings carry tab damage
+    // ("1st\tRunner Up") — place '1' is the winner.
+    { tier: 'T1', name: 'Title winner only (place 1)',
+      sql: `LOWER(a.award_type) = 'title' AND a.place = '1'` },
+    { tier: 'T2', name: 'Overall placements 1-3 (StarQuest core competitive stat)',
+      sql: `LOWER(a.award_type) = 'overall' AND a.place IN ('1','2','3')` },
+    { tier: 'T3', name: 'Odyssey / Apogee / Studio of Excellence (named specials)',
+      sql: `(LOWER(a.award_type) LIKE '%odyssey%' OR LOWER(a.award_type) LIKE '%apogee%'
+             OR LOWER(a.award_type) LIKE '%studio of excellence%')` },
+  ],
+  nycda: [
+    // NOTE: `Outstanding Dancer` (10,307 rows, ~143/event, no place, no
+    // routine) is the CONTESTANT FIELD of that competition, not winners —
+    // deliberately NOT encoded until the winner rows can be identified.
+    { tier: 'T2', name: 'High Score placements 1st-3rd (division-wide)',
+      sql: `LOWER(a.award_type) = 'high score' AND a.place IN ('1st','2nd','3rd')` },
+    { tier: 'T2', name: 'Overall 1st',
+      sql: `LOWER(a.award_type) = 'overall' AND a.place IN ('1st','1st Place')` },
+    { tier: 'T3', name: "Critics' Choice, Judges' Pick, Class Act, Good Sport",
+      sql: `(LOWER(a.award_type) LIKE '%critics%' OR LOWER(a.award_type) LIKE '%judges%pick%'
+             OR LOWER(a.award_type) LIKE '%class act%' OR LOWER(a.award_type) LIKE '%good sport%')` },
+  ],
 };
 
 async function main() {

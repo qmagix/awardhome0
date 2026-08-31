@@ -242,3 +242,55 @@ Original options considered:
 Nothing user-visible has changed yet: `utils/majorAward.js` still drives the
 public figure, and it does not read `is_top_award`. Switching it is the next
 step, after the T1/T2/T3 display decision.
+
+
+---
+
+## 7. Batch 2 encoded — NexStar, Rainbow, Revolution, StarQuest, NYCDA (2026-08-30)
+
+**9 of 26 orgs now encoded, covering 59% of all awards.** The remaining 17 orgs
+still use the labelled-provisional keyword fallback.
+
+| org | T1 headline | T2 division overalls | T3 specials |
+|---|---:|---:|---:|
+| NexStar | 6,273 | 24,890 | 570 |
+| Rainbow | 2,407 | 24,945 | 5,748 |
+| Revolution | 8,905 | 21,808 | 3,923 |
+| StarQuest | 1,429 | 16,975 | 2,547 |
+| NYCDA | — | 11,494 | 1,781 |
+
+**The recurring trap in this batch:** a `champion` / `title` / `DOY`
+award_type names the whole CONTEST — winner, runner-ups and often the entire
+finalist field share the type, separated only by `place`. Each rule was
+checked against real rows first:
+
+- **NexStar** — champion rows with `place='1'` carry a routine name and are the
+  real champions (~12/event); the 15,758 NULL-place rows (~52/event) are the
+  qualifier list. Only place 1/Winner encoded.
+- **Rainbow** — 14,537 DOY rows have `place='Finalist'`. The winner repeats the
+  award name in `place` (the KAR title pattern). Only those encoded. `Rising
+  Starz … NYC All Stars` rows are invitations — excluded.
+- **Revolution** — `place='Winner'` spans real specials (Choreography,
+  Entertainment) AND opportunities (`Discovery Spotlight` callbacks,
+  `Dancer Palooza $150 Voucher`). Only the specials encoded.
+- **StarQuest** — title runner-up places carry tab damage (`"1st\tRunner Up"`);
+  `place='1'` is the winner.
+- **NYCDA** — ⚠️ `Outstanding Dancer` (10,307 rows, ~143/event, no place, no
+  routine name) is the CONTESTANT FIELD of that competition, not winners.
+  **Deliberately NOT encoded** until the winner rows can be identified — NYCDA's
+  headline award is therefore still missing from its numbers. Next research task.
+
+**Prior human curation was preserved, not overwritten**: it was inspected first
+(NYCDA `Critics' Choice` + `Overall 1st`, StarQuest Odyssey/Apogee, Believe and
+Imagine SDA Champions) and found consistent with this model, so the new rules
+were written to re-cover it — NYCDA's 441 `Overall` rows re-encoded with zero
+changes, confirming the match.
+
+**Per-studio effect** (all orgs, public pairing):
+
+| studio | awards | first places | other major (was) | division placements |
+|---|---:|---:|---:|---:|
+| Encore Dance Academy | 5,458 | 1,272 | 586 (146) | 903 |
+| The Element Dance Center | 3,900 | 464 | 718 (7) | 921 |
+| Studio 19 Dance Complex | 4,689 | 1,054 | 394 (124) | 622 |
+| Club Dance Studio | 4,693 | 680 | 71 (0) | 84 |
