@@ -67,10 +67,27 @@ The server side is `routes/wellknown.js`, driven by environment variables:
 | `ANDROID_PACKAGE` | `com.awardhome.app` |
 | `ANDROID_CERT_SHA256` | `AA:BB:…` — comma-separate the upload key **and** the Play signing key |
 
-Until those are set the association files return **404**, deliberately. A
+`IOS_APP_ID` is configured (`XP7TK4Z8M3.com.awardhome.app`). The Team ID came
+from the signing certificate's **OU field**, not from the name in
+`security find-identity` — the Development certificate shows a *certificate* id
+there (`QS5D4K4XD6`), which would have been silently wrong:
+
+```bash
+security find-certificate -c "Apple Distribution: <name>" -p \
+  | openssl x509 -noout -subject | tr ',' '\n' | grep OU
+```
+
+Android's fingerprint is still unset, so `assetlinks.json` 404s.
+
+Until a value is set the association file returns **404**, deliberately. A
 placeholder is worse than nothing: the platforms cache association files, so a
 wrong one breaks deep linking for as long as the cache lives, and it looks like
 an app bug the whole time.
+
+**Universal links cannot work until the server is deployed.** Apple fetches
+`https://awardhome.com/.well-known/apple-app-site-association` directly, over
+HTTPS, following no redirects. It is correct locally; production still needs
+`IOS_APP_ID` in its environment.
 
 That Android fingerprint list is the usual cause of "links worked in the
 internal build and broke in production" — Play re-signs the app, so its signing
