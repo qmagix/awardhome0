@@ -1309,6 +1309,45 @@ The trophy case returns `myClaim` for a signed-in caller, so the app shows
 where the claim stands and what happens next rather than a button that makes
 things worse.
 
+### The app shows the REAL award card, not a copy of it
+Tapping an award in the app opens the actual card — the same
+`views/partials/dancer_award_card.ejs` the web renders — served standalone at
+`/dance/card/:dancerUniqueId/:awardId` and shown in a web view.
+
+That is a deliberate refusal to reimplement it natively. The card is the
+product, not a layout: a container-query design measured in `cqw` so it scales
+like an image, per-org branding arriving from `organizations.custom_icons` as
+CSS custom properties, a flipbook back stack, and the subject of the
+provisional filing. A hand-built React Native copy would drift from all of that
+inside one release — and every future card change would then need an App Store
+review to reach anybody. One card, and the app picks up card work the moment
+the server ships it.
+
+**Scoped to a (dancer, award) pair**, because the per-card hide lives in
+`dancer_card_hidden` and is per-pair, and a solo card names the dancer on its
+face. An award the dancer has no link to answers **404, never 403** — probing
+ids reveals nothing the trophy case would not already show.
+
+**Mount position is load-bearing**, and it is the second place in the app where
+that is true: `routes/cardEmbed.js` is mounted after the session store (so an
+`early_access` family sees the same flipbook pages here as on the web) but
+*before* the beta gate — for the same reason `/api/v1/mobile` sits outside it.
+The app ships through TestFlight and internal builds, which is its own gate; a
+card that met the beta password page inside a native sheet would simply look
+broken. It did, the first time.
+
+**`.embed-stage .flip-card` had to be registered as a container** in
+`styles.css`. That file states the rule plainly — any surface rendering a
+flip-card must be listed, or `cqw` silently resolves against the viewport — and
+skipping it produced exactly the documented symptom: a card with text several
+times too large for it. There is now a smoke check asserting the registration,
+because the failure is silent in CSS and only visible in a screenshot.
+
+`react-native-webview` is required lazily, like `expo-network` and
+`expo-clipboard`: a binary built before the dependency existed falls back to an
+honest summary plus a link that opens the same card in the browser, rather than
+taking the route down.
+
 ### My Dancers: confirmed first, pending visible, refreshed on focus
 Three faults, one screen. Once `/me` started returning pending claims (M8), a
 dancer she had merely *asked* for rendered identically to one she manages —

@@ -247,6 +247,10 @@ app.use(verifyCsrf);
 
 // Private-beta gate for the public data surfaces (see middleware/beta.js).
 // Landing, auth, widgets, unsubscribe, and healthz stay open.
+// A single award card for the mobile app's card sheet. Mounted HERE — after
+// the session store, before the beta gate — see routes/cardEmbed.js for why.
+app.use(require('./routes/cardEmbed'));
+
 const { betaGate } = require('./middleware/beta');
 app.use(['/dance', '/dancer'], betaGate);
 

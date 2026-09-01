@@ -1132,7 +1132,8 @@ a:hover {
      grid track or the explicit lightbox width — so containment is safe. */
   .awards-grid .flip-card,
   .card-lightbox .flip-card,
-  .demo-card-wrap .flip-card {
+  .demo-card-wrap .flip-card,
+  .embed-stage .flip-card {
     container-type: inline-size;
   }
 

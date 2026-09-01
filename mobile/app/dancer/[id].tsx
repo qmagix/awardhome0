@@ -25,7 +25,8 @@ export default function TrophyCaseScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { signedIn, dancers } = useSession();
   const [awards, setAwards] = useState<Award[]>([]);
-  const [dancer, setDancer] = useState<{ id: number; name: string; is_claimed: boolean } | null>(null);
+  const [dancer, setDancer] =
+    useState<{ id: number; unique_id: string; name: string; is_claimed: boolean } | null>(null);
   const [myClaim, setMyClaim] = useState<MyClaim | null>(null);
   const [cursor, setCursor] = useState<string | null>(null);
   const [openCard, setOpenCard] = useState<Award | null>(null);
@@ -229,6 +230,9 @@ export default function TrophyCaseScreen() {
             {item.verification_status === 'family_submitted' && (
               <Text style={styles.badge}>Added by a family · not yet confirmed</Text>
             )}
+            {/* The row did not read as tappable — the medal alone was too
+                quiet, and the card is the whole point of opening it. */}
+            <Text style={styles.viewCard}>View award card ›</Text>
           </Pressable>
           );
         }}
@@ -237,6 +241,7 @@ export default function TrophyCaseScreen() {
       <AwardCardModal
         award={openCard}
         dancerName={dancer?.name ?? ''}
+        dancerUniqueId={dancer?.unique_id ?? String(id ?? '')}
         onClose={() => setOpenCard(null)}
       />
     </View>
@@ -259,6 +264,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius, padding: theme.space(1.5), marginTop: theme.space(1.5),
   },
   cardIcon: { position: 'absolute', right: theme.space(1.5), top: theme.space(1.5), fontSize: 18 },
+  viewCard: { color: theme.gold, fontSize: 13, fontWeight: '600', marginTop: theme.space(1) },
   place: { color: theme.gold, fontWeight: '700', fontSize: 15 },
   routine: { color: theme.text, fontSize: 17, fontWeight: '600', marginTop: 2 },
   meta: { color: theme.muted, fontSize: 13, marginTop: 3 },

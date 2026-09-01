@@ -1205,6 +1205,39 @@ async function main() {
           ' flagged=' + qSubAfter.unverified_household + ' statuses=' + qSubAfter.status + '/' +
           mateAfter.status + ' awards=' + qAwardsFinal.length + ' links=' + qLinks.length);
 
+        // ---- The standalone award card the mobile app embeds ----
+        // Reuses views/partials/dancer_award_card.ejs, so a card in the app
+        // and a card on the web cannot drift. Scoped to a (dancer, award)
+        // pair because the per-card hide is per-pair and a solo card names
+        // the dancer on its face.
+        const cardAward = await db.get(
+          'SELECT a.id FROM awards a JOIN award_dancers ad ON ad.award_id = a.id WHERE ad.dancer_id = ? LIMIT 1',
+          [famDancer.lastID]);
+        if (cardAward) {
+          const cardRes = await fetch(BASE + `/dance/card/smoke-dancer-fam/${cardAward.id}`);
+          const cardHtml = await cardRes.text();
+          check(cardRes.status === 200 && cardHtml.includes('flip-card') &&
+                cardHtml.includes('embed-stage'),
+            'the embeddable award card renders the real card partial',
+            'status ' + cardRes.status);
+
+          // The container-query registration is load-bearing and easy to
+          // forget: styles.css says every surface rendering a flip-card must
+          // be listed, or cqw silently resolves against the VIEWPORT and the
+          // card renders enormous. It did, the first time.
+          const css = await (await fetch(BASE + '/css/styles.css')).text();
+          check(css.includes('.embed-stage .flip-card'),
+            'the embed surface is registered as a container, so cqw scales to the card not the viewport',
+            'registered=' + css.includes('.embed-stage .flip-card'));
+
+          // Scope: an award this dancer has no part in must not render under
+          // their name, and probing ids must reveal nothing.
+          const wrongPair = await fetch(BASE + `/dance/card/smoke-dancer-indep/${cardAward.id}`);
+          check(wrongPair.status === 404,
+            'a card is 404 for a dancer with no link to that award — never rendered under the wrong name',
+            'status ' + wrongPair.status);
+        }
+
         // ---- M4: correction proposals ----
         const corrTarget = convAwards[0];
         const corrRes = await fetch(BASE + `/api/award/${corrTarget.id}/correction`, {

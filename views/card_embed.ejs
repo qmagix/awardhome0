@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <!-- viewport-fit=cover + no user scaling: this page is a card in a native
+       sheet, not a document. The card scales itself (cqw units), so pinch-zoom
+       would only fight the container query. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title><%= pageTitle %></title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/dancer_v2.css">
+  <style>
+    /* The embed frame. Deliberately minimal: everything about how the CARD
+       looks lives in the shared partial and the shared stylesheets, so a card
+       here and a card on the web page cannot drift. This file only positions
+       one. */
+    html, body {
+      margin: 0; padding: 0; background: transparent;
+      -webkit-text-size-adjust: 100%;
+    }
+    body {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; padding: 12px;
+      box-sizing: border-box;
+      /* A native sheet has its own scroll; a second one inside it feels broken. */
+      overflow-x: hidden;
+    }
+    .embed-stage { width: 100%; max-width: 340px; }
+    /* The flip affordance is a tap anywhere on the card, same as the web. */
+    .embed-hint {
+      margin: 14px auto 0; text-align: center;
+      font-size: 0.78rem; letter-spacing: 0.04em; text-transform: uppercase;
+      color: rgba(255,255,255,0.45);
+    }
+  </style>
+</head>
+<body>
+  <div class="embed-stage">
+    <%- include('partials/dancer_award_card', {
+      award: award,
+      dancer: dancer,
+      isGroupAward: award.dancer_count > 1,
+      cardDesign: cardDesign,
+      featureNotes: featureNotes,
+      featurePhotos: featurePhotos,
+    }) %>
+    <% if (cardDesign === 'flipbook') { %>
+      <p class="embed-hint">Tap the card to turn it</p>
+    <% } %>
+  </div>
+  <script src="/js/flipbook.js"></script>
+</body>
+</html>
