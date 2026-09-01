@@ -14,9 +14,7 @@
       "ios": {
         "simulator": true
       },
-      "env": {
-        "EXPO_PUBLIC_API_BASE_URL": "http://192.168.1.243:3008"
-      }
+      "_comment": "No EXPO_PUBLIC_API_BASE_URL on purpose: a dev client derives the API host from the Metro server it connects to (src/api/client.ts), so it follows this machine across DHCP leases instead of being pinned to one that expires. preview and production DO pin it, because a shipped build must never guess."
     },
     "preview": {
       "extends": "base",

@@ -8,6 +8,9 @@ import { createAuth, type Auth } from './tokens';
 import { secureTokenStorage } from './storage';
 import type { components } from './schema';
 
+// The port `npm run dev` serves on. Only consulted in development.
+const DEV_API_PORT = 3008;
+
 export type Award = components['schemas']['Award'];
 export type Submission = components['schemas']['Submission'];
 export type EventOption = components['schemas']['EventOption'];
@@ -45,8 +48,36 @@ export interface ActivityItem {
   note?: string | null;
 }
 
+/**
+ * Where the API lives.
+ *
+ * An explicit EXPO_PUBLIC_API_BASE_URL always wins — that is what the eas.json
+ * build profiles set, and it is the only thing a release build should ever
+ * use. app.config.js folds it into extra.apiBaseUrl.
+ *
+ * In DEV with nothing explicit, derive the host from the Metro server the app
+ * is already talking to. A hardcoded LAN address in .env.local is only correct
+ * until DHCP hands this machine a different lease, and when it moves the app
+ * fails with "We couldn't reach AwardHome" — which looks like a bug in the app
+ * rather than a stale line in a config file. Metro's host is by construction
+ * the machine serving this bundle, so it cannot go stale.
+ */
 function resolveBaseUrl(): string {
   const configured = Constants.expoConfig?.extra?.['apiBaseUrl'];
+  const explicit = typeof configured === 'string' && configured.length > 0
+    && configured !== 'https://awardhome.com';
+  if (explicit) return configured as string;
+
+  if (__DEV__) {
+    // "<lan-ip>:8081" -> "http://<lan-ip>:3008"
+    const hostUri = Constants.expoConfig?.hostUri
+      ?? (Constants.expoGoConfig as { debuggerHost?: string } | undefined)?.debuggerHost;
+    const host = typeof hostUri === 'string' ? hostUri.split(':')[0] : null;
+    if (host && host !== 'localhost' && host !== '127.0.0.1') {
+      return `http://${host}:${DEV_API_PORT}`;
+    }
+  }
+
   return typeof configured === 'string' && configured.length > 0
     ? configured
     : 'https://awardhome.com';

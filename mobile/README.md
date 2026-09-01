@@ -438,3 +438,22 @@ written real claims and submissions to production.
   `eas credentials` shows both — the iOS Team ID and the Android SHA-256. Add
   the **Play signing key** fingerprint too once the app is in the Play Console.
 - App icon and splash screen.
+
+## The dev API host is derived, not pinned
+
+`mobile/.env.local` is empty on purpose. With no explicit
+`EXPO_PUBLIC_API_BASE_URL`, `src/api/client.ts` derives the API host from the
+Metro server the app is already connected to (`http://<metro-host>:3008`).
+
+A hardcoded LAN address is correct only until DHCP hands this machine a
+different lease. When that happened mid-session the app failed with "We
+couldn't reach AwardHome", which looks like an app bug rather than a stale line
+in a config file. Metro's host is by construction the machine serving the
+bundle, so it cannot go stale.
+
+Set the variable only to target something other than this machine. The eas.json
+build profiles set it explicitly, and a release build uses nothing else.
+
+**`EXPO_PUBLIC_*` is inlined at bundle time and cached.** Changing it needs
+`npx expo start --clear` — a reload is not enough, and the stale value will sit
+in the bundle looking correct in the config file.
