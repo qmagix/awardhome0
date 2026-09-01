@@ -68,6 +68,12 @@ app.use(express.urlencoded({ extended: true })); // Added for form parsing
 // This is the only place in the app where router order carries a security
 // argument; scripts/audit_get_routes.js is the check on it.
 app.use('/api/v1/mobile', require('./routes/api/mobile'));
+
+// Universal / App Links association files. Mounted here for the same reason as
+// the API — Apple and Google fetch them with no cookie and must not meet the
+// beta gate or a CSRF token. They 404 until the real app IDs are configured;
+// see routes/wellknown.js for why a placeholder would be worse than nothing.
+app.use(require('./routes/wellknown'));
 const SESSION_SECRET = process.env.SESSION_SECRET || (() => {
   if (process.env.NODE_ENV === 'production') {
     console.error('FATAL: SESSION_SECRET must be set in production.');

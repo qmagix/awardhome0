@@ -1081,3 +1081,65 @@ spec cannot drift into a wiki. `test/api_mobile.js` runs against its **own
 throwaway copy** of the database (the API mints awards, claims and evidence; a
 contract test that leaves debris is one people learn to skip) and is a gate
 stage of its own: `npm run test:api`, and stage 2 of `npm run gate`.
+
+## Mobile app: read, recover, claim (2026-09-01)
+Milestone M6 — the first mobile code, in `mobile/`. Expo SDK 57, React Native
+0.86, TypeScript **strict** plus `noUncheckedIndexedAccess`, Expo Router with
+typed routes. Guest search, trophy-case viewing, email-code sign-in, household
+dashboard and profile claiming. **No submission capability** — that is M7, and
+the screens deliberately offer no disabled button pretending otherwise.
+
+### The contract cannot drift
+`src/api/schema.ts` is **generated** (`npm run api:types`) from the same
+OpenAPI document the server serves at `/api/v1/mobile/openapi.json`. Nothing in
+the client restates a response shape by hand, so a server change that breaks
+the app shows up as a type error rather than a runtime surprise. This closes
+the M5 deferral: the generator now has a consumer to generate for.
+
+### The token lifecycle is where the risk is
+`src/api/tokens.ts` takes `fetch` and its storage adapter as parameters, with
+no React Native imports, so the riskiest logic runs in plain Node
+(`npm run mobile:test`) rather than only in a simulator nobody runs in CI.
+
+The property it exists to guarantee: **refresh is single-flight**. The server
+rotates refresh tokens and treats a replayed one as theft by revoking the
+session — correct server behaviour, and exactly what lets a naive client sign
+its own user out:
+
+> five screens mount at once → five requests 401 on an expired access token →
+> five parallel refreshes with the *same* refresh token → the first rotates it,
+> the other four look like theft → session revoked, family signed out for no
+> reason.
+
+Concurrent callers await one in-flight refresh. Seven tests cover that, the
+single retry on 401, rotation being followed, a dead session clearing storage
+and reporting *why*, and guests reading public endpoints without ever
+attempting a refresh.
+
+Refresh tokens live in `expo-secure-store` (Keychain / Keystore). The access
+token is **memory only** — it lives fifteen minutes, and persisting it would
+widen the blast radius of a device compromise for no benefit. A test asserts it
+never reaches storage.
+
+### Universal links
+The app claims `awardhome.com/dancer/*` and nothing else — claiming the domain
+would swallow `/dance`, `/admin` and the marketing pages into an app with no
+screens for them. The route file `app/dancer/[id].tsx` mirrors the web URL, so
+Expo Router resolves an incoming link with no extra mapping.
+
+`routes/wellknown.js` serves the association files from environment variables
+(`IOS_APP_ID`, `ANDROID_PACKAGE`, `ANDROID_CERT_SHA256`) and **404s until they
+are set**. A placeholder would be worse than nothing: the platforms cache
+association files, so a wrong one breaks deep linking for as long as the cache
+lives and looks like an app bug the whole time.
+
+### What is not verified
+Nothing in this repository renders the app — there is no simulator or device in
+the environment it was written in. Layout, gestures, keyboard behaviour,
+on-device deep linking and every native module (`expo-secure-store` above all)
+are **unrun**. Types and the token lifecycle are checked on every run; the first
+device launch is the real first test. `mobile/README.md` says so plainly.
+
+The mobile checks are deliberately **not** in `npm run gate`: that is the
+server deploy gate, and the production host has no `mobile/node_modules`.
+`npm run mobile:check` runs them.

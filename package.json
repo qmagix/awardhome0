@@ -12,7 +12,10 @@
     "smoke": "node test/smoke.js",
     "test:api": "node test/api_mobile.js",
     "test": "node test/smoke.js",
-    "gate": "node scripts/predeploy_gate.js"
+    "gate": "node scripts/predeploy_gate.js",
+    "mobile:typecheck": "npm --prefix mobile run typecheck",
+    "mobile:test": "npm --prefix mobile test",
+    "mobile:check": "npm run mobile:typecheck && npm run mobile:test"
   },
   "keywords": [],
   "author": "",

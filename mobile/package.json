@@ -1,0 +1,29 @@
+{
+  "name": "awardhome-mobile",
+  "version": "0.1.0",
+  "private": true,
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start",
+    "ios": "expo start --ios",
+    "android": "expo start --android",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test test/*.test.mjs",
+    "api:types": "npx --yes openapi-typescript ../docs/openapi_mobile.json -o src/api/schema.ts"
+  },
+  "dependencies": {
+    "@types/react": "~19.2.4",
+    "expo": "^57.0.18",
+    "expo-constants": "~57.0.16",
+    "expo-linking": "~57.0.8",
+    "expo-router": "~57.0.17",
+    "expo-secure-store": "~57.0.2",
+    "expo-status-bar": "~57.0.1",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.86.3",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "~4.26.0",
+    "typescript": "~6.0.3"
+  }
+}

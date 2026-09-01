@@ -97,6 +97,11 @@ const CHECKS = [
   ['GET', '/admin/corrections', [403], 'anonymous corrections queue blocked'],
   ['POST', '/admin/corrections/1/accept', [403], 'anonymous correction accept blocked'],
   ['POST', '/api/award/1/correction', [403], 'anonymous correction proposal blocked (CSRF)'],
+  // Universal links: 404 until the real app IDs are configured. A placeholder
+  // association file is worse than none — the platforms cache it, and a wrong
+  // one breaks deep linking in a way that looks like an app bug.
+  ['GET', '/.well-known/apple-app-site-association', [200, 404], 'apple association file responds (404 until configured)'],
+  ['GET', '/.well-known/assetlinks.json', [200, 404], 'android association file responds (404 until configured)'],
 ];
 
 // Family submissions stage in their OWN SQLite file (utils/submissionsDb.js).

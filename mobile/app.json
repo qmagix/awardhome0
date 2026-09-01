@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "AwardHome",
+    "slug": "awardhome",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "awardhome",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "ios": {
+      "bundleIdentifier": "com.awardhome.app",
+      "supportsTablet": true,
+      "associatedDomains": ["applinks:awardhome.com", "applinks:www.awardhome.com"]
+    },
+    "android": {
+      "package": "com.awardhome.app",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            { "scheme": "https", "host": "awardhome.com", "pathPrefix": "/dancer" },
+            { "scheme": "https", "host": "www.awardhome.com", "pathPrefix": "/dancer" }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-status-bar"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "apiBaseUrl": "https://awardhome.com"
+    }
+  }
+}

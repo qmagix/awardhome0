@@ -1,0 +1,124 @@
+import { useState } from 'react';
+import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { router, useLocalSearchParams } from 'expo-router';
+import { auth } from '@/api/client';
+import { useSession } from '@/ui/Session';
+import { theme } from '@/ui/theme';
+
+/**
+ * Emailed one-time code — no password (design §6.1). The server answers
+ * identically whether or not the address has an account, so this screen must
+ * not imply otherwise: after requesting a code it always says "check your
+ * email", because telling a stranger which families are registered is not
+ * something the sign-in screen gets to leak either.
+ */
+export default function SignInScreen() {
+  const { next } = useLocalSearchParams<{ next?: string }>();
+  const { refresh } = useSession();
+  const [stage, setStage] = useState<'email' | 'code'>('email');
+  const [email, setEmail] = useState('');
+  const [code, setCode] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const send = async () => {
+    setBusy(true); setError(null);
+    try {
+      await auth.requestCode(email.trim());
+      setStage('code');
+    } catch {
+      setError('We couldn’t reach AwardHome. Please try again.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const verify = async () => {
+    setBusy(true); setError(null);
+    try {
+      await auth.verifyCode(email.trim(), code.trim(), {
+        label: Platform.select({ ios: 'iPhone', android: 'Android phone', default: 'Device' }),
+        platform: Platform.OS,
+      });
+      await refresh();
+      if (typeof next === 'string' && next.startsWith('/')) router.replace(next as never);
+      else router.replace('/household');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'That code did not work.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <View style={styles.screen}>
+      {stage === 'email' ? (
+        <>
+          <Text style={styles.h1}>Sign in</Text>
+          <Text style={styles.muted}>
+            We’ll email you a six-digit code. No password to remember.
+          </Text>
+          <TextInput
+            value={email}
+            onChangeText={setEmail}
+            placeholder="you@example.com"
+            placeholderTextColor={theme.muted}
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="email-address"
+            textContentType="emailAddress"
+            style={styles.input}
+            accessibilityLabel="Email address"
+          />
+          <Pressable style={styles.cta} onPress={send} disabled={busy || email.trim().length < 5}>
+            {busy ? <ActivityIndicator color={theme.gold} /> : <Text style={styles.ctaText}>Email me a code</Text>}
+          </Pressable>
+        </>
+      ) : (
+        <>
+          <Text style={styles.h1}>Check your email</Text>
+          <Text style={styles.muted}>
+            If {email.trim()} has an AwardHome account, a code is on its way. It works once and
+            expires in ten minutes.
+          </Text>
+          <TextInput
+            value={code}
+            onChangeText={setCode}
+            placeholder="123456"
+            placeholderTextColor={theme.muted}
+            keyboardType="number-pad"
+            textContentType="oneTimeCode"
+            maxLength={6}
+            style={[styles.input, styles.codeInput]}
+            accessibilityLabel="Six-digit sign-in code"
+          />
+          <Pressable style={styles.cta} onPress={verify} disabled={busy || code.trim().length !== 6}>
+            {busy ? <ActivityIndicator color={theme.gold} /> : <Text style={styles.ctaText}>Sign in</Text>}
+          </Pressable>
+          <Pressable onPress={() => { setStage('email'); setCode(''); }}>
+            <Text style={styles.link}>Use a different email</Text>
+          </Pressable>
+        </>
+      )}
+      {error && <Text style={styles.error}>{error}</Text>}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: theme.bg, padding: theme.space(2.5) },
+  h1: { color: theme.text, fontSize: 24, fontWeight: '700' },
+  muted: { color: theme.muted, marginTop: theme.space(1), lineHeight: 20 },
+  input: {
+    marginTop: theme.space(2), backgroundColor: 'rgba(0,0,0,0.35)', borderColor: theme.border,
+    borderWidth: 1, borderRadius: theme.radius, color: theme.text, padding: theme.space(1.5), fontSize: 16,
+  },
+  codeInput: { fontSize: 28, letterSpacing: 8, textAlign: 'center' },
+  cta: {
+    marginTop: theme.space(2), backgroundColor: theme.goldSoft, borderColor: theme.gold,
+    borderWidth: 1, borderRadius: theme.radius, padding: theme.space(1.5), alignItems: 'center',
+  },
+  ctaText: { color: theme.gold, fontWeight: '600', fontSize: 16 },
+  link: { color: theme.gold, marginTop: theme.space(2), textAlign: 'center' },
+  error: { color: theme.danger, marginTop: theme.space(2) },
+});

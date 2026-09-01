@@ -537,3 +537,44 @@ curl -s localhost:3008/api/v1/mobile/me -H 'Authorization: Bearer <accessToken>'
 - Evidence files are never served from the static tree and never shown to
   anyone but the uploader and reviewers. Nothing scans them yet — that hook is
   open work, and the code refuses to pretend otherwise.
+
+## 24. The Mobile App (`mobile/`)
+
+Milestone M6: families can search, view a trophy case, sign in, and claim a
+dancer. **Adding awards is not in this build** — that is M7.
+
+```bash
+npm run mobile:check     # typecheck + token-lifecycle tests (from the repo root)
+cd mobile && npm start   # Expo dev server; needs a simulator or a device
+```
+
+Point `mobile/app.json` → `extra.apiBaseUrl` at your server. On a physical
+device use your machine's LAN IP, not `localhost`.
+
+**Nothing in the app has been run on a device yet.** Types and the token
+lifecycle are tested on every run; layout, gestures, keyboard behaviour,
+on-device deep links and the native secure-store module are not. Plan for a
+real debugging pass at first launch.
+
+### Turning on universal links
+
+Set these on the web server and restart. Until they are set the association
+files return 404 on purpose — a placeholder association file is cached by Apple
+and Google and breaks deep linking for as long as the cache lives.
+
+| Variable | Example |
+|---|---|
+| `IOS_APP_ID` | `ABCDE12345.com.awardhome.app` (Team ID + bundle id) |
+| `ANDROID_PACKAGE` | `com.awardhome.app` |
+| `ANDROID_CERT_SHA256` | `AA:BB:…` — include the **Play signing key** as well as your upload key |
+
+Verify with:
+
+```bash
+curl https://awardhome.com/.well-known/apple-app-site-association
+curl https://awardhome.com/.well-known/assetlinks.json
+```
+
+Both must be served over HTTPS with no redirect. If links work in an internal
+build but not from the Play Store, the missing Play signing fingerprint is
+almost always why.
