@@ -123,7 +123,12 @@ router.post('/auth/request-code', codeLimiter, async (req, res) => {
   const result = await requestCode((req.body || {}).email);
   // Always 200, always the same shape: whether an address has an account is
   // not something an unauthenticated caller gets to learn.
-  res.json({ ok: true, expiresInMinutes: require('../../utils/mobileAuth').CODE_TTL_MIN, ...(result.devCode ? { devCode: result.devCode } : {}) });
+  res.json({
+    ok: true,
+    expiresInMinutes: require('../../utils/mobileAuth').CODE_TTL_MIN,
+    ...(result.devMode ? { devMode: true } : {}),
+    ...(result.devCode ? { devCode: result.devCode } : {}),
+  });
 });
 
 router.post('/auth/verify', verifyLimiter, async (req, res) => {

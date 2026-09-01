@@ -149,6 +149,12 @@ async function requestCode(email, { baseUrl } = {}) {
   const user = await db.get('SELECT id, email FROM users WHERE LOWER(email) = ?', [addr]);
 
   const code = newCode();
+  // Issuing a new code retires any earlier one. Verification only ever checks
+  // the newest row, so this changes no behaviour — it makes the table honest
+  // instead of leaving rows that look usable and never are.
+  await adb.run(
+    "UPDATE mobile_auth_codes SET consumed_at = datetime('now') WHERE email = ? AND consumed_at IS NULL",
+    [addr]);
   // The row is written even for an unknown address, so timing does not leak
   // account existence either.
   await adb.run(
@@ -167,7 +173,22 @@ async function requestCode(email, { baseUrl } = {}) {
       });
     }
   }
-  return { ok: true, sent: true, devCode: process.env.NODE_ENV === 'production' ? undefined : code };
+  // In development ONLY, hand the code back so a simulator can sign in with no
+  // mail provider — but only when there is an account for it to unlock.
+  // Returning a code for an unknown address produced a dead end that looked
+  // exactly like a bad code, because verify's (correct, deliberate) generic
+  // failure cannot say "no account" without becoming the oracle this endpoint
+  // exists to avoid.
+  //
+  // `devMode` is what lets the client tell "development, no account" apart
+  // from "production, check your email". Both fields are gated on the SAME
+  // condition, so there is one thing to get wrong in production rather than
+  // two — and in production neither is ever sent.
+  const isDev = process.env.NODE_ENV !== 'production';
+  return {
+    ok: true, sent: true,
+    ...(isDev ? { devMode: true, ...(user ? { devCode: code } : {}) } : {}),
+  };
 }
 
 // Verify a code and mint a session. Attempts are counted on the ROW, so
@@ -179,7 +200,7 @@ async function verifyCode(email, code, { deviceLabel = null, platform = null } =
   const row = await adb.get(`
     SELECT * FROM mobile_auth_codes
     WHERE email = ? AND consumed_at IS NULL AND expires_at > datetime('now')
-    ORDER BY created_at DESC LIMIT 1`, [addr]);
+    ORDER BY id DESC LIMIT 1`, [addr]);
   if (!row) return { ok: false, reason: 'invalid_code' };
   if (row.attempts >= CODE_MAX_ATTEMPTS) return { ok: false, reason: 'too_many_attempts' };
 

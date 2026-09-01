@@ -199,9 +199,33 @@ async function main() {
     check(codeReq.status === 200 && !!devCode, 'a sign-in code is issued', 'status ' + codeReq.status);
 
     const unknown = await api('POST', '/auth/request-code', { body: { email: 'nobody-here@test.invalid' } });
-    check(unknown.status === 200 && JSON.stringify(Object.keys(unknown.json).sort()) === JSON.stringify(Object.keys(codeReq.json).sort()),
-      'an unknown address gets the same answer — no account-existence oracle',
-      'status ' + unknown.status);
+    // In DEVELOPMENT the two differ by design: `devCode` appears only when
+    // there is an account to unlock, so a simulator is not left staring at a
+    // valid code that cannot work. What must never differ is PRODUCTION.
+    check(unknown.status === 200 && !unknown.json.devCode && unknown.json.devMode === true,
+      'a development server withholds the code for an unknown address, and says it is development',
+      JSON.stringify(unknown.json));
+
+    // The property that actually matters is the PRODUCTION shape, and it
+    // cannot be probed through this server (which is running in development).
+    // So assert it where it is decided — one gate in utils/mobileAuth.js —
+    // by flipping NODE_ENV in-process. Fresh addresses each time, because
+    // requesting a code is rate-limited per email.
+    {
+      const { requestCode: rc } = require('../utils/mobileAuth');
+      const prev = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'production';
+      // Deliberately NOT api-family: issuing a code retires that address's
+      // earlier one, and this test is holding a devCode for it that has not
+      // been redeemed yet.
+      const known = await rc('api-other@test.invalid');
+      const stranger = await rc('nobody-at-all@test.invalid');
+      process.env.NODE_ENV = prev;
+      check(JSON.stringify(known) === JSON.stringify(stranger) &&
+            !known.devCode && !known.devMode,
+        'in production the two answers are byte-identical — no account-existence oracle',
+        JSON.stringify(known));
+    }
 
     const badCode = await api('POST', '/auth/verify', { body: { email: 'api-family@test.invalid', code: '000000' } });
     check(badCode.status === 401, 'a wrong code is refused', 'status ' + badCode.status);

@@ -26,11 +26,20 @@ export default function SignInScreen() {
     setBusy(true); setError(null);
     try {
       const res = await auth.requestCode(email.trim());
-      // Development convenience: with no EMAIL_PROVIDER configured the server
-      // returns the code in the response instead of mailing it (and never does
-      // this in production). Prefilling it is the difference between the app
-      // being testable on a simulator and not.
+      // Development convenience: a non-production server hands the code back
+      // instead of mailing it, so a simulator can sign in with no mail
+      // provider. Prefilling it is the difference between the app being
+      // testable on a simulator and not.
       if (res.devCode) { setCode(res.devCode); setDevCode(res.devCode); }
+      // devMode with no code means the development server has no account for
+      // this address. Saying so is only safe BECAUSE it is a development
+      // server — in production the same screen must not reveal whether an
+      // account exists, so it just says "check your email".
+      else if (res.devMode) {
+        setError(`No account for ${email.trim()} on this development server. `
+          + 'Register it on the web first, or use an email that already exists.');
+        return;
+      }
       setStage('code');
     } catch {
       setError('We couldn’t reach AwardHome. Please try again.');

@@ -186,9 +186,16 @@ export function createAuth(opts: AuthOptions) {
       return (await opts.storage.getRefreshToken()) !== null;
     },
 
-    /** `devCode` is returned ONLY by a non-production server with no mail
-     *  provider configured, so a simulator can sign in without email. */
-    async requestCode(email: string): Promise<{ ok: boolean; devCode?: string }> {
+    /**
+     * `devMode` marks a non-production server; `devCode` is the sign-in code
+     * handed straight back so a simulator can sign in with no mail provider.
+     *
+     * devMode WITHOUT devCode is the informative case: a development server
+     * that has no account for this address. Production sends neither, and
+     * deliberately cannot say which it is — that would make this endpoint an
+     * account-existence oracle.
+     */
+    async requestCode(email: string): Promise<{ ok: boolean; devMode?: boolean; devCode?: string }> {
       return publicRequest('/auth/request-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
