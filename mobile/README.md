@@ -79,23 +79,50 @@ key must be in the list too.
 module this app uses (`expo-secure-store` included) is in the Expo Go runtime,
 so:
 
+Two terminals:
+
 ```bash
-npm run dev        # repo root — prints the exact command to paste next
+npm run dev            # repo root — the API server
+cd mobile && npm run go # Expo Go mode
 ```
 
-`npm run dev` now prints your machine's LAN address and a ready-made line:
+Then **scan the QR code**. Don't tap the entry under "Recently in development"
+in Expo Go — that list caches whatever URL it last saw, which is the single
+most common way to end up staring at a blank screen.
+
+`.env.local` holds the API address, so no environment prefix is needed:
 
 ```
-Server running on http://localhost:3008
-  on your network:  http://192.168.1.243:3008
-  for the mobile app (mobile/):
-    EXPO_PUBLIC_API_BASE_URL=http://192.168.1.243:3008 npx expo start
+EXPO_PUBLIC_API_BASE_URL=http://192.168.1.243:3008
 ```
 
-Run that second line in `mobile/` and scan the QR code with Expo Go. The LAN
-address matters because `localhost` on the phone means *the phone* — it has to
-be the machine's address on the wifi, and DHCP changes it, which is why the
-server prints it rather than anyone memorising it.
+It is gitignored, and it is a DHCP lease. `npm run dev` prints the current LAN
+address on boot — if it stops matching `.env.local`, update the file. The
+address matters because `localhost` on the phone means *the phone*.
+
+### `npm run go` vs `npm start`
+
+`expo-dev-client` is installed (the EAS `development` profile needs it), and
+its presence makes a bare `expo start` default to **dev-client** mode. Expo Go
+will still discover a project served that way and then do nothing useful with
+it — the URL it is handed points at a custom dev client that is not installed.
+Pressing `s` in the terminal switches modes and changes the URL, which is why
+the entry then disappears from Expo Go's list.
+
+So the mode is pinned in the scripts rather than left to a default:
+
+| Command | Mode | Use when |
+|---|---|---|
+| `npm run go` | Expo Go | the normal case — no build, no Apple account |
+| `npm run go:clear` | Expo Go, cache cleared | after dependency changes, or a stale-looking blank screen |
+| `npm start` | dev client | you have installed a build from the `development` EAS profile |
+
+If Expo Go shows a blank screen or the project vanishes from its list, you are
+almost certainly in the wrong mode — `npm run go:clear` and rescan.
+
+Second thing to check if that does not fix it: Expo Go from the App Store
+supports only the newest SDK. This app is on **SDK 57**; an older Expo Go will
+refuse the bundle. Update it.
 
 Given that nothing in this app has ever rendered, this is worth doing before
 anything else.

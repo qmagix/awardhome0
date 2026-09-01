@@ -12,3 +12,5 @@ android/
 
 expo-env.d.ts
 # @end expo-cli
+# local dev overrides (LAN address changes with DHCP)
+.env*.local

@@ -4,12 +4,14 @@
   "private": true,
   "main": "expo-router/entry",
   "scripts": {
-    "start": "expo start",
+    "start": "expo start --dev-client",
     "ios": "expo start --ios",
     "android": "expo start --android",
     "typecheck": "tsc --noEmit",
     "test": "node --test test/*.test.mjs",
-    "api:types": "npx --yes openapi-typescript ../docs/openapi_mobile.json -o src/api/schema.ts"
+    "api:types": "npx --yes openapi-typescript ../docs/openapi_mobile.json -o src/api/schema.ts",
+    "go": "expo start --go",
+    "go:clear": "expo start --go --clear"
   },
   "dependencies": {
     "@types/react": "~19.2.4",
