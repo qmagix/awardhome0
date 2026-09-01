@@ -90,6 +90,21 @@ async function main() {
   await db.run('INSERT INTO dancer_studios (dancer_id, studio_id) VALUES (?, ?)', [unclaimed.lastID, st.lastID]);
   const event = await db.get('SELECT id, year FROM events WHERE year IS NOT NULL ORDER BY id LIMIT 1');
 
+  // Three seasons, seeded so that ID ORDER DISAGREES WITH YEAR ORDER — which
+  // is what real import order looks like, and what made the trophy case read
+  // 2023, 2025, 2024, 2026 before it was sorted by year.
+  const seasons = [];
+  for (const y of [2024, 2026, 2025]) {
+    const ev = await db.run(
+      "INSERT INTO events (name, year) VALUES (?, ?)", [`API Season ${y}`, y]);
+    const aw = await db.run(
+      "INSERT INTO awards (event_id, place, performance_name, studio_id) VALUES (?, '1', ?, ?)",
+      [ev.lastID, `Routine ${y}`, st.lastID]);
+    await db.run('INSERT INTO award_dancers (award_id, dancer_id) VALUES (?, ?)',
+      [aw.lastID, dn.lastID]);
+    seasons.push({ year: y, awardId: aw.lastID });
+  }
+
   // ---- boot ----
   const server = spawn('node', ['server.js'], {
     cwd: ROOT,
@@ -189,6 +204,24 @@ async function main() {
     const guestAwards = await api('GET', '/dancers/DNC-api-dancer/awards');
     check(guestAwards.status === 200 && Array.isArray(guestAwards.json.awards),
       'a guest with no token can read a trophy case', 'status ' + guestAwards.status);
+
+    // MOST RECENT FIRST. The families' own ordering, not the importer's.
+    const years = guestAwards.json.awards.map(a => a.event_year).filter(y => y !== null);
+    check(years.every((y, i) => i === 0 || years[i - 1] >= y),
+      'the trophy case comes back most-recent-first, whatever order it was imported in',
+      years.join(','));
+
+    // The cursor is a composite, because a single id can no longer locate a
+    // position in a year-ordered list. Paging from the newest season must
+    // return the older ones and never repeat what was already shown.
+    const newest = guestAwards.json.awards[0];
+    const paged = await api('GET',
+      `/dancers/DNC-api-dancer/awards?cursor=${newest.event_year}:${newest.id}`);
+    check(paged.status === 200 &&
+          !paged.json.awards.some(a => a.id === newest.id) &&
+          paged.json.awards.every(a => a.event_year <= newest.event_year),
+      'the "<year>:<id>" cursor pages backwards in time without repeating a card',
+      'status ' + paged.status + ' n=' + ((paged.json.awards || []).length));
     const noAuth = await api('POST', '/submissions', { body: {} });
     check(noAuth.status === 401 && noAuth.json.error === 'unauthorized',
       'writes still require a token', 'status ' + noAuth.status);
@@ -271,6 +304,23 @@ async function main() {
           newClaim.json.unclaimedStudio.name === 'API Unclaimed Studio',
       'the claim response names the unclaimed studio — nobody there will review it, and she can say so',
       JSON.stringify((newClaim.json || {}).unclaimedStudio));
+
+    // And it is still there when she comes back later, because that is when
+    // she will actually get round to messaging her director.
+    const orphanCase = await api('GET', `/dancers/${unclaimedDancer.lastID}/awards`, {
+      token: newSignIn.json.accessToken,
+    });
+    check(orphanCase.status === 200 && orphanCase.json.unclaimedStudio &&
+          orphanCase.json.unclaimedStudio.unique_id === 'api-unclaimed-studio',
+      'a waiting family is handed the studio invite path every time they open the trophy case',
+      JSON.stringify((orphanCase.json || {}).unclaimedStudio));
+
+    // But only her. Which studios are unclaimed is not a stranger's business,
+    // and it is exactly the list a scraper would want.
+    const guestCase = await api('GET', `/dancers/${unclaimedDancer.lastID}/awards`);
+    check(guestCase.status === 200 && !guestCase.json.unclaimedStudio,
+      'a guest browsing the same page is told nothing about the studio being unclaimed',
+      JSON.stringify((guestCase.json || {}).unclaimedStudio));
 
     // A claim on a dancer whose studio HAS an owner goes to that studio, with
     // or without a code. AwardHome cannot judge whether someone is a child's

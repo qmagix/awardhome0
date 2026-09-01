@@ -419,7 +419,7 @@
     "/dancers/{id}/awards": {
       "get": {
         "summary": "Trophy case",
-        "description": "Public, and honours the owner's per-card hide. Page with `cursor` (last id seen; ids only increase, so paging is stable under concurrent writes) and sync with `updated_since`.",
+        "description": "Public, and honours the owner's per-card hide. Ordered most-recent-first by competition year. Page with `cursor` (opaque `\"<year>:<id>\"` keyset, echoed back as `nextCursor`) and sync with `updated_since`.",
         "security": [],
         "parameters": [
           {
@@ -435,8 +435,9 @@
             "name": "cursor",
             "in": "query",
             "schema": {
-              "type": "integer"
-            }
+              "type": "string"
+            },
+            "description": "Opaque keyset cursor of the form \"<year>:<id>\", taken from a previous nextCursor."
           },
           {
             "name": "updated_since",

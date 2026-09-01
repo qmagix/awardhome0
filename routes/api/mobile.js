@@ -205,8 +205,8 @@ router.get('/dancers/search', async (req, res) => {
 // The trophy case. Public, because the web page is — but it honours the same
 // per-card hide the owner controls there.
 //
-// SYNC. `cursor` is the last award id seen, and ids only ever increase, so
-// paging is stable under concurrent writes. `updated_since` is derived from
+// SYNC. `cursor` is an opaque "<year>:<id>" keyset position (see below).
+// `updated_since` is derived from
 // the two timestamps that actually exist — when the dancer's link was made and
 // when the fact last changed — because `awards` has no updated_at and putting
 // a trigger on a 900k-row table's UPDATE path would tax every import for the
@@ -219,12 +219,20 @@ router.get('/dancers/:id/awards', async (req, res) => {
     [req.params.id, parseInt(req.params.id, 10) || -1]);
   if (!dancer) return fail(res, 404, 'not_found', 'No such dancer.');
 
-  const cursor = parseInt(req.query.cursor, 10) || 0;
+  // MOST RECENT FIRST, by the competition's year — not by award id, which is
+  // import order and interleaves seasons badly (a real dancer's ids run 2023,
+  // 2025, 2024, 2024, 2026, 2023). Keyset pagination on the composite keeps
+  // paging stable under concurrent writes; the cursor is "<year>:<id>".
   const since = normalizeText(req.query.updated_since);
+  const rawCursor = String(req.query.cursor || '');
+  const cm = rawCursor.match(/^(\d+):(\d+)$/);
+  const cursorYear = cm ? parseInt(cm[1], 10) : null;
+  const cursorId = cm ? parseInt(cm[2], 10) : null;
+
   const params = [dancer.id, dancer.id, dancer.id, dancer.id];
   let sinceClause = '';
   if (since) { sinceClause = 'AND updated_at > ?'; params.push(since); }
-  if (cursor) params.push(cursor);
+  if (cm) params.push(cursorYear, cursorYear, cursorId);
 
   const rows = await db.all(`
     SELECT * FROM (
@@ -233,6 +241,7 @@ router.get('/dancers/:id/awards', async (req, res) => {
              e.name AS event_name, e.year AS event_year, o.name AS org_name,
              ${studioDisplayNameSql('s')} AS studio_name, s.unique_id AS studio_unique_id,
              (SELECT COUNT(*) FROM award_dancers ad2 WHERE ad2.award_id = a.id) AS dancer_count,
+             CAST(IFNULL(e.year, 0) AS INTEGER) AS sort_year,
              MAX(
                IFNULL((SELECT MAX(ad3.created_at) FROM award_dancers ad3
                        WHERE ad3.award_id = a.id AND ad3.dancer_id = ?), ''),
@@ -246,8 +255,8 @@ router.get('/dancers/:id/awards', async (req, res) => {
       WHERE (a.dancer_id = ? OR ad.dancer_id = ?)
         AND NOT EXISTS (SELECT 1 FROM dancer_card_hidden h WHERE h.award_id = a.id AND h.dancer_id = ?)
     ) ${sinceClause ? 'WHERE 1=1 ' + sinceClause : ''}
-    ${cursor ? (sinceClause ? 'AND' : 'WHERE') + ' id < ?' : ''}
-    ORDER BY id DESC
+    ${cm ? (sinceClause ? 'AND' : 'WHERE') + ' (sort_year < ? OR (sort_year = ? AND id < ?))' : ''}
+    ORDER BY sort_year DESC, id DESC
     LIMIT ${PAGE_SIZE + 1}`, params);
 
   const hasMore = rows.length > PAGE_SIZE;
@@ -269,11 +278,27 @@ router.get('/dancers/:id/awards', async (req, res) => {
     } catch (e) { /* pre-migration */ }
   }
 
+  // Why a pending claim is not moving. When the dancer's studio has no owner
+  // there is nobody competent to confirm the family, and the wait is open-ended
+  // — 21,693 of 21,695 real studios are in that state. The family is the one
+  // person positioned to fix it, so the app has to be able to hand them the
+  // director's invite link, not just an apology. Computed only for a caller
+  // with a live claim; a browsing stranger has no business being told which
+  // studios are unclaimed.
+  let unclaimedStudio = null;
+  if (myClaim && myClaim.status === 'pending' && !myClaim.studio_id) {
+    const route = await routeDancerClaim(db, dancer.id, null);
+    unclaimedStudio = route.unclaimedStudio || null;
+  }
+
   res.json({
     dancer: { id: dancer.id, unique_id: dancer.unique_id, name: dancer.name, is_claimed: !!dancer.is_claimed },
     myClaim: myClaim || null,
+    unclaimedStudio,
     awards: page,
-    nextCursor: hasMore ? page[page.length - 1].id : null,
+    nextCursor: hasMore
+      ? `${page[page.length - 1].sort_year}:${page[page.length - 1].id}`
+      : null,
   });
 });
 

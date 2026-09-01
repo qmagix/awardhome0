@@ -1308,3 +1308,30 @@ family could put their own claim into dispute with itself.
 The trophy case returns `myClaim` for a signed-in caller, so the app shows
 where the claim stands and what happens next rather than a button that makes
 things worse.
+
+### The waiting room
+A pending claimant cannot submit anything yet, so the page she is left on has
+to be worth the wait on its own — she is the only person in the system who can
+reach the director who would end it.
+
+Three things changed for her:
+
+- **Most recent first.** The trophy case was ordered by award id, which is
+  import order and interleaves seasons badly (one real dancer read 2023, 2025,
+  2024, 2024, 2026, 2023). It now orders by competition year, newest first.
+  Because a single id can no longer locate a position in that list, the page
+  cursor became an opaque `"<year>:<id>"` keyset — `nextCursor` is a string,
+  and clients should treat it as opaque rather than parse it.
+- **The card, not the row.** Tapping any award opens the award card: the
+  placement medallion, the routine, the event, the studio. The list is only an
+  index into it. Empty fields are omitted rather than filled with placeholder
+  words, and an unconfirmed award says so.
+- **The invite path, every time.** When the dancer's studio has no owner, the
+  pending panel says plainly that nobody is reviewing the claim, and offers the
+  director's `/claim/studio/<unique_id>` link to share or copy. 21,693 of
+  21,695 real studios are unclaimed, so this is the ordinary case.
+
+`unclaimedStudio` is computed only for a caller with a live pending claim. A
+guest browsing the same public page is told nothing about it: which studios are
+unclaimed is precisely the list an outreach scraper would want, and the family
+already knows which studio her child dances for.

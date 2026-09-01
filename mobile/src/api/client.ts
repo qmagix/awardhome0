@@ -61,14 +61,19 @@ export function searchDancers(q: string): Promise<{ dancers: DancerSummary[] }> 
 
 export interface MyClaim { id: number; status: string; studio_id: number | null }
 
-export function getTrophyCase(dancerId: string, cursor?: number): Promise<{
+export function getTrophyCase(dancerId: string, cursor?: string): Promise<{
   dancer: { id: number; unique_id: string; name: string; is_claimed: boolean };
   /** Where the signed-in caller's own claim stands, if they have one. */
   myClaim: MyClaim | null;
+  /** Set when the caller has a pending claim and the dancer's studio has no
+   *  owner — nobody is going to review it until someone there claims. */
+  unclaimedStudio: { id: number; unique_id: string; name: string } | null;
   awards: Award[];
-  nextCursor: number | null;
+  /** Opaque "<year>:<id>" keyset cursor — the trophy case is ordered by
+   *  recency, not by import order, so a single id no longer locates a page. */
+  nextCursor: string | null;
 }> {
-  const qs = cursor ? `?cursor=${cursor}` : '';
+  const qs = cursor ? `?cursor=${encodeURIComponent(cursor)}` : '';
   return auth.publicRequest(`/dancers/${encodeURIComponent(dancerId)}/awards${qs}`);
 }
 

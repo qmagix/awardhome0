@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { copyOrShare } from '@/ui/clipboard';
+import Constants from 'expo-constants';
 import { claimDancer } from '@/api/client';
 import { useSession } from '@/ui/Session';
 import { theme } from '@/ui/theme';
@@ -23,6 +25,7 @@ export default function ClaimScreen() {
   const [proof, setProof] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const [done, setDone] = useState<{
     status: string; routedTo: string;
     unclaimedStudio: { id: number; unique_id: string; name: string } | null;
@@ -70,14 +73,44 @@ export default function ClaimScreen() {
               own director — who would recognise you instantly. If you mention it to them, they can
               claim it from their phone in a minute.
             </Text>
+            {/* A link the director can act on directly. /claim/studio/<id> is
+                the web's one-page apply: it creates their account and files
+                the claim together, so there is nothing to set up first. */}
             <Pressable
               style={styles.secondary}
+              onPress={() => {
+                const base = (Constants.expoConfig?.extra?.['apiBaseUrl'] as string | undefined)
+                  ?? 'https://awardhome.com';
+                const url = `${base}/claim/studio/${done.unclaimedStudio!.unique_id}`;
+                void Share.share({
+                  message: `${done.unclaimedStudio!.name} can claim its page on AwardHome here — `
+                    + `it takes a minute, and then you can confirm our families' awards yourself: ${url}`,
+                  url,
+                });
+              }}
+            >
+              <Text style={styles.secondaryText}>Send your director the claim link</Text>
+            </Pressable>
+            <Pressable
+              style={styles.secondary}
+              onPress={() => {
+                const base = (Constants.expoConfig?.extra?.['apiBaseUrl'] as string | undefined)
+                  ?? 'https://awardhome.com';
+                void copyOrShare(`${base}/claim/studio/${done.unclaimedStudio!.unique_id}`)
+                  .then((didCopy) => { if (didCopy) setCopied(true); });
+              }}
+            >
+              <Text style={styles.secondaryText}>{copied ? 'Link copied' : 'Copy the link'}</Text>
+            </Pressable>
+            <Pressable
               onPress={() => router.push({
                 pathname: '/studio/[id]',
                 params: { id: done.unclaimedStudio!.unique_id },
               })}
             >
-              <Text style={styles.secondaryText}>Show them the studio page</Text>
+              <Text style={[styles.link, { textAlign: 'center', marginTop: theme.space(1.25) }]}>
+                See the studio page
+              </Text>
             </Pressable>
           </View>
         )}

@@ -2,7 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, Share, StyleSheet, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import Constants from 'expo-constants';
+import { copyOrShare } from '@/ui/clipboard';
 import { getTrophyCase, type Award, type MyClaim } from '@/api/client';
+import { AwardCardModal } from '@/ui/AwardCard';
 import { useSession } from '@/ui/Session';
 import { theme } from '@/ui/theme';
 
@@ -11,22 +13,35 @@ import { theme } from '@/ui/theme';
  * awardhome.com/dancer/<unique_id>. A family tapping that link from a text
  * message lands here whether or not they have ever opened the app.
  */
+/** The web's one-page studio apply: it creates the director's account and
+ *  files the claim together, so there is nothing for them to set up first. */
+function studioClaimUrl(uniqueId: string): string {
+  const base = (Constants.expoConfig?.extra?.['apiBaseUrl'] as string | undefined)
+    ?? 'https://awardhome.com';
+  return `${base}/claim/studio/${uniqueId}`;
+}
+
 export default function TrophyCaseScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { signedIn, dancers } = useSession();
   const [awards, setAwards] = useState<Award[]>([]);
   const [dancer, setDancer] = useState<{ id: number; name: string; is_claimed: boolean } | null>(null);
   const [myClaim, setMyClaim] = useState<MyClaim | null>(null);
-  const [cursor, setCursor] = useState<number | null>(null);
+  const [cursor, setCursor] = useState<string | null>(null);
+  const [openCard, setOpenCard] = useState<Award | null>(null);
+  const [unclaimedStudio, setUnclaimedStudio] =
+    useState<{ id: number; unique_id: string; name: string } | null>(null);
+  const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async (next?: number) => {
+  const load = useCallback(async (next?: string) => {
     if (!id) return;
     try {
       const res = await getTrophyCase(id, next);
       setDancer(res.dancer);
       setMyClaim(res.myClaim);
+      setUnclaimedStudio(res.unclaimedStudio);
       setAwards((prev) => (next ? [...prev, ...res.awards] : res.awards));
       setCursor(res.nextCursor);
     } catch {
@@ -73,6 +88,46 @@ export default function TrophyCaseScreen() {
           <Text style={styles.hint}>
             Once it\u2019s approved you can add missing awards and put photos on the cards.
           </Text>
+
+          {/* The honest version of "it's being reviewed": when the studio has
+              no owner, nobody is reviewing it, and saying so is what makes the
+              invite worth sending. The family is the only person here who can
+              actually reach the director. */}
+          {unclaimedStudio && (
+            <View style={styles.invite}>
+              <Text style={styles.muted}>
+                {unclaimedStudio.name} hasn\u2019t claimed its studio page yet, so there\u2019s
+                nobody there to confirm it. If you send your director this link, they can
+                claim the studio and approve you — and confirm every other family\u2019s
+                awards too.
+              </Text>
+              <Pressable
+                style={styles.secondary}
+                onPress={() => {
+                  void Share.share({
+                    message: `${unclaimedStudio.name} can claim its studio page on AwardHome `
+                      + `here \u2014 then you can confirm our dancers\u2019 awards yourself: `
+                      + `${studioClaimUrl(unclaimedStudio.unique_id)}`,
+                    url: studioClaimUrl(unclaimedStudio.unique_id),
+                  });
+                }}
+                accessibilityRole="button"
+              >
+                <Text style={styles.secondaryText}>Send your director the link</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  void copyOrShare(studioClaimUrl(unclaimedStudio.unique_id))
+                    .then((didCopy) => { if (didCopy) setCopied(true); });
+                }}
+                accessibilityRole="button"
+              >
+                <Text style={styles.copy}>
+                  {copied ? 'Link copied' : 'Copy the link instead'}
+                </Text>
+              </Pressable>
+            </View>
+          )}
         </View>
       ) : dancer && !dancer.is_claimed && !isMine ? (
         <Pressable
@@ -142,7 +197,15 @@ export default function TrophyCaseScreen() {
             ? [item.category, item.award_type].filter(Boolean).join(' · ')
             : '';
           return (
-          <View style={styles.card}>
+          <Pressable
+            style={styles.card}
+            onPress={() => setOpenCard(item)}
+            accessibilityRole="button"
+            accessibilityLabel={`Open the award card for ${heading ?? 'this award'}`}
+          >
+            {/* The card is the thing a family actually wants to look at and
+                show people; the row is just the index into it. */}
+            <Text style={styles.cardIcon}>🏅</Text>
             {/* place_display is formatted by the server from the same helper
                 the web uses: "1" -> "1st", and an unplaced scholarship reads
                 "Winner" rather than blank. */}
@@ -157,9 +220,15 @@ export default function TrophyCaseScreen() {
             {item.verification_status === 'family_submitted' && (
               <Text style={styles.badge}>Added by a family · not yet confirmed</Text>
             )}
-          </View>
+          </Pressable>
           );
         }}
+      />
+
+      <AwardCardModal
+        award={openCard}
+        dancerName={dancer?.name ?? ''}
+        onClose={() => setOpenCard(null)}
       />
     </View>
   );
@@ -180,6 +249,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.card, borderColor: theme.border, borderWidth: 1,
     borderRadius: theme.radius, padding: theme.space(1.5), marginTop: theme.space(1.5),
   },
+  cardIcon: { position: 'absolute', right: theme.space(1.5), top: theme.space(1.5), fontSize: 18 },
   place: { color: theme.gold, fontWeight: '700', fontSize: 15 },
   routine: { color: theme.text, fontSize: 17, fontWeight: '600', marginTop: 2 },
   meta: { color: theme.muted, fontSize: 13, marginTop: 3 },
@@ -189,6 +259,11 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius, padding: theme.space(1.25), alignItems: 'center',
   },
   secondaryText: { color: theme.text },
+  invite: {
+    marginTop: theme.space(1.5), paddingTop: theme.space(1.5),
+    borderTopColor: theme.border, borderTopWidth: 1,
+  },
+  copy: { color: theme.gold, textAlign: 'center', marginTop: theme.space(1), fontSize: 14 },
   pending: {
     marginTop: theme.space(2), padding: theme.space(1.5),
     backgroundColor: theme.goldSoft, borderRadius: theme.radius,
