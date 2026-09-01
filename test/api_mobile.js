@@ -272,6 +272,44 @@ async function main() {
       'the claim response names the unclaimed studio — nobody there will review it, and she can say so',
       JSON.stringify((newClaim.json || {}).unclaimedStudio));
 
+    // A claim on a dancer whose studio HAS an owner goes to that studio, with
+    // or without a code. AwardHome cannot judge whether someone is a child's
+    // parent; the director can.
+    const ownedDancer = await db.run(
+      "INSERT INTO dancers (unique_id, name) VALUES ('DNC-api-owned', 'API Owned Studio Dancer')");
+    await db.run('INSERT INTO dancer_studios (dancer_id, studio_id) VALUES (?, ?)',
+      [ownedDancer.lastID, st.lastID]); // st is owned by u1
+    const routed = await api('POST', `/dancers/${ownedDancer.lastID}/claim`, {
+      token: newSignIn.json.accessToken, body: { relationship: 'parent' },
+    });
+    const routedRow = await db.get(
+      'SELECT studio_id, code_valid FROM dancer_claims WHERE dancer_id = ?', [ownedDancer.lastID]);
+    check(routed.status === 201 && routed.json.routedTo === 'studio' &&
+          routedRow.studio_id === st.lastID && routedRow.code_valid === 0,
+      'a claim with NO code still goes to the studio when one has an owner — competence, not paperwork',
+      'routedTo=' + (routed.json || {}).routedTo + ' studio=' + (routedRow || {}).studio_id);
+
+    // Asking twice must not file a second claim — that reads as two households
+    // in dispute and marks both contested.
+    const twice = await api('POST', `/dancers/${ownedDancer.lastID}/claim`, {
+      token: newSignIn.json.accessToken, body: { relationship: 'parent' },
+    });
+    const claimCount = await db.get(
+      'SELECT COUNT(*) AS n FROM dancer_claims WHERE dancer_id = ?', [ownedDancer.lastID]);
+    check(twice.status === 409 && twice.json.error === 'already_claimed_by_you' && claimCount.n === 1,
+      'claiming the same dancer twice is refused with a useful answer, not filed again',
+      'status ' + twice.status + ' claims=' + claimCount.n);
+
+    // And the trophy case tells the app so it can show the pending state
+    // rather than offering the button again.
+    const withClaim = await api('GET', `/dancers/${ownedDancer.lastID}/awards`, {
+      token: newSignIn.json.accessToken,
+    });
+    check(withClaim.status === 200 && withClaim.json.myClaim &&
+          withClaim.json.myClaim.status === 'pending',
+      'the trophy case reports the caller\'s own pending claim',
+      JSON.stringify((withClaim.json || {}).myClaim));
+
     // ---- a director claiming their studio from a phone ----
     const studioSearch = await api('GET', '/studios/search?q=API%20Unclaimed');
     check(studioSearch.status === 200 &&

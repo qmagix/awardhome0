@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, Share, StyleSheet, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import Constants from 'expo-constants';
-import { getTrophyCase, type Award } from '@/api/client';
+import { getTrophyCase, type Award, type MyClaim } from '@/api/client';
 import { useSession } from '@/ui/Session';
 import { theme } from '@/ui/theme';
 
@@ -16,6 +16,7 @@ export default function TrophyCaseScreen() {
   const { signedIn, dancers } = useSession();
   const [awards, setAwards] = useState<Award[]>([]);
   const [dancer, setDancer] = useState<{ id: number; name: string; is_claimed: boolean } | null>(null);
+  const [myClaim, setMyClaim] = useState<MyClaim | null>(null);
   const [cursor, setCursor] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,6 +26,7 @@ export default function TrophyCaseScreen() {
     try {
       const res = await getTrophyCase(id, next);
       setDancer(res.dancer);
+      setMyClaim(res.myClaim);
       setAwards((prev) => (next ? [...prev, ...res.awards] : res.awards));
       setCursor(res.nextCursor);
     } catch {
@@ -51,7 +53,28 @@ export default function TrophyCaseScreen() {
       {/* Claiming is offered only where it is actually available: an unclaimed
           profile that is not already one of yours. Offering it otherwise
           teaches families to ignore the button. */}
-      {dancer && !dancer.is_claimed && !isMine && (
+      {/* Already asked? Say where it stands. Offering the button again let a
+          family file a second claim on their own child, which then read as two
+          households in dispute and went to AwardHome as "contested". */}
+      {myClaim && myClaim.status !== 'rejected' && !isMine ? (
+        <View style={styles.pending}>
+          <Text style={styles.pendingTitle}>
+            {myClaim.status === 'contested'
+              ? 'Someone else has claimed this dancer too'
+              : `You've asked to manage ${dancer?.name}`}
+          </Text>
+          <Text style={styles.muted}>
+            {myClaim.status === 'contested'
+              ? 'The AwardHome team is sorting it out directly rather than asking a studio to choose between families. We\u2019ll email you.'
+              : myClaim.studio_id
+                ? 'Your studio director is confirming it — they know which families belong to which dancers. You\u2019ll get an email when they do.'
+                : 'It\u2019s being reviewed. You\u2019ll get an email with the outcome.'}
+          </Text>
+          <Text style={styles.hint}>
+            Once it\u2019s approved you can add missing awards and put photos on the cards.
+          </Text>
+        </View>
+      ) : dancer && !dancer.is_claimed && !isMine ? (
         <Pressable
           style={styles.cta}
           onPress={() => router.push(
@@ -63,7 +86,7 @@ export default function TrophyCaseScreen() {
         >
           <Text style={styles.ctaText}>This is my dancer</Text>
         </Pressable>
-      )}
+      ) : null}
       {isMine && <Text style={styles.mine}>You manage this profile.</Text>}
 
       {/* Sharing sends the public URL, not a rendered image. The web page
@@ -166,4 +189,10 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius, padding: theme.space(1.25), alignItems: 'center',
   },
   secondaryText: { color: theme.text },
+  pending: {
+    marginTop: theme.space(2), padding: theme.space(1.5),
+    backgroundColor: theme.goldSoft, borderRadius: theme.radius,
+  },
+  pendingTitle: { color: theme.gold, fontWeight: '700', fontSize: 16, marginBottom: theme.space(0.5) },
+  hint: { color: theme.muted, fontSize: 12, marginTop: theme.space(1), lineHeight: 17 },
 });

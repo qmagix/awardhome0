@@ -3,7 +3,7 @@ const router = express.Router();
 const { openDb } = require('../../database');
 const { logStudioActivity } = require('../../utils/activity');
 const { requireAuth } = require('../../middleware/auth');
-const { domainsMatch, approveStudioClaim, matchDancerClaimCode, notifyStudioOfProfileClaim, markContestedClaims } = require('../../utils/claims');
+const { domainsMatch, approveStudioClaim, matchDancerClaimCode, notifyStudioOfProfileClaim, markContestedClaims, routeDancerClaim } = require('../../utils/claims');
 const { sendEmail } = require('../../utils/mailer');
 const { consumeHouseholdAction } = require('../../utils/submissions');
 const { BASE_URL } = require('../../config');
@@ -161,6 +161,7 @@ router.post('/claim/dancer/:id', requireAuth, async (req, res) => {
   // director for confirmation; a mismatch is recorded as signal for the
   // admin reviewer (never silently dropped).
   const codeMatch = await matchDancerClaimCode(db, dancer.id, studio_code);
+  const route = await routeDancerClaim(db, dancer.id, codeMatch);
   let proof_text = `Relationship: ${relationship || ''}\nDetails: ${proof || ''}`;
   if (codeMatch.provided) {
     proof_text += codeMatch.valid

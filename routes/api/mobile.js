@@ -42,7 +42,10 @@ const {
   LIFECYCLE, cleanCandidateInput, findDuplicateCandidates, createCandidate,
 } = require('../../utils/eventCandidates');
 const { CORRECTABLE_FIELDS, CORRECTION_REASON_TEXT, canPropose, propose } = require('../../utils/corrections');
-const { markContestedClaims, matchDancerClaimCode, domainsMatch, approveStudioClaim } = require('../../utils/claims');
+const {
+  markContestedClaims, matchDancerClaimCode, domainsMatch, approveStudioClaim,
+  routeDancerClaim, notifyStudioOfProfileClaim,
+} = require('../../utils/claims');
 const { studioDisplayNameSql, excludeIndependentSql } = require('../../utils/independents');
 const { formatPlacement } = require('../../utils/format');
 const { issueGrant, storeEvidence, canServe, readEvidence, MAX_BYTES } = require('../../utils/evidence');
@@ -252,8 +255,23 @@ router.get('/dancers/:id/awards', async (req, res) => {
   // Formatted server-side from the shared helper the web pages use, so the two
   // surfaces cannot disagree about what an unplaced scholarship is called.
   page.forEach(a => { a.place_display = formatPlacement(a); });
+
+  // Where the caller's own claim stands, if they have one. Without this the
+  // app offers "This is my dancer" to someone who already asked, and tapping
+  // it files a second claim that reads as two households fighting over the
+  // child.
+  let myClaim = null;
+  if (req.mobileUser) {
+    try {
+      myClaim = await db.get(
+        "SELECT id, status, studio_id FROM dancer_claims WHERE dancer_id = ? AND user_id = ? ORDER BY id DESC LIMIT 1",
+        [dancer.id, req.mobileUser.id]);
+    } catch (e) { /* pre-migration */ }
+  }
+
   res.json({
     dancer: { id: dancer.id, unique_id: dancer.unique_id, name: dancer.name, is_claimed: !!dancer.is_claimed },
+    myClaim: myClaim || null,
     awards: page,
     nextCursor: hasMore ? page[page.length - 1].id : null,
   });
@@ -349,8 +367,25 @@ router.post('/dancers/:id/claim', requireBearer, async (req, res) => {
       `That's ${quota.limit} profile claims in 24 hours. Please try again tomorrow.`);
   }
 
+  // Already asked? Say so, rather than showing the form again and filing a
+  // second claim — which would then look like two households fighting over
+  // the dancer and get marked contested.
+  const mine = await db.get(
+    "SELECT id, status FROM dancer_claims WHERE dancer_id = ? AND user_id = ? AND status IN ('pending','contested','approved') ORDER BY id DESC LIMIT 1",
+    [dancer.id, req.mobileUser.id]);
+  if (mine) {
+    return res.status(409).json({
+      error: 'already_claimed_by_you',
+      message: mine.status === 'approved'
+        ? `You already manage ${dancer.name}.`
+        : `You've already asked to manage ${dancer.name}. It's still being reviewed.`,
+      claim: { id: mine.id, status: mine.status },
+    });
+  }
+
   const { relationship, proof, studio_code: studioCode } = req.body || {};
   const codeMatch = await matchDancerClaimCode(db, dancer.id, studioCode);
+  const route = await routeDancerClaim(db, dancer.id, codeMatch);
   let proofText = `Relationship: ${normalizeText(relationship) || ''}\nDetails: ${normalizeText(proof) || ''}`;
   if (codeMatch.provided) {
     proofText += codeMatch.valid
@@ -360,28 +395,26 @@ router.post('/dancers/:id/claim', requireBearer, async (req, res) => {
   await db.run(
     'INSERT INTO dancer_claims (user_id, dancer_id, proof_text, status, studio_id, code_valid) VALUES (?, ?, ?, ?, ?, ?)',
     [req.mobileUser.id, dancer.id, proofText, 'pending',
-     codeMatch.valid ? codeMatch.studio.id : null, codeMatch.valid ? 1 : 0]);
+     route.studioId, codeMatch.valid ? 1 : 0]);
 
   // A second household on the same dancer contests both, and it leaves the
   // studio queue for AwardHome — the same rule the web flow follows.
-  const contest = await markContestedClaims(db, dancer.id);
+  if (route.routedTo === 'studio' && route.studio) {
+    notifyStudioOfProfileClaim(db, {
+      studio: route.studio, dancer, claimantEmail: req.mobileUser.email, relationship,
+    });
+  }
 
-  // Who will actually review this? If the dancer's studio has no owner,
-  // nobody at that studio will — it falls to AwardHome, and the family is the
-  // one person positioned to fix that by telling their director. Surfacing it
-  // turns a slow queue into an invitation.
-  const unclaimedStudio = await db.get(`
-    SELECT s.id, s.unique_id, s.name
-    FROM dancer_studios ds JOIN studios s ON s.id = ds.studio_id
-    WHERE ds.dancer_id = ? AND s.owner_id IS NULL
-      AND COALESCE(s.is_independent, 0) = 0 AND COALESCE(s.status, 'active') != 'merged'
-    LIMIT 1`, [dancer.id]);
+  const contest = await markContestedClaims(db, dancer.id);
 
   res.status(201).json({
     ok: true,
     status: contest.contested ? 'contested' : 'pending',
-    routedTo: contest.contested ? 'awardhome' : (codeMatch.valid ? 'studio' : 'awardhome'),
-    unclaimedStudio: unclaimedStudio || null,
+    // Contested always overrides: a director must never be asked to choose
+    // between two families.
+    routedTo: contest.contested ? 'awardhome' : route.routedTo,
+    studio: route.studio ? { id: route.studio.id, name: route.studio.name } : null,
+    unclaimedStudio: route.unclaimedStudio || null,
   });
 });
 

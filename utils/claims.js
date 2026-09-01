@@ -160,6 +160,53 @@ async function isDancerContested(db, dancerId) {
   }
 }
 
+// WHO SHOULD DECIDE A DANCER CLAIM (revised 2026-09-01).
+//
+// The question a dancer claim asks is "is this person really this child's
+// parent?" — and an AwardHome reviewer has no way to answer it. They have no
+// relationship to the family and nothing to check against. Sending them the
+// decision does not produce review; it produces rubber-stamping, on a
+// child-safety surface, with the appearance of oversight.
+//
+// The studio director CAN answer it. They know which parent belongs to which
+// dancer. So the routing follows competence, not paperwork:
+//
+//   contested            -> AwardHome. A director must never be asked to
+//                           choose between two families (design §6.9).
+//   independent dancer   -> AwardHome. There is no director, by definition
+//                           (design §6.2.3).
+//   studio has an owner  -> THAT STUDIO, whether or not a code was supplied.
+//   studio unclaimed     -> nobody competent exists yet. It waits, and the
+//                           family is told why and offered the invite path.
+//
+// This demotes the studio claim code from a routing gate to what it always
+// really was: a shortcut that proves community membership and lets a family
+// skip the queue. Its ABSENCE never made AwardHome more able to judge.
+async function routeDancerClaim(db, dancerId, codeMatch) {
+  if (codeMatch && codeMatch.valid && codeMatch.studio) {
+    return { studioId: codeMatch.studio.id, studio: codeMatch.studio, routedTo: 'studio', withCode: true };
+  }
+  const owned = await db.get(`
+    SELECT s.id, s.name, s.owner_id
+    FROM dancer_studios ds JOIN studios s ON s.id = ds.studio_id
+    WHERE ds.dancer_id = ? AND s.owner_id IS NOT NULL
+      AND COALESCE(s.is_independent, 0) = 0 AND COALESCE(s.status, 'active') != 'merged'
+    LIMIT 1`, [dancerId]);
+  if (owned) return { studioId: owned.id, studio: owned, routedTo: 'studio', withCode: false };
+
+  const unclaimed = await db.get(`
+    SELECT s.id, s.unique_id, s.name
+    FROM dancer_studios ds JOIN studios s ON s.id = ds.studio_id
+    WHERE ds.dancer_id = ? AND s.owner_id IS NULL
+      AND COALESCE(s.is_independent, 0) = 0 AND COALESCE(s.status, 'active') != 'merged'
+    LIMIT 1`, [dancerId]);
+  return {
+    studioId: null, studio: null, withCode: false,
+    routedTo: unclaimed ? 'waiting_for_studio' : 'awardhome',
+    unclaimedStudio: unclaimed || null,
+  };
+}
+
 // Approve a dancer claim: assign ownership, upgrade the role, and settle
 // the queue — any competing pending claims for the same dancer are
 // auto-rejected (otherwise a later approval would silently reassign the
@@ -213,7 +260,7 @@ async function notifyRosterAttach(db, dancerId, studioId) {
 
 module.exports = {
   domainsMatch, approveStudioClaim,
-  matchDancerClaimCode, markContestedClaims, isDancerContested,
+  matchDancerClaimCode, markContestedClaims, isDancerContested, routeDancerClaim,
   approveDancerClaim, rejectDancerClaim,
   notifyDancerClaimDecision, notifyStudioOfProfileClaim, notifyRosterAttach,
 };

@@ -1271,3 +1271,40 @@ the family cares most:
 Every family whose studio is unclaimed becomes a channel to that studio, and
 the pitch is true rather than promotional: their own claim genuinely resolves
 faster once their director is there.
+
+## Dancer claims route by competence, not by paperwork (2026-09-01)
+A correction to the claim routing, prompted by a question worth asking out
+loud: *what can an AwardHome admin actually check about a dancer claim?*
+
+Nothing. The question a claim asks is "is this person really this child's
+parent", and an AwardHome reviewer has no relationship to the family and
+nothing to check against. Sending them that decision does not produce review —
+it produces rubber-stamping, on a child-safety surface, wearing the appearance
+of oversight. Three such claims were sitting in the queue for dancers whose
+studio *had* an owner who could have decided them instantly.
+
+The studio director can answer it. So routing now follows who is competent:
+
+| Case | Decided by |
+|---|---|
+| Contested (two households) | **AwardHome** — a director must never be asked to choose between two families (§6.9) |
+| Independent dancer | **AwardHome** — there is no director, by definition (§6.2.3) |
+| Studio has an owner | **That studio**, whether or not a claim code was supplied |
+| Studio unclaimed | Waits. The family is told why, and offered the invite path |
+
+This demotes the studio claim code from a routing gate to what it always
+really was: a shortcut proving community membership that lets a family skip a
+queue. Its *absence* never made AwardHome more able to judge. The director's
+queue still shows whether a code was used, because that tells them how much the
+claimant already proved — it just no longer decides who reviews.
+
+### Asking twice
+Claiming a dancer you have already claimed now returns the pending state
+instead of the form. Previously the app offered "This is my dancer" again, and
+tapping it filed a second claim — which the contested-claim machinery then read
+as two households in dispute over the child, and escalated to AwardHome. A
+family could put their own claim into dispute with itself.
+
+The trophy case returns `myClaim` for a signed-in caller, so the app shows
+where the claim stands and what happens next rather than a button that makes
+things worse.

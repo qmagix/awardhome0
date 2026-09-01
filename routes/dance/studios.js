@@ -1238,9 +1238,12 @@ router.get('/manage/studio/:id/verifications', requireAuth, requireStudioOwner, 
     WHERE ds.status = 'pending' AND ds.studio_id = ?
   `, [studio.id]);
 
-  // Profile claims routed here by a valid studio claim code: the claimant
-  // proved community membership with the code; the director confirms the
-  // family identity. Approval finalizes the claim — no system-admin step.
+  // Profile claims routed to this studio. As of 2026-09-01 that is ANY claim
+  // on one of this studio's dancers, not only the ones carrying a claim code:
+  // AwardHome cannot judge whether someone is a child's parent, and the
+  // director can. The code is still shown, because it tells the director how
+  // much the claimant already proved — it is no longer what decides who
+  // reviews. Contested claims never appear here (design §6.9).
   let pendingProfileClaims = [];
   try {
     pendingProfileClaims = await db.all(`
@@ -1249,7 +1252,7 @@ router.get('/manage/studio/:id/verifications', requireAuth, requireStudioOwner, 
       FROM dancer_claims dc
       JOIN users u ON dc.user_id = u.id
       JOIN dancers d ON dc.dancer_id = d.id
-      WHERE dc.status = 'pending' AND dc.code_valid = 1 AND dc.studio_id = ?
+      WHERE dc.status = 'pending' AND dc.studio_id = ?
       ORDER BY dc.created_at ASC
     `, [studio.id]);
   } catch (e) { /* columns missing until `node database.js` runs */ }
@@ -1294,7 +1297,7 @@ router.post('/manage/studio/:id/verifications/profile/:claim_id/approve', requir
 
   // Only claims code-routed to THIS studio are the director's to decide
   const claim = await db.get(
-    "SELECT * FROM dancer_claims WHERE id = ? AND status = 'pending' AND code_valid = 1 AND studio_id = ?",
+    "SELECT * FROM dancer_claims WHERE id = ? AND status = 'pending' AND studio_id = ?",
     [req.params.claim_id, studio.id]);
   if (claim) {
     await approveDancerClaim(db, claim);
@@ -1309,7 +1312,7 @@ router.post('/manage/studio/:id/verifications/profile/:claim_id/deny', requireAu
   const studio = req.studio;
 
   const claim = await db.get(
-    "SELECT id FROM dancer_claims WHERE id = ? AND status = 'pending' AND code_valid = 1 AND studio_id = ?",
+    "SELECT id FROM dancer_claims WHERE id = ? AND status = 'pending' AND studio_id = ?",
     [req.params.claim_id, studio.id]);
   if (claim) await rejectDancerClaim(db, claim.id);
   res.redirect(`/manage/studio/${studio.id}/verifications`);

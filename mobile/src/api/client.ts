@@ -59,8 +59,12 @@ export function searchDancers(q: string): Promise<{ dancers: DancerSummary[] }> 
   return auth.publicRequest(`/dancers/search?q=${encodeURIComponent(q)}`);
 }
 
+export interface MyClaim { id: number; status: string; studio_id: number | null }
+
 export function getTrophyCase(dancerId: string, cursor?: number): Promise<{
   dancer: { id: number; unique_id: string; name: string; is_claimed: boolean };
+  /** Where the signed-in caller's own claim stands, if they have one. */
+  myClaim: MyClaim | null;
   awards: Award[];
   nextCursor: number | null;
 }> {
@@ -81,7 +85,10 @@ export function claimDancer(
   dancerId: number | string,
   body: { relationship?: string; proof?: string; studio_code?: string },
 ): Promise<{
-  ok: boolean; status: string; routedTo: string;
+  ok: boolean; status: string;
+  /** studio | waiting_for_studio | awardhome — who is competent to decide. */
+  routedTo: string;
+  studio: { id: number; name: string } | null;
   /** Set when the dancer's studio has no owner — nobody there will review
    *  this, and the family is the person positioned to change that. */
   unclaimedStudio: { id: number; unique_id: string; name: string } | null;
