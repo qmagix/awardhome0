@@ -1039,6 +1039,110 @@ async function main() {
           'statuses=' + JSON.stringify(claimRows.map(c => c.status)) +
           ' inStudio=' + studioVerifHtml.includes('Smoke Dancer Contested'));
 
+        // ---- M8: a pending claimant may QUEUE, but nothing promotes ----
+        // A parent who just found her child cannot wait for an unclaimed
+        // studio to appear before writing down a weekend she still remembers.
+        // Staging is a separate file and nothing there is public, so letting
+        // her queue costs nothing — as long as neither reviewer-less door
+        // opens for her. Both are tested here, in both directions.
+        const qDancer = await db.run(
+          "INSERT INTO dancers (unique_id, name) VALUES ('smoke-dancer-queue', 'Smoke Dancer Queued')");
+        // Cleaned up by the 'Smoke Dancer%' name sweep, like the others.
+        await db.run('INSERT INTO dancer_studios (dancer_id, studio_id) VALUES (?, ?)',
+          [qDancer.lastID, s1.lastID]); // s1 has an owner, so the claim routes there and waits
+        const qClaimRes = await fetch(BASE + `/claim/dancer/${qDancer.lastID}`, {
+          method: 'POST', redirect: 'manual',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: claimant.cookie },
+          body: new URLSearchParams({ _csrf: claimToken, relationship: 'parent', proof: 'smoke' }).toString(),
+        });
+        const qClaim = await db.get(
+          "SELECT id, status FROM dancer_claims WHERE dancer_id = ? AND status = 'pending'", [qDancer.lastID]);
+        if (qClaim) ids.claims.push(qClaim.id);
+
+        const QROUTINE = 'Smoke Queued Routine';
+        const qPost = (extra = {}) => fetch(BASE + `/manage/dancer/${qDancer.lastID}/submissions`, {
+          method: 'POST', redirect: 'manual',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: claimant.cookie },
+          body: new URLSearchParams({
+            _csrf: claimToken, client_submission_id: 'smoke-queue-a',
+            event_id: String(event.id), performance_name: QROUTINE,
+            group_size: 'small_group', place: '1st', category: 'Teen Jazz', ...extra,
+          }).toString(),
+        });
+        const qRes = await qPost();
+        const qSub = await sdb.get(
+          "SELECT * FROM award_submissions WHERE client_submission_id = 'smoke-queue-a'");
+        const qAwardsAfter = await db.all(
+          'SELECT id FROM awards WHERE performance_name = ?', [QROUTINE]);
+        check(qClaimRes.status < 400 && qRes.status === 302 &&
+              (qRes.headers.get('location') || '').includes('queued=1') &&
+              qSub && qSub.unverified_household === 1 && qSub.status === 'submitted' &&
+              qAwardsAfter.length === 0,
+          'a PENDING claimant can queue an award into staging, and nothing canonical is written',
+          'post=' + qRes.status + ' loc=' + (qRes.headers.get('location') || '') +
+          ' flagged=' + (qSub && qSub.unverified_household) +
+          ' awards=' + qAwardsAfter.length);
+
+        // Not in the director's queue: the claim in front of her IS the
+        // prerequisite question, and answering it releases the whole queue.
+        const qStudioQueue = await fetch(BASE + `/manage/studio/${s1.lastID}/submissions`,
+          { headers: { Cookie: owner.cookie } });
+        const qStudioHtml = await qStudioQueue.text();
+        // Nor in AwardHome's, for the stronger reason: AwardHome cannot judge
+        // parentage at all — that is why dancer claims route to studios.
+        const qAdminQueue = await fetch(BASE + '/admin/submissions',
+          { headers: { Cookie: superUser.cookie } });
+        const qAdminHtml = await qAdminQueue.text();
+        check(!qStudioHtml.includes(QROUTINE) && !qAdminHtml.includes(QROUTINE),
+          'a pending claimant\'s queued award reaches neither the studio queue nor AwardHome\'s',
+          'studio=' + qStudioHtml.includes(QROUTINE) + ' admin=' + qAdminHtml.includes(QROUTINE));
+
+        // THE DIRECTION THAT IS EASY TO MISS. Corroboration promotes BOTH
+        // partners, so an unverified entry left matchable would promote a
+        // real household's submission — publishing an award on the say-so of
+        // someone whose relationship to a child is still unestablished.
+        const qMate = await fetch(BASE + `/manage/dancer/${famDancer.lastID}/submissions`, {
+          method: 'POST', redirect: 'manual',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: owner.cookie },
+          body: new URLSearchParams({
+            _csrf: subToken, client_submission_id: 'smoke-queue-mate',
+            event_id: String(event.id), performance_name: QROUTINE,
+            group_size: 'small_group', place: '1st',
+          }).toString(),
+        });
+        const mateSub = await sdb.get(
+          "SELECT * FROM award_submissions WHERE client_submission_id = 'smoke-queue-mate'");
+        const afterMate = await db.all('SELECT id FROM awards WHERE performance_name = ?', [QROUTINE]);
+        check(qMate.status === 302 && mateSub && mateSub.status === 'submitted' &&
+              afterMate.length === 0,
+          'an unverified entry cannot corroborate anyone — the other household stays unpublished too',
+          'mate=' + (mateSub && mateSub.status) + ' awards=' + afterMate.length);
+
+        // Approving the claim is the one decision that releases the queue —
+        // and now the two households corroborate each other normally.
+        const qApprove = await fetch(
+          BASE + `/manage/studio/${s1.lastID}/verifications/profile/${qClaim.id}/approve`, {
+            method: 'POST', redirect: 'manual',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: owner.cookie },
+            body: new URLSearchParams({ _csrf: subToken }).toString(),
+          });
+        const qSubAfter = await sdb.get(
+          "SELECT * FROM award_submissions WHERE client_submission_id = 'smoke-queue-a'");
+        const mateAfter = await sdb.get(
+          "SELECT * FROM award_submissions WHERE client_submission_id = 'smoke-queue-mate'");
+        const qAwardsFinal = await db.all(
+          'SELECT id FROM awards WHERE performance_name = ?', [QROUTINE]);
+        qAwardsFinal.forEach(a => ids.awards.push(a.id));
+        const qLinks = qAwardsFinal.length
+          ? await db.all('SELECT dancer_id FROM award_dancers WHERE award_id = ?', [qAwardsFinal[0].id]) : [];
+        check(qApprove.status === 302 && qSubAfter.unverified_household === 0 &&
+              qSubAfter.status === 'accepted' && mateAfter.status === 'accepted' &&
+              qAwardsFinal.length === 1 && qLinks.length === 2,
+          'approving the claim clears the marker and releases the queue — one decision, a season of entries',
+          'approve=' + qApprove.status + ' claim=' + qClaim.id +
+          ' flagged=' + qSubAfter.unverified_household + ' statuses=' + qSubAfter.status + '/' +
+          mateAfter.status + ' awards=' + qAwardsFinal.length + ' links=' + qLinks.length);
+
         // ---- M4: correction proposals ----
         const corrTarget = convAwards[0];
         const corrRes = await fetch(BASE + `/api/award/${corrTarget.id}/correction`, {

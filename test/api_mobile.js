@@ -88,6 +88,12 @@ async function main() {
   await db.run('INSERT INTO dancer_studios (dancer_id, studio_id) VALUES (?, ?)', [dn.lastID, st.lastID]);
   const unclaimed = await db.run("INSERT INTO dancers (unique_id, name) VALUES ('DNC-api-unclaimed', 'API Unclaimed Dancer')");
   await db.run('INSERT INTO dancer_studios (dancer_id, studio_id) VALUES (?, ?)', [unclaimed.lastID, st.lastID]);
+  // Nobody's child, as far as this API's callers are concerned: no ownership
+  // and no claim from any test household. Needed because `unclaimed` acquires
+  // a pending claim partway through the run, which legitimately grants the
+  // right to QUEUE (M8) — so it can no longer stand in for a stranger.
+  const stranger = await db.run("INSERT INTO dancers (unique_id, name) VALUES ('DNC-api-stranger', 'API Stranger Dancer')");
+  await db.run('INSERT INTO dancer_studios (dancer_id, studio_id) VALUES (?, ?)', [stranger.lastID, st.lastID]);
   const event = await db.get('SELECT id, year FROM events WHERE year IS NOT NULL ORDER BY id LIMIT 1');
 
   // Three seasons, seeded so that ID ORDER DISAGREES WITH YEAR ORDER — which
@@ -420,10 +426,47 @@ async function main() {
       'status ' + missingSize.status);
 
     const otherDancer = await api('POST', '/submissions', {
-      token: access, body: { ...submitBody, client_submission_id: crypto.randomUUID(), dancer_id: unclaimed.lastID },
+      token: access, body: { ...submitBody, client_submission_id: crypto.randomUUID(), dancer_id: stranger.lastID },
     });
     check(otherDancer.status === 403,
-      'submit: only for a dancer this household manages', 'status ' + otherDancer.status);
+      'submit: a household with no ownership and no claim is refused outright',
+      'status ' + otherDancer.status);
+
+    // Her dancer must be IN the household list, or the Add flow has nothing
+    // to offer her and the queue is unreachable.
+    const meWithPending = await api('GET', '/me', { token: access });
+    const pendingEntry = (meWithPending.json.dancers || [])
+      .find(d => d.id === unclaimed.lastID);
+    check(meWithPending.status === 200 && pendingEntry &&
+          pendingEntry.standing === 'pending_claim' &&
+          (meWithPending.json.dancers || []).some(d => d.standing === 'owner'),
+      'a pending claimant\'s dancer appears in her household, labelled pending_claim',
+      'standing=' + (pendingEntry || {}).standing);
+
+    // M8 — a PENDING claimant may queue. `unclaimed` picked up a pending
+    // claim from this household earlier in the run, which is exactly the
+    // case: staging accepts her, and the response says plainly that it is
+    // waiting on the claim rather than pretending it was submitted.
+    const queued = await api('POST', '/submissions', {
+      token: access, body: { ...submitBody, client_submission_id: crypto.randomUUID(), dancer_id: unclaimed.lastID },
+    });
+    const queuedRow = queued.json.submission ? await (await openSubmissionsDb()).get(
+      'SELECT unverified_household, status FROM award_submissions WHERE id = ?',
+      [queued.json.submission.id]) : null;
+    check(queued.status === 201 && queued.json.queued === true &&
+          queued.json.published === false && queued.json.reason === 'claim_pending' &&
+          queuedRow && queuedRow.unverified_household === 1 && queuedRow.status === 'submitted',
+      'submit: a pending claimant queues into staging, told honestly it awaits her claim',
+      'status ' + queued.status + ' queued=' + queued.json.queued +
+      ' reason=' + queued.json.reason);
+
+    // And it is inert: not published, and not usable as anyone's
+    // corroboration until the claim is decided.
+    const queuedAward = await db.get(
+      'SELECT id FROM awards WHERE performance_name = ?', [submitBody.performance_name]);
+    check(!queued.json.published && (!queuedAward || !queued.json.submission.award_id),
+      'submit: a queued entry writes nothing canonical',
+      'award_id=' + (queued.json.submission || {}).award_id);
 
     // ---- status feed ----
     const feed = await api('GET', '/submissions', { token: access });

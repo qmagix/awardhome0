@@ -391,7 +391,8 @@
           "200": {
             "description": "Household"
           }
-        }
+        },
+        "description": "Dancers this household manages, plus any it has a PENDING claim on. `standing` is 'owner' or 'pending_claim' \u2014 a pending claimant may record awards, but they stage and are sent only when the claim is approved."
       }
     },
     "/dancers/search": {
@@ -673,7 +674,7 @@
       },
       "post": {
         "summary": "Submit a missing award",
-        "description": "Idempotent on (user, client_submission_id): a retried offline upload returns the ORIGINAL row. group_size is required \u2014 it decides the canonical write path. The studio is derived from affiliation and is never accepted as free text.",
+        "description": "Idempotent on (user, client_submission_id): a retried offline upload returns the ORIGINAL row. group_size is required \u2014 it decides the canonical write path. The studio is derived from affiliation and is never accepted as free text.\n\nA PENDING claimant may submit: the row stages with `unverified_household = 1`, `queued: true` comes back, and it takes neither automatic promotion door (independent auto-approval or corroboration) until her claim is approved. It is also not offered as anyone else's corroboration in the meantime. Approving the claim clears the marker and re-runs promotion for everything she queued.",
         "requestBody": {
           "required": true,
           "content": {

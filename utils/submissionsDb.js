@@ -126,6 +126,18 @@ async function initSubmissionsSchema(db) {
       visibility TEXT NOT NULL DEFAULT 'owner_visible',
       verification_level TEXT NOT NULL DEFAULT 'family_submitted',
 
+      -- Entered by a household whose relationship to the dancer is not
+      -- established yet: a PENDING CLAIMANT (M8).
+      --
+      -- She may stage all she likes — nothing here is public — but a staged
+      -- row must not reach canonical through either reviewer-less door:
+      -- independent auto-approval, or corroboration (where her entry would
+      -- otherwise promote a stranger's submission as well as her own). It is
+      -- a fact about the submission at the time it was made, and it is
+      -- CLEARED by the event that establishes the relationship — the claim
+      -- being approved — at which point auto-promotion is re-run.
+      unverified_household INTEGER NOT NULL DEFAULT 0,
+
       -- Set by promotion (M3). Non-NULL means this submission became (or
       -- joined) a canonical award.
       award_id INTEGER,
@@ -324,6 +336,18 @@ async function initSubmissionsSchema(db) {
     CREATE INDEX IF NOT EXISTS idx_household_action_log_lookup
       ON household_action_log(user_id, action, created_at);
   `);
+
+  // Migrations for staging files created before a column existed. The schema
+  // above only ever runs as CREATE TABLE IF NOT EXISTS, so an existing
+  // submissions.sqlite never picks up a new column without this — the same
+  // try/catch ALTER pattern database.js uses, and idempotent for the same
+  // reason: a duplicate-column error is the success case on the second run.
+  const migrations = [
+    'ALTER TABLE award_submissions ADD COLUMN unverified_household INTEGER NOT NULL DEFAULT 0',
+  ];
+  for (const sql of migrations) {
+    try { await db.exec(sql); } catch (e) { /* already applied */ }
+  }
 }
 
 module.exports = { openSubmissionsDb, submissionsDbPath, initSubmissionsSchema };

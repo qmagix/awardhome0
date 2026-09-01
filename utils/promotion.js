@@ -357,6 +357,14 @@ async function runAutoPromotion({ submissionId, db: dbIn, sdb: sdbIn } = {}) {
   const anomaly = await hasAnomaly(db, s);
   if (anomaly) return { promoted: [], reason: anomaly };
 
+  // A PENDING CLAIMANT's entry never takes an automatic door (M8). Both of
+  // the doors below promote with no human involved — independent
+  // auto-approval, and corroboration — and both assume the submitter is who
+  // she says she is, which is exactly the question her claim has not answered
+  // yet. Staging is free; canonical is not. Held, not refused: approving the
+  // claim clears the marker and runs this again.
+  if (s.unverified_household) return { promoted: [], reason: 'claim_pending' };
+
   // Path 1 — independent: publish immediately, label family_submitted.
   if (await isIndependentSubmission(db, s)) {
     const r = await confirmSubmission({ submissionId: s.id, level: 'family_submitted', db, sdb });
@@ -405,6 +413,8 @@ const REASON_TEXT = {
   tombstoned: 'This dancer was previously removed from this routine, so confirming would ' +
     'undo that decision. Re-add them from Group Routine Dancers first if it was a mistake.',
   dancer_missing: 'That dancer profile no longer exists.',
+  claim_pending: 'Saved. It will be submitted once your claim on this dancer is approved — ' +
+    'we can\'t publish an award for a dancer whose family hasn\'t been confirmed yet.',
 };
 
 module.exports = {

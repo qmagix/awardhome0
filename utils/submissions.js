@@ -195,6 +195,14 @@ async function resolveEventRef(db, input, userId) {
 async function validateSubmission(db, input, { dancerId, userId }) {
   const errors = [];
 
+  // Standing decides whether this may be staged at all, and whether what is
+  // staged may take an automatic door later (M8). Established HERE rather
+  // than in the routers, so the web form and the mobile API cannot drift on
+  // the one rule that governs who may write on a child's behalf.
+  const { householdStanding } = require('./claims');
+  const standing = await householdStanding(db, dancerId, userId);
+  if (!standing) errors.push('You can only add awards for a dancer you manage.');
+
   const clientSubmissionId = normalizeText(input.client_submission_id) || crypto.randomUUID();
 
   const performanceName = normalizeText(input.performance_name);
@@ -293,7 +301,11 @@ async function validateSubmission(db, input, { dancerId, userId }) {
       card_photo_media_type: normalizeText(input.card_photo_media_type),
       thank_you_note: normalizeText(input.thank_you_note),
       card_consent_affirmed: input.card_consent_affirmed ? 1 : 0,
+      // 1 when a pending claimant wrote this. Recorded, not refused — see
+      // householdStanding() and runAutoPromotion().
+      unverified_household: standing === 'pending_claim' ? 1 : 0,
     },
+    standing,
     affiliations,
     event,
     candidate,
@@ -328,15 +340,15 @@ async function createSubmission(value, cast = []) {
         client_submission_id, user_id, dancer_id, studio_id, event_id, event_candidate_id, event_session_id,
         performance_name, performance_name_key, group_size, group_size_n, cast_complete,
         place, award_type, category, age_division, teacher, choreographer, notes,
-        raw_payload, status, visibility, verification_level
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'submitted', 'owner_visible', 'family_submitted')`,
+        raw_payload, unverified_household, status, visibility, verification_level
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'submitted', 'owner_visible', 'family_submitted')`,
       [value.client_submission_id, value.user_id, value.dancer_id, value.studio_id,
        value.event_id, value.event_candidate_id, value.event_session_id,
        value.performance_name, value.performance_name_key, value.group_size,
        value.group_size_n, value.cast_complete,
        value.place, value.award_type, value.category, value.age_division,
        value.teacher, value.choreographer, value.notes,
-       JSON.stringify({ ...value, cast })]);
+       JSON.stringify({ ...value, cast }), value.unverified_household ? 1 : 0]);
     id = res.lastID;
     for (const name of cast) {
       await sdb.run(
@@ -423,9 +435,16 @@ async function listForDancer(dancerId, userId) {
 async function listForStudio(studioId, { statuses = ['submitted', 'needs_info'] } = {}) {
   const db = await openDb();
   const sdb = await openSubmissionsDb();
+  // Pending claimants' entries are held out of the director's queue on
+  // purpose (M8). The prerequisite question — is this person really that
+  // child's parent? — is already in front of her as a profile claim, and
+  // answering it releases the whole queue at once. Listing them here would
+  // put content from unconfirmed strangers in the scarcest inbox the product
+  // has, and ask the director to decide the same thing twice.
   const rows = await sdb.all(
     `SELECT * FROM award_submissions
      WHERE studio_id = ? AND status IN (${statuses.map(() => '?').join(',')})
+       AND IFNULL(unverified_household, 0) = 0
      ORDER BY created_at ASC, id ASC`,
     [studioId, ...statuses]);
 
@@ -453,9 +472,15 @@ async function listForStudio(studioId, { statuses = ['submitted', 'needs_info'] 
 async function listForReview({ statuses = ['submitted', 'needs_info'] } = {}) {
   const db = await openDb();
   const sdb = await openSubmissionsDb();
+  // Held out here too, and for the stronger reason: AwardHome cannot judge
+  // whether someone is a child's parent — that is why dancer claims route to
+  // studios in the first place. Reviewing her awards while that is unanswered
+  // would be rubber-stamping on a child-safety surface. The claim is the
+  // decision; the queue follows it. `/admin/claims` shows how much is waiting.
   const rows = await sdb.all(
     `SELECT * FROM award_submissions
      WHERE status IN (${statuses.map(() => '?').join(',')})
+       AND IFNULL(unverified_household, 0) = 0
      ORDER BY created_at ASC, id ASC
      LIMIT 300`, statuses);
 

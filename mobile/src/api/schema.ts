@@ -278,7 +278,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** The household: dancers managed, with derived studio affiliations */
+        /**
+         * The household: dancers managed, with derived studio affiliations
+         * @description Dancers this household manages, plus any it has a PENDING claim on. `standing` is 'owner' or 'pending_claim' — a pending claimant may record awards, but they stage and are sent only when the claim is approved.
+         */
         get: {
             parameters: {
                 query?: never;
@@ -350,12 +353,13 @@ export interface paths {
         };
         /**
          * Trophy case
-         * @description Public, and honours the owner's per-card hide. Page with `cursor` (last id seen; ids only increase, so paging is stable under concurrent writes) and sync with `updated_since`.
+         * @description Public, and honours the owner's per-card hide. Ordered most-recent-first by competition year. Page with `cursor` (opaque `"<year>:<id>"` keyset, echoed back as `nextCursor`) and sync with `updated_since`.
          */
         get: {
             parameters: {
                 query?: {
-                    cursor?: number;
+                    /** @description Opaque keyset cursor of the form "<year>:<id>", taken from a previous nextCursor. */
+                    cursor?: string;
                     updated_since?: string;
                 };
                 header?: never;
@@ -598,6 +602,8 @@ export interface paths {
         /**
          * Submit a missing award
          * @description Idempotent on (user, client_submission_id): a retried offline upload returns the ORIGINAL row. group_size is required — it decides the canonical write path. The studio is derived from affiliation and is never accepted as free text.
+         *
+         *     A PENDING claimant may submit: the row stages with `unverified_household = 1`, `queued: true` comes back, and it takes neither automatic promotion door (independent auto-approval or corroboration) until her claim is approved. It is also not offered as anyone else's corroboration in the meantime. Approving the claim clears the marker and re-runs promotion for everything she queued.
          */
         post: {
             parameters: {

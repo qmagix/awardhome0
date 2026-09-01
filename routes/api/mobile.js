@@ -36,7 +36,7 @@ const {
   GROUP_SIZES, validateSubmission, createSubmission, listForDancer,
   castForSubmissions, normalizeText, consumeHouseholdAction, dancerStudios,
 } = require('../../utils/submissions');
-const { runAutoPromotion } = require('../../utils/promotion');
+const { runAutoPromotion, REASON_TEXT } = require('../../utils/promotion');
 const { findEventOptions } = require('../../utils/eventPicker');
 const {
   LIFECYCLE, cleanCandidateInput, findDuplicateCandidates, createCandidate,
@@ -44,7 +44,7 @@ const {
 const { CORRECTABLE_FIELDS, CORRECTION_REASON_TEXT, canPropose, propose } = require('../../utils/corrections');
 const {
   markContestedClaims, matchDancerClaimCode, domainsMatch, approveStudioClaim,
-  routeDancerClaim, notifyStudioOfProfileClaim,
+  routeDancerClaim, notifyStudioOfProfileClaim, householdStanding,
 } = require('../../utils/claims');
 const { studioDisplayNameSql, excludeIndependentSql } = require('../../utils/independents');
 const { formatPlacement } = require('../../utils/format');
@@ -542,7 +542,11 @@ router.post('/submissions', requireBearer, async (req, res) => {
   const dancerId = parseInt((req.body || {}).dancer_id, 10);
   const dancer = await db.get('SELECT id, claimed_by_user_id FROM dancers WHERE id = ?', [dancerId]);
   if (!dancer) return fail(res, 404, 'not_found', 'No such dancer.');
-  if (dancer.claimed_by_user_id !== req.mobileUser.id) {
+  // Standing (owner or pending claimant) is decided by the service, not here,
+  // so the web form and this endpoint cannot drift on who may write on a
+  // child's behalf. A stranger fails validation below with the same message.
+  const standing = await householdStanding(db, dancer.id, req.mobileUser.id);
+  if (!standing) {
     return fail(res, 403, 'forbidden', 'You can only add awards for a dancer you manage.');
   }
 
@@ -563,6 +567,11 @@ router.post('/submissions', requireBearer, async (req, res) => {
   }
   res.status(idempotent ? 200 : 201).json({
     submission, idempotent, published: auto.promoted.includes(submission.id), reason: auto.reason,
+    // Tell her the truth about where it went. "Saved, waiting on your claim"
+    // is a different promise from "submitted for review", and an app that
+    // conflates them teaches families their entries vanished.
+    queued: !!value.unverified_household,
+    message: auto.reason && REASON_TEXT[auto.reason] ? REASON_TEXT[auto.reason] : null,
   });
 });
 
@@ -710,10 +719,31 @@ router.get('/activity', requireBearer, async (req, res) => {
 // anyone to type a studio name.
 router.get('/me', requireBearer, async (req, res) => {
   const db = await openDb();
-  const dancers = await db.all(`
-    SELECT d.id, d.unique_id, d.name,
-      (SELECT COUNT(*) FROM award_dancers ad WHERE ad.dancer_id = d.id) AS award_count
-    FROM dancers d WHERE d.claimed_by_user_id = ? ORDER BY d.name`, [req.mobileUser.id]);
+  // Dancers this household manages, PLUS the ones it has asked to manage
+  // (M8). A pending claimant needs her dancer in this list or the Add flow
+  // has nothing to offer her — and the weekend she is trying to write down
+  // will be gone by the time an unclaimed studio finds an owner. `standing`
+  // tells the app which it is, so it can promise the right thing.
+  let dancers;
+  try {
+    dancers = await db.all(`
+      SELECT d.id, d.unique_id, d.name,
+        (SELECT COUNT(*) FROM award_dancers ad WHERE ad.dancer_id = d.id) AS award_count,
+        CASE WHEN d.claimed_by_user_id = ? THEN 'owner' ELSE 'pending_claim' END AS standing
+      FROM dancers d
+      WHERE d.claimed_by_user_id = ?
+         OR EXISTS (SELECT 1 FROM dancer_claims c
+                     WHERE c.dancer_id = d.id AND c.user_id = ?
+                       AND c.status IN ('pending', 'contested'))
+      ORDER BY d.name`,
+      [req.mobileUser.id, req.mobileUser.id, req.mobileUser.id]);
+  } catch (e) { // pre-migration: no dancer_claims table
+    dancers = await db.all(`
+      SELECT d.id, d.unique_id, d.name,
+        (SELECT COUNT(*) FROM award_dancers ad WHERE ad.dancer_id = d.id) AS award_count,
+        'owner' AS standing
+      FROM dancers d WHERE d.claimed_by_user_id = ? ORDER BY d.name`, [req.mobileUser.id]);
+  }
   for (const d of dancers) d.studios = await dancerStudios(db, d.id);
   res.json({
     user: { id: req.mobileUser.id, email: req.mobileUser.email },

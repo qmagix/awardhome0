@@ -35,20 +35,30 @@ const {
   LIFECYCLE, cleanCandidateInput, findDuplicateCandidates, createCandidate,
 } = require('../../utils/eventCandidates');
 
+const { householdStanding } = require('../../utils/claims');
+
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
-// Ownership: the household that claimed this dancer, plus site admins. Same
-// rule the rest of /manage/dancer/* uses — ownership is an owner_id column,
-// never a role.
-async function loadOwnedDancer(req, res) {
+// Who may enter an award for this dancer: the household that claimed her,
+// a household whose claim is still PENDING (M8), plus site admins. Ownership
+// is an owner_id column, never a role — the same rule the rest of
+// /manage/dancer/* uses; this surface additionally admits the pending case
+// because staging is not publication.
+//
+// Every caller of this helper is part of the award-entry flow (the form, the
+// submit, the event picker, candidate check and create). Surfaces that
+// actually change the dancer's public profile still use the owner-only rule.
+async function loadDancerForSubmission(req, res) {
   const db = await openDb();
   const dancer = await db.get('SELECT * FROM dancers WHERE id = ?', [req.params.id]);
   if (!dancer) { res.status(404).send('Dancer not found'); return null; }
   const { id: userId, role } = req.session.user;
-  if (dancer.claimed_by_user_id !== userId && role !== 'admin' && role !== 'superadmin') {
+  const standing = await householdStanding(db, dancer.id, userId);
+  if (!standing && role !== 'admin' && role !== 'superadmin') {
     res.status(403).send('Forbidden: Not the owner');
     return null;
   }
+  dancer.standing = standing;
   return dancer;
 }
 
@@ -110,7 +120,7 @@ async function renderPage(req, res, dancer, { errors = [], form = {}, notice = n
 
 router.get('/manage/dancer/:id/submissions', requireAuth, async (req, res) => {
   if (!(await requireFlag(req, res))) return;
-  const dancer = await loadOwnedDancer(req, res);
+  const dancer = await loadDancerForSubmission(req, res);
   if (!dancer) return;
   const NOTICES = {
     added: 'Saved. It is pending review — you can see it below; nobody else can see it yet.',
@@ -120,15 +130,22 @@ router.get('/manage/dancer/:id/submissions', requireAuth, async (req, res) => {
       'own results confirm it.',
     corroborated: 'Saved and published. Another family recorded the same result independently, which is ' +
       'the strongest confirmation we can get without waiting for anyone.',
+    // A different promise from "pending review", and worth keeping distinct:
+    // nothing has been sent to anyone yet, and what unblocks it is the claim,
+    // not a queue.
+    queued: 'Saved to your own list. It will be submitted automatically as soon as your claim on ' +
+      'this dancer is approved — nobody else can see it before then, so nothing is lost by ' +
+      'entering the rest of the weekend now while you remember it.',
   };
   const notice = req.query.added ? NOTICES.added
-    : (req.query.duplicate ? NOTICES.duplicate : (NOTICES[req.query.auto] || null));
+    : (req.query.queued ? NOTICES.queued
+      : (req.query.duplicate ? NOTICES.duplicate : (NOTICES[req.query.auto] || null)));
   await renderPage(req, res, dancer, { notice });
 });
 
 router.post('/manage/dancer/:id/submissions', requireAuth, async (req, res) => {
   if (!(await requireFlag(req, res))) return;
-  const dancer = await loadOwnedDancer(req, res);
+  const dancer = await loadDancerForSubmission(req, res);
   if (!dancer) return;
   const db = await openDb();
 
@@ -161,7 +178,8 @@ router.post('/manage/dancer/:id/submissions', requireAuth, async (req, res) => {
   }
   const flag = idempotent ? 'duplicate=1'
     : (auto.reason === 'independent' ? 'auto=independent'
-      : (auto.reason === 'corroborated' ? 'auto=corroborated' : 'added=1'));
+      : (auto.reason === 'corroborated' ? 'auto=corroborated'
+        : (auto.reason === 'claim_pending' ? 'queued=1' : 'added=1')));
   res.redirect(`/manage/dancer/${dancer.id}/submissions?${flag}`);
 });
 
@@ -177,7 +195,7 @@ router.post('/manage/dancer/:id/submissions', requireAuth, async (req, res) => {
 // before the picker existed.
 router.get(['/api/dancer/:id/event-picker', '/api/dancer/:id/event-search'], requireAuth, async (req, res) => {
   if (!(await flagOn('family_submissions', req))) return res.status(404).json({ error: 'Not found' });
-  const dancer = await loadOwnedDancer(req, res);
+  const dancer = await loadDancerForSubmission(req, res);
   if (!dancer) return;
 
   const db = await openDb();
@@ -204,7 +222,7 @@ router.get(['/api/dancer/:id/event-picker', '/api/dancer/:id/event-search'], req
 // competition within minutes, so the check runs on the server, not the client.
 router.post('/api/dancer/:id/event-candidates/check', requireAuth, async (req, res) => {
   if (!(await flagOn('family_submissions', req))) return res.status(404).json({ error: 'Not found' });
-  const dancer = await loadOwnedDancer(req, res);
+  const dancer = await loadDancerForSubmission(req, res);
   if (!dancer) return;
 
   const { ok, errors, values } = cleanCandidateInput(req.body || {});
@@ -230,7 +248,7 @@ router.post('/api/dancer/:id/event-candidates/check', requireAuth, async (req, r
 // the event it belongs to.
 router.post('/api/dancer/:id/event-candidates', requireAuth, async (req, res) => {
   if (!(await flagOn('family_submissions', req))) return res.status(404).json({ error: 'Not found' });
-  const dancer = await loadOwnedDancer(req, res);
+  const dancer = await loadDancerForSubmission(req, res);
   if (!dancer) return;
 
   const { ok, errors, values } = cleanCandidateInput(req.body || {});

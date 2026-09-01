@@ -157,6 +157,12 @@ async function findCorroborating(sdb, s) {
       AND user_id != ?
       AND dancer_id != ?
       AND status IN ('submitted', 'accepted')
+      -- A pending claimant's entry cannot corroborate anyone (M8). This is
+      -- the direction that is easy to miss: blocking only HER promotion
+      -- would still let her row promote a stranger's submission, since
+      -- corroboration promotes BOTH partners. Whether she is really that
+      -- child's parent is unanswered, so her agreement is not yet evidence.
+      AND IFNULL(unverified_household, 0) = 0
     ORDER BY created_at ASC`,
     [s.id, s.event_id, s.event_candidate_id, s.performance_name_key,
      s.studio_id, s.group_size, s.user_id, s.dancer_id]);

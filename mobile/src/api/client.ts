@@ -26,6 +26,9 @@ export interface HouseholdDancer {
   unique_id: string;
   name: string;
   award_count: number;
+  /** 'owner' — the claim was approved. 'pending_claim' — she has asked and
+   *  nobody has decided yet; she may still record awards, but they wait. */
+  standing: 'owner' | 'pending_claim';
   studios: { id: number; name: string; unique_id: string; is_independent: number }[];
 }
 

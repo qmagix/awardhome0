@@ -86,8 +86,17 @@ export default function TrophyCaseScreen() {
                 : 'It\u2019s being reviewed. You\u2019ll get an email with the outcome.'}
           </Text>
           <Text style={styles.hint}>
-            Once it\u2019s approved you can add missing awards and put photos on the cards.
+            You don\u2019t have to wait to start: awards you add now are saved to your own list and
+            sent automatically the moment your claim is approved. Nobody else can see them before
+            then.
           </Text>
+          <Pressable
+            style={styles.secondary}
+            onPress={() => router.push('/add')}
+            accessibilityRole="button"
+          >
+            <Text style={styles.secondaryText}>Add an award while you wait</Text>
+          </Pressable>
 
           {/* The honest version of "it's being reviewed": when the studio has
               no owner, nobody is reviewing it, and saying so is what makes the

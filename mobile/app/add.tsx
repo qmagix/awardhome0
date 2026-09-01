@@ -228,10 +228,24 @@ export default function AddAwardScreen() {
             onPress={() => setDancerId(d.id)}
             style={[styles.chip, dancerId === d.id && styles.chipOn]}
           >
-            <Text style={dancerId === d.id ? styles.chipTextOn : styles.chipText}>{d.name}</Text>
+            <Text style={dancerId === d.id ? styles.chipTextOn : styles.chipText}>
+              {d.name}{d.standing === 'pending_claim' ? ' · pending' : ''}
+            </Text>
           </Pressable>
         ))}
       </View>
+
+      {/* Say what will actually happen. Recording a weekend you remember is
+          worth doing now; pretending it was submitted when it is waiting on a
+          claim is how families conclude their entries vanished. */}
+      {dancerId !== null
+        && dancers.find(d => d.id === dancerId)?.standing === 'pending_claim' && (
+        <Text style={styles.hint}>
+          Your claim on this dancer is still being confirmed, so awards you add are saved to your
+          own list and sent automatically once it is approved. Nobody else can see them before
+          then — nothing is lost by writing the weekend down now.
+        </Text>
+      )}
       {/* The studio is never asked for — it comes from the dancer's
           affiliation, which is what keeps duplicates out of the archive. */}
       {dancerId !== null && (

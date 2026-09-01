@@ -170,9 +170,15 @@ router.post('/claim/dancer/:id', requireAuth, async (req, res) => {
   }
   const user = req.session.user;
 
+  // Route by COMPETENCE, not by paperwork: whether a code was supplied does
+  // not change who is able to judge whether someone is a child's parent. The
+  // director can; an AwardHome reviewer cannot. `route` was already computed
+  // above and was previously discarded here — which meant a codeless claim
+  // filed on the web went to AwardHome while the identical claim filed from
+  // the app went to the studio. Same product decision, two behaviours.
   await db.run(
     'INSERT INTO dancer_claims (user_id, dancer_id, proof_text, status, studio_id, code_valid) VALUES (?, ?, ?, ?, ?, ?)',
-    [user.id, dancer.id, proof_text, 'pending', codeMatch.valid ? codeMatch.studio.id : null, codeMatch.valid ? 1 : 0]);
+    [user.id, dancer.id, proof_text, 'pending', route.studioId, codeMatch.valid ? 1 : 0]);
 
   // A second household on the same dancer makes BOTH claims contested, and a
   // contested claim leaves the studio queue entirely — a director must never
@@ -182,12 +188,17 @@ router.post('/claim/dancer/:id', requireAuth, async (req, res) => {
     return res.send(`<script>alert("Claim submitted. Someone else has also claimed this dancer, so the AwardHome team will sort it out directly rather than asking your studio to choose — we'll email you with the outcome."); window.location.href="/dancer/${dancer.unique_id}";</script>`);
   }
 
-  if (codeMatch.valid) {
+  if (route.routedTo === 'studio' && route.studio) {
     notifyStudioOfProfileClaim(db, {
-      studio: codeMatch.studio, dancer,
+      studio: route.studio, dancer,
       claimantEmail: user.email, relationship,
     });
-    return res.send(`<script>alert("Claim submitted! Since you used ${JSON.stringify(codeMatch.studio.name).slice(1, -1)}'s claim code, your studio director can confirm it directly — you'll get an email when it's approved."); window.location.href="/dancer/${dancer.unique_id}";</script>`);
+    const who = JSON.stringify(route.studio.name).slice(1, -1);
+    return res.send(`<script>alert("Claim submitted! ${who} can confirm it directly — they know which families belong to which dancers — and you'll get an email when they do."); window.location.href="/dancer/${dancer.unique_id}";</script>`);
+  }
+  if (route.routedTo === 'waiting_for_studio' && route.unclaimedStudio) {
+    const who = JSON.stringify(route.unclaimedStudio.name).slice(1, -1);
+    return res.send(`<script>alert("Claim submitted. ${who} hasn't claimed its studio page yet, so there is nobody there to confirm it — if you let your director know, they can claim the studio and approve you. In the meantime you can still record awards; they'll be submitted once your claim is approved."); window.location.href="/dancer/${dancer.unique_id}";</script>`);
   }
   return res.send(`<script>alert("Claim submitted successfully! Our admins will review your request shortly — you'll get an email with the decision."); window.location.href="/dancer/${dancer.unique_id}";</script>`);
 });

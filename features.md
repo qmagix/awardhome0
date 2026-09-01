@@ -1309,6 +1309,56 @@ The trophy case returns `myClaim` for a signed-in caller, so the app shows
 where the claim stands and what happens next rather than a button that makes
 things worse.
 
+### Queuing while you wait (M8)
+A pending claimant may enter awards. They stage; they do not publish.
+
+Her premise is right — the staging file is separate, nothing in it is public,
+and promotion is the only door — but it was not true of the system as built:
+`runAutoPromotion` fires synchronously when a submission is created, and two of
+its paths need no human at all. So staging had two trapdoors, and both had to
+be closed before letting an unconfirmed household in.
+
+- **Independent auto-approval** publishes immediately, because an independent
+  dancer has no director to review anything. An unconfirmed household would
+  have written canonical awards onto a child it had no established
+  relationship to.
+- **Corroboration** promotes *both* partners when two unrelated households
+  describe the same result. This is the direction that is easy to miss:
+  blocking only her own promotion would still leave her row matchable, so her
+  entry would publish a *real* family's submission. Whether she is that child's
+  parent is exactly what has not been answered, so her agreement is not yet
+  evidence.
+
+`award_submissions.unverified_household` records that a submission was made by
+a household whose relationship to the dancer was not established. It is a fact
+about the submission at the time, and it is cleared by the event that
+establishes the relationship — the claim being approved — which then re-runs
+auto-promotion over everything she queued. One decision by one director
+releases a season of entries. A rejected claim withdraws them instead
+(`withdrawn`, never deleted: the row is the audit trail, and nothing was ever
+public).
+
+Queued entries are held out of **both** reviewer queues, for different
+reasons. The studio's, because the prerequisite question is already in front of
+that director as a profile claim, and answering it releases everything at once —
+listing them separately would put content from unconfirmed strangers in the
+scarcest inbox the product has and ask for the same judgment twice. AwardHome's,
+because AwardHome cannot judge parentage at all; that is why dancer claims route
+to studios in the first place, and reviewing her awards while that is open would
+be rubber-stamping on a child-safety surface.
+
+Standing is decided in `utils/claims.js` (`householdStanding`) and consumed by
+`validateSubmission`, so the web form and the mobile API cannot drift on the one
+rule that governs who may write on a child's behalf. `/me` returns `standing`
+per dancer so the app can promise the right thing: "saved to your own list and
+sent when your claim is approved" is a different promise from "pending review".
+
+**Fixed in passing:** the web claim route computed `routeDancerClaim(...)` and
+then discarded it, inserting a studio only when a claim code was supplied. A
+codeless claim filed on the web went to AwardHome while the identical claim from
+the app went to the director — the same product decision behaving two ways. The
+smoke test for the release path is what surfaced it.
+
 ### The waiting room
 A pending claimant cannot submit anything yet, so the page she is left on has
 to be worth the wait on its own — she is the only person in the system who can

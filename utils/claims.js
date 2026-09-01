@@ -207,6 +207,39 @@ async function routeDancerClaim(db, dancerId, codeMatch) {
   };
 }
 
+/**
+ * What standing does this household have over this dancer?
+ *
+ *   'owner'         — the claim was approved; she manages the profile.
+ *   'pending_claim' — she has asked, and nobody has decided yet.
+ *   null            — a stranger.
+ *
+ * The distinction exists because the two questions are different. "May she
+ * PUT SOMETHING IN STAGING?" and "may that thing become a canonical award?"
+ * were the same question only as long as staging was unreachable to anyone
+ * but an owner. A pending claimant on an unclaimed studio can be waiting
+ * indefinitely — 21,693 of 21,695 real studios have no owner to decide — and
+ * a weekend's results are gone from memory long before that resolves. Letting
+ * her queue costs nothing: staging is a separate file, nothing there is
+ * public, and promotion remains the only door.
+ *
+ * A contested claim still counts as pending here. Both households may queue;
+ * neither promotes, because promotion refuses a contested dancer outright.
+ */
+async function householdStanding(db, dancerId, userId) {
+  if (!userId) return null;
+  const dancer = await db.get('SELECT claimed_by_user_id FROM dancers WHERE id = ?', [dancerId]);
+  if (!dancer) return null;
+  if (dancer.claimed_by_user_id === userId) return 'owner';
+  try {
+    const claim = await db.get(
+      "SELECT 1 AS x FROM dancer_claims WHERE dancer_id = ? AND user_id = ? " +
+      "AND status IN ('pending', 'contested') LIMIT 1", [dancerId, userId]);
+    if (claim) return 'pending_claim';
+  } catch (e) { /* pre-migration */ }
+  return null;
+}
+
 // Approve a dancer claim: assign ownership, upgrade the role, and settle
 // the queue — any competing pending claims for the same dancer are
 // auto-rejected (otherwise a later approval would silently reassign the
@@ -218,18 +251,80 @@ async function approveDancerClaim(db, claim) {
   await db.run('UPDATE users SET role = "dancer_owner" WHERE id = ? AND role = "user"', [claim.user_id]);
 
   const competing = await db.all(
-    "SELECT id FROM dancer_claims WHERE dancer_id = ? AND status IN ('pending', 'contested') AND id != ?",
+    "SELECT id, user_id FROM dancer_claims WHERE dancer_id = ? AND status IN ('pending', 'contested') AND id != ?",
     [claim.dancer_id, claim.id]);
   for (const c of competing) {
     await db.run('UPDATE dancer_claims SET status = "rejected" WHERE id = ?', [c.id]);
     notifyDancerClaimDecision(db, c.id, false);
+    // The losing household's queue goes with the claim. Left alone it would
+    // sit in staging forever, attached to a dancer they were just told is not
+    // theirs — and would still be matchable as somebody's corroboration.
+    await withdrawQueuedSubmissions(c.user_id, claim.dancer_id);
   }
   notifyDancerClaimDecision(db, claim.id, true);
+
+  // The relationship is now established, so the queue she built while waiting
+  // stops being unverified — and gets the auto-promotion pass it was held out
+  // of. This is the payoff of letting her queue at all: one decision by one
+  // director releases a season's worth of entries at once.
+  await releaseQueuedSubmissions(claim.user_id, claim.dancer_id, db);
+}
+
+/**
+ * Clear the unverified marker on a newly-confirmed household's staged
+ * submissions and run each through auto-promotion.
+ *
+ * Required lazily: promotion.js reaches into staging and canonical both, and
+ * claims.js is required by routes that have no business loading that. Failure
+ * is logged and swallowed — a claim approval must not fail because a
+ * submission could not be promoted; the reviewer queue is the backstop.
+ */
+async function releaseQueuedSubmissions(userId, dancerId, dbIn) {
+  try {
+    const { openSubmissionsDb } = require('./submissionsDb');
+    const { runAutoPromotion } = require('./promotion');
+    const sdb = await openSubmissionsDb();
+    const rows = await sdb.all(
+      "SELECT id FROM award_submissions WHERE user_id = ? AND dancer_id = ? " +
+      "AND unverified_household = 1 AND status = 'submitted'", [userId, dancerId]);
+    if (!rows.length) return;
+    await sdb.run(
+      "UPDATE award_submissions SET unverified_household = 0, updated_at = CURRENT_TIMESTAMP " +
+      'WHERE user_id = ? AND dancer_id = ? AND unverified_household = 1', [userId, dancerId]);
+    for (const r of rows) {
+      try { await runAutoPromotion({ submissionId: r.id, db: dbIn }); }
+      catch (e) { console.error('[claims] release auto-promotion failed:', e.message); }
+    }
+  } catch (e) {
+    console.error('[claims] releasing queued submissions failed:', e.message);
+  }
+}
+
+/**
+ * A rejected claimant's queue is withdrawn, not left to rot.
+ *
+ * Withdrawn rather than deleted: the row is the audit trail of what was
+ * entered and by whom, and the household ledger that counted it is
+ * append-only. Nothing was ever public, so nothing is unpublished.
+ */
+async function withdrawQueuedSubmissions(userId, dancerId) {
+  try {
+    const { openSubmissionsDb } = require('./submissionsDb');
+    const sdb = await openSubmissionsDb();
+    await sdb.run(
+      "UPDATE award_submissions SET status = 'withdrawn', updated_at = CURRENT_TIMESTAMP " +
+      "WHERE user_id = ? AND dancer_id = ? AND unverified_household = 1 AND status = 'submitted'",
+      [userId, dancerId]);
+  } catch (e) {
+    console.error('[claims] withdrawing queued submissions failed:', e.message);
+  }
 }
 
 async function rejectDancerClaim(db, claimId) {
+  const claim = await db.get('SELECT user_id, dancer_id FROM dancer_claims WHERE id = ?', [claimId]);
   await db.run('UPDATE dancer_claims SET status = "rejected" WHERE id = ?', [claimId]);
   notifyDancerClaimDecision(db, claimId, false);
+  if (claim) await withdrawQueuedSubmissions(claim.user_id, claim.dancer_id);
 }
 
 // Layer-3 rogue-studio deterrent: when a studio owner attaches a CLAIMED
@@ -261,6 +356,7 @@ async function notifyRosterAttach(db, dancerId, studioId) {
 module.exports = {
   domainsMatch, approveStudioClaim,
   matchDancerClaimCode, markContestedClaims, isDancerContested, routeDancerClaim,
+  householdStanding, releaseQueuedSubmissions, withdrawQueuedSubmissions,
   approveDancerClaim, rejectDancerClaim,
   notifyDancerClaimDecision, notifyStudioOfProfileClaim, notifyRosterAttach,
 };
