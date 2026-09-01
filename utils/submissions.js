@@ -204,6 +204,21 @@ async function validateSubmission(db, input, { dancerId, userId }) {
   const groupSize = GROUP_SIZE_BY_KEY.get(normalizeText(input.group_size) || '');
   if (!groupSize) errors.push('Group size is required — it decides how the award is recorded.');
 
+  // An event session batches a weekend (utils/eventSessions.js). Validated,
+  // not trusted: the id arrives from a client, and accepting an arbitrary
+  // string would let one household file submissions into another's batch.
+  let eventSessionId = normalizeText(input.event_session_id);
+  if (eventSessionId) {
+    const { openSubmissionsDb: openSdb } = require('./submissionsDb');
+    const sdb = await openSdb();
+    const owned = await sdb.get(
+      'SELECT id FROM event_sessions WHERE id = ? AND user_id = ?', [eventSessionId, userId]);
+    // A session that is not this household's is dropped rather than rejected:
+    // the award itself is still fine, and failing the whole submission over
+    // stale batching context would lose a real record for no benefit.
+    if (!owned) eventSessionId = null;
+  }
+
   // The rule that stays firm from v1: no submission floats free of an event.
   // An award without one is unreviewable and unmergeable. But "an event" now
   // means any of three things (M2) — a canonical event, a family-created
@@ -262,7 +277,7 @@ async function validateSubmission(db, input, { dancerId, userId }) {
       studio_id: studioId,
       event_id: event ? event.id : null,
       event_candidate_id: candidate ? candidate.id : null,
-      event_session_id: normalizeText(input.event_session_id),
+      event_session_id: eventSessionId,
       performance_name: performanceName,
       performance_name_key: canonicalizeRoutine(performanceName),
       group_size: groupSize ? groupSize.key : null,
@@ -271,6 +286,13 @@ async function validateSubmission(db, input, { dancerId, userId }) {
       place, award_type: awardType, category, age_division: ageDivision,
       teacher, choreographer, notes,
       cast: uniqueCast,
+      // Card content (M7): the photo and thank-you note a family adds at the
+      // moment they are motivated. Held on the submission because there is no
+      // award to hang it on yet — promotion copies it across.
+      card_photo_object_key: normalizeText(input.card_photo_object_key),
+      card_photo_media_type: normalizeText(input.card_photo_media_type),
+      thank_you_note: normalizeText(input.thank_you_note),
+      card_consent_affirmed: input.card_consent_affirmed ? 1 : 0,
     },
     affiliations,
     event,
@@ -320,6 +342,14 @@ async function createSubmission(value, cast = []) {
       await sdb.run(
         'INSERT OR IGNORE INTO award_submission_dancers (submission_id, name, name_key) VALUES (?, ?, ?)',
         [id, name, nameKey(name)]);
+    }
+    if (value.card_photo_object_key || value.thank_you_note) {
+      await sdb.run(`
+        INSERT INTO award_submission_card_content
+          (submission_id, photo_object_key, photo_media_type, thank_you_note, consent_affirmed)
+        VALUES (?, ?, ?, ?, ?)`,
+        [id, value.card_photo_object_key, value.card_photo_media_type,
+         value.thank_you_note, value.card_consent_affirmed]);
     }
     await recordAction(sdb, value.user_id, 'submission', id);
     await sdb.run('COMMIT');

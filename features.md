@@ -1156,3 +1156,73 @@ Getting this wrong costs a full dependency realignment each time, so it is
 worth asking before choosing: this project went 57 → 56 → 54 before landing.
 `expo-doctor` is 18/18 on 54. Web support (`npm run web`) was added along the
 way as an escape hatch that never has this problem.
+
+## Mobile app: submission, offline, media (2026-09-01)
+Milestone M7 — the app writes. Offline drafts, the Add flow, evidence capture,
+card content, push, and sharing.
+
+### The offline outbox is the milestone
+"A parent adds a weekend of results offline at a venue; all submissions arrive
+exactly once." Exactly-once over an unreliable network is not achievable by
+trying to send once — so the client doesn't try:
+
+> `client_submission_id` is minted when the draft is **created**, written to
+> disk before the first attempt, and never regenerated. The server is idempotent
+> on `(user, client_submission_id)`. The client's promise is therefore not
+> "send exactly once" but "always send the same id for the same draft" — a
+> promise it can actually keep across a crash mid-request, a timeout that
+> secretly succeeded, and a process death between send and acknowledgement.
+
+A draft may be sent many times; that is expected and harmless. Nine Node tests
+cover it, including the nastiest case — the server succeeded and the reply was
+lost, so the client retries believing it failed and still produces **one**
+award.
+
+Storage is `expo-sqlite`, not AsyncStorage: these rows are a family's only
+record of their child's awards before anything reaches the server, and a JSON
+blob rewritten in full on every change loses everything on a partial write.
+
+A draft that exhausts automatic retries is **parked, never discarded** — it
+stays visible with a manual retry, because silently dropping someone's record
+is worse than a stuck queue. One bad draft never blocks the rest of a weekend.
+
+### Event sessions: server-issued, get-or-create
+A weekend batches under one session id so a reviewer can approve it in one pass
+and convergence can see across households. The id comes from the **server**
+(`POST /event-sessions`), because a local one cannot survive two devices or a
+reinstall mid-weekend — each would invent its own "weekend" for one event.
+Asking twice rejoins the same session rather than starting a second.
+
+A session id belonging to another household is **dropped, not rejected**: the
+award is still a real record, and failing the whole submission over stale
+batching context would lose it for no benefit.
+
+**Picking the event needs signal, once per weekend** — an event has to be
+resolved against the archive or it becomes a duplicate. Everything after that is
+fully offline. That split is the whole reason the flow works at a venue.
+
+### Card content captured at the moment of motivation
+The photo and thank-you note ride on the *submission*, not the award — there is
+no award yet, and there may never be one if a reviewer rejects it. Promotion
+copies them across at status `pending`, into exactly the same moderation path as
+content added from the web. Submitting publishes nothing, and a test asserts the
+canonical card tables stay empty until promotion.
+
+### Push: decisions and questions only
+`utils/push.js` sends on confirm, reject and ask — nothing else. No digests, no
+re-engagement. The module has no scheduling or campaign concept on purpose: a
+future engagement ping should have to build that machinery and argue for it
+rather than find it lying around. Sends are best-effort; a failed notification
+never rolls back the decision it was announcing. A `DeviceNotRegistered`
+receipt disables the device.
+
+### Sharing: the link, not a rendered image
+The native share sheet shares the public trophy-case URL, and the web page now
+carries OpenGraph tags so it unfurls properly in a message. `og:image` uses the
+dancer's **approved** card photo — approved being the operative word, since an
+unfurled preview is about as public as an image gets.
+
+Server-generated share *images* are deliberately not built: they need a
+headless browser on the production box, which is an infrastructure decision
+rather than a detail. The link works today, keeps working for someone without
+the app, and costs nothing. **Evidence is never share media.**

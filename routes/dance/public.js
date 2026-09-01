@@ -1517,11 +1517,36 @@ router.get('/dancer/:unique_id', profileLimiter, async (req, res) => {
   // Dancer page designs (cutover 2026-08-24): Rafters chrome (dancer_v2)
   // is the default; ?design=v0 is the classic escape hatch. Independent
   // of ?card_design= (the award-card variant registry) — the two compose.
+  // Link preview for shares (M7). The mobile app shares this URL rather than a
+  // rendered image, so the preview is what a family's friends actually see in
+  // a text message. og:image uses the dancer's APPROVED card photo when there
+  // is one — approved is the operative word: a pending photo has not been
+  // through moderation, and an unfurled preview is about as public as an image
+  // gets.
+  let shareImage = null;
+  try {
+    const approved = await db.get(
+      "SELECT card_photo_url FROM dancers WHERE id = ? AND card_photo_status = 'approved'",
+      [dancer.id]);
+    if (approved && approved.card_photo_url) {
+      shareImage = approved.card_photo_url.startsWith('http')
+        ? approved.card_photo_url
+        : `${BASE_URL}${approved.card_photo_url}`;
+    }
+  } catch (e) { /* pre-migration: no preview image, page still renders */ }
+
   res.render(req.query.design === 'v0' ? 'dancer' : 'dancer_v2', {
     dancer, soloAwards, groupAwards, conventionAwards, yearSections, cardDesign,
     featureNotes, featurePhotos, featureReactions,
     pageTitle: dancer.name,
-    pageDesc: `${dancer.name}'s digital trophy case on AwardHome: ${totalAwardCount} dance awards.`
+    pageDesc: `${dancer.name}'s digital trophy case on AwardHome: ${totalAwardCount} dance awards.`,
+    share: {
+      type: 'profile',
+      title: `${dancer.name} — AwardHome`,
+      description: `${totalAwardCount} dance award${totalAwardCount === 1 ? '' : 's'}, all in one place.`,
+      url: `${BASE_URL}/dancer/${dancer.unique_id}`,
+      image: shareImage,
+    },
   });
 });
 

@@ -45,6 +45,7 @@ const { CORRECTABLE_FIELDS, CORRECTION_REASON_TEXT, canPropose, propose } = requ
 const { markContestedClaims, matchDancerClaimCode } = require('../../utils/claims');
 const { studioDisplayNameSql } = require('../../utils/independents');
 const { issueGrant, storeEvidence, canServe, readEvidence, MAX_BYTES } = require('../../utils/evidence');
+const { openSession, sessionContext } = require('../../utils/eventSessions');
 const { flagOn } = require('../../utils/featureFlags');
 const openapi = require('../../docs/openapi_mobile.json');
 
@@ -319,6 +320,29 @@ router.post('/events/candidates', requireBearer, async (req, res) => {
   });
   if (offered) return res.status(409).json({ error: 'duplicates_found', offered: true, duplicates });
   res.status(201).json({ candidate });
+});
+
+// ---- Event sessions (M7) ---------------------------------------------------
+//
+// A weekend at one competition, batched. Get-or-create by design: a client
+// that lost its local copy — reinstalled, switched devices mid-weekend —
+// rejoins the same session instead of starting a second one.
+router.post('/event-sessions', requireBearer, async (req, res) => {
+  const eventId = parseInt((req.body || {}).event_id, 10) || null;
+  const candidateId = parseInt((req.body || {}).event_candidate_id, 10) || null;
+  const result = await openSession({
+    userId: req.mobileUser.id, eventId, eventCandidateId: candidateId,
+  });
+  if (!result.ok) return fail(res, 400, result.reason, 'An event is required to start a session.');
+  res.status(result.created ? 201 : 200).json({ session: result.session, created: result.created });
+});
+
+// What the session already knows, so the second award of a weekend asks for a
+// routine and a placement and nothing else.
+router.get('/event-sessions/:id', requireBearer, async (req, res) => {
+  const ctx = await sessionContext(req.params.id, req.mobileUser.id);
+  if (!ctx) return fail(res, 404, 'not_found', 'No such session.');
+  res.json(ctx);
 });
 
 // ---- Submissions -----------------------------------------------------------

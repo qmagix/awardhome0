@@ -204,6 +204,36 @@ async function confirmSubmission({ submissionId, reviewerId = null, corrections 
       VALUES (?, 'family_submission', ?, ?, ?, ?, datetime('now'), ?)`,
       [awardId, s.id, s.user_id, level, reviewerId, note]);
 
+    // Card content the family attached at submission time (M7). It could not
+    // be written earlier because there was no award to hang it on — and there
+    // might never have been one. It lands at status 'pending', which puts it
+    // in exactly the same moderation path as content added from the web:
+    // photos wait for the studio (M3), notes for the superadmin queue.
+    // Nothing here publishes anything.
+    const card = await sdb.get(
+      'SELECT * FROM award_submission_card_content WHERE submission_id = ?', [s.id]);
+    if (card) {
+      if (card.photo_object_key) {
+        await db.run(`
+          INSERT OR IGNORE INTO award_card_photos (award_id, dancer_id, photo_url, status, uploaded_by)
+          VALUES (?, ?, ?, 'pending', ?)`,
+          [awardId, s.dancer_id, card.photo_object_key, s.user_id]);
+        // The one-time consent affirmation, recorded where the web flow
+        // records it, so a family is not asked twice for the same dancer.
+        if (card.consent_affirmed) {
+          await db.run(
+            'INSERT OR IGNORE INTO card_photo_consents (user_id, dancer_id) VALUES (?, ?)',
+            [s.user_id, s.dancer_id]);
+        }
+      }
+      if (card.thank_you_note) {
+        await db.run(`
+          INSERT OR IGNORE INTO award_acknowledgements (award_id, dancer_id, message, status, created_by)
+          VALUES (?, ?, ?, 'pending', ?)`,
+          [awardId, s.dancer_id, card.thank_you_note, s.user_id]);
+      }
+    }
+
     await db.run('COMMIT');
   } catch (err) {
     await db.run('ROLLBACK').catch(() => {});
@@ -225,6 +255,16 @@ async function confirmSubmission({ submissionId, reviewerId = null, corrections 
     [awardId, level, reviewerId, note, s.performance_name_key,
      ...CORRECTABLE.filter(f => f in corrections).map(f => s[f]), s.id]);
 
+  // Decisions are worth a notification; nothing else is (design §13).
+  // Fire-and-forget: a push that fails must never undo a published award.
+  try {
+    const dancer = await db.get('SELECT name FROM dancers WHERE id = ?', [s.dancer_id]);
+    require('./push').submissionAccepted(s.user_id, {
+      routine: s.performance_name, dancerName: dancer ? dancer.name : 'your dancer',
+      submissionId: s.id,
+    }).catch(() => {});
+  } catch (e) { /* never blocks the decision */ }
+
   return { ok: true, awardId, created };
 }
 
@@ -238,6 +278,14 @@ async function rejectSubmission({ submissionId, reviewerId, note = null, sdb: sd
     SET status = 'rejected', reviewer_user_id = ?, reviewer_note = ?,
         decided_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
     WHERE id = ?`, [reviewerId, note, submissionId]);
+  try {
+    const full = await sdb.get('SELECT user_id, performance_name FROM award_submissions WHERE id = ?', [submissionId]);
+    if (full) {
+      require('./push').submissionRejected(full.user_id, {
+        routine: full.performance_name, note, submissionId,
+      }).catch(() => {});
+    }
+  } catch (e) { /* never blocks the decision */ }
   return { ok: true };
 }
 
@@ -254,6 +302,14 @@ async function requestInfo({ submissionId, reviewerId, note = null, sdb: sdbIn }
     SET status = 'needs_info', reviewer_user_id = ?, reviewer_note = ?,
         updated_at = CURRENT_TIMESTAMP
     WHERE id = ?`, [reviewerId, note, submissionId]);
+  try {
+    const full = await sdb.get('SELECT user_id, performance_name FROM award_submissions WHERE id = ?', [submissionId]);
+    if (full) {
+      require('./push').submissionNeedsInfo(full.user_id, {
+        routine: full.performance_name, note, submissionId,
+      }).catch(() => {});
+    }
+  } catch (e) { /* never blocks the decision */ }
   return { ok: true };
 }
 

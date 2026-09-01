@@ -72,6 +72,7 @@ async function main() {
   process.env.EVIDENCE_DIR = EVIDENCE_DIR;
 
   const { openDb } = require('../database');
+  const { openSubmissionsDb } = require('../utils/submissionsDb');
   const db = await openDb();
 
   // Feature-gated write paths need their flag on in the copy.
@@ -310,6 +311,74 @@ async function main() {
     check(badBytes.status === 400 && badBytes.json.error === 'unsupported_type',
       'evidence: the bytes are believed, not the Content-Type header',
       'status ' + badBytes.status);
+
+    // ---- M7: event sessions batch a weekend ----
+    const s1 = await api('POST', '/event-sessions', { token: access, body: { event_id: event.id } });
+    const s2 = await api('POST', '/event-sessions', { token: access, body: { event_id: event.id } });
+    check(s1.status === 201 && s2.status === 200 && s1.json.session.id === s2.json.session.id,
+      'a session is get-or-create — asking twice rejoins the weekend, never starts a second one',
+      s1.status + '/' + s2.status);
+
+    const sessionId = s1.json.session.id;
+    const batched = await api('POST', '/submissions', {
+      token: access,
+      body: { ...submitBody, client_submission_id: crypto.randomUUID(), event_session_id: sessionId },
+    });
+    check(batched.status === 201 && batched.json.submission.event_session_id === sessionId,
+      'a submission joins the session', 'status ' + batched.status);
+
+    // A session id belonging to another household must not let one family file
+    // into another's batch.
+    const otherCode2 = await api('POST', '/auth/request-code', { body: { email: 'api-other@test.invalid' } });
+    const other2 = await api('POST', '/auth/verify', {
+      body: { email: 'api-other@test.invalid', code: otherCode2.json.devCode },
+    });
+    const otherDn = await db.run(
+      "INSERT INTO dancers (unique_id, name, is_claimed, claimed_by_user_id) VALUES ('DNC-api-other', 'API Other Dancer', 1, ?)",
+      [u2.lastID]);
+    const stolen = await api('POST', '/submissions', {
+      token: other2.json.accessToken,
+      body: {
+        client_submission_id: crypto.randomUUID(), dancer_id: otherDn.lastID, event_id: event.id,
+        performance_name: 'Stolen Session', group_size: 'solo', event_session_id: sessionId,
+      },
+    });
+    check(stolen.status === 201 && stolen.json.submission.event_session_id === null,
+      'another household\'s session id is dropped, not honoured — and the award still saves',
+      'status ' + stolen.status + ' session=' + (stolen.json.submission || {}).event_session_id);
+
+    const ctx = await api('GET', `/event-sessions/${sessionId}`, { token: access });
+    check(ctx.status === 200 && ctx.json.submissionCount >= 1 && ctx.json.suggested.dancer_id === dn.lastID,
+      'the session carries the weekend\'s context forward as suggestions',
+      'count=' + (ctx.json.submissionCount));
+
+    // ---- M7: card content rides with the submission ----
+    const withCard = await api('POST', '/submissions', {
+      token: access,
+      body: {
+        ...submitBody, client_submission_id: crypto.randomUUID(),
+        performance_name: 'API Card Content Routine',
+        thank_you_note: 'Thank you Miss API!',
+        card_photo_object_key: 'ab/deadbeef.jpg',
+        card_consent_affirmed: true,
+      },
+    });
+    const cardRow = withCard.status === 201
+      ? await (await openSubmissionsDb()).get(
+          'SELECT * FROM award_submission_card_content WHERE submission_id = ?',
+          [withCard.json.submission.id])
+      : null;
+    check(withCard.status === 201 && !!cardRow &&
+          cardRow.thank_you_note === 'Thank you Miss API!' && cardRow.consent_affirmed === 1,
+      'a photo and thank-you note are captured with the submission, before any award exists',
+      'status ' + withCard.status + ' stored=' + !!cardRow);
+
+    // Nothing is published by submitting: the canonical card tables stay empty
+    // until a reviewer promotes the award.
+    const prematureCard = await db.get(
+      "SELECT COUNT(*) AS n FROM award_card_photos WHERE photo_url = 'ab/deadbeef.jpg'");
+    check(prematureCard.n === 0,
+      'card content is NOT written to the award tables by submitting — promotion does that, at pending');
 
     // ---- events picker ----
     const nearby = await api('GET', '/events/nearby?q=dance');

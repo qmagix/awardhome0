@@ -268,6 +268,48 @@ async function initSubmissionsSchema(db) {
     CREATE INDEX IF NOT EXISTS idx_award_submissions_converge_candidate
       ON award_submissions(event_candidate_id, performance_name_key, studio_id, group_size);
 
+    -- A weekend at one competition, batched (design §6.7, plan M7).
+    --
+    -- The session id is issued by the SERVER, not minted locally, and that is
+    -- the change from v1. A local-only session would let two devices, or one
+    -- device reinstalled mid-weekend, produce two "weekends" for the same
+    -- event — and the whole point is that a reviewer approves a weekend in one
+    -- pass and convergence can see across households.
+    CREATE TABLE IF NOT EXISTS event_sessions (
+      id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL,
+      event_id INTEGER,
+      event_candidate_id INTEGER,
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      last_used_at DATETIME
+    );
+    CREATE INDEX IF NOT EXISTS idx_event_sessions_user
+      ON event_sessions(user_id, created_at);
+    -- One live session per household per event: asking twice returns the same
+    -- id, so a client that loses its local copy rejoins the weekend instead of
+    -- starting a second one.
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_event_sessions_unique
+      ON event_sessions(user_id, IFNULL(event_id, -1), IFNULL(event_candidate_id, -1));
+
+    -- Card content offered at submission time (design §6.3/§11, plan M7).
+    --
+    -- Kept on the SUBMISSION, not written to award_card_photos /
+    -- award_acknowledgements directly, because at submission time there is no
+    -- award yet — and there may never be one, if a reviewer rejects it.
+    -- Promotion copies these across once the canonical award exists, at
+    -- status 'pending', so they enter the SAME moderation path as content
+    -- added from the web. This is the only part of the record organizers
+    -- never supply, so it is captured at the moment the family is motivated.
+    CREATE TABLE IF NOT EXISTS award_submission_card_content (
+      submission_id INTEGER PRIMARY KEY,
+      photo_object_key TEXT,
+      photo_media_type TEXT,
+      thank_you_note TEXT,
+      consent_affirmed INTEGER NOT NULL DEFAULT 0,
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
     -- Per-household abuse ledger (design §9 "abuse limits"). One row per
     -- counted action; the limiter counts rows in a rolling day rather than
     -- keeping a mutable counter, so a limit change applies retroactively and

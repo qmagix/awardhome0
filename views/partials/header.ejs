@@ -6,6 +6,26 @@
   <title><%= typeof pageTitle !== 'undefined' && pageTitle ? pageTitle + ' — AwardHome' : 'AwardHome | Dance' %></title>
   <% if (typeof pageDesc !== 'undefined' && pageDesc) { %><meta name="description" content="<%= pageDesc %>"><% } %>
   <% if (typeof csrfToken !== 'undefined' && csrfToken) { %><meta name="csrf-token" content="<%= csrfToken %>"><% } %>
+  <%# Link previews. A shared trophy case should look like something in a text
+      message rather than a bare URL — this is the sharing path the mobile app
+      uses (M7), because a server-rendered share IMAGE would need a headless
+      browser on the box and that is a real infrastructure decision, not a
+      detail. Only pages that pass `share` opt in. %>
+  <% if (typeof share !== 'undefined' && share) { %>
+  <meta property="og:type" content="<%= share.type || 'website' %>">
+  <meta property="og:site_name" content="AwardHome">
+  <meta property="og:title" content="<%= share.title %>">
+  <% if (share.description) { %><meta property="og:description" content="<%= share.description %>"><% } %>
+  <% if (share.url) { %><meta property="og:url" content="<%= share.url %>"><% } %>
+  <% if (share.image) { %>
+  <meta property="og:image" content="<%= share.image %>">
+  <meta name="twitter:card" content="summary_large_image">
+  <% } else { %>
+  <meta name="twitter:card" content="summary">
+  <% } %>
+  <meta name="twitter:title" content="<%= share.title %>">
+  <% if (share.description) { %><meta name="twitter:description" content="<%= share.description %>"><% } %>
+  <% } %>
   <script src="/js/csrf.js"></script>
   <link rel="stylesheet" href="/css/styles.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">

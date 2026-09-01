@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, Share, StyleSheet, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import Constants from 'expo-constants';
 import { getTrophyCase, type Award } from '@/api/client';
 import { useSession } from '@/ui/Session';
 import { theme } from '@/ui/theme';
@@ -65,6 +66,25 @@ export default function TrophyCaseScreen() {
       )}
       {isMine && <Text style={styles.mine}>You manage this profile.</Text>}
 
+      {/* Sharing sends the public URL, not a rendered image. The web page
+          carries OpenGraph tags so it unfurls properly in a message — and the
+          link keeps working for someone who does not have the app. Evidence is
+          never share media; only the public trophy case is shared. */}
+      {dancer && (
+        <Pressable
+          style={styles.secondary}
+          onPress={() => {
+            const base = (Constants.expoConfig?.extra?.['apiBaseUrl'] as string | undefined)
+              ?? 'https://awardhome.com';
+            const url = `${base}/dancer/${id}`;
+            void Share.share({ message: `${dancer.name}'s trophy case: ${url}`, url });
+          }}
+          accessibilityRole="button"
+        >
+          <Text style={styles.secondaryText}>Share this trophy case</Text>
+        </Pressable>
+      )}
+
       <FlatList
         data={awards}
         keyExtractor={(a) => String(a.id)}
@@ -116,4 +136,9 @@ const styles = StyleSheet.create({
   routine: { color: theme.text, fontSize: 17, fontWeight: '600', marginTop: 2 },
   meta: { color: theme.muted, fontSize: 13, marginTop: 3 },
   badge: { color: theme.muted, fontSize: 12, marginTop: theme.space(1), fontStyle: 'italic' },
+  secondary: {
+    marginTop: theme.space(1.5), borderColor: theme.border, borderWidth: 1,
+    borderRadius: theme.radius, padding: theme.space(1.25), alignItems: 'center',
+  },
+  secondaryText: { color: theme.text },
 });

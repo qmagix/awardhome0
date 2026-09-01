@@ -94,3 +94,52 @@ export function getActivity(): Promise<{ activity: ActivityItem[] }> {
 export function listSubmissions(): Promise<{ submissions: Submission[]; nextCursor: number | null }> {
   return auth.request('/submissions');
 }
+
+// ---- M7: sessions, evidence, sharing --------------------------------------
+
+export interface EventSession {
+  id: string;
+  event_id: number | null;
+  event_candidate_id: number | null;
+  created_at: string;
+}
+
+/** Get-or-create the session for a weekend. Needs network — which is why the
+ *  Add flow asks for the event once, up front, and then works offline. */
+export function openEventSession(
+  ref: { event_id?: number; event_candidate_id?: number },
+): Promise<{ session: EventSession; created: boolean }> {
+  return auth.request('/event-sessions', { method: 'POST', body: JSON.stringify(ref) });
+}
+
+export function findEvents(params: {
+  lat?: number; lng?: number; date?: string; q?: string;
+}): Promise<{ options: EventOption[] }> {
+  const qs = new URLSearchParams(
+    Object.entries(params).filter(([, v]) => v !== undefined && v !== null)
+      .map(([k, v]) => [k, String(v)]),
+  ).toString();
+  return auth.publicRequest(`/events/nearby?${qs}`);
+}
+
+/** Two steps by design: the grant is what lets the storage driver move to
+ *  S3/R2 later without the client changing. */
+export async function uploadEvidence(
+  submissionId: number,
+  file: { uri: string; mimeType?: string },
+): Promise<{ evidenceId: number; objectKey: string }> {
+  const grant = await auth.request<{ grant: string; uploadUrl: string }>(
+    `/submissions/${submissionId}/evidence`, { method: 'POST' },
+  );
+  const bytes = await (await fetch(file.uri)).blob();
+  const res = await auth.authedFetch('/uploads', {
+    method: 'POST',
+    headers: {
+      'Content-Type': file.mimeType ?? 'application/octet-stream',
+      'X-Upload-Grant': grant.grant,
+    },
+    body: bytes as unknown as BodyInit,
+  });
+  if (!res.ok) throw new Error('Upload failed');
+  return (await res.json()) as { evidenceId: number; objectKey: string };
+}

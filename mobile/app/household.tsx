@@ -11,8 +11,9 @@ import { theme } from '@/ui/theme';
  * see that the claim exists, not land somewhere generic that looks like
  * nothing happened.
  *
- * Adding awards is M7. This screen deliberately offers no such button rather
- * than a disabled one that teaches families the app is broken.
+ * As of M7 it is also the way into the Add flow and the outbox — "waiting to
+ * send" is deliberately visible, because "it saved" and "it reached AwardHome"
+ * are different facts and a family at a venue deserves to know which is true.
  */
 export default function HouseholdScreen() {
   const { ready, signedIn, email, dancers, signOut } = useSession();
@@ -79,6 +80,15 @@ export default function HouseholdScreen() {
           ))}
         </View>
       )}
+
+      <Pressable style={styles.cta} onPress={() => router.push('/add')}>
+        <Text style={styles.ctaText}>Add a missing award</Text>
+      </Pressable>
+      <Pressable onPress={() => router.push('/outbox')}>
+        <Text style={[styles.link, { textAlign: 'center', marginTop: theme.space(1.5) }]}>
+          Waiting to send →
+        </Text>
+      </Pressable>
 
       <Pressable onPress={() => void signOut()} style={styles.signOut}>
         <Text style={styles.link}>Sign out</Text>
