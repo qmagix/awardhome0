@@ -84,10 +84,13 @@ clean" always means `npm run gate` passes **with new smoke coverage added**.
 **Acceptance:** a family completes the prototype Add flow for a real award
 without assistance, and the independent-dancer decision is written down.
 
-> **Blocking decision.** The independent-dancer path touches existing
-> invariants: `resolveDancer` requires a `studioId`, and both solo-repair
-> scripts resolve ambiguity by matching dancer studio to award studio. Resolve
-> this in M0 or M1 silently inherits it.
+> **Blocking decision — CLOSED 2026-08-31.** Independents get a synthetic
+> studio each (unique-named, `is_independent`, hidden from studio surfaces);
+> families create the identity, organizers verify on (event, name, award);
+> unmatched organizer awards import with the dancer link unresolved;
+> submissions auto-approve but stay `family_submitted` and out of rankings until
+> corroborated. See design §6.2.1–§6.2.3. The migration it creates is scoped
+> into M1 below.
 
 ### M1 — Submission staging, web-first
 
@@ -103,6 +106,21 @@ without assistance, and the independent-dancer decision is written down.
 - A minimal **web** submission form behind the existing auth, for a claimed
   dancer, reachable from the dancer page.
 - Per-household daily rate limits (submissions, dancer links).
+- **Independent-dancer migration** (design §6.2.1). Convert the 91 existing
+  `Independent, <region>` rosters — YAGP's convention, carrying 459 dancers — to
+  per-dancer synthetic studios with an `is_independent` flag, excluded from the
+  studio directory, featured rotation, rankings, and homepage cards, with no
+  public studio page.
+
+> **Do this before family entry opens, not after.** A shared regional roster
+> plus `auto_merge_dancer_profiles` — which groups on `(studio_id, clean name)`
+> — is a latent conflation of two real children. Four same-name pairs already
+> sit on those rosters (`relinda kozol`, `takdanai mcleod-smith`, `diane
+> doberstein`, `zixi yu`). They survive only because the script's third
+> condition, *a shared canonical routine in the same year*, is unmet — and
+> family entry is precisely what supplies routines. Route those four to a human:
+> each is either one person entered twice or two different children, and only a
+> person can tell.
 
 **Acceptance**
 - A claimed family can submit an award for an existing event; it appears as
@@ -111,6 +129,9 @@ without assistance, and the independent-dancer decision is written down.
   duplicate.
 - Group size is required and stored; a group submission records
   `cast_complete = false`.
+- No `Independent, <region>` roster remains; no synthetic independent studio is
+  reachable from a studio-facing surface; `auto_merge_dancer_profiles` still
+  reports zero afterwards.
 
 **Gate:** smoke covers submit → pending-visible → idempotent-retry → not-public.
 
@@ -285,6 +306,7 @@ All idempotent `CREATE TABLE IF NOT EXISTS` / try-catch `ALTER TABLE` in
 | Milestone | Change |
 |---|---|
 | M1 | Staging DB file; `award_submissions`, `award_submission_dancers`, `award_submission_evidence`, `award_provenance` |
+| M1 | `studios.is_independent`; per-dancer synthetic studios replacing the 91 shared `Independent, <region>` rosters |
 | M2 | `event_candidates` (+ dedup cluster) |
 | M3 | Submission status/verification columns; provenance writes on promotion |
 | M4 | `award_corrections`; convergence index on `(event, routine, studio, group_size)` |
@@ -323,8 +345,10 @@ Every new table needs an orphan story, since foreign keys are off.
 
 ## 9. Decision and compliance gates
 
-1. **M0 — independent-dancer model.** Blocking; touches `resolveDancer` and both
-   solo-repair scripts.
+1. ~~**M0 — independent-dancer model.**~~ **Closed 2026-08-31** (design
+   §6.2.1–§6.2.3). Remaining work is the M1 migration, not a decision. Note the
+   detection caveat: `IndepenDANCE Studio` is a real studio, so independent
+   markers need a curated per-organization list, never a regex on `independ`.
 2. **M0 — event candidate lifecycle.** Visibility radius, date window, promotion
    authority, auto-merge on organizer import.
 3. **M2 — reviewer split.** What only AwardHome may decide.

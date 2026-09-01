@@ -140,10 +140,8 @@ source — better than resolving it afterwards.
 Three cases must be designed explicitly:
 
 - **Rostered dancer (the common case).** Studio is derived. No input.
-- **Independent dancer.** The family self-identifies as independent. This is
-  already representable — **2,294 awards currently carry no studio and 493
-  dancers sit on no roster** — but see the warning in §16.1: several server
-  rules assume a studio exists.
+- **Independent dancer.** The family self-identifies as independent. **Decided
+  2026-08-31 — see §6.2.1 for the full model.**
 - **Multi-studio dancer.** Switchers and cross-studio collaborations. Only **7**
   dancers are on more than one studio today, so this is rare, but the Add flow
   must ask *which* studio a routine was danced for rather than guessing. Note
@@ -152,6 +150,117 @@ Three cases must be designed explicitly:
 
 A studio switch mid-season is normal and must not rewrite history: past awards
 keep the studio they were danced for.
+
+#### 6.2.1 The independent-dancer model *(decided 2026-08-31)*
+
+Three options were weighed: no studio at all, a synthetic studio per
+independent, or one shared "Independent" studio. **A synthetic studio per
+independent wins**, because it makes "independent" a *data* case rather than a
+*code* case — `resolveDancer`, both solo-repair scripts, and the convergence key
+all keep working on a studio key, with no parallel branch to maintain forever.
+
+This is not a new pattern here: `CLAUDE.md` already establishes pseudo-studios
+for cross-studio collaborations.
+
+**Why not a shared "Independent" studio — and why this is urgent.** YAGP already
+does exactly that, regionally: `Independent, CA` (147 awards), `Independent,
+Poland`, `Independent, TX`, `Independent, China`, and so on — **91 such studios
+carrying 459 dancers**. That puts every unaffiliated dancer in a region on one
+roster, and `auto_merge_dancer_profiles` groups by `(studio_id, clean name)`.
+
+**Four same-name collisions already exist on those rosters** — `relinda kozol`
+(Independent, Canada), `takdanai mcleod-smith` (Independent, Australia), `diane
+doberstein` (Independent, CA), `zixi yu` (Independent, NJ). They have not been
+fused only because that script's third condition — *a shared canonical routine
+in the same year* (Q's rule, 2026-08-30) — is not met.
+
+Family entry supplies routines. That is precisely the missing third condition.
+So the shared-roster model is a latent conflation of real children waiting for
+this app to trigger it, which is why the migration below is scoped into M1 and
+not deferred.
+
+**Two conditions, or the synthetic model degenerates into the shared one:**
+
+1. **The synthetic studio name must be globally unique** — include the dancer's
+   `unique_id`, never just their name. Two independents both named "Emma Smith"
+   would otherwise create two identically-named studio rows,
+   `merge_studio_aliases` would merge them on the case tier, and the shared
+   roster returns one step later.
+2. **Add an `is_independent` flag and exclude these rows from every
+   studio-facing surface** — `/dance/studios`, featured rotation, rankings,
+   homepage cards — and never render a public studio page for one; redirect to
+   the dancer. Otherwise the directory fills with thousands of one-dancer
+   "studios".
+
+**Migration (M1).** The 91 existing `Independent, <region>` rosters convert to
+per-dancer synthetic studios. The four same-name collisions go to a human: each
+pair is either one person entered twice or two different children, and only a
+person can tell.
+
+#### 6.2.2 Who may create an independent identity *(decided 2026-08-31)*
+
+**Families create; organizers verify.** This is the inverse of the affiliated
+case, and it follows from what the scraper can actually know.
+
+When an organizer publishes an award for an unaffiliated dancer, the importer
+has a name and no disambiguator. It cannot tell a returning independent from a
+new one sharing a name. Making it guess produces either duplicate people or —
+far worse — two real children merged. The same principle removed the StarQuest
+extractor's "very crude fallback": never invent identity from insufficient
+evidence.
+
+So:
+
+- **Only a family creates an independent dancer identity.** Importers never do.
+- **Organizer data verifies.** A published result matching an
+  already-entered independent on **(event, dancer name, award)** upgrades that
+  record's verification level. The key is sound for the same reason
+  `resolveDancer` already tie-breaks on routine: collisions inside a single
+  event are vanishingly rare.
+- **When two same-name independents do appear at one event, queue it — never
+  pick.** A duplicate is recoverable; a wrong merge conflates two children.
+
+**Unmatched organizer awards are still imported.** If no family has entered it,
+the published result remains a real, verified fact: create the **award** and
+leave the dancer link **unresolved**, rather than dropping it or inventing a
+profile. There is precedent — 2,294 awards already carry no studio and the NYCDA
+rows carry no dancer links. An award without a resolved dancer is a legitimate
+archive entry; an invented person is not. A later family entry links it, which
+is the verification arriving from the other direction.
+
+Archive completeness is the moat; silently dropping independent results would
+shrink it at exactly the events families care most about.
+
+**Detecting "independent" needs a curated list, not a regex.** YAGP's
+`Independent, <region>` is clean, but across the corpus the marker arrives as
+`INDEPENDENT - MCGEE`, `Independant, MD`, `Iindependent, CO` (typo),
+`Independant Dancer, MI` — and **`IndepenDANCE Studio` is a real studio**. A
+pattern match on `independ` would dissolve a genuine studio's identity. Maintain
+a reviewed per-organization marker list; this is the §2b naming trap from
+`docs/major_award_policy.md` in a new place.
+
+#### 6.2.3 Auto-approval for independents *(decided 2026-08-31)*
+
+Independent submissions are **auto-approved and labelled as such**. There is no
+studio owner to review them, so the §7.1 reviewer economics simply do not apply.
+
+Separate latency from trust:
+
+- **Publish immediately** — that is what auto-approval means.
+- **Label honestly** — `family_submitted`, never `studio_confirmed`. Accurate,
+  not harsh, consistent with the no-shame-labels principle.
+- **Per-household rate limits still apply.** Self-identification is
+  unverifiable, so without limits "independent" becomes the route around review.
+- **Anomalies still queue** to AwardHome — auto-approve is the default, not an
+  override for conflicting facts or suspected duplicates.
+- **Hold out of competitive aggregates** (rankings, top-studio stats) until
+  corroborated. Appearing in one's own trophy case is a different claim from
+  being ranked against reviewed data.
+
+Independents end up with a *stronger* ladder than affiliated dancers:
+`family_submitted` → organizer data matches → **`source_verified`**, which is
+above `studio_confirmed`. Auto-approval therefore costs nothing in eventual
+trust; it only changes latency.
 
 ### 6.3 Add an award
 
@@ -548,15 +657,16 @@ or false dancer links is a product regression.
 
 ## 16. Decisions Required Before Implementation
 
-### 16.1 The independent-dancer model ⚠ *new in v2*
-Self-identifying as independent is representable — 2,294 awards already carry no
-studio and 493 dancers sit on no roster — but **several server rules assume a
-studio exists**: `resolveDancer` requires a `studioId`; the solo primary-dancer
-repair resolves ambiguity by matching a dancer's studio to the award's studio;
-the collapsed-solo repair uses the same key. An independent dancer bypasses all
-three. Decide whether independents get a synthetic "Independent" studio row per
-dancer, a nullable path with its own resolution rules, or are deferred past MVP.
-This is the one v2 change that touches existing invariants.
+### 16.1 The independent-dancer model ✔ *closed 2026-08-31*
+**Decided:** synthetic studio per independent (unique-named, `is_independent`,
+hidden from studio surfaces); families create identities, organizers verify on
+(event, name, award); unmatched organizer awards import with the dancer link
+unresolved; submissions auto-approved but labelled `family_submitted` and held
+out of rankings until corroborated. Full model in §6.2.1–§6.2.3.
+
+**Carries into M1 as work, not just policy:** migrate the 91 existing
+`Independent, <region>` rosters (459 dancers) to per-dancer studios, and route
+the 4 existing same-name collisions to a human.
 
 ### 16.2 Event-candidate lifecycle
 Visibility radius and date window; who promotes a candidate to canonical; what
