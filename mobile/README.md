@@ -39,12 +39,15 @@ Verified on every run:
   the tests check.
 - **Types** across every screen and module, against the generated contract.
 
-**Not** verified here, and it would be dishonest to imply otherwise: nothing in
-this repository renders the app. There is no simulator and no device in the
-environment it was written in, so layout, gestures, fonts, keyboard behaviour,
-deep-link handling on a real OS, and anything that depends on native modules
-(`expo-secure-store` in particular) are **unrun**. Treat the first device
-launch as the real first test.
+Verified once, by hand (2026-09-01): the app **builds and runs on the iOS
+Simulator** — `npx expo run:ios`, "Build Succeeded, 0 error(s), 0 warning(s)",
+screens render.
+
+**Still unverified**, and worth naming rather than implying otherwise: a
+*physical* device. The Simulator's blind spots are the ones that matter here —
+Keychain behaviour under a real lock screen (`expo-secure-store`), push, camera,
+and on-device universal links, none of which the Simulator represents
+faithfully. `npx expo run:ios --device` is the cheap next step.
 
 ## Configuration
 
