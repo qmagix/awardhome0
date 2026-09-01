@@ -1083,8 +1083,8 @@ contract test that leaves debris is one people learn to skip) and is a gate
 stage of its own: `npm run test:api`, and stage 2 of `npm run gate`.
 
 ## Mobile app: read, recover, claim (2026-09-01)
-Milestone M6 — the first mobile code, in `mobile/`. Expo SDK 57, React Native
-0.86, TypeScript **strict** plus `noUncheckedIndexedAccess`, Expo Router with
+Milestone M6 — the first mobile code, in `mobile/`. Expo SDK 56, React Native
+0.85, TypeScript **strict** plus `noUncheckedIndexedAccess`, Expo Router with
 typed routes. Guest search, trophy-case viewing, email-code sign-in, household
 dashboard and profile claiming. **No submission capability** — that is M7, and
 the screens deliberately offer no disabled button pretending otherwise.
@@ -1143,3 +1143,11 @@ device launch is the real first test. `mobile/README.md` says so plainly.
 The mobile checks are deliberately **not** in `npm run gate`: that is the
 server deploy gate, and the production host has no `mobile/node_modules`.
 `npm run mobile:check` runs them.
+
+**SDK pin (2026-09-01):** the app targets Expo SDK **56**, not npm's `latest`
+(57). App Store Expo Go lags npm by weeks, so a project on npm-latest is
+rejected by a phone that already has the newest Expo Go — there is no newer one
+to install. The heuristic is *newest SDK the shipped Expo Go supports*. The
+accepted cost is one failing `expo-doctor` check (a Hermes V1 memory
+regression fixed only in 57); move to 57 at the first dev-client/TestFlight
+build, when Expo Go stops being the constraint. See `mobile/README.md`.

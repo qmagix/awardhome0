@@ -120,9 +120,51 @@ So the mode is pinned in the scripts rather than left to a default:
 If Expo Go shows a blank screen or the project vanishes from its list, you are
 almost certainly in the wrong mode — `npm run go:clear` and rescan.
 
-Second thing to check if that does not fix it: Expo Go from the App Store
-supports only the newest SDK. This app is on **SDK 57**; an older Expo Go will
-refuse the bundle. Update it.
+## SDK version: why 56 and not 57
+
+**The project is pinned to Expo SDK 56 so that App Store Expo Go can run it.**
+
+npm's `latest` tag for `expo` is 57, and that is the wrong thing to follow when
+Expo Go is the target: the App Store build lags npm by weeks, so a project on
+npm-latest gets *"The project you requested requires a newer version of Expo
+Go"* from a phone that already has the newest Expo Go installed. There is no
+newer one to download. This project was briefly on 57 and hit exactly that.
+
+The heuristic that matters: **pick the newest SDK the shipped Expo Go
+supports**, not the newest on npm.
+
+### The cost of that choice, stated honestly
+
+`npx expo-doctor` reports one failing check on SDK 56, and it will keep
+reporting it:
+
+> This project uses Hermes V1 with expo@56.0.21, which is affected by a known
+> memory regression. Its only fix is SDK 57.
+
+So there is a real trade, and no version satisfies both sides today:
+
+| | Expo Go works | Hermes fixed |
+|---|---|---|
+| SDK 56 | ✅ | ❌ |
+| SDK 57 | ❌ | ✅ |
+
+SDK 56 is the right side of that trade **right now**, because the immediate job
+is seeing five read-only screens render at all, and a memory regression will
+not bite a session like that. It would matter for a shipped build.
+
+### When to move to 57
+
+Either trigger, whichever comes first:
+
+- **You build a dev client or a TestFlight build.** Expo Go stops being the
+  constraint at that moment, and the Hermes fix starts mattering. Then:
+  `npx expo install expo@^57.0.9 --fix`, and use `npm start` (dev-client mode)
+  rather than `npm run go`.
+- **App Store Expo Go picks up SDK 57.** At that point 56 buys nothing.
+
+Until one of those, `expo-doctor`'s Hermes failure is a known, accepted
+finding — not something to fix by upgrading blindly, which would put you back
+on a bundle your phone refuses to open.
 
 Given that nothing in this app has ever rendered, this is worth doing before
 anything else.

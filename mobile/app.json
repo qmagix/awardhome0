@@ -6,11 +6,13 @@
     "orientation": "portrait",
     "scheme": "awardhome",
     "userInterfaceStyle": "dark",
-    "newArchEnabled": true,
     "ios": {
       "bundleIdentifier": "com.awardhome.app",
       "supportsTablet": true,
-      "associatedDomains": ["applinks:awardhome.com", "applinks:www.awardhome.com"]
+      "associatedDomains": [
+        "applinks:awardhome.com",
+        "applinks:www.awardhome.com"
+      ]
     },
     "android": {
       "package": "com.awardhome.app",
@@ -19,10 +21,21 @@
           "action": "VIEW",
           "autoVerify": true,
           "data": [
-            { "scheme": "https", "host": "awardhome.com", "pathPrefix": "/dancer" },
-            { "scheme": "https", "host": "www.awardhome.com", "pathPrefix": "/dancer" }
+            {
+              "scheme": "https",
+              "host": "awardhome.com",
+              "pathPrefix": "/dancer"
+            },
+            {
+              "scheme": "https",
+              "host": "www.awardhome.com",
+              "pathPrefix": "/dancer"
+            }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
