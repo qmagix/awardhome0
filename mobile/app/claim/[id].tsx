@@ -111,6 +111,14 @@ export default function ClaimScreen() {
         {busy ? <ActivityIndicator color={theme.gold} /> : <Text style={styles.ctaText}>Send claim</Text>}
       </Pressable>
       {error && <Text style={styles.error}>{error}</Text>}
+
+      {/* Same-name dancers are common here, so tapping the wrong one is an
+          ordinary mistake rather than an edge case — and a claim on the wrong
+          child is exactly what the contested-claim machinery exists to clean
+          up afterwards. Cheaper to make backing out obvious. */}
+      <Pressable onPress={() => router.replace('/')} style={styles.escape}>
+        <Text style={styles.link}>← Not the right dancer? Search again</Text>
+      </Pressable>
     </View>
   );
 }
@@ -132,4 +140,6 @@ const styles = StyleSheet.create({
   },
   ctaText: { color: theme.gold, fontWeight: '600', fontSize: 16 },
   error: { color: theme.danger, marginTop: theme.space(2) },
+  escape: { marginTop: theme.space(3), alignItems: 'center' },
+  link: { color: theme.gold },
 });

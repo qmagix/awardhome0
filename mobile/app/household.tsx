@@ -81,6 +81,12 @@ export default function HouseholdScreen() {
         </View>
       )}
 
+      <Pressable onPress={() => router.replace('/')}>
+        <Text style={[styles.link, { textAlign: 'center', marginTop: theme.space(1.5) }]}>
+          ← Search for another dancer
+        </Text>
+      </Pressable>
+
       <Pressable style={styles.cta} onPress={() => router.push('/add')}>
         <Text style={styles.ctaText}>Add a missing award</Text>
       </Pressable>

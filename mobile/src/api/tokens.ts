@@ -186,6 +186,8 @@ export function createAuth(opts: AuthOptions) {
       return (await opts.storage.getRefreshToken()) !== null;
     },
 
+    /** `devCode` is returned ONLY by a non-production server with no mail
+     *  provider configured, so a simulator can sign in without email. */
     async requestCode(email: string): Promise<{ ok: boolean; devCode?: string }> {
       return publicRequest('/auth/request-code', {
         method: 'POST',

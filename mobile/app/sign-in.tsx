@@ -20,11 +20,17 @@ export default function SignInScreen() {
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [devCode, setDevCode] = useState<string | null>(null);
 
   const send = async () => {
     setBusy(true); setError(null);
     try {
-      await auth.requestCode(email.trim());
+      const res = await auth.requestCode(email.trim());
+      // Development convenience: with no EMAIL_PROVIDER configured the server
+      // returns the code in the response instead of mailing it (and never does
+      // this in production). Prefilling it is the difference between the app
+      // being testable on a simulator and not.
+      if (res.devCode) { setCode(res.devCode); setDevCode(res.devCode); }
       setStage('code');
     } catch {
       setError('We couldn’t reach AwardHome. Please try again.');
@@ -95,12 +101,24 @@ export default function SignInScreen() {
           <Pressable style={styles.cta} onPress={verify} disabled={busy || code.trim().length !== 6}>
             {busy ? <ActivityIndicator color={theme.gold} /> : <Text style={styles.ctaText}>Sign in</Text>}
           </Pressable>
-          <Pressable onPress={() => { setStage('email'); setCode(''); }}>
+          {devCode && (
+            <Text style={styles.dev}>
+              Development server: no email was sent, so the code is filled in for you.
+            </Text>
+          )}
+          <Pressable onPress={() => { setStage('email'); setCode(''); setDevCode(null); }}>
             <Text style={styles.link}>Use a different email</Text>
           </Pressable>
         </>
       )}
       {error && <Text style={styles.error}>{error}</Text>}
+
+      {/* Always an escape. This screen is reached with router.replace() from
+          the household and Add screens, so there is no back button on the
+          stack — without this, a family that opened it by accident is stuck. */}
+      <Pressable onPress={() => router.replace('/')} style={styles.escape}>
+        <Text style={styles.link}>← Back to search</Text>
+      </Pressable>
     </View>
   );
 }
@@ -121,4 +139,6 @@ const styles = StyleSheet.create({
   ctaText: { color: theme.gold, fontWeight: '600', fontSize: 16 },
   link: { color: theme.gold, marginTop: theme.space(2), textAlign: 'center' },
   error: { color: theme.danger, marginTop: theme.space(2) },
+  dev: { color: theme.muted, fontSize: 12, marginTop: theme.space(1.5), textAlign: 'center' },
+  escape: { marginTop: theme.space(3), alignItems: 'center' },
 });
