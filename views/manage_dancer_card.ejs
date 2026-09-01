@@ -42,9 +42,50 @@
     </div>
   </div>
 
+  <% if (typeof photoNotice !== 'undefined' && photoNotice) { %>
+    <div style="margin-bottom: 1.5rem; padding: 1rem; background: rgba(107,191,107,0.12); border-left: 4px solid #6bbf6b; border-radius: 4px; font-size: 0.9rem;">
+      <%= photoNotice %>
+    </div>
+  <% } %>
+
+  <!-- Teammates' photos awaiting approval on routines this dancer is in.
+       A group photo shows other people's children; their families are the
+       only ones who can say it shouldn't be seen, and this is the window in
+       which they can. One concern stops publication. -->
+  <% if (typeof castmatePhotos !== 'undefined' && castmatePhotos.length) { %>
+    <div class="card glass-card" style="margin-bottom: 1.5rem;" id="castmate-photos">
+      <h3 style="margin-top: 0;">Photos from <%= dancer.name %>'s routines</h3>
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+        Other families have added these to routines <%= dancer.name %> danced in. They are not public yet —
+        only families in the routine can see them. If a photo shouldn't be shared, say so and it will not be
+        published while we look at it.
+      </p>
+      <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        <% castmatePhotos.forEach(function (p) { %>
+          <div style="width: 200px;" data-castmate-photo="<%= p.id %>">
+            <img src="<%= p.photo_url %>" alt="" style="width: 100%; height: 140px; object-fit: cover; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15);">
+            <div style="font-size: 0.85rem; margin-top: 0.4rem;"><%= p.performance_name || 'Routine' %></div>
+            <div style="font-size: 0.78rem; color: var(--text-muted);">
+              <%= p.event_name || '' %><% if (p.event_year) { %> (<%= p.event_year %>)<% } %> · added for <%= p.dancer_name %>
+            </div>
+            <% if (p.i_objected) { %>
+              <div style="font-size: 0.8rem; color: var(--gold-vivid); margin-top: 0.4rem;">You raised a concern — AwardHome will decide.</div>
+            <% } else { %>
+              <button type="button" class="btn btn-outline object-photo"
+                      data-photo-id="<%= p.id %>"
+                      style="margin-top: 0.4rem; padding: 0.25rem 0.6rem; font-size: 0.8rem; border-color: #d98a8a; color: #d98a8a;">
+                Please don't share this
+              </button>
+            <% } %>
+          </div>
+        <% }); %>
+      </div>
+    </div>
+  <% } %>
+
   <div style="margin-bottom: 1.5rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-left: 4px solid #3b82f6; border-radius: 4px; font-size: 0.9rem; color: var(--text-color);">
     Tap a card to flip it, then use the arrows/dots to reach the photo and thank-you pages.
-    New photos and notes go live <strong>after the AwardHome team approves them</strong>, and when the
+    New photos and notes go live <strong>once your studio approves them</strong>, and when the
     same routine won several awards at one competition, one save fills the matching cards automatically.
     <% if (consent) { %>
       <div style="margin-top: 0.5rem; color: #10b981;">✓ Photo permission on file
@@ -305,6 +346,25 @@
       editToast(err.message);
     }
   }
+
+  // One concern from a family in the routine stops publication. No counting,
+  // no undo button: reversing it is a conversation with AwardHome, which is
+  // the right amount of friction for "don't share a picture of my child".
+  document.querySelectorAll('.object-photo').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      if (!confirm('This stops the photo being published while AwardHome looks at it. Continue?')) return;
+      btn.disabled = true;
+      fetch('/api/card-photo/' + btn.dataset.photoId + '/object', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+      })
+        .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+        .then(function (res) {
+          if (!res.ok) { btn.disabled = false; editToast(res.d.error || 'Could not record that.'); return; }
+          window.location.href = '/manage/dancer/<%= dancer.id %>/card?objected=1';
+        })
+        .catch(function () { btn.disabled = false; editToast('Network error.'); });
+    });
+  });
 </script>
 
 <%- include('partials/footer') %>

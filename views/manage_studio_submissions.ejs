@@ -1,0 +1,157 @@
+<%- include('partials/header') %>
+
+<div class="container" style="margin-top: 4rem; max-width: 980px; padding-bottom: 4rem;">
+
+  <div class="header-section" style="margin-bottom: 1.5rem;">
+    <h1>Family submissions</h1>
+    <p class="subtitle">
+      Awards families added for <strong><%= studio.name %></strong>'s dancers. Nothing here is public
+      yet. You know these routines and these results better than anyone — one look is usually all it
+      takes.
+    </p>
+    <p style="margin: 0.5rem 0 0;">
+      <a href="/manage/studio/<%= studio.id %>" style="color: var(--primary); text-decoration: none;">&larr; Back to the dashboard</a>
+    </p>
+  </div>
+
+  <% if (notice) { %>
+    <div class="card glass-card" style="margin-bottom: 1.5rem; border-left: 3px solid #6bbf6b;">
+      <p style="margin: 0;"><%= notice %></p>
+    </div>
+  <% } %>
+  <% if (error) { %>
+    <div class="card glass-card" style="margin-bottom: 1.5rem; border-left: 3px solid #d98a8a;">
+      <p style="margin: 0;"><%= error %></p>
+    </div>
+  <% } %>
+
+  <% if (!submissions.length) { %>
+    <div class="card glass-card">
+      <p style="margin: 0; color: var(--text-muted);">Nothing waiting. When a family adds an award for
+      one of your dancers, it appears here.</p>
+    </div>
+  <% } %>
+
+  <% submissions.forEach(function (s) { %>
+    <div class="card glass-card" style="margin-bottom: 1.5rem;" data-submission-id="<%= s.id %>">
+      <form method="POST" action="/manage/studio/<%= studio.id %>/submissions/<%= s.id %>/confirm">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+        <div style="display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
+          <div>
+            <strong style="font-size: 1.1rem;"><%= s.dancer.name %></strong>
+            <span style="color: var(--text-muted);">· <%= s.group_size_label %></span>
+            <div style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">
+              <% if (s.event) { %>
+                <%= s.event.name %><% if (s.event.year) { %> (<%= s.event.year %>)<% } %>
+              <% } else if (s.candidate) { %>
+                <span style="color: var(--gold-vivid);">⏳ <%= s.candidate.name %> — event added by a family,
+                waiting on AwardHome to confirm it. You can review the details now; confirming has to wait.</span>
+              <% } else { %>
+                <span style="color: #d98a8a;">No event on this submission.</span>
+              <% } %>
+            </div>
+            <div style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem;">
+              Submitted <%= s.created_at %> by <%= s.submitter ? s.submitter.email : 'an account since deleted' %>
+              <% if (s.status === 'needs_info') { %> · <span style="color: var(--gold-vivid);">you asked a question</span><% } %>
+            </div>
+            <% var names = cast.get(s.id) || []; %>
+            <% if (names.length) { %>
+              <div style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem;">
+                Family also named: <%= names.join(', ') %>
+                <em>(names only — no profiles are created from them)</em>
+              </div>
+            <% } else if (!s.cast_complete) { %>
+              <div style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem;">
+                Cast is partial — other families fill in their own dancers.
+              </div>
+            <% } %>
+          </div>
+          <div style="text-align: right; color: var(--text-muted); font-size: 0.85rem;">
+            <%= s.studio ? s.studio.name : '' %>
+          </div>
+        </div>
+
+        <!-- Correct in place: the reviewer fixes what the family got slightly
+             wrong rather than bouncing it back over a typo. Untouched fields
+             are not sent as corrections, so the family's words stand. -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem;">
+          <div>
+            <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">Routine</label>
+            <input type="text" name="performance_name" value="<%= s.performance_name || '' %>"
+                   style="width: 100%; padding: 0.5rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+          </div>
+          <div>
+            <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">Placement</label>
+            <input type="text" name="place" value="<%= s.place || '' %>"
+                   style="width: 100%; padding: 0.5rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+          </div>
+          <div>
+            <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">Category</label>
+            <input type="text" name="category" value="<%= s.category || '' %>"
+                   style="width: 100%; padding: 0.5rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+          </div>
+          <div>
+            <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">Award</label>
+            <input type="text" name="award_type" value="<%= s.award_type || '' %>"
+                   style="width: 100%; padding: 0.5rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+          </div>
+          <div>
+            <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">Age division</label>
+            <input type="text" name="age_division" value="<%= s.age_division || '' %>"
+                   style="width: 100%; padding: 0.5rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+          </div>
+          <div>
+            <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">Teacher</label>
+            <input type="text" name="teacher" value="<%= s.teacher || '' %>"
+                   style="width: 100%; padding: 0.5rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+          </div>
+          <div>
+            <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">Choreographer</label>
+            <input type="text" name="choreographer" value="<%= s.choreographer || '' %>"
+                   style="width: 100%; padding: 0.5rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+          </div>
+        </div>
+
+        <% if (s.notes) { %>
+          <p style="margin: 0.75rem 0 0; font-size: 0.9rem; color: var(--text-muted);">
+            Family's note: <%= s.notes %>
+          </p>
+        <% } %>
+
+        <div style="margin-top: 1rem; display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap;">
+          <input type="text" name="note" placeholder="Note or question (optional)"
+                 style="flex-grow: 1; min-width: 220px; padding: 0.5rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+          <button type="submit" class="btn btn-primary" style="padding: 0.45rem 1.1rem;"
+                  <%= s.event ? '' : 'disabled title="The event has to be confirmed first"' %>>
+            Confirm &amp; publish
+          </button>
+          <button type="submit" class="btn btn-outline" style="padding: 0.45rem 0.9rem;"
+                  formaction="/manage/studio/<%= studio.id %>/submissions/<%= s.id %>/ask">Ask the family</button>
+          <button type="submit" class="btn btn-outline" style="padding: 0.45rem 0.9rem; border-color: #d98a8a; color: #d98a8a;"
+                  formaction="/manage/studio/<%= studio.id %>/submissions/<%= s.id %>/reject">Reject</button>
+        </div>
+        <p style="margin: 0.5rem 0 0; font-size: 0.8rem; color: var(--text-muted);">
+          Confirming publishes it as a real award on <%= s.dancer.name %>'s trophy case and your studio page,
+          recorded as confirmed by you.
+          <% if (s.group_size === 'solo') { %>It will be recorded as a solo.<% } else { %>It will be recorded as a group routine, so other families can add themselves later.<% } %>
+        </p>
+      </form>
+    </div>
+  <% }); %>
+
+  <% if (decided.length) { %>
+    <h2 style="margin-top: 3rem;">Recently decided</h2>
+    <div class="card glass-card">
+      <% decided.forEach(function (s) { %>
+        <div style="padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 0.9rem;">
+          <span style="color: <%= s.status === 'accepted' ? '#6bbf6b' : '#d98a8a' %>;"><%= s.status %></span>
+          · <%= s.dancer.name %> — <%= s.performance_name %>
+          <% if (s.reviewer_note) { %><span style="color: var(--text-muted);"> · <%= s.reviewer_note %></span><% } %>
+        </div>
+      <% }); %>
+    </div>
+  <% } %>
+</div>
+
+<%- include('partials/footer') %>

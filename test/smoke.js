@@ -87,6 +87,11 @@ const CHECKS = [
   ['GET', '/admin/event-candidates', [403], 'anonymous candidate queue blocked'],
   ['POST', '/admin/event-candidates/1/promote', [403], 'anonymous candidate promotion blocked'],
   ['POST', '/admin/event-candidates/1/merge', [403], 'anonymous candidate merge blocked'],
+  ['GET', '/manage/studio/1/submissions', [302], 'anonymous reviewer inbox redirected to login'],
+  ['POST', '/manage/studio/1/submissions/1/confirm', [403], 'anonymous submission confirm blocked (CSRF)'],
+  ['POST', '/manage/studio/1/submissions/1/reject', [403], 'anonymous submission reject blocked (CSRF)'],
+  ['POST', '/manage/studio/1/verifications/card-photo/1/approve', [403], 'anonymous studio photo approval blocked (CSRF)'],
+  ['POST', '/api/card-photo/1/object', [403], 'anonymous photo objection blocked (CSRF)'],
 ];
 
 // Family submissions stage in their OWN SQLite file (utils/submissionsDb.js).
@@ -115,16 +120,19 @@ async function main() {
   // The family-submission surfaces are behind a feature flag that ships dark.
   // Flip it ON in the database BEFORE the server boots, so its flag cache is
   // never warmed with the wrong value, and restore it afterwards.
-  let priorFlagState = null;
+  const SMOKE_FLAGS = ['family_submissions', 'award_photos'];
+  const priorFlagState = {};
   try {
     const { openDb } = require('../database');
     const db = await openDb();
-    const row = await db.get("SELECT state FROM feature_flags WHERE key = 'family_submissions'");
-    priorFlagState = row ? row.state : null;
-    await db.run("INSERT INTO feature_flags (key, state) VALUES ('family_submissions', 'on') " +
-      "ON CONFLICT(key) DO UPDATE SET state = 'on'");
+    for (const key of SMOKE_FLAGS) {
+      const row = await db.get('SELECT state FROM feature_flags WHERE key = ?', [key]);
+      priorFlagState[key] = row ? row.state : null;
+      await db.run("INSERT INTO feature_flags (key, state) VALUES (?, 'on') " +
+        "ON CONFLICT(key) DO UPDATE SET state = 'on'", [key]);
+    }
   } catch (e) {
-    console.log('NOTE: could not enable family_submissions flag (' + e.message + ')');
+    console.log('NOTE: could not enable smoke feature flags (' + e.message + ')');
   }
 
   const server = spawn('node', ['server.js'], {
@@ -720,11 +728,188 @@ async function main() {
               mergeReport.merged.some(m => m.candidate_id === ce3Json.candidate.id),
           'a candidate matching the organizer\'s own event auto-merges into it, no reviewer needed',
           'status=' + twin.status + ' event=' + twin.promoted_event_id);
+
+        // ---- M3: the studio reviewer inbox and promotion ----
+        // The write path is the whole milestone: a solo double-writes
+        // awards.dancer_id AND the junction; a group writes the junction
+        // only. Getting this wrong is what left 79,181 solos with no primary
+        // dancer and 1,874 groups indistinguishable from solos.
+        const inbox = await fetch(BASE + `/manage/studio/${s1.lastID}/submissions`, { headers: { Cookie: owner.cookie } });
+        const inboxHtml = await inbox.text();
+        const groupSubId = r1.id;
+        check(inbox.status === 200 && inboxHtml.includes(`data-submission-id="${groupSubId}"`) &&
+              inboxHtml.includes('Smoke Dancer Family'),
+          'the studio reviewer inbox lists this studio\'s pending family submissions', 'status ' + inbox.status);
+
+        const reviewPost = (sid, action, body) => fetch(
+          BASE + `/manage/studio/${s1.lastID}/submissions/${sid}/${action}`, {
+            method: 'POST', redirect: 'manual',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: owner.cookie },
+            body: new URLSearchParams({ _csrf: subToken, ...(body || {}) }).toString(),
+          });
+
+        // A submission whose event is still a family-added candidate cannot
+        // become a canonical award — awards.event_id points at the canonical
+        // table, and the event has to be settled first.
+        const candSub = await sdb.get("SELECT id FROM award_submissions WHERE client_submission_id = 'smoke-idem-up-1'");
+        const pendingEvent = await reviewPost(candSub.id, 'confirm', {});
+        const stillPending = await sdb.get('SELECT status FROM award_submissions WHERE id = ?', [candSub.id]);
+        check((pendingEvent.headers.get('location') || '').includes('error=') && stillPending.status === 'submitted',
+          'a submission on an unconfirmed family event cannot be promoted',
+          pendingEvent.headers.get('location'));
+
+        // Confirm the GROUP: junction only, primary column untouched.
+        const confirmGroup = await reviewPost(groupSubId, 'confirm', {});
+        const groupSub = await sdb.get('SELECT * FROM award_submissions WHERE id = ?', [groupSubId]);
+        const groupAward = groupSub.award_id
+          ? await db.get('SELECT id, dancer_id, performance_name, is_self_added, verification_status FROM awards WHERE id = ?', [groupSub.award_id]) : null;
+        const groupLink = groupAward
+          ? await db.get('SELECT status, source FROM award_dancers WHERE award_id = ? AND dancer_id = ?', [groupAward.id, famDancer.lastID]) : null;
+        if (groupAward) ids.awards.push(groupAward.id);
+        check(confirmGroup.status === 302 && groupSub.status === 'accepted' &&
+              groupSub.verification_level === 'studio_confirmed' &&
+              !!groupAward && groupAward.dancer_id === null && !!groupLink && groupLink.source === 'family_submission',
+          'confirming a GROUP writes the junction only — awards.dancer_id stays empty',
+          'status=' + groupSub.status + ' primary=' + (groupAward && groupAward.dancer_id) +
+          ' link=' + JSON.stringify(groupLink));
+
+        const prov = groupAward
+          ? await db.get("SELECT * FROM award_provenance WHERE award_id = ? AND source_type = 'family_submission'", [groupAward.id]) : null;
+        check(!!prov && prov.submission_id === groupSubId && prov.contributor_user_id === u1.lastID &&
+              prov.verification_level === 'studio_confirmed' && prov.decided_by === u1.lastID,
+          'promotion records provenance: who contributed it, who confirmed it, how strong it is',
+          JSON.stringify(prov && { sub: prov.submission_id, by: prov.decided_by, level: prov.verification_level }));
+
+        // Confirm a SOLO, with a reviewer correction applied on the way
+        // through: the family said 2nd, the director knows it was 1st.
+        await postSubmission({
+          client_submission_id: 'smoke-idem-solo-1', group_size: 'solo',
+          performance_name: 'Smoke Solo Confirm', place: '2nd',
+        });
+        const soloSub0 = await sdb.get("SELECT * FROM award_submissions WHERE client_submission_id = 'smoke-idem-solo-1'");
+        const confirmSolo = await reviewPost(soloSub0.id, 'confirm', {
+          performance_name: 'Smoke Solo Confirm', place: '1st', category: '', award_type: '',
+          age_division: '', teacher: '', choreographer: '',
+        });
+        const soloSub = await sdb.get('SELECT * FROM award_submissions WHERE id = ?', [soloSub0.id]);
+        const soloAward = soloSub.award_id
+          ? await db.get('SELECT id, dancer_id, place FROM awards WHERE id = ?', [soloSub.award_id]) : null;
+        const soloLink = soloAward
+          ? await db.get('SELECT 1 AS x FROM award_dancers WHERE award_id = ? AND dancer_id = ?', [soloAward.id, famDancer.lastID]) : null;
+        if (soloAward) ids.awards.push(soloAward.id);
+        check(confirmSolo.status === 302 && !!soloAward && soloAward.dancer_id === famDancer.lastID &&
+              !!soloLink && soloAward.place === '1st' && soloSub.place === '1st',
+          'confirming a SOLO double-writes the primary dancer AND the junction, and the reviewer\'s correction sticks',
+          'primary=' + (soloAward && soloAward.dancer_id) + ' place=' + (soloAward && soloAward.place));
+
+        // It has to actually reach the public pages — the acceptance
+        // criterion is the award appearing, not a row existing.
+        const pubDancer = await fetch(BASE + '/dancer/smoke-dancer-fam');
+        const pubDancerHtml = await pubDancer.text();
+        check(pubDancer.status === 200 && pubDancerHtml.includes('Smoke Solo Confirm'),
+          'a confirmed award appears on the dancer\'s public trophy case', 'status ' + pubDancer.status);
+
+        // A tombstone is a human decision. Confirming must never undo it.
+        const tombAward = await db.run(
+          "INSERT INTO awards (event_id, studio_id, performance_name, performance_name_key, place) VALUES (?, ?, 'Smoke Tombstoned Routine', 'smoke tombstoned routine', '4th')",
+          [event.id, s1.lastID]);
+        ids.awards.push(tombAward.lastID);
+        await db.run('INSERT OR IGNORE INTO award_dancer_removals (award_id, dancer_id) VALUES (?, ?)',
+          [tombAward.lastID, famDancer.lastID]);
+        await postSubmission({
+          client_submission_id: 'smoke-idem-tomb-1', group_size: 'solo',
+          performance_name: 'Smoke Tombstoned Routine', place: '4th',
+        });
+        const tombSub0 = await sdb.get("SELECT * FROM award_submissions WHERE client_submission_id = 'smoke-idem-tomb-1'");
+        const tombConfirm = await reviewPost(tombSub0.id, 'confirm', {});
+        const tombSub = await sdb.get('SELECT status FROM award_submissions WHERE id = ?', [tombSub0.id]);
+        const resurrected = await db.get('SELECT 1 AS x FROM award_dancers WHERE award_id = ? AND dancer_id = ?',
+          [tombAward.lastID, famDancer.lastID]);
+        check((tombConfirm.headers.get('location') || '').includes('error=') &&
+              tombSub.status === 'submitted' && !resurrected,
+          'confirming never resurrects a dancer a director removed from a routine',
+          'status=' + tombSub.status + ' relinked=' + !!resurrected);
+
+        // Scope: an owner may act only on their own studio's submissions.
+        const foreignSub = await sdb.run(`
+          INSERT INTO award_submissions (client_submission_id, user_id, dancer_id, studio_id, event_id,
+                                         performance_name, performance_name_key, group_size, cast_complete)
+          VALUES ('smoke-foreign-1', ?, ?, ?, ?, 'Smoke Foreign Routine', 'smoke foreign routine', 'solo', 0)`,
+          [u2.lastID, famDancer2.lastID, s2.lastID, event.id]);
+        const crossSee = !inboxHtml.includes('Smoke Foreign Routine');
+        const crossAct = await reviewPost(foreignSub.lastID, 'confirm', {});
+        const foreignAfter = await sdb.get('SELECT status FROM award_submissions WHERE id = ?', [foreignSub.lastID]);
+        check(crossSee && crossAct.status === 404 && foreignAfter.status === 'submitted',
+          'an owner can neither see nor act on another studio\'s submissions',
+          'listed=' + !crossSee + ' act=' + crossAct.status);
+
+        // ---- M3: card photos delegated to the studio ----
+        // Ladder: team-visible on upload -> one objection from a cast family
+        // stops it -> otherwise the studio publishes. Superadmin sees only
+        // the exceptions.
+        await db.run("INSERT OR IGNORE INTO award_dancers (award_id, dancer_id, status, source) VALUES (?, ?, 'verified', 'studio_owner')",
+          [gaw.lastID, famDancer.lastID]);
+        await db.run("INSERT OR IGNORE INTO award_dancers (award_id, dancer_id, status, source) VALUES (?, ?, 'verified', 'studio_owner')",
+          [gaw.lastID, famDancer2.lastID]);
+        const cleanPhoto = await db.run(
+          "INSERT INTO award_card_photos (award_id, dancer_id, photo_url, status, uploaded_by) VALUES (?, ?, '/uploads/smoke-clean.jpg', 'pending', ?)",
+          [gaw.lastID, famDancer.lastID, u1.lastID]);
+        const objectedPhoto = await db.run(
+          "INSERT INTO award_card_photos (award_id, dancer_id, photo_url, status, uploaded_by) VALUES (?, ?, '/uploads/smoke-objected.jpg', 'pending', ?)",
+          [gaw.lastID, famDancer2.lastID, u2.lastID]);
+
+        const verif = await fetch(BASE + `/manage/studio/${s1.lastID}/verifications`, { headers: { Cookie: owner.cookie } });
+        const verifHtml = await verif.text();
+        check(verif.status === 200 && verifHtml.includes(`data-card-photo="${cleanPhoto.lastID}"`),
+          'card photos on a studio\'s routines now wait for the STUDIO, not a superadmin', 'status ' + verif.status);
+
+        // A family in the routine objects to the other family's photo.
+        const objectRes = await fetch(BASE + `/api/card-photo/${cleanPhoto.lastID}/object`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Cookie: claimant.cookie, 'X-CSRF-Token': claimToken },
+        });
+        // ...and someone with no dancer in the routine cannot.
+        const outsiderRes = await fetch(BASE + `/api/card-photo/${cleanPhoto.lastID}/object`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Cookie: superUser.cookie, 'X-CSRF-Token': superToken },
+        });
+        check(objectRes.status === 200 && outsiderRes.status === 403,
+          'only a family with a dancer in the routine can object to its photo',
+          'cast=' + objectRes.status + ' outsider=' + outsiderRes.status);
+
+        // One objection takes the decision away from the studio.
+        const blocked = await fetch(BASE + `/manage/studio/${s1.lastID}/verifications/card-photo/${cleanPhoto.lastID}/approve`, {
+          method: 'POST', redirect: 'manual',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: owner.cookie },
+          body: new URLSearchParams({ _csrf: subToken }).toString(),
+        });
+        const blockedRow = await db.get('SELECT status FROM award_card_photos WHERE id = ?', [cleanPhoto.lastID]);
+        check((blocked.headers.get('location') || '').includes('photo_error=') && blockedRow.status === 'pending',
+          'one objection from a cast family blocks studio approval and routes it to AwardHome',
+          'status=' + blockedRow.status);
+
+        // No objection: the studio publishes it, no superadmin involved.
+        const approved = await fetch(BASE + `/manage/studio/${s1.lastID}/verifications/card-photo/${objectedPhoto.lastID}/approve`, {
+          method: 'POST', redirect: 'manual',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: owner.cookie },
+          body: new URLSearchParams({ _csrf: subToken }).toString(),
+        });
+        const approvedRow = await db.get('SELECT status FROM award_card_photos WHERE id = ?', [objectedPhoto.lastID]);
+        check(approved.status === 302 && approvedRow.status === 'approved',
+          'an unobjected photo is published by the studio, with no superadmin step',
+          'status=' + approvedRow.status);
       } finally {
         await db.run("DELETE FROM award_dancer_removals WHERE dancer_id IN (SELECT id FROM dancers WHERE name LIKE 'Smoke Dancer%')").catch(() => {});
         await db.run("DELETE FROM award_dancers WHERE dancer_id IN (SELECT id FROM dancers WHERE name LIKE 'Smoke Dancer%')").catch(() => {});
         await db.run("DELETE FROM dancer_studios WHERE dancer_id IN (SELECT id FROM dancers WHERE name LIKE 'Smoke Dancer%')").catch(() => {});
         await db.run("DELETE FROM dancers WHERE name LIKE 'Smoke Dancer%'").catch(() => {});
+        await db.run("DELETE FROM award_card_photos WHERE photo_url LIKE '/uploads/smoke-%'").catch(() => {});
+        await db.run("DELETE FROM content_flags WHERE content_type = 'award_photo' AND content_id NOT IN (SELECT id FROM award_card_photos)").catch(() => {});
+        for (const id of ids.awards) {
+          await db.run('DELETE FROM award_provenance WHERE award_id = ?', [id]).catch(() => {});
+          await db.run('DELETE FROM award_dancers WHERE award_id = ?', [id]).catch(() => {});
+          await db.run('DELETE FROM award_dancer_removals WHERE award_id = ?', [id]).catch(() => {});
+        }
         if (ids.promotedEventId) await db.run('DELETE FROM events WHERE id = ?', [ids.promotedEventId]).catch(() => {});
         for (const id of ids.claims) await db.run('DELETE FROM studio_claims WHERE id = ?', [id]).catch(() => {});
         for (const id of ids.awards) await db.run('DELETE FROM awards WHERE id = ?', [id]).catch(() => {});
@@ -760,8 +945,10 @@ async function main() {
     try {
       const { openDb } = require('../database');
       const db = await openDb();
-      if (priorFlagState === null) await db.run("DELETE FROM feature_flags WHERE key = 'family_submissions'");
-      else await db.run("UPDATE feature_flags SET state = ? WHERE key = 'family_submissions'", [priorFlagState]);
+      for (const key of SMOKE_FLAGS) {
+        if (priorFlagState[key] == null) await db.run('DELETE FROM feature_flags WHERE key = ?', [key]);
+        else await db.run('UPDATE feature_flags SET state = ? WHERE key = ?', [priorFlagState[key], key]);
+      }
     } catch (e) { /* nothing to restore */ }
     for (const ext of ['', '-wal', '-shm']) require('fs').rmSync(SUBMISSIONS_DB + ext, { force: true });
   }

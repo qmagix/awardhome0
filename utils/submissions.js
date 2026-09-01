@@ -382,6 +382,33 @@ async function listForDancer(dancerId, userId) {
   return decorate(db, rows);
 }
 
+// The studio reviewer's inbox: submissions for THIS studio's dancers only.
+// Scope is the studio_id derived at submit time, never a role — the same
+// ownership-by-column rule the rest of the platform uses.
+//
+// A submission with no studio (an independent dancer, design §6.2.1) appears
+// in no studio inbox by construction. There is no studio owner to review it,
+// which is exactly why §6.2.3 routes independents to auto-approval and the
+// AwardHome queue instead — M4 work, tracked in TODOS_and_DONE.md.
+async function listForStudio(studioId, { statuses = ['submitted', 'needs_info'] } = {}) {
+  const db = await openDb();
+  const sdb = await openSubmissionsDb();
+  const rows = await sdb.all(
+    `SELECT * FROM award_submissions
+     WHERE studio_id = ? AND status IN (${statuses.map(() => '?').join(',')})
+     ORDER BY created_at ASC, id ASC`,
+    [studioId, ...statuses]);
+
+  const out = await decorate(db, rows);
+  for (const r of out) {
+    r.dancer = await db.get('SELECT id, name, unique_id FROM dancers WHERE id = ?', [r.dancer_id]);
+    r.submitter = await db.get('SELECT id, email FROM users WHERE id = ?', [r.user_id]);
+  }
+  // A submission whose dancer profile is gone cannot be confirmed and must
+  // not sit in a reviewer's queue looking actionable.
+  return out.filter(r => r.dancer);
+}
+
 async function listForUser(userId) {
   const db = await openDb();
   const sdb = await openSubmissionsDb();
@@ -412,5 +439,5 @@ module.exports = {
   normalizeText, normalizePersonName, nameKey,
   checkRateLimit, recordAction, consumeHouseholdAction,
   dancerStudios, resolveEventRef, validateSubmission, createSubmission,
-  listForDancer, listForUser, castForSubmissions,
+  listForDancer, listForUser, listForStudio, castForSubmissions,
 };

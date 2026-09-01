@@ -376,3 +376,62 @@ node scripts/merge_event_candidates.js --apply
 
 Two plausible matches are never guessed between — that would file an award on
 the wrong weekend of a tour. They are left in the queue with both options shown.
+
+## 20. Family Submissions: the Studio Inbox
+
+Behind the `family_submissions` flag. **Studio dashboard → Family Submissions**
+(the nav entry carries a count when work is waiting).
+
+Every award a family added for one of your dancers lands here, and nothing is
+public until you say so. For each one:
+
+- **Confirm & publish** — writes the real award onto that dancer's trophy case
+  and your studio page, recorded as confirmed by you.
+- **Correct it first.** The fields are editable in place. Fix a placement or a
+  routine spelling and confirm in one go; you don't have to reject a real award
+  over a typo. Fields you don't touch keep the family's wording.
+- **Ask the family** — sends it back with your question instead of forcing a
+  yes/no.
+- **Reject** — for something that didn't happen, or isn't yours.
+
+Things the system does for you:
+
+- **Solos and groups are recorded differently**, using the size the family
+  chose. A group stays a group even when only one dancer is on it, so other
+  families can add themselves later.
+- **A dancer you previously removed from a routine is never re-added** by
+  confirming. You'll see a message instead; re-add them from Group Routine
+  Dancers if that removal was a mistake.
+- **Family-added competitions have to be confirmed first.** If the event itself
+  came from a family, the Confirm button waits until AwardHome settles the event
+  (section 19). You can still review the details.
+- **You only ever see your own studio's submissions.** Independent dancers have
+  no studio, so they never appear in any studio's inbox.
+
+## 21. Card Photos: Approving for Your Studio
+
+Behind the `award_photos` flag. Card photos on your routines now wait for
+**you**, in **Pending Verifications → Card Photos to Approve** — not for the
+AwardHome team.
+
+How a photo travels:
+
+1. A family uploads it. It is immediately visible to the families of the
+   dancers **in that routine**, and to nobody else.
+2. Any of those families can say *"please don't share this"*. That is enough on
+   its own — no vote, no tally. A group photo shows other people's children, and
+   one parent's objection should win.
+3. If nobody objects, you approve it and it goes public on that dancer's trophy
+   case.
+4. Once public, anyone can report it. A report takes it straight down and sends
+   it to AwardHome. (If AwardHome puts it back, further reports queue instead of
+   taking it down again, so it can't be used as a weapon.)
+
+If a family in the routine has objected, you'll see that on the photo and the
+Approve button is gone — AwardHome decides that one. That's deliberate: you
+shouldn't be put in the position of overruling one of your own families about a
+picture of their child.
+
+The dancer's **default** card photo (set on their profile, used when a card has
+no photo of its own) still goes through the AwardHome team — it isn't tied to a
+routine, so there's no cast to ask.

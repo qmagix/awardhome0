@@ -10,6 +10,7 @@ const { validateVanityTag } = require('../../utils/vanity');
 const { flagOn } = require('../../utils/featureFlags');
 const { moderateNote, getModerationMode } = require('../../utils/moderation');
 const { studioDisplayNameSql } = require('../../utils/independents');
+const { pendingForCastmates, canObject, PHOTO_REASON_TEXT } = require('../../utils/cardPhotos');
 
 // ---- Flip-book card extras (photo + thank-you lines) ----
 
@@ -191,10 +192,45 @@ router.get('/manage/dancer/:id/card', requireAuth, async (req, res) => {
     'SELECT consented_at FROM card_photo_consents WHERE user_id = ? AND dancer_id = ?',
     [req.session.user.id, dancer.id]);
 
+  // Teammates' photos awaiting the studio's approval, on routines THIS
+  // dancer is in. The point of showing them: a group photo shows other
+  // people's children, and their families are the only ones who can say it
+  // should not be seen. This is the window in which they can say so — before
+  // the studio publishes it (see utils/cardPhotos.js).
+  const castmatePhotos = featurePhotos
+    ? await pendingForCastmates(db, dancer.id, req.session.user.id)
+    : [];
+
   res.render('manage_dancer_card', {
     dancer, awards, consent: consentRow || null, cardDesign: 'flipbook',
-    featureNotes, featurePhotos,
+    featureNotes, featurePhotos, castmatePhotos,
+    photoNotice: req.query.objected ? 'Thank you — that photo will not be published while we look at it.' : null,
   });
+});
+
+
+// A cast family raises a concern about a teammate's photo. One is enough to
+// stop publication: the pool is a handful of families who were actually
+// there, and a single "that is my child and no" deserves to win over a
+// tally. Recorded in content_flags, so an objection here and a public report
+// later are the same record with the same audit trail.
+router.post('/api/card-photo/:id/object', requireAuth, async (req, res) => {
+  const db = await openDb();
+  const photoId = parseInt(req.params.id, 10);
+  const { ok, reason } = await canObject(db, req.session.user.id, photoId);
+  if (!ok) {
+    return res.status(reason === 'not_found' ? 404 : 403)
+      .json({ error: PHOTO_REASON_TEXT[reason] || 'Cannot raise a concern about that photo.' });
+  }
+  try {
+    await db.run(
+      `INSERT OR IGNORE INTO content_flags (content_type, content_id, flagger_user_id, flagger_key)
+       VALUES ('award_photo', ?, ?, ?)`,
+      [photoId, req.session.user.id, 'u:' + req.session.user.id]);
+  } catch (e) {
+    return res.status(500).json({ error: 'Could not record that right now.' });
+  }
+  res.json({ success: true });
 });
 
 

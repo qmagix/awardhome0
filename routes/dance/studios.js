@@ -10,6 +10,8 @@ const { WEIGHTS, DEFAULT_WEIGHT, awardTerm, weightsForStudio, weightOf, ensureAw
 const { isIndividualLabel } = require('../../utils/soloPrimary');
 const { canonicalizeRoutine, routineKeySql, ensureRoutineAliasTable, ensureRoutineChecksTable, resolveRoutineKey, resweepStudioKeys } = require('../../utils/routineKey');
 const { ensureCastInviteTables, newInviteToken, inviteExpiry, sendCastInviteEmail } = require('../../utils/castInvites');
+const { flagOn } = require('../../utils/featureFlags');
+const { pendingForStudio, studioDecide, PHOTO_REASON_TEXT } = require('../../utils/cardPhotos');
 const { sendEmail } = require('../../utils/mailer');
 const multer = require('multer');
 // CSV imports only (roster + awards). Rejections surface as 400s via the
@@ -65,6 +67,27 @@ const { OpenAI } = require('openai');
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const { generateDancerId } = require('../../utils.js');
 const { parse } = require('csv-parse/sync');
+
+// Dashboard nav state for the Family Submissions inbox: hidden entirely
+// while the flag is dark, and badged with the waiting count when it isn't, so
+// an owner sees work without having to go looking for it. Never throws — a
+// dashboard must not 500 because the staging database is unreachable.
+async function submissionsNavState(req, studioId) {
+  try {
+    const { flagOn } = require('../../utils/featureFlags');
+    if (!(await flagOn('family_submissions', req))) {
+      return { featureSubmissions: false, pendingSubmissionCount: 0 };
+    }
+    const { openSubmissionsDb } = require('../../utils/submissionsDb');
+    const sdb = await openSubmissionsDb();
+    const row = await sdb.get(
+      "SELECT COUNT(*) AS n FROM award_submissions WHERE studio_id = ? AND status IN ('submitted', 'needs_info')",
+      [studioId]);
+    return { featureSubmissions: true, pendingSubmissionCount: row ? row.n : 0 };
+  } catch (e) {
+    return { featureSubmissions: false, pendingSubmissionCount: 0 };
+  }
+}
 
 // Same-name studios the owner might want to merge, enriched with enough
 // award context (counts, years, orgs, dancer names) for them to judge
@@ -161,7 +184,11 @@ router.get('/manage/studio/:id', requireAuth, requireStudioOwner, async (req, re
   studio.prefs = prefs;
 
   const onboarding = await buildOnboarding(db, studio);
-  res.render('manage_studio', { studio, potentialDuplicates, mergeRequests, onboarding });
+  const { featureSubmissions, pendingSubmissionCount } = await submissionsNavState(req, studio.id);
+  res.render('manage_studio', {
+    studio, potentialDuplicates, mergeRequests, onboarding,
+    featureSubmissions, pendingSubmissionCount,
+  });
 });
 
 
@@ -500,7 +527,13 @@ router.post('/manage/studio/:id/profile', requireAuth, requireStudioOwner, async
   const potentialDuplicates = await findPotentialDuplicates(db, updatedStudio);
 
   const onboarding = await buildOnboarding(db, updatedStudio);
-  res.render('manage_studio', { studio: updatedStudio, potentialDuplicates, onboarding, success: 'Profile updated successfully!' });
+  const navState = await submissionsNavState(req, updatedStudio.id);
+  res.render('manage_studio', {
+    studio: updatedStudio, potentialDuplicates, onboarding,
+    featureSubmissions: navState.featureSubmissions,
+    pendingSubmissionCount: navState.pendingSubmissionCount,
+    success: 'Profile updated successfully!',
+  });
 });
 
 
@@ -1221,8 +1254,38 @@ router.get('/manage/studio/:id/verifications', requireAuth, requireStudioOwner, 
     `, [studio.id]);
   } catch (e) { /* columns missing until `node database.js` runs */ }
 
-  res.render('manage_studio_verifications', { studio, pendingAwards, pendingRoster, pendingProfileClaims });
+  // Card photos on this studio's routines, delegated from the superadmin
+  // queue (see utils/cardPhotos.js). A photo a cast family objected to is
+  // shown but not approvable here — that decision has left the studio.
+  const featurePhotos = await flagOn('award_photos', req);
+  const pendingCardPhotos = featurePhotos ? await pendingForStudio(db, studio.id) : [];
+
+  res.render('manage_studio_verifications', {
+    studio, pendingAwards, pendingRoster, pendingProfileClaims,
+    pendingCardPhotos, featurePhotos,
+    photoError: req.query.photo_error || null,
+  });
 });
+
+// Studio approves a card photo for public display. Superadmin no longer has
+// to see it at all unless a family objected.
+router.post('/manage/studio/:id/verifications/card-photo/:photoId/:action',
+  requireAuth, requireStudioOwner, async (req, res) => {
+    const db = await openDb();
+    const approve = req.params.action === 'approve';
+    const result = await studioDecide(db, {
+      photoId: parseInt(req.params.photoId, 10),
+      studioId: req.studio.id,
+      reviewerId: req.session.user.id,
+      approve,
+    });
+    const base = `/manage/studio/${req.studio.id}/verifications`;
+    if (!result.ok) {
+      return res.redirect(`${base}?photo_error=${encodeURIComponent(PHOTO_REASON_TEXT[result.reason] || 'Could not update that photo.')}`);
+    }
+    logStudioActivity(req.studio.id, approve ? 'card_photo_approved' : 'card_photo_rejected');
+    res.redirect(base);
+  });
 
 
 router.post('/manage/studio/:id/verifications/profile/:claim_id/approve', requireAuth, requireStudioOwner, async (req, res) => {

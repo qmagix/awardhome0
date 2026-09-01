@@ -19,12 +19,16 @@ const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
 const { openDb } = require('../../database');
-const { requireAuth } = require('../../middleware/auth');
+const { requireAuth, requireStudioOwner } = require('../../middleware/auth');
 const { flagOn } = require('../../utils/featureFlags');
+const { logStudioActivity } = require('../../utils/activity');
 const {
   GROUP_SIZES, LIMITS, dancerStudios, validateSubmission, createSubmission,
-  listForDancer, castForSubmissions, normalizeText, consumeHouseholdAction,
+  listForDancer, listForStudio, castForSubmissions, normalizeText, consumeHouseholdAction,
 } = require('../../utils/submissions');
+const {
+  CORRECTABLE, REASON_TEXT, confirmSubmission, rejectSubmission, requestInfo,
+} = require('../../utils/promotion');
 const { openSubmissionsDb } = require('../../utils/submissionsDb');
 const { findEventOptions } = require('../../utils/eventPicker');
 const {
@@ -242,6 +246,100 @@ router.post('/api/dancer/:id/event-candidates', requireAuth, async (req, res) =>
       end_date: candidate.end_date, city: candidate.city, state: candidate.state,
     },
   });
+});
+
+// ---- Studio reviewer inbox (M3) --------------------------------------------
+//
+// THE REVIEWER-ECONOMICS MILESTONE. AwardHome staff review does not scale;
+// studio owners already know their dancers, their routines and their results,
+// already have a dashboard, and are already motivated — the studio's page is
+// the showcase. This is the difference between review scaling with our
+// headcount and review scaling with the network.
+//
+// Scope is enforced twice on every action: requireStudioOwner proves the
+// caller owns THIS studio, and each handler then proves the submission
+// belongs to it. One check would be enough if ids were never guessable; two
+// is what makes "an owner cannot act on another studio's submissions" a
+// property rather than a hope.
+async function loadStudioSubmission(req, res) {
+  const sdb = await openSubmissionsDb();
+  const sub = await sdb.get('SELECT * FROM award_submissions WHERE id = ?', [req.params.sid]);
+  if (!sub) { res.status(404).send('Submission not found'); return null; }
+  if (sub.studio_id !== req.studio.id) {
+    // Deliberately 404, not 403: a reviewer poking at ids learns nothing
+    // about which submissions exist for other studios.
+    res.status(404).send('Submission not found');
+    return null;
+  }
+  return sub;
+}
+
+router.get('/manage/studio/:id/submissions', requireAuth, requireStudioOwner, async (req, res) => {
+  if (!(await requireFlag(req, res))) return;
+  const submissions = await listForStudio(req.studio.id);
+  const cast = await castForSubmissions(submissions.map(s => s.id));
+  const decided = await listForStudio(req.studio.id, { statuses: ['accepted', 'rejected'] });
+
+  res.render('manage_studio_submissions', {
+    studio: req.studio,
+    submissions,
+    cast,
+    decided: decided.slice(0, 25),
+    correctable: CORRECTABLE,
+    notice: req.query.ok ? 'Confirmed — the award is live on the dancer and studio pages.' : null,
+    error: req.query.error || null,
+    pageTitle: `Family submissions — ${req.studio.name}`,
+  });
+});
+
+router.post('/manage/studio/:id/submissions/:sid/confirm', requireAuth, requireStudioOwner, async (req, res) => {
+  if (!(await requireFlag(req, res))) return;
+  const sub = await loadStudioSubmission(req, res);
+  if (!sub) return;
+
+  // Only fields the reviewer actually changed are sent through as
+  // corrections, so an untouched form never rewrites the family's words.
+  const corrections = {};
+  for (const field of CORRECTABLE) {
+    if (!(field in req.body)) continue;
+    const sent = normalizeText(req.body[field]);
+    if (sent !== (sub[field] || null)) corrections[field] = req.body[field];
+  }
+
+  const result = await confirmSubmission({
+    submissionId: sub.id,
+    reviewerId: req.session.user.id,
+    corrections,
+    note: normalizeText(req.body.note),
+  });
+  const base = `/manage/studio/${req.studio.id}/submissions`;
+  if (!result.ok) {
+    return res.redirect(`${base}?error=${encodeURIComponent(REASON_TEXT[result.reason] || 'Could not confirm that submission.')}`);
+  }
+  logStudioActivity(req.studio.id, 'submission_confirmed');
+  res.redirect(`${base}?ok=1`);
+});
+
+router.post('/manage/studio/:id/submissions/:sid/reject', requireAuth, requireStudioOwner, async (req, res) => {
+  if (!(await requireFlag(req, res))) return;
+  const sub = await loadStudioSubmission(req, res);
+  if (!sub) return;
+  const result = await rejectSubmission({
+    submissionId: sub.id, reviewerId: req.session.user.id, note: normalizeText(req.body.note),
+  });
+  const base = `/manage/studio/${req.studio.id}/submissions`;
+  res.redirect(result.ok ? base : `${base}?error=${encodeURIComponent(REASON_TEXT[result.reason] || 'Could not reject that submission.')}`);
+});
+
+router.post('/manage/studio/:id/submissions/:sid/ask', requireAuth, requireStudioOwner, async (req, res) => {
+  if (!(await requireFlag(req, res))) return;
+  const sub = await loadStudioSubmission(req, res);
+  if (!sub) return;
+  const result = await requestInfo({
+    submissionId: sub.id, reviewerId: req.session.user.id, note: normalizeText(req.body.note),
+  });
+  const base = `/manage/studio/${req.studio.id}/submissions`;
+  res.redirect(result.ok ? base : `${base}?error=${encodeURIComponent(REASON_TEXT[result.reason] || 'Could not update that submission.')}`);
 });
 
 module.exports = router;

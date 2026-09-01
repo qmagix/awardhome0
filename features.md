@@ -827,3 +827,80 @@ already-promoted candidate returns its event, and an existing event with the
 same (org, name, year) is reused — so a crash between the halves costs a retry,
 never a duplicate event. Rejecting a candidate never deletes the family's
 submissions: the award still happened, it just needs a new home.
+
+## Studio reviewer inbox + delegated photo approval (2026-08-31)
+Milestone M3 of the mobile-app plan — **the reviewer-economics milestone**.
+AwardHome staff review does not scale. Studio owners already know their
+dancers, their routines and their results, already have a dashboard, and are
+already motivated: the studio's page is the showcase. This is the difference
+between review scaling with our headcount and review scaling with the network.
+
+### Family submissions → canonical awards
+`/manage/studio/:id/submissions` (studio owner, behind `family_submissions`)
+lists that studio's pending submissions with **confirm / correct / ask /
+reject**. Corrections are made in place — a director fixes a placement rather
+than bouncing a real award back over a typo — and only fields the reviewer
+actually changed are applied, so the family's words otherwise stand. The
+family's original stays in `raw_payload`.
+
+`utils/promotion.js` is the only door from staging to canonical, and holds five
+rules, each a scar from real data:
+
+1. **The write path follows the declared group size.** Solo double-writes
+   `awards.dancer_id` *and* the junction; a group writes the junction only.
+   The family told us the format, which is a stronger positive identification
+   than `utils/soloPrimary.js` can infer from a label. An absent or unknown
+   size is treated as a group — mistaking a group for a solo is the damaging
+   error; the reverse is not.
+2. **Find before create.** An award matching (event, studio, routine key,
+   place, category, award type) is reused and the dancer linked to it. That is
+   both the mandated ETL idempotency and what makes promotion safe to retry
+   across two SQLite files that cannot share a transaction — and it is how a
+   second household's submission for the same routine will converge onto one
+   award in M4.
+3. **Tombstones are never resurrected.** If a director removed this dancer
+   from this routine, confirming is refused and says so. Re-adding is a
+   deliberate act in Group Routine Dancers, not a side effect of clicking
+   confirm.
+4. **No canonical award without a canonical event.** A submission whose event
+   is still a family-created candidate cannot promote; the reviewer is sent to
+   `/admin/event-candidates` to settle the event first.
+5. **Typed cast names never become people.** A family naming teammates is
+   evidence for a reviewer, never authority to create dancer profiles.
+
+Confirming writes `award_provenance` in the same transaction as the award —
+who contributed the fact, who confirmed it, and at what verification level
+(`studio_confirmed`). Scope is enforced twice: `requireStudioOwner` proves the
+caller owns the studio, then each handler proves the submission belongs to it,
+answering with 404 rather than 403 so probing ids reveals nothing.
+
+### Card photo approval, delegated to the people who were there
+Every award card photo used to need a superadmin before going public — review
+scaling with headcount again, and worse for photos, since a family uploads one
+per routine per season. The ladder now runs (`utils/cardPhotos.js`):
+
+1. **Upload → team-visible.** A pending photo is visible to the families of the
+   dancers *on that award*, and nobody else. This rung does real work: a group
+   photo shows other people's children, and cross-studio collaborations mean
+   the studio owner alone cannot speak for everyone pictured. Families see them
+   on `/manage/dancer/:id/card`.
+2. **Objection → stop.** One objection from a cast family blocks studio
+   approval and sends the photo to AwardHome. Not a vote count: the pool is a
+   handful of families, and a single *"that's my child and no"* deserves to
+   win. Objections reuse `content_flags`, so an objection and a public report
+   are one record with one audit trail. Only a household owning a claimed
+   dancer in that routine may object — and owning a claimed dancer means
+   passing a human review, which is what makes a threshold of one safe here.
+3. **No objection → the studio publishes**, from Pending Verifications. Consent
+   is passive by design: a unanimity rule would never fire, because most
+   dancers on a big group have no claimed profile, so "everyone approved" would
+   in practice mean "the one family that claimed approved their own photo".
+4. **Public → community flagging, unchanged.** `routes/flags.js` darkens
+   approved content on the first report and routes it back to the superadmin
+   queue; a human reinstate blocks repeat auto-darkening, so an attacker gets
+   exactly one dark per photo, ever.
+
+Superadmin becomes exception handling — objections and public reports, not
+volume. The dancer-level default photo (`dancers.card_photo_*`) still goes
+through the superadmin queue: it is not scoped to a routine, so there is no
+cast to consult.
