@@ -17,6 +17,7 @@ tobeprocessed/
 backups/
 public/uploads/
 staging_import.sqlite*
+submissions.sqlite*
 reports/
 dance_awards.sqlite
 mdfilesbk/

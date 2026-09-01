@@ -55,6 +55,9 @@ async function computeFeaturedStudios() {
      JOIN studio_activity sa ON sa.studio_id = s.id
      WHERE sa.created_at > datetime('now', '-${WINDOW_DAYS} days')
        AND s.status = 'active'
+       -- Synthetic independent studios are never featured: they are one
+       -- dancer wearing a studio-shaped row (utils/independents.js).
+       AND COALESCE(s.is_independent, 0) = 0
        AND s.is_claimed = 1
        AND s.owner_id IS NOT NULL
        AND s.logo_url IS NOT NULL AND s.logo_url != ''

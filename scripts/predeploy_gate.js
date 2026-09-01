@@ -19,6 +19,9 @@ const path = require('path');
 const ROOT = path.join(__dirname, '..');
 const GATE_PORT = 3997;
 const GATE_DB = path.join(os.tmpdir(), 'awardhome_gate.sqlite');
+// Family submissions stage in their own SQLite file; the gate gets a
+// throwaway one so a sweep or audit never touches a real staging database.
+const GATE_SUBMISSIONS_DB = path.join(os.tmpdir(), 'awardhome_gate_submissions.sqlite');
 
 const run = (cmd, args, opts = {}) => new Promise(resolve => {
   const child = spawn(cmd, args, { cwd: ROOT, stdio: 'inherit', ...opts });
@@ -78,7 +81,8 @@ async function main() {
 
   console.log('=== GATE 3/4: adversarial page sweep ===');
   const env = {
-    ...process.env, DB_PATH: GATE_DB, PORT: String(GATE_PORT), BETA_MODE: 'false',
+    ...process.env, DB_PATH: GATE_DB, SUBMISSIONS_DB_PATH: GATE_SUBMISSIONS_DB,
+    PORT: String(GATE_PORT), BETA_MODE: 'false',
     PROFILE_RATE_LIMIT: '50000', ENABLE_NIGHTLY_BACKUPS: 'false', ENABLE_WEEKLY_SCRAPE: 'false',
     ENABLE_SENTINEL: 'false', EMAIL_PROVIDER: '',
   };
@@ -107,7 +111,10 @@ async function main() {
 }
 
 function finish(results) {
-  for (const ext of ['', '-wal', '-shm']) fs.rmSync(GATE_DB + ext, { force: true });
+  for (const ext of ['', '-wal', '-shm']) {
+    fs.rmSync(GATE_DB + ext, { force: true });
+    fs.rmSync(GATE_SUBMISSIONS_DB + ext, { force: true });
+  }
   const failed = Object.entries(results).filter(([, c]) => c !== 0);
   console.log('\n=== GATE SUMMARY ===');
   for (const [stage, code] of Object.entries(results)) {

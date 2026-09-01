@@ -62,7 +62,16 @@ async function main() {
   const studios = await db.all(`
     SELECT s.id, s.name, s.owner_id, s.rejected_merges,
            (SELECT COUNT(*) FROM awards a WHERE a.studio_id = s.id) AS awards
-    FROM studios s WHERE IFNULL(s.status,'') <> 'merged'`);
+    FROM studios s
+    WHERE IFNULL(s.status,'') <> 'merged'
+      -- Independent dancers' synthetic studios are EXCLUDED, and this is
+      -- load-bearing (design v2 §6.2.1 condition 1): two independents named
+      -- "Emma Smith" carry near-identical names, and merging them on the case
+      -- tier would fuse two real children into one roster — precisely the
+      -- shared-roster failure the synthetic model exists to prevent. Their
+      -- names carry the dancer's unique_id so they can't collide anyway; this
+      -- guard means a future naming change can't quietly re-arm it.
+      AND COALESCE(s.is_independent, 0) = 0`);
 
   const groups = new Map();
   for (const s of studios) {

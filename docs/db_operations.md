@@ -264,3 +264,55 @@ sweep; run once on prod after deploy:
   content (claims/acks/photos) never deleted; primary = claimed > most
   awards > oldest. Local run: 1,070 dups merged (e.g. 4x "Ina Su" -> 1).
   This is the convergence mechanism for repair-created per-routine profiles.
+
+## Family submissions: a second SQLite file (2026-08-31)
+
+Family-entered awards stage in **`submissions.sqlite`**, not `database.sqlite`.
+`SUBMISSIONS_DB_PATH` overrides the file, the same way `DB_PATH` does for the
+canonical database; the smoke suite and `npm run gate` both point it at a
+throwaway copy.
+
+Why a second file: SQLite serialises writers. A submission spike — a Saturday
+at a big competition, dozens of families entering placements — must not queue
+behind, or hold up, the database that renders every public page. A long write
+transaction was already observed against production during the 2026-08-31
+studio merge. It also keeps the Postgres question answerable with a real number
+(p95 write latency on this file) rather than a guess; see "When to revisit"
+above.
+
+Schema lives in `utils/submissionsDb.js` and is applied on first connection
+(`CREATE TABLE IF NOT EXISTS`), not by `node database.js` — so there is never a
+window where a deploy has the code but not the table.
+
+**What stays in the canonical database.** `award_provenance` does, deliberately:
+it is a property of an award, read wherever awards are read, and promotion
+writes it in the same transaction as the award itself — impossible across two
+SQLite files. Provenance writes happen at review-promotion rate, not submission
+rate, so they do not reintroduce the contention the split exists to avoid.
+
+**Orphans.** Staging rows carry canonical ids (user, dancer, studio, event)
+across a database boundary, so `PRAGMA foreign_key_check` cannot see them at
+all. `scripts/check_submission_orphans.js` reports them — run by the weekly
+Sunday integrity cron, and safe to run by hand. It never deletes: a family's
+submission is their record of their own child's award, and silent erasure is
+worse than a dangling row. Read paths already drop rows whose canonical event
+has vanished, and promotion re-resolves every id at decision time.
+
+## Independent-dancer migration (2026-08-31)
+
+`node scripts/migrate_independent_studios.js [--apply]` — dry run by default,
+idempotent, writes `reports/independent_migration.json`. Converts shared
+`Independent, <region>` rosters into per-dancer synthetic studios
+(`studios.is_independent = 1`). Run the identical command on local and prod;
+never copy a database between them.
+
+Left behind on purpose: awards with no resolved dancer (a published result is a
+real fact even when the person cannot be identified), genuine cross-independent
+collaborations, and same-name pairs — each of those is either one person entered
+twice or two different children, and only a person can tell. The residual roster
+is flagged `is_independent` too, so it disappears from studio surfaces while
+keeping its awards.
+
+Detection is a reviewed per-organization list in `utils/independents.js`, never
+a regex on `independ` — `IndepenDANCE Studio` is a real studio. A rule fires
+only on studios whose awards come from that organization.

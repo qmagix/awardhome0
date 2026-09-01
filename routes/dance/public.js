@@ -8,6 +8,7 @@ const { formatEventTitle } = require('../../utils/format');
 const { unsubscribeToken } = require('../../utils/invites');
 const { resolveCardDesign } = require('../../utils/cardDesign');
 const { flagOn } = require('../../utils/featureFlags');
+const { studioDisplayNameSql, excludeIndependentSql } = require('../../utils/independents');
 const { ensureUpcomingTable, upcomingForOrg, distanceMiles } = require('../../utils/upcoming');
 const { REACTION_TYPES, readReactorKey, ensureReactorKey, toggleReaction, countsForAwards, myReactions } = require('../../utils/reactions');
 const rateLimit = require('express-rate-limit');
@@ -128,8 +129,10 @@ router.get('/faq/admin', (req, res) => {
 });
 
 
-router.get('/faq/dancer', (req, res) => {
-  res.render('faq_dancer');
+router.get('/faq/dancer', async (req, res) => {
+  // The family-submission answer appears only for readers who can actually
+  // use the feature — same flag that gates the form itself.
+  res.render('faq_dancer', { featureSubmissions: await flagOn('family_submissions', req) });
 });
 
 
@@ -209,11 +212,18 @@ router.get(['/studios', '/org/:slug', '/event/:id'],
 async function loadHomepageData() {
   const db = await openDb();
 
+  // Synthetic one-dancer studios standing in for INDEPENDENT dancers are
+  // excluded from every studio-facing surface on this page — featured,
+  // leaderboards, and the studio total. Without that, 451 (and growing)
+  // one-dancer "studios" would swamp the directory and the rankings would
+  // compare a soloist's personal row against a 200-dancer studio. See
+  // utils/independents.js.
   const featuredStudios = await db.all(`
     SELECT s.id, s.unique_id, s.name, COUNT(DISTINCT a.id) as total_awards
     FROM studios s
     LEFT JOIN awards a ON s.id = a.studio_id
-    WHERE s.is_featured = 1 OR s.auto_featured_rank IS NOT NULL
+    WHERE (s.is_featured = 1 OR s.auto_featured_rank IS NOT NULL)
+      AND ${excludeIndependentSql('s')}
     GROUP BY s.id
     ORDER BY s.is_featured DESC, s.auto_featured_rank ASC, s.name
     LIMIT 12
@@ -226,7 +236,7 @@ async function loadHomepageData() {
     SELECT s.id, s.unique_id, s.name, COUNT(a.id) as total_awards
     FROM studios s
     LEFT JOIN awards a ON s.id = a.studio_id
-    WHERE s.id NOT IN (${excludeIds.join(',')})
+    WHERE s.id NOT IN (${excludeIds.join(',')}) AND ${excludeIndependentSql('s')}
     GROUP BY s.id
     ORDER BY total_awards DESC
     LIMIT 100
@@ -238,6 +248,7 @@ async function loadHomepageData() {
     LEFT JOIN awards a ON s.id = a.studio_id
     LEFT JOIN events e ON a.event_id = e.id
     WHERE e.year = (SELECT MAX(year) FROM events) AND s.id NOT IN (${excludeIds.join(',')})
+      AND ${excludeIndependentSql('s')}
     GROUP BY s.id
     ORDER BY total_awards DESC
     LIMIT 100
@@ -248,9 +259,10 @@ async function loadHomepageData() {
     FROM studios s
     LEFT JOIN awards a ON s.id = a.studio_id
     LEFT JOIN events e ON a.event_id = e.id
-    WHERE a.is_first_place = 1 
+    WHERE a.is_first_place = 1
       AND e.year = (SELECT MAX(year) FROM events)
       AND s.id NOT IN (${excludeIds.join(',')})
+      AND ${excludeIndependentSql('s')}
     GROUP BY s.id
     ORDER BY total_awards DESC
     LIMIT 100
@@ -309,7 +321,9 @@ async function loadHomepageData() {
   const totals = await db.get(`
     SELECT (SELECT COUNT(*) FROM awards) AS awards,
            (SELECT COUNT(*) FROM dancers) AS dancers,
-           (SELECT COUNT(*) FROM studios WHERE status IS NULL OR status != 'merged') AS studios
+           (SELECT COUNT(*) FROM studios
+              WHERE (status IS NULL OR status != 'merged')
+                AND COALESCE(is_independent, 0) = 0) AS studios
   `);
 
   return { featuredStudios, topStudios, topStudiosThisYear, topStudiosFirstPlaceThisYear, topDancers, topDancersThisYear, topDancersFirstPlaceThisYear, orgs, totals };
@@ -871,7 +885,7 @@ router.get('/dance/api/search', searchLimiter, async (req, res) => {
   const studios = await db.all(`
     SELECT s.id, s.unique_id, s.name, COUNT(a.id) AS awards
     FROM studios s LEFT JOIN awards a ON a.studio_id = s.id
-    WHERE s.name LIKE ? AND s.status = 'active'
+    WHERE s.name LIKE ? AND s.status = 'active' AND ${excludeIndependentSql('s')}
     GROUP BY s.id ORDER BY awards DESC LIMIT 6
   `, [like]);
 
@@ -899,13 +913,19 @@ router.get('/dance/studios', requireAdmin, async (req, res) => {
   const offset = (page - 1) * limit;
   const q = req.query.q || '';
 
-  let whereClause = '';
+  // Synthetic independent studios are one dancer each and would swamp the
+  // directory (451 of them the day the migration ran). ?independent=1 shows
+  // them for the rare admin task that needs to audit the migration.
+  const showIndependent = req.query.independent === '1';
+  const conds = [];
   let queryParams = [];
 
   if (q) {
-    whereClause = 'WHERE s.name LIKE ?';
+    conds.push('s.name LIKE ?');
     queryParams.push(`%${q}%`);
   }
+  if (!showIndependent) conds.push(excludeIndependentSql('s'));
+  const whereClause = conds.length ? 'WHERE ' + conds.join(' AND ') : '';
 
   const countRow = await db.get(`SELECT COUNT(*) as count FROM studios s ${whereClause}`, queryParams);
   const totalStudios = countRow.count;
@@ -961,6 +981,24 @@ router.get('/dance/studio/:id', profileLimiter, async (req, res) => {
   // numeric id via req.params.id.
   const studio = await db.get('SELECT * FROM studios WHERE unique_id = ?', [req.params.id]);
   if (!studio) return res.status(404).send('Studio not found');
+
+  // A synthetic independent "studio" has no studio page — it is one dancer
+  // wearing a studio-shaped row so the resolvers keep working (design
+  // §6.2.1). Send visitors to the person the row stands for. Redirecting is
+  // safe here in a way the numeric-id case is not: this URL is the
+  // non-guessable unique_id, so it can't be walked to enumerate the dataset.
+  // Only a genuinely one-dancer row redirects. A residual shared roster —
+  // the leftovers the migration deliberately did not split, such as a
+  // same-name pair awaiting a human — carries several dancers, and picking
+  // one of them would assert an identity nobody has verified.
+  if (studio.is_independent) {
+    const roster = await db.all(
+      'SELECT d.unique_id FROM dancer_studios ds JOIN dancers d ON d.id = ds.dancer_id WHERE ds.studio_id = ?',
+      [studio.id]);
+    if (roster.length === 1) return res.redirect(302, `/dancer/${roster[0].unique_id}`);
+    return res.status(404).send('Studio not found');
+  }
+
   req.params.id = studio.id;
 
   await db.run('UPDATE studios SET view_count = view_count + 1 WHERE id = ?', [studio.id]);
@@ -1337,7 +1375,8 @@ router.get('/dancer/:unique_id', profileLimiter, async (req, res) => {
 
   // Fetch all affiliated studios
   const studios = await db.all(`
-    SELECT s.id, s.unique_id, s.name, ds.status 
+    SELECT s.id, s.unique_id, ${studioDisplayNameSql('s')} as name,
+           COALESCE(s.is_independent, 0) as is_independent, ds.status
     FROM dancer_studios ds
     JOIN studios s ON ds.studio_id = s.id
     WHERE ds.dancer_id = ?
@@ -1351,7 +1390,7 @@ router.get('/dancer/:unique_id', profileLimiter, async (req, res) => {
   // rather than 500 the whole dancer page.
   const awardsSelect = `
     SELECT DISTINCT a.*, e.name as event_name, e.year as event_year, o.name as org_name, o.logo_url, o.custom_icons,
-      s.name as studio_name, s.unique_id as studio_unique_id,
+      ${studioDisplayNameSql('s')} as studio_name, s.unique_id as studio_unique_id,
       CASE WHEN s.owner_id IS NOT NULL THEN 1 ELSE 0 END as studio_claimed,
       (SELECT COUNT(*) FROM award_dancers ad2 WHERE ad2.award_id = a.id) as dancer_count
     FROM awards a
@@ -1522,7 +1561,7 @@ router.get('/dance/event/:id', async (req, res) => {
   try { orgIconsObj = event.custom_icons ? JSON.parse(event.custom_icons) : null; } catch (e) { }
 
   const awards = await db.all(`
-    SELECT a.*, d.name as dancer_name, d.unique_id, s.name as studio_name, s.unique_id as studio_uid,
+    SELECT a.*, d.name as dancer_name, d.unique_id, ${studioDisplayNameSql('s')} as studio_name, s.unique_id as studio_uid,
       CASE WHEN s.owner_id IS NOT NULL THEN 1 ELSE 0 END as studio_claimed
     FROM awards a
     LEFT JOIN dancers d ON a.dancer_id = d.id

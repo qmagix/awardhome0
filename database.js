@@ -590,7 +590,38 @@ async function initDb() {
     CREATE INDEX IF NOT EXISTS idx_event_reg_clicks_event
       ON event_reg_clicks(upcoming_event_id);
 
+    -- How a canonical award came to exist, and who vouched for it. Lives in
+    -- the CANONICAL database (not the submissions staging file, where the
+    -- rest of the family-submission tables sit) for two reasons: it is a
+    -- property of an award, read wherever awards are read; and promotion
+    -- writes it in the SAME transaction as the award itself, which is
+    -- impossible across two SQLite files. Written at review time only, so it
+    -- never competes with the submission firehose the staging file absorbs.
+    --
+    -- source_type: 'import' | 'family_submission' | 'studio_owner' | 'admin'
+    -- verification_level: family_submitted | corroborated | studio_confirmed
+    --                     | source_verified   (design v2 §7)
+    -- Orphan story: award_id may dangle if an award is deleted; the ledger is
+    -- deliberately append-only and is read by award_id, so an orphan row is
+    -- simply never selected. scripts/check_submission_orphans.js reports them.
+    CREATE TABLE IF NOT EXISTS award_provenance (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      award_id INTEGER NOT NULL,
+      source_type TEXT NOT NULL,
+      submission_id INTEGER,
+      import_run TEXT,
+      contributor_user_id INTEGER REFERENCES users(id),
+      verification_level TEXT NOT NULL DEFAULT 'family_submitted',
+      decided_by INTEGER REFERENCES users(id),
+      decided_at DATETIME,
+      note TEXT,
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE INDEX IF NOT EXISTS idx_award_provenance_award ON award_provenance(award_id);
+    CREATE INDEX IF NOT EXISTS idx_award_provenance_submission ON award_provenance(submission_id);
+
     -- Known flags ship dark; releases happen at /admin/features
+    INSERT OR IGNORE INTO feature_flags (key, state) VALUES ('family_submissions', 'off');
     INSERT OR IGNORE INTO feature_flags (key, state) VALUES ('thank_you_notes', 'off');
     INSERT OR IGNORE INTO feature_flags (key, state) VALUES ('award_photos', 'off');
     INSERT OR IGNORE INTO feature_flags (key, state) VALUES ('auto_moderation', 'off');
@@ -717,6 +748,17 @@ async function initDb() {
     // full scrape so they read as long-settled rather than brand new.
     await db.exec("UPDATE events SET created_at = '2026-05-15 00:00:00'");
   } catch(e) {}
+
+  // Synthetic one-dancer studio standing in for an INDEPENDENT dancer
+  // (mobile design v2 §6.2.1). Making "independent" a data case rather than a
+  // code case keeps resolveDancer, both solo-repair scripts and the M4
+  // convergence key working on a studio key with no parallel branch. The flag
+  // is what keeps the directory from filling with thousands of one-dancer
+  // "studios": every studio-facing surface excludes it, and the public studio
+  // page redirects to the dancer instead of rendering.
+  // Applied to existing data by scripts/migrate_independent_studios.js.
+  try { await db.exec('ALTER TABLE studios ADD COLUMN is_independent INTEGER DEFAULT 0'); } catch(e) {}
+  try { await db.exec('CREATE INDEX IF NOT EXISTS idx_studios_independent ON studios(is_independent)'); } catch(e) {}
 
   // Director's private tag for a dancer within their studio ("Senior Mia",
   // "Mia 2018") — shown only on studio-management surfaces to distinguish

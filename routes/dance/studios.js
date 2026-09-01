@@ -81,6 +81,10 @@ async function findPotentialDuplicates(db, studio) {
     WHERE (name LIKE ? OR aka LIKE ?)
       AND id != ?
       AND status != 'merged'
+      -- Never suggest merging a real studio with an independent dancer's
+      -- synthetic row: that would attach one child's whole history to a
+      -- studio they never danced for.
+      AND COALESCE(is_independent, 0) = 0
     LIMIT 15
   `, [searchName, searchName, studio.id]);
 

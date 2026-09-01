@@ -1,0 +1,265 @@
+<%- include('partials/header') %>
+
+<div class="container" style="margin-top: 4rem; max-width: 900px; padding-bottom: 4rem;">
+
+  <div class="header-section" style="margin-bottom: 2rem;">
+    <h1>Add a missing award</h1>
+    <p class="subtitle">
+      For <strong><%= dancer.name %></strong>. Competitions don't always publish everything —
+      when something is missing, you can add it here. It stays private to you until a
+      reviewer confirms it.
+    </p>
+    <p style="margin: 0.5rem 0 0;">
+      <a href="/manage/dancer/<%= dancer.id %>" style="color: var(--primary); text-decoration: none;">&larr; Back to <%= dancer.name %>'s profile</a>
+    </p>
+  </div>
+
+  <% if (notice) { %>
+    <div class="card glass-card" style="margin-bottom: 1.5rem; border-left: 3px solid #6bbf6b;">
+      <p style="margin: 0;"><%= notice %></p>
+    </div>
+  <% } %>
+
+  <% if (errors && errors.length) { %>
+    <div class="card glass-card" style="margin-bottom: 1.5rem; border-left: 3px solid #d98a8a;">
+      <p style="margin: 0 0 0.5rem; font-weight: 600;">We couldn't save that yet:</p>
+      <ul style="margin: 0; padding-left: 1.2rem;">
+        <% errors.forEach(function (e) { %><li><%= e %></li><% }); %>
+      </ul>
+    </div>
+  <% } %>
+
+  <div class="card glass-card">
+    <form method="POST" action="/manage/dancer/<%= dancer.id %>/submissions"
+          style="display: flex; flex-direction: column; gap: 1.5rem;">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <!-- One key per rendered form: a double-click or a refresh-resend returns
+           the original submission instead of creating a second award. -->
+      <input type="hidden" name="client_submission_id" value="<%= clientSubmissionId %>">
+
+      <!-- Studio: DERIVED from affiliation, never typed. -->
+      <div>
+        <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Studio</label>
+        <% if (affiliations.length === 0) { %>
+          <p style="margin: 0; padding: 0.75rem; background: rgba(0,0,0,0.3); border-radius: 6px;">
+            Dancing independently — no studio on this award.
+          </p>
+        <% } else if (affiliations.length === 1) { %>
+          <p style="margin: 0; padding: 0.75rem; background: rgba(0,0,0,0.3); border-radius: 6px;">
+            <%= affiliations[0].is_independent ? 'Independent' : affiliations[0].name %>
+          </p>
+        <% } else { %>
+          <select name="studio_id" required
+                  style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+            <option value="">Which studio was this routine danced for?</option>
+            <% affiliations.forEach(function (s) { %>
+              <option value="<%= s.id %>" <%= String(form.studio_id) === String(s.id) ? 'selected' : '' %>>
+                <%= s.is_independent ? 'Independent' : s.name %>
+              </option>
+            <% }); %>
+          </select>
+        <% } %>
+        <p style="margin: 0.4rem 0 0; font-size: 0.8rem; color: var(--text-muted);">
+          Taken from <%= dancer.name %>'s studio affiliations — you never have to type it.
+          A studio switch doesn't rewrite history: past awards keep the studio they were danced for.
+        </p>
+      </div>
+
+      <!-- Event: canonical events only. Families never create one here. -->
+      <div>
+        <label for="eventSearch" style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Competition *</label>
+        <input type="text" id="eventSearch" autocomplete="off" placeholder="Start typing a competition or event name…"
+               style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+        <input type="hidden" name="event_id" id="eventId" value="<%= form.event_id || '' %>">
+        <div id="eventResults" style="margin-top: 0.5rem; display: none; max-height: 240px; overflow-y: auto; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px;"></div>
+        <p id="eventChosen" style="margin: 0.4rem 0 0; font-size: 0.85rem; color: var(--gold-vivid);"></p>
+        <p style="margin: 0.4rem 0 0; font-size: 0.8rem; color: var(--text-muted);">
+          Can't find it? Adding a brand-new event is coming soon — for now, tell us in the notes
+          and a reviewer will sort it out.
+        </p>
+      </div>
+
+      <div>
+        <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Routine name *</label>
+        <input type="text" name="performance_name" required maxlength="200" value="<%= form.performance_name || '' %>"
+               placeholder="e.g. Fireworks"
+               style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+      </div>
+
+      <!-- Group size decides how the award is recorded. Required, always. -->
+      <div>
+        <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Routine size *</label>
+        <select name="group_size" id="groupSize" required
+                style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+          <option value="">Choose one…</option>
+          <% groupSizes.forEach(function (g) { %>
+            <option value="<%= g.key %>" data-enumerable="<%= g.enumerable ? 1 : 0 %>"
+                    <%= form.group_size === g.key ? 'selected' : '' %>><%= g.label %></option>
+          <% }); %>
+        </select>
+        <p style="margin: 0.4rem 0 0; font-size: 0.8rem; color: var(--text-muted);">
+          This one matters: it's how we know a group routine is a group, even when only
+          your dancer is listed on it.
+        </p>
+      </div>
+
+      <div id="castBlock" style="display: none;">
+        <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Who else danced it?</label>
+        <textarea name="cast_names" rows="3" placeholder="One name per line — optional"
+                  style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;"><%= form.cast_names || '' %></textarea>
+        <label style="display: flex; gap: 0.6rem; align-items: flex-start; margin-top: 0.6rem; cursor: pointer;">
+          <input type="checkbox" name="cast_complete" value="1" <%= form.cast_complete ? 'checked' : '' %> style="margin-top: 0.2rem;">
+          <span>That's everyone in this routine</span>
+        </label>
+      </div>
+      <p id="castPartialNote" style="display: none; margin: -0.75rem 0 0; font-size: 0.85rem; color: var(--text-muted);">
+        Just name your own dancer. Other families will fill in their own — the cast grows
+        over the season without anyone typing eight names.
+      </p>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+        <div>
+          <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Placement</label>
+          <input type="text" name="place" value="<%= form.place || '' %>" placeholder="e.g. 1st"
+                 style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+        </div>
+        <div>
+          <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Category / division</label>
+          <input type="text" name="category" value="<%= form.category || '' %>" placeholder="e.g. Teen Contemporary"
+                 style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+        </div>
+        <div>
+          <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Award name</label>
+          <input type="text" name="award_type" value="<%= form.award_type || '' %>" placeholder="e.g. Platinum, Judges' Choice"
+                 style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+        </div>
+        <div>
+          <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Age division</label>
+          <input type="text" name="age_division" value="<%= form.age_division || '' %>" placeholder="e.g. Teen"
+                 style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+        </div>
+        <div>
+          <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Teacher</label>
+          <input type="text" name="teacher" value="<%= form.teacher || '' %>"
+                 style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+        </div>
+        <div>
+          <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Choreographer</label>
+          <input type="text" name="choreographer" value="<%= form.choreographer || '' %>"
+                 style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+        </div>
+      </div>
+      <p style="margin: -0.75rem 0 0; font-size: 0.8rem; color: var(--text-muted);">
+        Teacher and choreographer are almost never published by competitions. You're often the
+        only person who can record who made the routine.
+      </p>
+
+      <div>
+        <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Anything else a reviewer should know?</label>
+        <textarea name="notes" rows="2" maxlength="2000"
+                  style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;"><%= form.notes || '' %></textarea>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="align-self: flex-start;">Submit for review</button>
+      <p style="margin: 0; font-size: 0.8rem; color: var(--text-muted);">
+        Up to <%= dailyLimit %> submissions a day per household.
+      </p>
+    </form>
+  </div>
+
+  <h2 style="margin-top: 3rem;">Your submissions</h2>
+  <% if (!submissions.length) { %>
+    <div class="card glass-card"><p style="margin: 0; color: var(--text-muted);">Nothing submitted yet.</p></div>
+  <% } else { %>
+    <% submissions.forEach(function (s) { %>
+      <div class="card glass-card" style="margin-bottom: 1rem;" data-submission-id="<%= s.id %>">
+        <div style="display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+          <div>
+            <strong style="font-size: 1.05rem;"><%= s.performance_name %></strong>
+            <span style="color: var(--text-muted);">— <%= s.group_size_label %></span>
+            <div style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">
+              <% if (s.event) { %><%= s.event.name %><% if (s.event.year) { %> (<%= s.event.year %>)<% } %><% } %>
+              <% if (s.studio) { %> · <%= s.studio.is_independent ? 'Independent' : s.studio.name %><% } %>
+              <% if (s.place) { %> · <%= s.place %><% } %>
+            </div>
+            <% var names = cast.get(s.id) || []; %>
+            <% if (names.length) { %>
+              <div style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem;">
+                With: <%= names.join(', ') %><%= s.cast_complete ? '' : ' (cast still filling in)' %>
+              </div>
+            <% } else if (!s.cast_complete) { %>
+              <div style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem;">Cast still filling in</div>
+            <% } %>
+          </div>
+          <div style="text-align: right;">
+            <span data-submission-status="<%= s.status %>"
+                  style="display: inline-block; padding: 0.3rem 0.7rem; border-radius: 999px; font-size: 0.8rem; background: rgba(212,175,55,0.15); color: var(--gold-vivid);">
+              <%= s.status === 'submitted' ? 'Pending review' : s.status %>
+            </span>
+            <div style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.35rem;"><%= s.created_at %></div>
+          </div>
+        </div>
+      </div>
+    <% }); %>
+    <p style="color: var(--text-muted); font-size: 0.85rem;">
+      Pending submissions are visible only to you. They appear on the public trophy case
+      once a reviewer confirms them.
+    </p>
+  <% } %>
+</div>
+
+<script>
+  (function () {
+    var sizeSel = document.getElementById('groupSize');
+    var castBlock = document.getElementById('castBlock');
+    var partialNote = document.getElementById('castPartialNote');
+    function syncCast() {
+      var opt = sizeSel.options[sizeSel.selectedIndex];
+      var enumerable = opt && opt.dataset.enumerable === '1';
+      var chosen = !!sizeSel.value;
+      castBlock.style.display = enumerable ? 'block' : 'none';
+      partialNote.style.display = (chosen && !enumerable) ? 'block' : 'none';
+    }
+    sizeSel.addEventListener('change', syncCast);
+    syncCast();
+
+    // Event picker. Canonical events only — there is deliberately no
+    // "create event" path here; families get one in M2 via event candidates.
+    var search = document.getElementById('eventSearch');
+    var results = document.getElementById('eventResults');
+    var hidden = document.getElementById('eventId');
+    var chosen = document.getElementById('eventChosen');
+    var timer = null;
+
+    function pick(ev) {
+      hidden.value = ev.id;
+      chosen.textContent = 'Selected: ' + ev.name + (ev.year ? ' (' + ev.year + ')' : '');
+      results.style.display = 'none';
+      search.value = '';
+    }
+
+    search.addEventListener('input', function () {
+      clearTimeout(timer);
+      var q = search.value.trim();
+      if (q.length < 2) { results.style.display = 'none'; return; }
+      timer = setTimeout(function () {
+        fetch('/api/dancer/<%= dancer.id %>/event-search?q=' + encodeURIComponent(q))
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            results.innerHTML = '';
+            (data.events || []).forEach(function (ev) {
+              var row = document.createElement('div');
+              row.style.cssText = 'padding:0.6rem 0.75rem;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.08);';
+              row.textContent = ev.name + (ev.year ? ' (' + ev.year + ')' : '') + (ev.org_name ? ' — ' + ev.org_name : '');
+              row.addEventListener('click', function () { pick(ev); });
+              results.appendChild(row);
+            });
+            results.style.display = (data.events || []).length ? 'block' : 'none';
+          })
+          .catch(function () { results.style.display = 'none'; });
+      }, 200);
+    });
+  })();
+</script>
+
+<%- include('partials/footer') %>

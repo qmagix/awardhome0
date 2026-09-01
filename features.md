@@ -679,3 +679,93 @@ signal: GET /admin/award-emphasis (superadmin) aggregates them per award term
 classification (docs/org_top_awards.md, award vocab). Owner endpoints:
 GET/POST /manage/studio/:id/history/weights. Activity: award_weights_updated.
 IP: maybe_patentable.md §A11.
+
+## Independent dancers: synthetic studios (2026-08-31)
+Some competitions publish an unaffiliated entrant on a shared regional roster —
+YAGP's `Independent, CA`, `Independent, Poland` and 91 siblings, carrying 459
+dancers between them. That is a latent conflation of real children, because
+`scripts/auto_merge_dancer_profiles.js` groups candidates by
+`(studio_id, cleaned name)` and four same-name pairs already sat on those
+rosters. They survived only because the script's third condition — a shared
+canonical routine in the same year — was unmet, and family award entry is
+precisely what supplies routines.
+
+So an independent dancer now gets a **synthetic one-dancer studio** of their
+own (`studios.is_independent = 1`, name
+`Independent — <dancer name> (<DNC-unique_id>)`). This makes "independent" a
+data case rather than a code case: `resolveDancer`, both solo-repair scripts,
+and the planned convergence key all keep working on a studio key with no
+parallel branch. It is the same pseudo-studio pattern the platform already uses
+for cross-studio collaborations.
+
+Two conditions hold it up, and both are enforced in code:
+- **Globally unique names.** The dancer's `unique_id` is in the stored name, and
+  `scripts/merge_studio_aliases.js` skips independents outright — otherwise two
+  independents named "Emma Smith" would be fused on the case tier and the
+  shared roster would return one step later. Visitors never see the machine
+  name: card and profile queries render `Independent` via
+  `studioDisplayNameSql()`.
+- **Invisible to studio surfaces.** Excluded from the studio directory, public
+  search, the featured rotation, homepage leaderboards, the platform studio
+  count, and owner merge suggestions. `/dance/studio/<uid>` for a synthetic
+  studio redirects to the dancer; a *residual* roster (several dancers, e.g. a
+  same-name pair awaiting a human) 404s rather than asserting an identity.
+
+Detection is a **reviewed per-organization marker list**
+(`utils/independents.js`), never a regex on `independ`: `IndepenDANCE Studio`
+and `Independent Dance Collective` are real studios, and a substring match
+would dissolve their identity. A rule fires only on studios whose awards
+actually come from that organization.
+
+Migration: `node scripts/migrate_independent_studios.js [--apply]` (idempotent,
+dry-run by default, writes `reports/independent_migration.json`). Awards with no
+resolved dancer, and genuine cross-independent collaborations, stay on the
+roster — a published result is a real fact even when the person cannot be
+identified. Same-name pairs are never split automatically: each is either one
+person entered twice or two different children, and only a person can tell.
+
+## Family award submissions, staged (2026-08-31)
+Competitions do not publish everything. A family that owns a dancer profile can
+now add a missing award themselves at
+`/manage/dancer/:id/submissions` — the first milestone of the mobile-app plan
+(`docs/mobile_app_development_plan.md` M1), shipped web-first so the riskiest
+part (data integrity of family-entered awards) is proven on a surface we already
+know how to ship. Behind the `family_submissions` feature flag, dark by default.
+
+Nothing canonical is written. Submissions land in **their own SQLite file**
+(`submissions.sqlite`, `SUBMISSIONS_DB_PATH` override) so a submission spike at
+a competition never contends with the database that renders every public page.
+They are private to the household and appear on no public surface until a
+reviewer promotes them (M3).
+
+The rules that protect the archive live in `utils/submissions.js`, so the web
+form and the future mobile API cannot drift apart:
+- **Studio is derived from affiliation, never typed** — the single largest
+  duplicate vector, removed at the source. A multi-studio dancer is *asked*
+  which studio the routine was danced for; a dancer with no affiliation submits
+  with no studio.
+- **Group size is required** and drives the canonical write path later: solo
+  double-writes `awards.dancer_id` + the junction, groups use the junction only.
+  Only solo/duet/trio may claim a complete cast; a group, line or production is
+  recorded as explicitly partial no matter what the client sends, so a parent
+  who enters one child never produces a record indistinguishable from a solo.
+- **Server-side normalisation.** Whitespace collapse and typographic folds are
+  re-applied on receipt; the client's version is a courtesy to reviewers, not a
+  guarantee. The raw payload is retained for the reviewer.
+- **Idempotent on `(user_id, client_submission_id)`** — a double-click, a
+  refresh-resend, or (later) a retried offline upload returns the original row.
+- **Per-household daily limits** (40 submissions, 10 dancer links) recorded in
+  an append-only ledger, so a refusal is auditable. The dancer-link limit also
+  applies to authenticated profile claims.
+- **Teacher and choreographer** are captured as award metadata — data organizers
+  almost never publish. (The credit *graph* with two-sided accept remains behind
+  its IP gate; see TODOS_and_DONE.md.)
+
+Event choice is against **canonical events only** — families cannot create an
+event here. `event_candidates` and the geo/date picker arrive in M2.
+
+`award_provenance` (canonical DB) records how each award came to exist and who
+vouched for it; it is written at promotion time in the same transaction as the
+award. `scripts/check_submission_orphans.js` reports cross-database dangling
+references (the weekly Sunday integrity cron runs it) and never deletes: a
+family's submission is their record of their own child's award.

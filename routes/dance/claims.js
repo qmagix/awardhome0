@@ -5,6 +5,7 @@ const { logStudioActivity } = require('../../utils/activity');
 const { requireAuth } = require('../../middleware/auth');
 const { domainsMatch, approveStudioClaim, matchDancerClaimCode, notifyStudioOfProfileClaim } = require('../../utils/claims');
 const { sendEmail } = require('../../utils/mailer');
+const { consumeHouseholdAction } = require('../../utils/submissions');
 const { BASE_URL } = require('../../config');
 const rateLimit = require('express-rate-limit');
 const bcrypt = require('bcrypt');
@@ -142,6 +143,18 @@ router.post('/claim/dancer/:id', requireAuth, async (req, res) => {
 
   if (dancer.is_claimed) {
     return res.render('claim_dancer', { dancer, pageTitle: `Claim ${dancer.name}`, error: 'This dancer profile is already claimed.' });
+  }
+
+  // Per-household daily ceiling on dancer links. The IP limiter on the
+  // anonymous apply route stops a burst; this stops one signed-in account
+  // quietly claiming profile after profile, which is the shape that costs
+  // reviewer time rather than bandwidth.
+  const linkQuota = await consumeHouseholdAction(req.session.user.id, 'dancer_link', dancer.id);
+  if (!linkQuota.ok) {
+    return res.status(429).render('claim_dancer', {
+      dancer, pageTitle: `Claim ${dancer.name}`,
+      error: `That's ${linkQuota.limit} profile claims in 24 hours. Please come back tomorrow, or contact us if you manage more dancers than that.`,
+    });
   }
 
   // Optional studio claim code: a match routes the claim to that studio's

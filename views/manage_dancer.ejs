@@ -48,6 +48,13 @@
             🎴 Edit Award Cards
           </a>
         </li>
+        <% if (typeof featureSubmissions !== 'undefined' && featureSubmissions) { %>
+        <li>
+          <a href="/manage/dancer/<%= dancer.id %>/submissions" style="display: block; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; color: var(--text-muted); transition: background 0.2s;">
+            ➕ Add a Missing Award
+          </a>
+        </li>
+        <% } %>
       </ul>
       
       <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">

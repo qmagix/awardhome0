@@ -9,6 +9,7 @@ const { generateDancerId } = require('../../utils.js');
 const { validateVanityTag } = require('../../utils/vanity');
 const { flagOn } = require('../../utils/featureFlags');
 const { moderateNote, getModerationMode } = require('../../utils/moderation');
+const { studioDisplayNameSql } = require('../../utils/independents');
 
 // ---- Flip-book card extras (photo + thank-you lines) ----
 
@@ -125,7 +126,7 @@ router.get('/manage/dancer/:id/card', requireAuth, async (req, res) => {
 
   const awards = await db.all(`
     SELECT a.*, e.name as event_name, e.year as event_year, o.name as org_name, o.logo_url, o.custom_icons,
-      s.name as studio_name, s.unique_id as studio_unique_id,
+      ${studioDisplayNameSql('s')} as studio_name, s.unique_id as studio_unique_id,
       CASE WHEN s.owner_id IS NOT NULL THEN 1 ELSE 0 END as studio_claimed,
       (SELECT COUNT(*) FROM award_dancers ad2 WHERE ad2.award_id = a.id) as dancer_count
     FROM awards a
@@ -451,14 +452,15 @@ router.get('/manage/dancer/:id', requireAuth, async (req, res) => {
   }
 
   const studios = await db.all(`
-    SELECT s.name, s.unique_id, ds.status, ds.id as link_id
+    SELECT ${studioDisplayNameSql('s')} as name, s.unique_id, ds.status, ds.id as link_id,
+           COALESCE(s.is_independent, 0) as is_independent
     FROM dancer_studios ds
     JOIN studios s ON ds.studio_id = s.id
     WHERE ds.dancer_id = ?
   `, [dancer.id]);
 
   const awards = await db.all(`
-    SELECT a.*, e.name as event_name, e.year, s.name as studio_name, o.name as org_name
+    SELECT a.*, e.name as event_name, e.year, ${studioDisplayNameSql('s')} as studio_name, o.name as org_name
     FROM awards a
     JOIN award_dancers ad ON a.id = ad.award_id
     JOIN events e ON a.event_id = e.id
@@ -474,8 +476,9 @@ router.get('/manage/dancer/:id', requireAuth, async (req, res) => {
     'SELECT consented_at FROM card_photo_consents WHERE user_id = ? AND dancer_id = ?',
     [req.session.user.id, dancer.id]);
   const featurePhotos = await flagOn('award_photos', req);
+  const featureSubmissions = await flagOn('family_submissions', req);
 
-  res.render('manage_dancer', { dancer, studios, awards, consent: consentRow || null, featurePhotos });
+  res.render('manage_dancer', { dancer, studios, awards, consent: consentRow || null, featurePhotos, featureSubmissions });
 });
 
 

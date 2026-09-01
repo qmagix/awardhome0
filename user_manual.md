@@ -263,3 +263,67 @@ identical copies off the cards. Photos are always human-reviewed.
   - **Shortlist:** signed in, tap the ☆ on any event to save it; "★ My Shortlist" filters to your saved events. Works for studio owners and parents alike.
   - **Calendar:** "Add to Calendar (.ics)" downloads whatever you're currently viewing (filters, near-me, or your shortlist) as an iCalendar file that imports into Google/Apple/Outlook calendars.
 - **Organizers:** manage your listings in the dashboard's **Upcoming Events** tab (also reachable from the "Tour dates" link when viewing your public page). Dates you enter yourself always override anything imported. Your stops appear on your public page ("On Tour") and in the directory.
+
+## 17. Family Award Submissions (staged)
+
+Behind the `family_submissions` feature flag — dark by default, released at
+`/admin/features` like every other flag.
+
+**For families.** Open a claimed dancer from **My Dancers** → **Add a Missing
+Award**. Pick the competition, name the routine, choose the size (solo / duet /
+trio / small group / large group / line / grand line / production), and add the
+placement, category, teacher and choreographer if known. The entry saves
+immediately and shows as **Pending review** on that page — private to the
+household, on no public page, and not yet a real award.
+
+Things worth knowing at the counter:
+- **Nobody types a studio name.** It comes from the dancer's affiliation. A
+  dancer at two studios is asked which one the routine was danced for.
+- **Group routines record an incomplete cast on purpose.** Enter your own
+  dancer; other families fill in theirs.
+- **Duplicate submits are safe.** Each form carries an idempotency key, so a
+  double-click or a refresh-resend returns the original entry.
+- **Limits:** 40 submissions and 10 dancer-profile claims per household per day.
+
+**For operators.**
+- Submissions live in `submissions.sqlite`, not `database.sqlite`
+  (`SUBMISSIONS_DB_PATH` overrides it). Back it up alongside the main database.
+- Nothing here writes a canonical award. Promotion is the reviewer inbox (M3),
+  not yet built — until then, submissions accumulate and are read-only to the
+  platform.
+- `node scripts/check_submission_orphans.js` reports staging rows pointing at
+  canonical records that no longer exist. It never deletes. The weekly Sunday
+  integrity cron runs it automatically.
+
+## 18. Independent Dancers (migration)
+
+Some competitions publish unaffiliated entrants on one shared regional roster
+(`Independent, CA`). That is unsafe: two same-name dancers on one roster can be
+merged into a single person by the duplicate-profile tooling. Each independent
+dancer now gets a private one-dancer studio record instead.
+
+```bash
+node scripts/migrate_independent_studios.js            # dry run — prints the plan
+node scripts/migrate_independent_studios.js --apply
+```
+
+Idempotent; run the identical command on local and prod (never copy a database
+between them). Writes `reports/independent_migration.json`.
+
+What it deliberately does **not** do:
+- It never splits a **same-name pair** — each is either one person entered twice
+  or two different children, and only a person can tell. They are listed in the
+  report; decide by hand, then re-run.
+- It never moves an award with **no resolved dancer** or one shared by several
+  independents. A published result is a real fact even when the person cannot
+  be identified.
+
+Detection uses a reviewed per-organization list in `utils/independents.js`, not
+a pattern match on the word "independent" — `IndepenDANCE Studio` is a real
+studio. Adding a competition to the list means reading the dry run's full output
+first.
+
+Independent records never appear in the studio directory, public search, the
+featured rotation, the homepage leaderboards, the platform studio count, or
+merge suggestions; their award cards read simply **Independent**, and their
+studio URL redirects to the dancer.

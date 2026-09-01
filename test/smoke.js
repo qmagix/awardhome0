@@ -78,7 +78,15 @@ const CHECKS = [
   ['GET', '/dance/leaderboard/bogus', [404], 'unknown leaderboard rejected'],
   ['GET', '/dance/api/search?q=a', [200], 'hero search rejects short query gracefully'],
   ['GET', '/dance/api/search?q=dance', [200], 'hero search returns results'],
+  ['GET', '/manage/dancer/1/submissions', [302], 'anonymous family submissions redirected to login'],
+  ['POST', '/manage/dancer/1/submissions', [403], 'anonymous family submission blocked (CSRF)'],
+  ['GET', '/api/dancer/1/event-search?q=dance', [302], 'anonymous event search redirected to login'],
 ];
+
+// Family submissions stage in their OWN SQLite file (utils/submissionsDb.js).
+// Point both this process and the server at a throwaway copy so the suite
+// never writes to a real staging database.
+const SUBMISSIONS_DB = require('path').join(require('os').tmpdir(), 'awardhome_smoke_submissions.sqlite');
 
 async function waitForServer(timeoutMs = 15000) {
   const deadline = Date.now() + timeoutMs;
@@ -94,10 +102,30 @@ async function waitForServer(timeoutMs = 15000) {
 }
 
 async function main() {
+  // Start from a clean staging file, and both processes must agree on it.
+  for (const ext of ['', '-wal', '-shm']) require('fs').rmSync(SUBMISSIONS_DB + ext, { force: true });
+  process.env.SUBMISSIONS_DB_PATH = SUBMISSIONS_DB;
+
+  // The family-submission surfaces are behind a feature flag that ships dark.
+  // Flip it ON in the database BEFORE the server boots, so its flag cache is
+  // never warmed with the wrong value, and restore it afterwards.
+  let priorFlagState = null;
+  try {
+    const { openDb } = require('../database');
+    const db = await openDb();
+    const row = await db.get("SELECT state FROM feature_flags WHERE key = 'family_submissions'");
+    priorFlagState = row ? row.state : null;
+    await db.run("INSERT INTO feature_flags (key, state) VALUES ('family_submissions', 'on') " +
+      "ON CONFLICT(key) DO UPDATE SET state = 'on'");
+  } catch (e) {
+    console.log('NOTE: could not enable family_submissions flag (' + e.message + ')');
+  }
+
   const server = spawn('node', ['server.js'], {
     cwd: __dirname + '/..',
     env: {
       ...process.env,
+      SUBMISSIONS_DB_PATH: SUBMISSIONS_DB,
       PORT: String(PORT),
       EMAIL_PROVIDER: '',          // never send real email from the smoke test
       ENABLE_NIGHTLY_BACKUPS: 'false',
@@ -394,6 +422,106 @@ async function main() {
             pv2.status + ' status=' + amb.status + ' tagged=' + !!tagged + ' routines=' + withRoutines);
         }
 
+        // ---- M1: family award submissions ----
+        // The whole contract in one pass: a claimed family submits, it shows
+        // as Pending in their private view, a retry with the same
+        // idempotency key returns the ORIGINAL row, and nothing canonical or
+        // public is created by any of it.
+        const famDancer = await db.run(
+          "INSERT INTO dancers (unique_id, name, is_claimed, claimed_by_user_id) VALUES ('smoke-dancer-fam', 'Smoke Dancer Family', 1, ?)",
+          [u1.lastID]);
+        await db.run('INSERT INTO dancer_studios (dancer_id, studio_id) VALUES (?, ?)', [famDancer.lastID, s1.lastID]);
+
+        const subPage = await fetch(BASE + `/manage/dancer/${famDancer.lastID}/submissions`, { headers: { Cookie: owner.cookie } });
+        const subHtml = await subPage.text();
+        check(subPage.status === 200 && subHtml.includes('Add a missing award') && subHtml.includes('Smoke Test Studio'),
+          'family submissions page renders with the studio derived from affiliation', 'status ' + subPage.status);
+
+        const subToken = (subHtml.match(/name="_csrf" value="([^"]+)"/) || [])[1];
+        const IDEM = 'smoke-idem-0001';
+        const postSubmission = (extra) => fetch(BASE + `/manage/dancer/${famDancer.lastID}/submissions`, {
+          method: 'POST', redirect: 'manual',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: owner.cookie },
+          body: new URLSearchParams({
+            _csrf: subToken,
+            client_submission_id: IDEM,
+            event_id: String(event.id),
+            performance_name: '  Smoke   Submitted Routine ',
+            group_size: 'small_group',
+            place: '1st',
+            cast_complete: '1', // must be IGNORED: a small group is never a complete cast
+            ...extra,
+          }).toString(),
+        });
+
+        const { openSubmissionsDb } = require('../utils/submissionsDb');
+        const sdb = await openSubmissionsDb();
+
+        const sub1 = await postSubmission({});
+        const rows1 = await sdb.all('SELECT * FROM award_submissions WHERE client_submission_id = ?', [IDEM]);
+        const r1 = rows1[0] || {};
+        check(sub1.status === 302 && (sub1.headers.get('location') || '').includes('added=1') && rows1.length === 1,
+          'family submission accepted', sub1.status + ' -> ' + sub1.headers.get('location') + ' rows=' + rows1.length);
+        check(r1.performance_name === 'Smoke Submitted Routine' && r1.studio_id === s1.lastID &&
+              r1.status === 'submitted' && r1.verification_level === 'family_submitted',
+          'submission is normalised server-side, studio derived, staged as family_submitted',
+          JSON.stringify({ name: r1.performance_name, studio: r1.studio_id, status: r1.status, level: r1.verification_level }));
+        check(r1.group_size === 'small_group' && r1.cast_complete === 0,
+          'a group submission records an explicitly INCOMPLETE cast, whatever the client claimed',
+          'group_size=' + r1.group_size + ' cast_complete=' + r1.cast_complete);
+
+        const pending = await fetch(BASE + `/manage/dancer/${famDancer.lastID}/submissions`, { headers: { Cookie: owner.cookie } });
+        const pendingHtml = await pending.text();
+        const subRow = (() => {
+          const start = pendingHtml.indexOf(`data-submission-id="${r1.id}"`);
+          if (start === -1) return '';
+          const end = pendingHtml.indexOf('</div>', pendingHtml.indexOf('data-submission-status', start));
+          return pendingHtml.slice(start, end === -1 ? undefined : end);
+        })();
+        check(subRow.includes('Smoke Submitted Routine') && subRow.includes('Pending review'),
+          'submission shows as Pending in the household\'s private view', 'rowFound=' + !!subRow);
+
+        const sub2 = await postSubmission({});
+        const rows2 = await sdb.all('SELECT * FROM award_submissions WHERE client_submission_id = ?', [IDEM]);
+        check(sub2.status === 302 && (sub2.headers.get('location') || '').includes('duplicate=1') &&
+              rows2.length === 1 && rows2[0].id === r1.id,
+          'retrying the same idempotency key returns the original row, no duplicate',
+          sub2.status + ' -> ' + sub2.headers.get('location') + ' rows=' + rows2.length);
+
+        // Nothing canonical, nothing public. A submission is a staging fact
+        // until a reviewer promotes it (M3).
+        const canonical = await db.get(
+          "SELECT COUNT(*) AS n FROM awards WHERE performance_name LIKE '%Smoke Submitted Routine%'");
+        const famPublic = await fetch(BASE + '/dancer/smoke-dancer-fam');
+        const famPublicHtml = await famPublic.text();
+        check(canonical.n === 0 && !famPublicHtml.includes('Smoke Submitted Routine'),
+          'a pending submission creates NO canonical award and appears on no public page',
+          'canonicalAwards=' + canonical.n + ' onPublicPage=' + famPublicHtml.includes('Smoke Submitted Routine'));
+
+        // Group size is required: it decides the canonical write path, so a
+        // submission without it must be refused, not guessed at.
+        const noSize = await postSubmission({ client_submission_id: 'smoke-idem-0002', group_size: '' });
+        check(noSize.status === 400, 'submission without a group size is refused', 'status ' + noSize.status);
+
+        // ---- M1: independent dancers are invisible to studio surfaces ----
+        const indep = await db.get(
+          "SELECT s.id, s.unique_id, s.name FROM studios s WHERE COALESCE(s.is_independent,0) = 1 " +
+          "AND (SELECT COUNT(*) FROM dancer_studios ds WHERE ds.studio_id = s.id) = 1 LIMIT 1");
+        if (indep) {
+          const indepPage = await fetch(BASE + `/dance/studio/${indep.unique_id}`, { redirect: 'manual' });
+          check(indepPage.status === 302 && (indepPage.headers.get('location') || '').startsWith('/dancer/'),
+            'an independent dancer\'s synthetic studio has no studio page — it redirects to the dancer',
+            indepPage.status + ' -> ' + indepPage.headers.get('location'));
+          const term = indep.name.split('(')[0].trim().slice(0, 20);
+          const searchRes = await fetch(BASE + `/dance/api/search?q=${encodeURIComponent(term)}`);
+          const searchJson = searchRes.status === 200 ? await searchRes.json() : { studios: [] };
+          check(!(searchJson.studios || []).some(s => s.unique_id === indep.unique_id),
+            'independent synthetic studios are excluded from public studio search',
+            'hits=' + (searchJson.studios || []).length);
+        } else {
+          console.log('NOTE: independent-studio checks skipped (migration not applied to this DB)');
+        }
+
         const claimant = await login('smoke-claimant@test.invalid');
         check(claimant.status === 302 && claimant.location === '/dance/studio/smoke-studio-2',
           'pending claimant login lands on their claimed studio', claimant.status + ' -> ' + claimant.location);
@@ -439,6 +567,15 @@ async function main() {
     console.error('--- server output ---\n' + serverLog);
   } finally {
     server.kill();
+    // Leave the flag exactly as it was found — the smoke suite runs against
+    // the developer's real local database.
+    try {
+      const { openDb } = require('../database');
+      const db = await openDb();
+      if (priorFlagState === null) await db.run("DELETE FROM feature_flags WHERE key = 'family_submissions'");
+      else await db.run("UPDATE feature_flags SET state = ? WHERE key = 'family_submissions'", [priorFlagState]);
+    } catch (e) { /* nothing to restore */ }
+    for (const ext of ['', '-wal', '-shm']) require('fs').rmSync(SUBMISSIONS_DB + ext, { force: true });
   }
 
   console.log(failures === 0 ? '\nAll smoke checks passed.' : `\n${failures} smoke check(s) FAILED.`);

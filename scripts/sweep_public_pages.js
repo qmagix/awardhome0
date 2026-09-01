@@ -79,6 +79,18 @@ const q = async (db, sql) => (await db.all(sql)).map(r => Object.values(r)[0]);
   add(await q(db, `SELECT s.unique_id FROM studios s JOIN awards a ON a.studio_id=s.id
     GROUP BY s.id ORDER BY COUNT(*) DESC LIMIT 10`), 'studio:biggest', u => `/dance/studio/${u}`);
   add(await q(db, `SELECT unique_id FROM studios ORDER BY RANDOM() LIMIT 40`), 'studio:random', u => `/dance/studio/${u}`);
+  // Independent dancers' synthetic studios take a different exit from this
+  // route (redirect to the dancer, or 404 for a residual shared roster), so
+  // both shapes need their own stratum.
+  add(await q(db, `SELECT s.unique_id FROM studios s WHERE COALESCE(s.is_independent,0)=1
+    AND (SELECT COUNT(*) FROM dancer_studios ds WHERE ds.studio_id=s.id) = 1 LIMIT 10`),
+    'studio:independent-solo', u => `/dance/studio/${u}`);
+  add(await q(db, `SELECT s.unique_id FROM studios s WHERE COALESCE(s.is_independent,0)=1
+    AND (SELECT COUNT(*) FROM dancer_studios ds WHERE ds.studio_id=s.id) != 1 LIMIT 10`),
+    'studio:independent-roster', u => `/dance/studio/${u}`);
+  add(await q(db, `SELECT d.unique_id FROM dancers d JOIN dancer_studios ds ON ds.dancer_id=d.id
+    JOIN studios s ON s.id=ds.studio_id WHERE COALESCE(s.is_independent,0)=1 LIMIT 15`),
+    'dancer:independent', u => `/dancer/${u}`);
 
   // --- orgs: every single one ---
   add(await q(db, `SELECT slug FROM organizations WHERE slug IS NOT NULL`), 'org', s => `/dance/org/${s}`);

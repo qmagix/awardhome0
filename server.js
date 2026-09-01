@@ -271,6 +271,7 @@ app.use(require('./routes/dance/claims'));
 app.use(require('./routes/dance/orgs'));
 app.use(require('./routes/dance/studios'));
 app.use(require('./routes/dance/dancers'));
+app.use(require('./routes/dance/submissions'));
 app.use(require('./routes/admin'));
 app.use(require('./routes/feedback'));
 app.use(require('./routes/partners'));
@@ -349,6 +350,15 @@ cron.schedule('0 4 * * 0', async () => {
     } else {
       console.log('Integrity check: clean');
     }
+
+    // Family submissions stage in their own SQLite file, so their canonical
+    // references (dancer, event, studio) cross a database boundary that the
+    // PRAGMA above cannot see at all. The script opens both connections;
+    // it reports and never deletes — a family's submission is their record
+    // of their own child's award.
+    require('child_process')
+      .spawn('node', [path.join(__dirname, 'scripts', 'check_submission_orphans.js')], { stdio: 'inherit' })
+      .on('error', e => console.error('Submission orphan check failed:', e.message));
   } catch (err) {
     console.error('Integrity check failed:', err);
   }
