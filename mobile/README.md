@@ -15,7 +15,9 @@ npm install            # once
 npm run typecheck      # tsc --noEmit, strict + noUncheckedIndexedAccess
 npm test               # token-lifecycle tests, plain Node, no simulator
 npm run api:types      # regenerate src/api/schema.ts from ../docs/openapi_mobile.json
-npm start              # Expo dev server (needs a simulator or a device)
+npm run go             # Expo dev server in Expo Go mode  <- the normal one
+npm run web            # render in a browser, no phone needed
+npx expo-doctor        # preflight; must stay 18/18
 ```
 
 From the repository root: `npm run mobile:check` runs the typecheck and the
@@ -46,9 +48,10 @@ launch as the real first test.
 
 ## Configuration
 
-`app.json` → `extra.apiBaseUrl` selects the server. Point it at
-`http://localhost:3008` for local development (and use a LAN IP rather than
-`localhost` when running on a physical device).
+The API address comes from `EXPO_PUBLIC_API_BASE_URL`, read from
+`mobile/.env.local` (gitignored) for local work and from the EAS build profile
+otherwise. `app.config.js` overlays it onto `app.json`'s
+`extra.apiBaseUrl`, which is the production default.
 
 ## Universal links
 
@@ -99,6 +102,107 @@ EXPO_PUBLIC_API_BASE_URL=http://192.168.1.243:3008
 It is gitignored, and it is a DHCP lease. `npm run dev` prints the current LAN
 address on boot — if it stops matching `.env.local`, update the file. The
 address matters because `localhost` on the phone means *the phone*.
+
+### If Expo Go refuses the bundle entirely
+
+`npm run web` opens the app in a browser with no Expo Go involved. It is not a
+substitute for a device — no Keychain, no real gestures, no deep links — but it
+renders every screen and exercises the API client against a live server, which
+is most of what a first look is for.
+
+Use it whenever the Expo Go SDK question is unresolved; it never has that
+problem.
+
+To find out which SDK your Expo Go *can* run: **since SDK 54 the Expo Go client
+version number matches the SDK it supports** (SDK 56 → client 56.0.4, SDK 57 →
+client 57.0.9; older clients used a `2.x` series, e.g. 2.33.17 → SDK 53). Open
+Expo Go and read its version, then pin this project to that major.
+
+A common trap: "the latest version in my App Store" is capped by the phone's
+**iOS version**. An older iPhone is offered an older Expo Go, and it really is
+the newest one available *to that device* — so the fix is the project's SDK,
+not another download.
+
+### `npm run go` vs `npm start`
+
+`expo-dev-client` is installed (the EAS `development` profile needs it), and
+its presence makes a bare `expo start` default to **dev-client** mode. Expo Go
+will still discover a project served that way and then do nothing useful with
+it — the URL it is handed points at a custom dev client that is not installed.
+Pressing `s` in the terminal switches modes and changes the URL, which is why
+the entry then disappears from Expo Go's list.
+
+So the mode is pinned in the scripts rather than left to a default:
+
+| Command | Mode | Use when |
+|---|---|---|
+| `npm run go` | Expo Go | the normal case — no build, no Apple account |
+| `npm run go:clear` | Expo Go, cache cleared | after dependency changes, or a stale-looking blank screen |
+| `npm start` | dev client | you have installed a build from the `development` EAS profile |
+
+If Expo Go shows a blank screen or the project vanishes from its list, you are
+almost certainly in the wrong mode — `npm run go:clear` and rescan.
+
+## SDK version: why 54 and not npm-latest
+
+**The project is pinned to Expo SDK 54, because that is what this developer's
+Expo Go supports.**
+
+npm's `latest` tag for `expo` is 57. Following it produces *"The project you
+requested requires a newer version of Expo Go"* on a phone that already has the
+newest Expo Go installed — and there is no newer one to download, because
+**App Store Expo Go is capped by the phone's iOS version**. It really is the
+latest available to that device. No amount of re-downloading fixes it; only
+changing the project's SDK does.
+
+This project went 57 → 56 → 54 before landing, which is two wasted dependency
+realignments. The lesson, in order:
+
+1. Open Expo Go and read the SDK it says it supports.
+2. Pin the project to that major.
+
+Since SDK 54 the Expo Go client version number tracks the SDK it supports
+(SDK 56 → client 56.0.4, SDK 57 → client 57.0.9); older clients used a `2.x`
+series (2.33.17 → SDK 53). So the version number in Expo Go is the answer
+either way.
+
+`npx expo-doctor` is **18/18 on SDK 54**. Keep it there — a red check here has
+twice turned out to be a real problem rather than noise.
+
+### Moving to a newer SDK later
+
+Two things unpin this, and only these:
+
+- **A dev client or TestFlight build.** Expo Go stops being the constraint
+  entirely, so the project can take any SDK. Use `npm start` (dev-client mode)
+  rather than `npm run go`.
+- **A newer Expo Go actually running on the phone** — which may need an iOS
+  upgrade first.
+
+Then `npx expo install expo@^<sdk> --fix`, clean-reinstall `node_modules`, and
+re-run `expo-doctor`, `npm run typecheck` and `npm test`. Expect config-plugin
+churn: `expo-status-bar` is a config plugin on newer SDKs and not on 54, which
+broke `expo config` until it was removed from `plugins` in `app.json`.
+
+### If Expo Go refuses the bundle entirely
+
+`npm run web` opens the app in a browser with no Expo Go involved. It is not a
+substitute for a device — no Keychain, no real gestures, no deep links — but it
+renders every screen and exercises the API client against a live server, which
+is most of what a first look is for.
+
+Use it whenever the Expo Go SDK question is unresolved; it never has that
+problem.
+
+To find out which SDK your Expo Go *can* run: **since SDK 54 the Expo Go client
+version number matches the SDK it supports** (SDK 56 → client 56.0.4, SDK 57 →
+client 57.0.9; older clients used a `2.x` series, e.g. 2.33.17 → SDK 53). Open
+Expo Go and read its version, then pin this project to that major.
+
+A common trap: "the latest version in my App Store" is capped by the phone's
+**iOS version**. An older iPhone is offered an older Expo Go, and it really is
+the newest one available *to that device* — so the fix is the project's SDK,
+not another download.
 
 ### `npm run go` vs `npm start`
 
