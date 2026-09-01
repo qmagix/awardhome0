@@ -80,13 +80,22 @@ module this app uses (`expo-secure-store` included) is in the Expo Go runtime,
 so:
 
 ```bash
-cd mobile
-EXPO_PUBLIC_API_BASE_URL=http://<your-LAN-IP>:3008 npx expo start
+npm run dev        # repo root — prints the exact command to paste next
 ```
 
-Scan the QR code with Expo Go. Use your machine's LAN IP, not `localhost` —
-the phone is a different host. Start the server with `npm run dev` from the
-repo root first.
+`npm run dev` now prints your machine's LAN address and a ready-made line:
+
+```
+Server running on http://localhost:3008
+  on your network:  http://192.168.1.243:3008
+  for the mobile app (mobile/):
+    EXPO_PUBLIC_API_BASE_URL=http://192.168.1.243:3008 npx expo start
+```
+
+Run that second line in `mobile/` and scan the QR code with Expo Go. The LAN
+address matters because `localhost` on the phone means *the phone* — it has to
+be the machine's address on the wifi, and DHCP changes it, which is why the
+server prints it rather than anyone memorising it.
 
 Given that nothing in this app has ever rendered, this is worth doing before
 anything else.
@@ -119,9 +128,10 @@ eas build --profile preview --platform android     # installable APK for invited
 eas build --profile preview --platform ios         # TestFlight — needs an Apple Developer account
 ```
 
-**Before the first build, edit the dev IP in `eas.json`.** The `development`
-profile ships with a placeholder LAN address (`192.168.1.10`); change it to
-yours.
+The `development` profile points at `http://192.168.1.243:3008`. **That is a
+DHCP lease, not a fixed address** — if `npm run dev` starts printing something
+else, update `eas.json` to match, or the dev build will silently fail to reach
+the server.
 
 ### Which profile points where
 

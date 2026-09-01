@@ -15,7 +15,7 @@
         "simulator": true
       },
       "env": {
-        "EXPO_PUBLIC_API_BASE_URL": "http://192.168.1.10:3008"
+        "EXPO_PUBLIC_API_BASE_URL": "http://192.168.1.243:3008"
       }
     },
     "preview": {

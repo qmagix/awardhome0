@@ -10,6 +10,7 @@ const bcrypt = require('bcrypt');
 const { openDb } = require('./database');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 const crypto = require('crypto');
 
 
@@ -325,6 +326,20 @@ app.listen(PORT, async (err) => {
   }
 
   console.log(`Server running on http://localhost:${PORT}`);
+
+  // LAN addresses, for pointing a phone at this machine. A device on the wifi
+  // cannot resolve `localhost` — that is the phone itself — so the mobile app
+  // needs the machine's actual address on the network. Express binds 0.0.0.0
+  // by default, so these work with no further configuration.
+  const nets = os.networkInterfaces();
+  const lan = Object.values(nets).flat()
+    .filter((n) => n && n.family === 'IPv4' && !n.internal)
+    .map((n) => n.address);
+  if (lan.length) {
+    for (const addr of lan) console.log(`  on your network:  http://${addr}:${PORT}`);
+    console.log(`  for the mobile app (mobile/):\n` +
+      `    EXPO_PUBLIC_API_BASE_URL=http://${lan[0]}:${PORT} npx expo start`);
+  }
 
   // Bootstrap Superadmin
   if (process.env.SUPERADMIN_EMAIL && process.env.SUPERADMIN_PASSWORD) {
