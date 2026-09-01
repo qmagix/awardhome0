@@ -2,8 +2,7 @@ import { useState } from 'react';
 import {
   ActivityIndicator, Linking, Modal, Pressable, ScrollView, StyleSheet, Text, View,
 } from 'react-native';
-import Constants from 'expo-constants';
-import type { Award } from '@/api/client';
+import { baseUrl, type Award } from '@/api/client';
 import { theme } from './theme';
 
 /**
@@ -36,11 +35,6 @@ function loadWebView(): React.ComponentType<Record<string, unknown>> | null {
   }
 }
 
-function apiBase(): string {
-  return (Constants.expoConfig?.extra?.['apiBaseUrl'] as string | undefined)
-    ?? 'https://awardhome.com';
-}
-
 export function AwardCardModal({
   award, dancerName, dancerUniqueId, onClose,
 }: {
@@ -53,7 +47,7 @@ export function AwardCardModal({
   const WebView = loadWebView();
 
   if (!award) return null;
-  const cardUrl = `${apiBase()}/dance/card/${encodeURIComponent(dancerUniqueId)}/${award.id}`;
+  const cardUrl = `${baseUrl}/dance/card/${encodeURIComponent(dancerUniqueId)}/${award.id}`;
 
   return (
     <Modal visible transparent animationType="fade" onRequestClose={onClose}>
@@ -76,7 +70,7 @@ export function AwardCardModal({
                 // A card is content, not an app surface: no navigation, no
                 // arbitrary origins. Anything that is not our card page opens
                 // in the real browser instead of inside the sheet.
-                originWhitelist={[apiBase()]}
+                originWhitelist={[baseUrl]}
                 onShouldStartLoadWithRequest={(req: { url: string }) => {
                   if (req.url.startsWith(cardUrl)) return true;
                   void Linking.openURL(req.url);

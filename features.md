@@ -1309,6 +1309,32 @@ The trophy case returns `myClaim` for a signed-in caller, so the app shows
 where the claim stands and what happens next rather than a button that makes
 things worse.
 
+### The beta gate is a production concern
+`BETA_MODE=true` now only gates when `NODE_ENV=production`, or when a
+developer explicitly asks with `BETA_MODE_DEV=true` to test the gate itself.
+
+A `.env` carried over from a production-shaped config used to gate localhost
+too, which does more harm than the obvious annoyance: it makes the local server
+behave unlike the developer's mental model, so when a mobile client
+accidentally pointed at production and met the real gate, the symptom was
+indistinguishable from a local misconfiguration. Two different causes, one
+identical screen.
+
+What the gate actually covers, measured rather than assumed:
+
+| Surface | Gated |
+| --- | --- |
+| `/dancer/*`, `/dance/*` — public data pages | **yes** |
+| `/login`, `/register` — accounts | no |
+| `/dance/card/*` — the app's card | no (mounted before it) |
+| `/api/v1/mobile/*` | no (mounted before it) |
+
+Worth stating plainly because it is the opposite of the intuitive reading: the
+gate protects **public award data**, not account creation. Signing up has never
+been gated. The gate exists so an unpartnered organization's results are not
+broadly browsable before launch, which is the same instinct behind
+non-enumerable studio URLs and homepage org cards that do not link.
+
 ### The app shows the REAL award card, not a copy of it
 Tapping an award in the app opens the actual card — the same
 `views/partials/dancer_award_card.ejs` the web renders — served standalone at

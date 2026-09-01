@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, Share, StyleSheet, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import Constants from 'expo-constants';
 import { copyOrShare } from '@/ui/clipboard';
-import { getTrophyCase, type Award, type MyClaim } from '@/api/client';
+import { baseUrl, getTrophyCase, type Award, type MyClaim } from '@/api/client';
 import { AwardCardModal } from '@/ui/AwardCard';
 import { useSession } from '@/ui/Session';
 import { theme } from '@/ui/theme';
@@ -16,9 +15,7 @@ import { theme } from '@/ui/theme';
 /** The web's one-page studio apply: it creates the director's account and
  *  files the claim together, so there is nothing for them to set up first. */
 function studioClaimUrl(uniqueId: string): string {
-  const base = (Constants.expoConfig?.extra?.['apiBaseUrl'] as string | undefined)
-    ?? 'https://awardhome.com';
-  return `${base}/claim/studio/${uniqueId}`;
+  return `${baseUrl}/claim/studio/${uniqueId}`;
 }
 
 export default function TrophyCaseScreen() {
@@ -162,9 +159,7 @@ export default function TrophyCaseScreen() {
         <Pressable
           style={styles.secondary}
           onPress={() => {
-            const base = (Constants.expoConfig?.extra?.['apiBaseUrl'] as string | undefined)
-              ?? 'https://awardhome.com';
-            const url = `${base}/dancer/${id}`;
+            const url = `${baseUrl}/dancer/${id}`;
             void Share.share({ message: `${dancer.name}'s trophy case: ${url}`, url });
           }}
           accessibilityRole="button"

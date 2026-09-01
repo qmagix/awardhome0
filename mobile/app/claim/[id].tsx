@@ -2,8 +2,7 @@ import { useState } from 'react';
 import { ActivityIndicator, Pressable, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { copyOrShare } from '@/ui/clipboard';
-import Constants from 'expo-constants';
-import { claimDancer } from '@/api/client';
+import { baseUrl, claimDancer } from '@/api/client';
 import { useSession } from '@/ui/Session';
 import { theme } from '@/ui/theme';
 
@@ -79,9 +78,7 @@ export default function ClaimScreen() {
             <Pressable
               style={styles.secondary}
               onPress={() => {
-                const base = (Constants.expoConfig?.extra?.['apiBaseUrl'] as string | undefined)
-                  ?? 'https://awardhome.com';
-                const url = `${base}/claim/studio/${done.unclaimedStudio!.unique_id}`;
+                const url = `${baseUrl}/claim/studio/${done.unclaimedStudio!.unique_id}`;
                 void Share.share({
                   message: `${done.unclaimedStudio!.name} can claim its page on AwardHome here — `
                     + `it takes a minute, and then you can confirm our families' awards yourself: ${url}`,
@@ -94,9 +91,7 @@ export default function ClaimScreen() {
             <Pressable
               style={styles.secondary}
               onPress={() => {
-                const base = (Constants.expoConfig?.extra?.['apiBaseUrl'] as string | undefined)
-                  ?? 'https://awardhome.com';
-                void copyOrShare(`${base}/claim/studio/${done.unclaimedStudio!.unique_id}`)
+                void copyOrShare(`${baseUrl}/claim/studio/${done.unclaimedStudio!.unique_id}`)
                   .then((didCopy) => { if (didCopy) setCopied(true); });
               }}
             >

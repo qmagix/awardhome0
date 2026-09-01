@@ -83,8 +83,20 @@ function resolveBaseUrl(): string {
     : 'https://awardhome.com';
 }
 
+/**
+ * The one resolved base URL, exported so nothing else re-derives it.
+ *
+ * Four screens used to call Constants.expoConfig.extra.apiBaseUrl themselves
+ * for share links and the award-card web view. When .env.local stopped pinning
+ * an address, those copies silently fell back to the PRODUCTION default while
+ * the API client correctly derived the local host — so the app talked to
+ * localhost but opened cards on awardhome.com, which answered with the private
+ * beta gate. One resolver, one answer.
+ */
+export const baseUrl = resolveBaseUrl();
+
 export const auth: Auth = createAuth({
-  baseUrl: resolveBaseUrl(),
+  baseUrl,
   storage: secureTokenStorage,
 });
 
