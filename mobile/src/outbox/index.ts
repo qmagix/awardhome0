@@ -3,7 +3,6 @@
 // Flushing is attempted on a timer and whenever the network comes back, never
 // only on a button. At a venue the family is between routines, not watching a
 // sync screen — the queue should drain itself the moment there is signal.
-import * as Network from 'expo-network';
 import { createOutbox } from './outbox';
 import { sqliteDraftStore } from './store';
 import { auth } from '@/api/client';
@@ -33,17 +32,34 @@ export function onOutboxChange(fn: () => void): () => void {
 let timer: ReturnType<typeof setInterval> | null = null;
 
 /**
+ * Is the internet reachable? `null` means we could not find out.
+ *
+ * expo-network is loaded LAZILY and its absence is tolerated, because it is
+ * only an optimisation. A binary built before this dependency existed throws
+ * "Cannot find native module 'ExpoNetwork'" on import — and a top-level import
+ * would take this whole module down with it, which took out the root layout
+ * (startOutboxSync became undefined) and both routes that import from here.
+ * An optional capability must not be an import-time hard dependency.
+ */
+async function isInternetReachable(): Promise<boolean | null> {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const Network = require('expo-network') as typeof import('expo-network');
+    const state = await Network.getNetworkStateAsync();
+    return state.isInternetReachable ?? null;
+  } catch {
+    return null; // module missing, or the check failed — we simply don't know
+  }
+}
+
+/**
  * Try to drain the queue. Checks connectivity first only as an optimisation —
- * a wrong "offline" reading must not stop a flush, so an unknown state still
- * attempts the send and lets the request itself be the judge.
+ * a wrong or unavailable "offline" reading must not stop a flush, so anything
+ * other than a definite "no" still attempts the send and lets the request
+ * itself be the judge.
  */
 export async function flushIfPossible(): Promise<void> {
-  try {
-    const state = await Network.getNetworkStateAsync();
-    if (state.isInternetReachable === false) return;
-  } catch {
-    // Fall through: attempting and failing costs one request.
-  }
+  if ((await isInternetReachable()) === false) return;
   if (!(await auth.isSignedIn())) return; // nothing to send as a guest
   try {
     await outbox.flush();
@@ -52,7 +68,8 @@ export async function flushIfPossible(): Promise<void> {
   }
 }
 
-/** Start the background drain. Idempotent. */
+/** Start the background drain. Idempotent, and never throws: a queue that
+ *  cannot start is a degraded app, not a blank screen. */
 export function startOutboxSync(intervalMs = 30_000): void {
   if (timer) return;
   void flushIfPossible();

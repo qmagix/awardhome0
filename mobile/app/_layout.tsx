@@ -9,8 +9,18 @@ import { theme } from '@/ui/theme';
 export default function RootLayout() {
   // The queue drains itself in the background: at a venue the family is
   // between routines, not watching a sync screen.
+  //
+  // Guarded because this is the ROOT layout: anything that throws here takes
+  // the entire app down to a red screen. A background sync that cannot start
+  // should cost the outbox, not the app — drafts are still written to disk and
+  // the Send now button still works.
   useEffect(() => {
-    startOutboxSync();
+    try {
+      startOutboxSync();
+    } catch (e) {
+      console.warn('[outbox] background sync unavailable:', e);
+      return;
+    }
     return stopOutboxSync;
   }, []);
 

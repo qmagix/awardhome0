@@ -1,4 +1,4 @@
-import * as SQLite from 'expo-sqlite';
+import type * as SQLiteTypes from 'expo-sqlite';
 import type { Draft, DraftStore } from './outbox';
 
 /**
@@ -16,11 +16,19 @@ import type { Draft, DraftStore } from './outbox';
  */
 const DB_NAME = 'awardhome-outbox.db';
 
-let dbPromise: Promise<SQLite.SQLiteDatabase> | null = null;
+let dbPromise: Promise<SQLiteTypes.SQLiteDatabase> | null = null;
 
-async function open(): Promise<SQLite.SQLiteDatabase> {
+// Required at USE time, not import time. expo-sqlite is genuinely essential to
+// the outbox — unlike the network check and the photo picker, it cannot be
+// degraded around — but a top-level import throwing on a binary that predates
+// the dependency took down every module that imports this one, including the
+// root layout. Failing when the queue is actually touched is recoverable;
+// failing at import is a blank app.
+async function open(): Promise<SQLiteTypes.SQLiteDatabase> {
   if (!dbPromise) {
     dbPromise = (async () => {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const SQLite = require('expo-sqlite') as typeof SQLiteTypes;
       const db = await SQLite.openDatabaseAsync(DB_NAME);
       await db.execAsync(`
         PRAGMA journal_mode = WAL;

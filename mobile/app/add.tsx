@@ -4,7 +4,6 @@ import {
   TextInput, View,
 } from 'react-native';
 import { router } from 'expo-router';
-import * as ImagePicker from 'expo-image-picker';
 import { findEvents, openEventSession, type EventOption, type EventSession } from '@/api/client';
 import { outbox, flushIfPossible } from '@/outbox';
 import { kvGet, kvSet } from '@/outbox/store';
@@ -111,7 +110,22 @@ export default function AddAwardScreen() {
     }
   }, []);
 
+  // expo-image-picker is loaded only when the button is tapped. A top-level
+  // import throws "Cannot find native module 'ExponentImagePicker'" on a
+  // binary built before the dependency was added, and that failure took the
+  // whole SCREEN down — a photo is optional, so its module must be too.
   const attachPhoto = useCallback(async () => {
+    let ImagePicker: typeof import('expo-image-picker');
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      ImagePicker = require('expo-image-picker') as typeof import('expo-image-picker');
+    } catch {
+      Alert.alert(
+        'Photos need a newer build',
+        'This build of the app does not include the photo picker yet. You can add the award now and attach a photo later.',
+      );
+      return;
+    }
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
       Alert.alert('Photos not allowed', 'You can add a photo later from the trophy case.');
