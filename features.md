@@ -1309,6 +1309,32 @@ The trophy case returns `myClaim` for a signed-in caller, so the app shows
 where the claim stands and what happens next rather than a button that makes
 things worse.
 
+### My Dancers: confirmed first, pending visible, refreshed on focus
+Three faults, one screen. Once `/me` started returning pending claims (M8), a
+dancer she had merely *asked* for rendered identically to one she manages —
+same card, same award count, no badge — so the app silently promised something
+it had not delivered. They were also interleaved alphabetically with confirmed
+dancers, and the empty state's copy pointed at "the list below" from inside the
+empty state, where there is no list (a leftover from when a family with a claim
+in flight was told she had no dancers at all).
+
+Order is now part of the API contract rather than a display detail, because the
+app renders the list as the server returns it: **confirmed dancers first**
+(alphabetical — a stable list should not reshuffle between visits), then
+**pending claims newest-first**, because a claim filed minutes ago is the one
+she is looking for. Pending rows carry a badge, a dashed border, and the one
+thing she actually needs to know: she can add awards now, privately, and they
+send on approval. Section headers appear only when both kinds are present, so a
+household with one dancer still sees a plain list.
+
+`No dancers yet` now means exactly that — no confirmed dancer *and* no claim in
+flight.
+
+The screen also re-reads on focus, not just on mount. It is where a family comes
+back to check whether anything moved; loading once at launch answers with
+whatever was true when the app started, which is the wrong answer precisely when
+she is looking.
+
 ### Independents curate; publishing is a separate grant (M9)
 Auto-approval for independent dancers existed because there is no director to
 ask — **not** because anything had been checked. That quietly turned one weak

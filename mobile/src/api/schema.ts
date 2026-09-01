@@ -280,7 +280,7 @@ export interface paths {
         };
         /**
          * The household: dancers managed, with derived studio affiliations
-         * @description Dancers this household manages, plus any it has a PENDING claim on. `standing` is 'owner' or 'pending_claim' — a pending claimant may record awards, but they stage and are sent only when the claim is approved. Each dancer also carries `independent_publish_status` ('none' | 'requested' | 'approved') — meaningful only for independents, and the difference between an app that promises review and one that admits there is no reviewer.
+         * @description Dancers this household manages, plus any it has a PENDING claim on. `standing` is 'owner' or 'pending_claim' — a pending claimant may record awards, but they stage and are sent only when the claim is approved. Each dancer also carries `independent_publish_status` ('none' | 'requested' | 'approved') — meaningful only for independents, and the difference between an app that promises review and one that admits there is no reviewer. Order is part of the contract, not a display detail: confirmed dancers first (alphabetical, so a stable list does not reshuffle between visits), then pending claims newest-first. Each row also carries `claim_at`, the pending claim's timestamp, or null.
          */
         get: {
             parameters: {

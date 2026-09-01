@@ -443,6 +443,18 @@ async function main() {
       'a pending claimant\'s dancer appears in her household, labelled pending_claim',
       'standing=' + (pendingEntry || {}).standing);
 
+    // ORDER IS A CONTRACT, not a display detail: the app renders this list
+    // as-is. Confirmed dancers first — those are the ones she manages and
+    // what she opened the app for — then pending claims, newest first,
+    // because a claim filed minutes ago is the one she is looking for.
+    const order = (meWithPending.json.dancers || []).map(d => d.standing);
+    const lastOwner = order.lastIndexOf('owner');
+    const firstPending = order.indexOf('pending_claim');
+    check(meWithPending.status === 200 && order.length >= 2 &&
+          (firstPending === -1 || lastOwner === -1 || lastOwner < firstPending),
+      '/me returns confirmed dancers before pending claims',
+      'order=' + order.join(','));
+
     // M8 — a PENDING claimant may queue. `unclaimed` picked up a pending
     // claim from this household earlier in the run, which is exactly the
     // case: staging accepts her, and the response says plainly that it is

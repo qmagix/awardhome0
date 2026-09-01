@@ -730,19 +730,31 @@ router.get('/me', requireBearer, async (req, res) => {
       SELECT d.id, d.unique_id, d.name,
         (SELECT COUNT(*) FROM award_dancers ad WHERE ad.dancer_id = d.id) AS award_count,
         CASE WHEN d.claimed_by_user_id = ? THEN 'owner' ELSE 'pending_claim' END AS standing,
-        IFNULL(d.independent_publish_status, 'none') AS independent_publish_status
+        IFNULL(d.independent_publish_status, 'none') AS independent_publish_status,
+        (SELECT MAX(c2.created_at) FROM dancer_claims c2
+          WHERE c2.dancer_id = d.id AND c2.user_id = ?
+            AND c2.status IN ('pending', 'contested')) AS claim_at
       FROM dancers d
       WHERE d.claimed_by_user_id = ?
          OR EXISTS (SELECT 1 FROM dancer_claims c
                      WHERE c.dancer_id = d.id AND c.user_id = ?
                        AND c.status IN ('pending', 'contested'))
-      ORDER BY d.name`,
-      [req.mobileUser.id, req.mobileUser.id, req.mobileUser.id]);
+      -- Confirmed dancers first: those are the ones she actually manages, and
+      -- they are what she opened the app for. Pending claims follow, most
+      -- RECENT first — a claim she filed minutes ago is the one she is looking
+      -- for, whereas confirmed dancers are a stable list best kept alphabetical
+      -- so it does not reshuffle under her between visits.
+      ORDER BY CASE WHEN d.claimed_by_user_id = ? THEN 0 ELSE 1 END,
+               CASE WHEN d.claimed_by_user_id = ? THEN d.name END ASC,
+               claim_at DESC, d.id DESC`,
+      [req.mobileUser.id, req.mobileUser.id, req.mobileUser.id, req.mobileUser.id,
+       req.mobileUser.id, req.mobileUser.id]);
   } catch (e) { // pre-migration: no dancer_claims table
     dancers = await db.all(`
       SELECT d.id, d.unique_id, d.name,
         (SELECT COUNT(*) FROM award_dancers ad WHERE ad.dancer_id = d.id) AS award_count,
-        'owner' AS standing
+        'owner' AS standing, NULL AS claim_at,
+        IFNULL(d.independent_publish_status, 'none') AS independent_publish_status
       FROM dancers d WHERE d.claimed_by_user_id = ? ORDER BY d.name`, [req.mobileUser.id]);
   }
   for (const d of dancers) d.studios = await dancerStudios(db, d.id);
