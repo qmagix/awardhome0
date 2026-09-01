@@ -306,7 +306,8 @@
               }
             }
           }
-        }
+        },
+        "description": "A first-time address gets an account created here rather than being sent to the website to make one \u2014 the code already proved the person controls it. `isNewAccount` says which happened."
       }
     },
     "/auth/refresh": {
@@ -477,7 +478,7 @@
     "/dancers/{id}/claim": {
       "post": {
         "summary": "Claim a dancer profile",
-        "description": "A second household claiming the same dancer contests both claims, which routes them to AwardHome and away from any studio.",
+        "description": "A second household claiming the same dancer contests both claims, which routes them to AwardHome and away from any studio. The response includes `unclaimedStudio` when the dancer's studio has no owner \u2014 nobody at that studio will review the claim, and the family is the person positioned to change that.",
         "parameters": [
           {
             "name": "id",
@@ -1007,6 +1008,109 @@
           },
           "404": {
             "description": "No such session"
+          }
+        }
+      }
+    },
+    "/studios/search": {
+      "get": {
+        "summary": "Search studios by name",
+        "security": [],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 2
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Matches, each with is_claimed"
+          }
+        }
+      }
+    },
+    "/studios/{id}": {
+      "get": {
+        "summary": "Public studio summary",
+        "security": [],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "unique_id or numeric id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Studio and stats"
+          },
+          "404": {
+            "description": "No such studio (independent dancers' synthetic studios are never returned)"
+          }
+        }
+      }
+    },
+    "/studios/{id}/claim": {
+      "post": {
+        "summary": "Claim a studio",
+        "description": "Mirrors the web flow including the domain fast-track: a claimant whose verified email domain matches the studio's website is approved immediately. Safe on mobile for the same reason it is on the web \u2014 the address is verified, here by the sign-in code itself.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "contact_name": {
+                    "type": "string"
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string"
+                  },
+                  "studio_address": {
+                    "type": "string",
+                    "description": "Required \u2014 how same-named studios are told apart."
+                  },
+                  "proof": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "contact_name",
+                  "studio_address"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Filed, or approved outright on a domain match"
+          },
+          "409": {
+            "description": "Already claimed"
           }
         }
       }

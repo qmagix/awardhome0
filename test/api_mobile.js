@@ -199,11 +199,11 @@ async function main() {
     check(codeReq.status === 200 && !!devCode, 'a sign-in code is issued', 'status ' + codeReq.status);
 
     const unknown = await api('POST', '/auth/request-code', { body: { email: 'nobody-here@test.invalid' } });
-    // In DEVELOPMENT the two differ by design: `devCode` appears only when
-    // there is an account to unlock, so a simulator is not left staring at a
-    // valid code that cannot work. What must never differ is PRODUCTION.
-    check(unknown.status === 200 && !unknown.json.devCode && unknown.json.devMode === true,
-      'a development server withholds the code for an unknown address, and says it is development',
+    // A development server returns a code for ANY address, because any address
+    // can now become an account — verifying the code creates one. There is no
+    // longer a "valid code with nothing to unlock" dead end.
+    check(unknown.status === 200 && !!unknown.json.devCode && unknown.json.devMode === true,
+      'a development server returns a code for a first-time address too — it will create the account',
       JSON.stringify(unknown.json));
 
     // The property that actually matters is the PRODUCTION shape, and it
@@ -240,6 +240,60 @@ async function main() {
 
     const replay = await api('POST', '/auth/verify', { body: { email: 'api-family@test.invalid', code: devCode } });
     check(replay.status === 401, 'a sign-in code works exactly once', 'status ' + replay.status);
+
+    // ---- a parent who has never heard of AwardHome ----
+    // The journey that matters commercially: she hears about it from a friend,
+    // finds her child, and taps claim. Requiring an account she does not have,
+    // made on another device, is where that parent leaves.
+    const NEW_EMAIL = `new-parent-${crypto.randomUUID().slice(0, 8)}@test.invalid`;
+    const newCode = await api('POST', '/auth/request-code', { body: { email: NEW_EMAIL } });
+    const newSignIn = await api('POST', '/auth/verify', {
+      body: { email: NEW_EMAIL, code: newCode.json.devCode },
+    });
+    const createdUser = await db.get('SELECT id, is_verified FROM users WHERE email = ?', [NEW_EMAIL]);
+    check(newSignIn.status === 200 && newSignIn.json.isNewAccount === true &&
+          !!newSignIn.json.accessToken && !!createdUser && createdUser.is_verified === 1,
+      'a first-time address gets an account and a session from the code alone — no signup form',
+      'status ' + newSignIn.status + ' isNew=' + (newSignIn.json || {}).isNewAccount);
+
+    // She claims, and is told nobody at the studio will see it.
+    const unclaimedDancer = await db.run(
+      "INSERT INTO dancers (unique_id, name) VALUES ('DNC-api-orphan', 'API Orphan Dancer')");
+    const orphanStudio = await db.run(
+      "INSERT INTO studios (unique_id, name, status) VALUES ('api-unclaimed-studio', 'API Unclaimed Studio', 'active')");
+    await db.run('INSERT INTO dancer_studios (dancer_id, studio_id) VALUES (?, ?)',
+      [unclaimedDancer.lastID, orphanStudio.lastID]);
+    const newClaim = await api('POST', `/dancers/${unclaimedDancer.lastID}/claim`, {
+      token: newSignIn.json.accessToken, body: { relationship: 'parent' },
+    });
+    check(newClaim.status === 201 &&
+          newClaim.json.unclaimedStudio &&
+          newClaim.json.unclaimedStudio.name === 'API Unclaimed Studio',
+      'the claim response names the unclaimed studio — nobody there will review it, and she can say so',
+      JSON.stringify((newClaim.json || {}).unclaimedStudio));
+
+    // ---- a director claiming their studio from a phone ----
+    const studioSearch = await api('GET', '/studios/search?q=API%20Unclaimed');
+    check(studioSearch.status === 200 &&
+          studioSearch.json.studios.some(s2 => s2.unique_id === 'api-unclaimed-studio'),
+      'studios are searchable, so a director can find their own', 'status ' + studioSearch.status);
+
+    const studioClaim = await api('POST', '/studios/api-unclaimed-studio/claim', {
+      token: newSignIn.json.accessToken,
+      body: { contact_name: 'A Director', studio_address: '1 Test Street', role: 'owner' },
+    });
+    const filed = await db.get(
+      "SELECT status FROM studio_claims WHERE studio_id = ?", [orphanStudio.lastID]);
+    check(studioClaim.status === 201 && studioClaim.json.status === 'pending' &&
+          !!filed && filed.status === 'pending',
+      'a director can claim a studio from the app', 'status ' + studioClaim.status);
+
+    const noAddress = await api('POST', '/studios/api-unclaimed-studio/claim', {
+      token: newSignIn.json.accessToken, body: { contact_name: 'A Director' },
+    });
+    check(noAddress.status === 409 || noAddress.status === 400,
+      'the studio address is required — it is how same-named studios are told apart',
+      'status ' + noAddress.status);
 
     // ---- household ----
     const me = await api('GET', '/me', { token: access });

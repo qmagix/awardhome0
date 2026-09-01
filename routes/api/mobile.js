@@ -42,8 +42,8 @@ const {
   LIFECYCLE, cleanCandidateInput, findDuplicateCandidates, createCandidate,
 } = require('../../utils/eventCandidates');
 const { CORRECTABLE_FIELDS, CORRECTION_REASON_TEXT, canPropose, propose } = require('../../utils/corrections');
-const { markContestedClaims, matchDancerClaimCode } = require('../../utils/claims');
-const { studioDisplayNameSql } = require('../../utils/independents');
+const { markContestedClaims, matchDancerClaimCode, domainsMatch, approveStudioClaim } = require('../../utils/claims');
+const { studioDisplayNameSql, excludeIndependentSql } = require('../../utils/independents');
 const { formatPlacement } = require('../../utils/format');
 const { issueGrant, storeEvidence, canServe, readEvidence, MAX_BYTES } = require('../../utils/evidence');
 const { openSession, sessionContext } = require('../../utils/eventSessions');
@@ -144,6 +144,9 @@ router.post('/auth/verify', verifyLimiter, async (req, res) => {
     accessToken: result.accessToken,
     refreshToken: result.refreshToken,
     expiresIn: result.expiresIn,
+    // A first-time address gets an account here rather than being sent to the
+    // website to make one — the code already proved she controls it.
+    isNewAccount: !!result.isNewAccount,
     user: { id: result.user.id, email: result.user.email },
   });
 });
@@ -256,6 +259,83 @@ router.get('/dancers/:id/awards', async (req, res) => {
   });
 });
 
+// ---- Studios ---------------------------------------------------------------
+//
+// A director hearing about AwardHome from one of their own families should be
+// able to claim the studio from a phone, in the moment. 21,693 of 21,695 real
+// studios are unclaimed, so this is the common case rather than an edge one —
+// and an unclaimed studio means nobody is reviewing that studio's families'
+// submissions at all.
+router.get('/studios/search', async (req, res) => {
+  const q = normalizeText(req.query.q);
+  if (!q || q.length < 2) return res.json({ studios: [] });
+  const db = await openDb();
+  const studios = await db.all(`
+    SELECT s.id, s.unique_id, s.name,
+           CASE WHEN s.owner_id IS NOT NULL THEN 1 ELSE 0 END AS is_claimed,
+           COUNT(a.id) AS award_count
+    FROM studios s LEFT JOIN awards a ON a.studio_id = s.id
+    WHERE s.name LIKE ? AND s.status = 'active' AND ${excludeIndependentSql('s')}
+    GROUP BY s.id ORDER BY award_count DESC LIMIT 15`, [`%${q}%`]);
+  res.json({ studios });
+});
+
+router.get('/studios/:id', async (req, res) => {
+  const db = await openDb();
+  const studio = await db.get(`
+    SELECT s.id, s.unique_id, s.name, s.bio, s.logo_url, s.website_url,
+           CASE WHEN s.owner_id IS NOT NULL THEN 1 ELSE 0 END AS is_claimed,
+           COALESCE(s.is_independent, 0) AS is_independent
+    FROM studios s WHERE s.unique_id = ? OR s.id = ?`,
+    [req.params.id, parseInt(req.params.id, 10) || -1]);
+  if (!studio || studio.is_independent) return fail(res, 404, 'not_found', 'No such studio.');
+
+  const stats = await db.get(`
+    SELECT COUNT(*) AS awards, COUNT(DISTINCT a.event_id) AS events
+    FROM awards a WHERE a.studio_id = ?`, [studio.id]);
+  const dancers = await db.get(
+    'SELECT COUNT(*) AS n FROM dancer_studios WHERE studio_id = ?', [studio.id]);
+  res.json({ studio, stats: { ...stats, dancers: dancers.n } });
+});
+
+// Claim a studio. Mirrors the web flow including the domain fast-track — and
+// the fast-track is legitimate here for the same reason it is there: it only
+// fires on a VERIFIED address, and a mobile address is verified by the code
+// that signed her in.
+router.post('/studios/:id/claim', requireBearer, async (req, res) => {
+  const db = await openDb();
+  const studio = await db.get('SELECT * FROM studios WHERE unique_id = ? OR id = ?',
+    [req.params.id, parseInt(req.params.id, 10) || -1]);
+  if (!studio || studio.is_independent) return fail(res, 404, 'not_found', 'No such studio.');
+  if (studio.owner_id) return fail(res, 409, 'already_claimed', 'This studio is already claimed.');
+
+  const { contact_name: contactName, role, phone, studio_address: address, proof } = req.body || {};
+  if (!normalizeText(contactName)) return fail(res, 400, 'invalid', 'Please tell us your name.');
+  if (!normalizeText(address)) {
+    return fail(res, 400, 'invalid',
+      "Please add the studio's address — it is how we tell same-named studios apart.");
+  }
+
+  const proofText = [
+    `Contact: ${normalizeText(contactName)}`,
+    `Role: ${normalizeText(role) || ''}`,
+    `Phone: ${normalizeText(phone) || ''}`,
+    `Studio address: ${normalizeText(address)}`,
+    `Details: ${normalizeText(proof) || ''}`,
+    'Filed from the mobile app',
+  ].join('\n');
+
+  await db.run(
+    'INSERT INTO studio_claims (user_id, studio_id, proof_text, status) VALUES (?, ?, ?, ?)',
+    [req.mobileUser.id, studio.id, proofText, 'pending']);
+
+  if (domainsMatch(studio.website_url, req.mobileUser.email)) {
+    await approveStudioClaim(db, { userId: req.mobileUser.id, studioId: studio.id });
+    return res.status(201).json({ ok: true, status: 'approved', reason: 'domain_match' });
+  }
+  res.status(201).json({ ok: true, status: 'pending' });
+});
+
 router.post('/dancers/:id/claim', requireBearer, async (req, res) => {
   const db = await openDb();
   const dancerId = parseInt(req.params.id, 10);
@@ -285,10 +365,23 @@ router.post('/dancers/:id/claim', requireBearer, async (req, res) => {
   // A second household on the same dancer contests both, and it leaves the
   // studio queue for AwardHome — the same rule the web flow follows.
   const contest = await markContestedClaims(db, dancer.id);
+
+  // Who will actually review this? If the dancer's studio has no owner,
+  // nobody at that studio will — it falls to AwardHome, and the family is the
+  // one person positioned to fix that by telling their director. Surfacing it
+  // turns a slow queue into an invitation.
+  const unclaimedStudio = await db.get(`
+    SELECT s.id, s.unique_id, s.name
+    FROM dancer_studios ds JOIN studios s ON s.id = ds.studio_id
+    WHERE ds.dancer_id = ? AND s.owner_id IS NULL
+      AND COALESCE(s.is_independent, 0) = 0 AND COALESCE(s.status, 'active') != 'merged'
+    LIMIT 1`, [dancer.id]);
+
   res.status(201).json({
     ok: true,
     status: contest.contested ? 'contested' : 'pending',
     routedTo: contest.contested ? 'awardhome' : (codeMatch.valid ? 'studio' : 'awardhome'),
+    unclaimedStudio: unclaimedStudio || null,
   });
 });
 

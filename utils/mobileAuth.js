@@ -161,15 +161,26 @@ async function requestCode(email, { baseUrl } = {}) {
     "INSERT INTO mobile_auth_codes (email, code_hash, expires_at) VALUES (?, ?, datetime('now', ?))",
     [addr, hashToken(code), `+${CODE_TTL_MIN} minutes`]);
 
-  if (user) {
-    if (!process.env.EMAIL_PROVIDER) {
-      console.log(`[DEV MODE] Mobile sign-in code for ${addr}: ${code}`);
-    } else {
+  if (!process.env.EMAIL_PROVIDER) {
+    console.log(`[DEV MODE] Mobile sign-in code for ${addr}: ${code}`);
+  } else {
+    if (user) {
       await sendEmail({
         to: user.email,
         subject: `Your AwardHome sign-in code: ${code}`,
         html: `<p>Your sign-in code is <strong style="font-size:1.4em;letter-spacing:0.1em;">${code}</strong></p>
                <p>It works once and expires in ${CODE_TTL_MIN} minutes. If you didn't ask for it, you can ignore this email.</p>`,
+      });
+    } else {
+      // A first-time address. The same code both proves the address and
+      // creates the account on verification, so there is no separate signup
+      // to complete and no verification link to chase.
+      await sendEmail({
+        to: addr,
+        subject: `Your AwardHome code: ${code}`,
+        html: `<p>Welcome to AwardHome. Your code is <strong style="font-size:1.4em;letter-spacing:0.1em;">${code}</strong></p>
+               <p>Entering it creates your account and signs you in. It works once and expires in ${CODE_TTL_MIN} minutes.
+               If you didn't ask for it, you can ignore this email — nothing was created.</p>`,
       });
     }
   }
@@ -184,11 +195,11 @@ async function requestCode(email, { baseUrl } = {}) {
   // from "production, check your email". Both fields are gated on the SAME
   // condition, so there is one thing to get wrong in production rather than
   // two — and in production neither is ever sent.
+  // Every valid address can become an account (verifyCode creates one), so a
+  // development server hands the code back for any of them — there is no
+  // longer a "no account to unlock" dead end to protect against.
   const isDev = process.env.NODE_ENV !== 'production';
-  return {
-    ok: true, sent: true,
-    ...(isDev ? { devMode: true, ...(user ? { devCode: code } : {}) } : {}),
-  };
+  return { ok: true, sent: true, ...(isDev ? { devMode: true, devCode: code } : {}) };
 }
 
 // Verify a code and mint a session. Attempts are counted on the ROW, so
@@ -211,17 +222,37 @@ async function verifyCode(email, code, { deviceLabel = null, platform = null } =
   await adb.run("UPDATE mobile_auth_codes SET consumed_at = datetime('now') WHERE id = ?", [row.id]);
 
   const db = await openDb();
-  const user = await db.get('SELECT id, email, role FROM users WHERE LOWER(email) = ?', [addr]);
-  // A consumed code for an address with no account is a dead end, not an
-  // error worth distinguishing.
-  if (!user) return { ok: false, reason: 'invalid_code' };
+  let user = await db.get('SELECT id, email, role FROM users WHERE LOWER(email) = ?', [addr]);
+  let isNewAccount = false;
 
-  // Signing in on a device confirms the address as surely as clicking a
-  // verification link does.
-  await db.run('UPDATE users SET is_verified = 1 WHERE id = ? AND is_verified = 0', [user.id]);
+  if (!user) {
+    // FIRST-TIME ADDRESS: create the account here.
+    //
+    // A parent hears about AwardHome, searches for her child, finds her, and
+    // taps claim. Requiring an account she does not have — created on a
+    // different device, on the website — is where that parent leaves. The
+    // code she just entered proves she controls the address, which is exactly
+    // what the web's password-plus-verification-link flow is trying to
+    // establish, so the account can simply exist now.
+    //
+    // No password is set. The web's "forgot password" flow is how she gets
+    // one if she ever wants to sign in there; a random hash means the empty
+    // password can never be used to log in meanwhile.
+    const bcrypt = require('bcrypt');
+    const unusable = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 10);
+    const res = await db.run(
+      "INSERT INTO users (email, password_hash, role, is_verified) VALUES (?, ?, 'user', 1)",
+      [addr, unusable]);
+    user = { id: res.lastID, email: addr, role: 'user' };
+    isNewAccount = true;
+  } else {
+    // Entering a code on a device confirms the address as surely as clicking
+    // a verification link does.
+    await db.run('UPDATE users SET is_verified = 1 WHERE id = ? AND is_verified = 0', [user.id]);
+  }
 
   const tokens = await createSession(user.id, { deviceLabel, platform });
-  return { ok: true, user, ...tokens };
+  return { ok: true, user, isNewAccount, ...tokens };
 }
 
 // ---- Sessions --------------------------------------------------------------

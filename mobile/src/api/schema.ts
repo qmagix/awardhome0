@@ -97,7 +97,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Exchange a code for tokens */
+        /**
+         * Exchange a code for tokens
+         * @description A first-time address gets an account created here rather than being sent to the website to make one — the code already proved the person controls it. `isNewAccount` says which happened.
+         */
         post: {
             parameters: {
                 query?: never;
@@ -404,7 +407,7 @@ export interface paths {
         put?: never;
         /**
          * Claim a dancer profile
-         * @description A second household claiming the same dancer contests both claims, which routes them to AwardHome and away from any studio.
+         * @description A second household claiming the same dancer contests both claims, which routes them to AwardHome and away from any studio. The response includes `unclaimedStudio` when the dancer's studio has no owner — nobody at that studio will review the claim, and the family is the person positioned to change that.
          */
         post: {
             parameters: {
@@ -1049,6 +1052,143 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/studios/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Search studios by name */
+        get: {
+            parameters: {
+                query: {
+                    q: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Matches, each with is_claimed */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/studios/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Public studio summary */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description unique_id or numeric id */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Studio and stats */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No such studio (independent dancers' synthetic studios are never returned) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/studios/{id}/claim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Claim a studio
+         * @description Mirrors the web flow including the domain fast-track: a claimant whose verified email domain matches the studio's website is approved immediately. Safe on mobile for the same reason it is on the web — the address is verified, here by the sign-in code itself.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        contact_name: string;
+                        role?: string;
+                        phone?: string;
+                        /** @description Required — how same-named studios are told apart. */
+                        studio_address: string;
+                        proof?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Filed, or approved outright on a domain match */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Already claimed */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;

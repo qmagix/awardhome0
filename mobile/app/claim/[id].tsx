@@ -23,7 +23,10 @@ export default function ClaimScreen() {
   const [proof, setProof] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [done, setDone] = useState<{ status: string; routedTo: string } | null>(null);
+  const [done, setDone] = useState<{
+    status: string; routedTo: string;
+    unclaimedStudio: { id: number; unique_id: string; name: string } | null;
+  } | null>(null);
 
   const submit = async () => {
     if (!id) return;
@@ -34,7 +37,7 @@ export default function ClaimScreen() {
         proof: proof.trim(),
         studio_code: code.trim() || undefined,
       });
-      setDone({ status: res.status, routedTo: res.routedTo });
+      setDone({ status: res.status, routedTo: res.routedTo, unclaimedStudio: res.unclaimedStudio });
       await refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'We couldn’t file that claim.');
@@ -56,6 +59,29 @@ export default function ClaimScreen() {
               ? 'Because you had your studio’s code, your studio director can confirm it directly. You’ll get an email when they do.'
               : 'The AwardHome team will review it and email you with the outcome.'}
         </Text>
+        {/* Nobody at the studio will review this, because the studio has no
+            owner. The family is the one person positioned to change that, and
+            this is the moment they care most. */}
+        {done.unclaimedStudio && (
+          <View style={styles.invite}>
+            <Text style={styles.inviteTitle}>{done.unclaimedStudio.name} hasn’t joined yet</Text>
+            <Text style={styles.muted}>
+              Your studio hasn’t claimed its page, so AwardHome reviews your claim instead of your
+              own director — who would recognise you instantly. If you mention it to them, they can
+              claim it from their phone in a minute.
+            </Text>
+            <Pressable
+              style={styles.secondary}
+              onPress={() => router.push({
+                pathname: '/studio/[id]',
+                params: { id: done.unclaimedStudio!.unique_id },
+              })}
+            >
+              <Text style={styles.secondaryText}>Show them the studio page</Text>
+            </Pressable>
+          </View>
+        )}
+
         <Pressable style={styles.cta} onPress={() => router.replace('/household')}>
           <Text style={styles.ctaText}>Back to my dancers</Text>
         </Pressable>
@@ -142,4 +168,14 @@ const styles = StyleSheet.create({
   error: { color: theme.danger, marginTop: theme.space(2) },
   escape: { marginTop: theme.space(3), alignItems: 'center' },
   link: { color: theme.gold },
+  invite: {
+    marginTop: theme.space(2.5), padding: theme.space(1.5),
+    backgroundColor: theme.goldSoft, borderRadius: theme.radius,
+  },
+  inviteTitle: { color: theme.gold, fontWeight: '700', fontSize: 16, marginBottom: theme.space(0.5) },
+  secondary: {
+    marginTop: theme.space(1.5), borderColor: theme.border, borderWidth: 1,
+    borderRadius: theme.radius, padding: theme.space(1.25), alignItems: 'center',
+  },
+  secondaryText: { color: theme.text },
 });

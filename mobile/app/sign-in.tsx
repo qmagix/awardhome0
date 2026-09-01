@@ -31,15 +31,6 @@ export default function SignInScreen() {
       // provider. Prefilling it is the difference between the app being
       // testable on a simulator and not.
       if (res.devCode) { setCode(res.devCode); setDevCode(res.devCode); }
-      // devMode with no code means the development server has no account for
-      // this address. Saying so is only safe BECAUSE it is a development
-      // server — in production the same screen must not reveal whether an
-      // account exists, so it just says "check your email".
-      else if (res.devMode) {
-        setError(`No account for ${email.trim()} on this development server. `
-          + 'Register it on the web first, or use an email that already exists.');
-        return;
-      }
       setStage('code');
     } catch {
       setError('We couldn’t reach AwardHome. Please try again.');
@@ -69,9 +60,10 @@ export default function SignInScreen() {
     <View style={styles.screen}>
       {stage === 'email' ? (
         <>
-          <Text style={styles.h1}>Sign in</Text>
+          <Text style={styles.h1}>Sign in or get started</Text>
           <Text style={styles.muted}>
-            We’ll email you a six-digit code. No password to remember.
+            We’ll email you a six-digit code. No password to remember — and if you’ve never used
+            AwardHome, entering the code creates your account.
           </Text>
           <TextInput
             value={email}
@@ -93,8 +85,7 @@ export default function SignInScreen() {
         <>
           <Text style={styles.h1}>Check your email</Text>
           <Text style={styles.muted}>
-            If {email.trim()} has an AwardHome account, a code is on its way. It works once and
-            expires in ten minutes.
+            A code is on its way to {email.trim()}. It works once and expires in ten minutes.
           </Text>
           <TextInput
             value={code}

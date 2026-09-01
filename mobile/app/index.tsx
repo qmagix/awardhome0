@@ -4,7 +4,7 @@ import {
 } from 'react-native';
 import { Link, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { searchDancers, type DancerSummary } from '@/api/client';
+import { searchDancers, searchStudios, type DancerSummary, type StudioSummary } from '@/api/client';
 import { useSession } from '@/ui/Session';
 import { theme } from '@/ui/theme';
 
@@ -18,14 +18,19 @@ export default function SearchScreen() {
   const { signedIn, dancers } = useSession();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<DancerSummary[]>([]);
+  const [studios, setStudios] = useState<StudioSummary[]>([]);
   const [state, setState] = useState<'idle' | 'searching' | 'done' | 'error'>('idle');
 
   const run = useCallback(async (q: string) => {
     if (q.trim().length < 2) { setResults([]); setState('idle'); return; }
     setState('searching');
     try {
-      const res = await searchDancers(q.trim());
-      setResults(res.dancers);
+      // Both, in one pass. A parent is looking for a child; a director is
+      // looking for their studio. Neither should have to know which tab to be
+      // on to find the thing they came for.
+      const [d, s2] = await Promise.all([searchDancers(q.trim()), searchStudios(q.trim())]);
+      setResults(d.dancers);
+      setStudios(s2.studios);
       setState('done');
     } catch {
       setState('error');
@@ -39,26 +44,48 @@ export default function SearchScreen() {
       <TextInput
         value={query}
         onChangeText={(t) => { setQuery(t); void run(t); }}
-        placeholder="Search a dancer's name"
+        placeholder="Search a dancer or a studio"
         placeholderTextColor={theme.muted}
         autoCorrect={false}
         autoCapitalize="words"
         style={styles.input}
         returnKeyType="search"
-        accessibilityLabel="Search for a dancer by name"
+        accessibilityLabel="Search for a dancer or a studio by name"
       />
 
       {state === 'searching' && <ActivityIndicator color={theme.gold} style={{ marginTop: theme.space(2) }} />}
       {state === 'error' && <Text style={styles.error}>We couldn&apos;t reach AwardHome. Please try again.</Text>}
-      {state === 'done' && results.length === 0 && (
+      {state === 'done' && results.length === 0 && studios.length === 0 && (
         <Text style={styles.muted}>
-          No dancer by that name yet. Competitions publish results at different speeds — try a
+          Nothing by that name yet. Competitions publish results at different speeds — try a
           different spelling, or check back after the next event.
         </Text>
       )}
 
+      {state === 'done' && studios.length > 0 && (
+        <View style={styles.studios}>
+          <Text style={styles.sectionLabel}>Studios</Text>
+          {studios.slice(0, 3).map((s2) => (
+            <Pressable
+              key={s2.unique_id}
+              style={styles.row}
+              onPress={() => router.push({ pathname: '/studio/[id]', params: { id: s2.unique_id } })}
+              accessibilityRole="button"
+            >
+              <Text style={styles.rowName}>{s2.name}</Text>
+              <Text style={styles.rowMeta}>
+                {s2.award_count} award{s2.award_count === 1 ? '' : 's'}
+                {s2.is_claimed ? '' : ' · not claimed yet'}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      )}
+
       <FlatList
         data={results}
+        ListHeaderComponent={state === 'done' && results.length > 0
+          ? <Text style={styles.sectionLabel}>Dancers</Text> : null}
         keyExtractor={(d) => d.unique_id}
         keyboardShouldPersistTaps="handled"
         renderItem={({ item }) => (
@@ -104,6 +131,11 @@ const styles = StyleSheet.create({
   rowMeta: { color: theme.muted, fontSize: 13, marginTop: 2 },
   muted: { color: theme.muted, marginTop: theme.space(2), lineHeight: 20 },
   error: { color: theme.danger, marginTop: theme.space(2) },
+  studios: { marginTop: theme.space(2) },
+  sectionLabel: {
+    color: theme.muted, fontSize: 12, fontWeight: '700', letterSpacing: 1,
+    textTransform: 'uppercase', marginTop: theme.space(1.5), marginBottom: theme.space(0.5),
+  },
   footer: { paddingVertical: theme.space(2) },
   link: { color: theme.gold, fontSize: 16 },
 });

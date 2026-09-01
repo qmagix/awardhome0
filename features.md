@@ -1226,3 +1226,48 @@ Server-generated share *images* are deliberately not built: they need a
 headless browser on the production box, which is an infrastructure decision
 rather than a detail. The link works today, keeps working for someone without
 the app, and costs nothing. **Evidence is never share media.**
+
+## Onboarding from the app: sign-up on claim, and studio claiming (2026-09-01)
+A gap found by testing the app as a stranger would use it. The claim flow
+required an account the parent did not have — she heard about AwardHome from a
+friend, found her child, tapped claim, and was sent to a sign-in screen that
+only worked for existing users. The web has had one-page apply since launch
+(`/claim/dancer/:id/apply` creates the account and files the claim together);
+the mobile API had simply never exposed the equivalent.
+
+### The code is the signup
+`POST /auth/verify` now **creates the account** when the address has none.
+There is no signup form, no password, and no verification link to chase: the
+six-digit code already proves she controls the address, which is exactly what
+the web's password-plus-link flow is establishing more slowly. `isNewAccount`
+tells the client which happened.
+
+No password is set — a random unusable hash goes in the column, and the web's
+"forgot password" flow is how she gets one if she ever wants to sign in there.
+
+### Studio claiming, from a phone
+**21,693 of 21,695 real studios are unclaimed.** That is not a cold-start
+curiosity: an unclaimed studio is one where *nobody reviews that studio's
+families' submissions*, so every one falls to AwardHome. The person who can fix
+it is a director who just heard about this from one of their own parents,
+standing in a lobby with a phone — and sending them to a desktop is where that
+ends.
+
+So the app now has `/studios/search`, a studio page, and a claim flow mirroring
+the web's, **including the domain fast-track**: a claimant whose email is on
+the studio's own website domain is approved on the spot. That is as safe here
+as on the web for the same reason — it only fires on a verified address, and a
+mobile address is verified by the code that signed them in.
+
+### The claim response names the gap
+`POST /dancers/:id/claim` now returns `unclaimedStudio` when the dancer's
+studio has no owner. The app turns that into an invitation at the one moment
+the family cares most:
+
+> *Your studio hasn't claimed its page, so AwardHome reviews your claim instead
+> of your own director — who would recognise you instantly. If you mention it
+> to them, they can claim it from their phone in a minute.*
+
+Every family whose studio is unclaimed becomes a channel to that studio, and
+the pitch is true rather than promotional: their own claim genuinely resolves
+faster once their director is there.

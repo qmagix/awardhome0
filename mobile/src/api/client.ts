@@ -80,7 +80,12 @@ export function getHousehold(): Promise<{
 export function claimDancer(
   dancerId: number | string,
   body: { relationship?: string; proof?: string; studio_code?: string },
-): Promise<{ ok: boolean; status: string; routedTo: string }> {
+): Promise<{
+  ok: boolean; status: string; routedTo: string;
+  /** Set when the dancer's studio has no owner — nobody there will review
+   *  this, and the family is the person positioned to change that. */
+  unclaimedStudio: { id: number; unique_id: string; name: string } | null;
+}> {
   return auth.request(`/dancers/${encodeURIComponent(String(dancerId))}/claim`, {
     method: 'POST',
     body: JSON.stringify(body),
@@ -142,4 +147,34 @@ export async function uploadEvidence(
   });
   if (!res.ok) throw new Error('Upload failed');
   return (await res.json()) as { evidenceId: number; objectKey: string };
+}
+
+// ---- Studios: search, view, claim ------------------------------------------
+
+export interface StudioSummary {
+  id: number;
+  unique_id: string;
+  name: string;
+  is_claimed: number;
+  award_count: number;
+}
+
+export function searchStudios(q: string): Promise<{ studios: StudioSummary[] }> {
+  return auth.publicRequest(`/studios/search?q=${encodeURIComponent(q)}`);
+}
+
+export function getStudio(id: string): Promise<{
+  studio: StudioSummary & { bio: string | null; website_url: string | null };
+  stats: { awards: number; events: number; dancers: number };
+}> {
+  return auth.publicRequest(`/studios/${encodeURIComponent(id)}`);
+}
+
+export function claimStudio(id: string, body: {
+  contact_name: string; role?: string; phone?: string;
+  studio_address: string; proof?: string;
+}): Promise<{ ok: boolean; status: string; reason?: string }> {
+  return auth.request(`/studios/${encodeURIComponent(id)}/claim`, {
+    method: 'POST', body: JSON.stringify(body),
+  });
 }
