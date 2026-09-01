@@ -990,3 +990,94 @@ than assumed: keying duplicates on (event, studio, routine, place) alone
 reported 97,556, because one routine legitimately wins several awards at one
 event, and blank-routine per-dancer placement rows share every field by
 construction. A guardrail that cries wolf gets ignored.
+
+## Mobile API — `/api/v1/mobile` (2026-09-01)
+Milestone M5. The versioned JSON API the Expo client (M6/M7) will consume, and
+the last milestone before any mobile code exists.
+
+### Mount position is part of the contract
+`server.js` mounts this router after `express.json()` and **before** the
+session store, the CSRF middleware and the private-beta gate. Each is
+deliberate:
+
+- **Before session** — a bearer-authenticated request has no reason to create a
+  session row, and a native client never returns the cookie anyway. The API
+  test asserts no `Set-Cookie` is issued on any API call, which turns this from
+  a claim into a property.
+- **Before CSRF** — CSRF defends against a browser attaching an *ambient*
+  credential to a cross-site request. A bearer token is not ambient: nothing
+  attaches it automatically, so there is nothing to forge. The check does not
+  apply rather than being skipped.
+- **Outside the beta gate** — the app ships to invited families through
+  TestFlight and internal builds, which is its own gate.
+
+This is the only place in the app where router order carries a security
+argument; `scripts/audit_get_routes.js` now mints a real bearer session and
+sweeps the API surface with it.
+
+### Auth: opaque tokens, only hashes stored
+Emailed one-time codes, then a short-lived access token (15 min) and a
+long-lived refresh token (60 days). Only SHA-256 hashes are stored — a database
+leak must not hand anyone a working token, the same rule
+`users.reset_token_hash` already follows. SHA-256 rather than bcrypt because
+these are 32 random bytes: a work factor buys nothing against a value nobody
+can dictionary-attack, and would cost latency on every call.
+
+**Refresh tokens rotate on every use**, which gives a cheap theft signal: a
+refresh token is valid exactly once, so presenting a rotated one means either a
+replay or a stolen token. We cannot tell which, so we assume the worse and
+revoke the whole session. Revocation takes effect on the very next request —
+there is no token cache to wait out.
+
+`/auth/request-code` always answers identically whether or not the address has
+an account. Whether a family exists here is not something an unauthenticated
+caller gets to learn.
+
+### Guests are first-class
+Read endpoints mirroring a public web page work with no token: a parent can
+search for their dancer and read the trophy case before deciding whether to
+make an account. `/dancers/:id/awards` honours the owner's per-card hide, pages
+on a `cursor` (award ids only increase, so paging is stable under concurrent
+writes) and syncs on `updated_since`.
+
+The sync marker is **derived** from the two timestamps that exist — when the
+dancer's link was made and when the fact last changed — because `awards` has no
+`updated_at` and putting a trigger on a 900k-row table's UPDATE path would tax
+every import to serve a sync protocol. Stated consequence: an importer editing
+an award without writing provenance will not move its marker.
+
+### Writes reuse the M1–M4 services
+Claim, submit, correct and create-event all call the same domain services the
+web surfaces do, so the two clients cannot drift: studio still derived from
+affiliation, group size still required, submissions still idempotent on
+`(user, client_submission_id)`, dedup still offered before an event is created,
+independents and corroboration still auto-promoting with honest labels.
+
+### Evidence: private by default, stored outside the served tree
+`utils/evidence.js`. A two-step grant (ask, then send bytes) so the storage
+driver can change without the client changing. **The storage decision is still
+open** (design §16.4: S3 vs R2, and the retention period) — both cost money and
+need an account, so the code ships the driver *interface* plus a local
+implementation correct at beta scale. Swapping in S3/R2 means implementing
+`put`/`get`/`remove`; `object_key` already holds an opaque key rather than a
+path, so stored rows survive the swap.
+
+What is done, and what deliberately is not:
+
+| | |
+|---|---|
+| ✔ | magic-byte sniffing — the declared Content-Type is a claim, not evidence |
+| ✔ | hard size ceiling on the bytes actually received |
+| ✔ | EXIF/GPS stripping (JPEG) and text-chunk stripping (PNG), no dependency — a competition photo carries the venue's coordinates and often the child's name |
+| ✔ | random opaque keys; files written 0600 outside `public/`, never enumerable |
+| ✔ | served only to the uploader and reviewers, always as an attachment |
+| ✘ | malware scanning — needs ClamAV or a service; `scan_status` and `scanFile()` are the hook, files stay `pending`, and `canServe` treats pending as uploader-and-reviewer-only |
+| ✘ | re-encoding — needs an image library; metadata stripping covers the privacy case, not the malformed-decoder case |
+| ✘ | PDFs — plausible evidence, but PDF sanitisation is its own project |
+
+### The contract ships with the code
+`/api/v1/mobile/openapi.json` is served from `docs/openapi_mobile.json`, so the
+spec cannot drift into a wiki. `test/api_mobile.js` runs against its **own
+throwaway copy** of the database (the API mints awards, claims and evidence; a
+contract test that leaves debris is one people learn to skip) and is a gate
+stage of its own: `npm run test:api`, and stage 2 of `npm run gate`.

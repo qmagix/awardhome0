@@ -66,6 +66,13 @@ async function main() {
     const adminCookie = await login('audit-admin@test.invalid');
     const ownerCookie = await login('audit-owner@test.invalid');
 
+    // A real mobile session for the owner fixture, minted directly rather than
+    // over HTTP so the audit does not depend on email delivery. Without this
+    // every authenticated API route would answer 401 and the audit would be
+    // proving nothing about the new surface.
+    const { createSession } = require(path.join(ROOT, 'utils', 'mobileAuth'));
+    const mobileAccessToken = (await createSession(owner.lastID, { deviceLabel: 'route-audit' })).accessToken;
+
     const sub = {
       // manage surfaces → fixture ids owned by the audit owner
       '/manage/studio/:id': `/manage/studio/${st.lastID}`,
@@ -90,6 +97,9 @@ async function main() {
       '/admin/orgs/:id': `/admin/orgs/${realOrg.id}`,
       '/admin/marketing/studios/:id': `/admin/marketing/studios/${realStudio.id}`,
       '/admin/import-review/report/:file': '/admin/import-review/report/bogus.md',
+      // mobile API (development plan M5) — hit with a real bearer token below
+      '/api/v1/mobile/dancers/:id/awards': `/api/v1/mobile/dancers/${realDancer.unique_id}/awards`,
+      '/api/v1/mobile/evidence/:id': '/api/v1/mobile/evidence/999999',
       // legacy 301 redirects to /dance/*
       '/event/:id': `/event/${event.id}`,
       '/org/:slug': `/org/${realOrg.slug}`,
@@ -102,15 +112,19 @@ async function main() {
     const routes = new Set();
     const files = fs.readdirSync(path.join(ROOT, 'routes')).map(f => path.join(ROOT, 'routes', f))
       .concat(fs.readdirSync(path.join(ROOT, 'routes/dance')).map(f => path.join(ROOT, 'routes/dance', f)))
+      .concat(fs.readdirSync(path.join(ROOT, 'routes/api')).map(f => path.join(ROOT, 'routes/api', f)))
       .filter(f => f.endsWith('.js'));
     for (const f of files) {
       const src = fs.readFileSync(f, 'utf8');
+      // routes/api/* are mounted under a prefix in server.js, so their
+      // in-file paths need it back before they can be requested.
+      const prefix = f.includes(path.join('routes', 'api')) ? '/api/v1/mobile' : '';
       for (const m of src.matchAll(/router\.get\(\s*(\[[^\]]+\]|'[^']+')/g)) {
         const spec = m[1];
         if (spec.startsWith('[')) {
-          for (const p of spec.matchAll(/'([^']+)'/g)) routes.add(p[1]);
+          for (const p of spec.matchAll(/'([^']+)'/g)) routes.add(prefix + p[1]);
         } else {
-          routes.add(spec.slice(1, -1));
+          routes.add(prefix + spec.slice(1, -1));
         }
       }
     }
@@ -124,8 +138,13 @@ async function main() {
       }
       if (url.includes(':')) { problems.push(['UNSUBSTITUTED', route, '-']); continue; }
       const cookie = url.startsWith('/admin') ? adminCookie : ownerCookie;
+      // The mobile API authenticates with a bearer token and ignores cookies
+      // entirely — sending the session cookie would audit nothing.
+      const headers = url.startsWith('/api/v1/mobile')
+        ? { Authorization: 'Bearer ' + mobileAccessToken }
+        : { Cookie: cookie };
       try {
-        const res = await fetch(BASE + url, { redirect: 'manual', headers: { Cookie: cookie } });
+        const res = await fetch(BASE + url, { redirect: 'manual', headers });
         if (res.status >= 500) {
           const body = (await res.text()).slice(0, 120).replace(/\n/g, ' ');
           problems.push([res.status, route, url, body]);

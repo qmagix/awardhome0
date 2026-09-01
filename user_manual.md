@@ -484,3 +484,56 @@ numbers above all: **duplicate canonical awards** (6,408 as of 2026-09-01,
 all legacy import residue — must not rise) and **group awards with one linked
 dancer** (1,874 — must fall). A faster funnel that creates duplicates is a
 regression, not progress.
+
+## 23. The Mobile API (`/api/v1/mobile`)
+
+The versioned JSON API for the family app. The contract is served by the app
+itself at **`/api/v1/mobile/openapi.json`** — read that rather than this
+section for endpoint detail; it ships with the code that implements it.
+
+**Testing it**
+
+```bash
+npm run test:api      # 27 contract checks against a throwaway DB copy
+npm run gate          # runs it as stage 2 of 5
+```
+
+The API test never touches your working database: it copies `database.sqlite`
+to a temp directory and boots the server against the copy, because the write
+paths mint awards, claims and evidence.
+
+**Trying it by hand** (dev mode prints the sign-in code to the server log and
+returns it in the response, so no mail is needed):
+
+```bash
+curl -s -X POST localhost:3008/api/v1/mobile/auth/request-code \
+  -H 'Content-Type: application/json' -d '{"email":"you@example.com"}'
+# -> {"ok":true,"devCode":"123456"}
+curl -s -X POST localhost:3008/api/v1/mobile/auth/verify \
+  -H 'Content-Type: application/json' -d '{"email":"you@example.com","code":"123456"}'
+# -> {"accessToken":"...","refreshToken":"..."}
+curl -s localhost:3008/api/v1/mobile/me -H 'Authorization: Bearer <accessToken>'
+```
+
+**Environment**
+
+| Variable | Default | Notes |
+|---|---|---|
+| `MOBILE_ACCESS_TTL_MIN` | 15 | Access token lifetime |
+| `MOBILE_REFRESH_TTL_DAYS` | 60 | Refresh token lifetime |
+| `MOBILE_CODE_TTL_MIN` | 10 | Sign-in code lifetime |
+| `MOBILE_AUTH_DB_PATH` | `sessions.sqlite` | Mobile sessions live beside web sessions |
+| `EVIDENCE_DIR` | `private_uploads/evidence` | **Must never be inside `public/`** |
+| `EVIDENCE_MAX_BYTES` | 12 MB | Enforced on bytes received |
+
+**Things worth knowing operationally**
+
+- Signing out a lost phone: `POST /auth/revoke` with `{"all": true}` kills every
+  device on the account, effective on the next request.
+- If a family reports being signed out unexpectedly, check
+  `mobile_sessions.revoked_reason`: `refresh_token_reuse` means a rotated token
+  was replayed. That is usually a buggy client retrying, but it is
+  indistinguishable from theft, so the session is ended either way.
+- Evidence files are never served from the static tree and never shown to
+  anyone but the uploader and reviewers. Nothing scans them yet — that hook is
+  open work, and the code refuses to pretend otherwise.

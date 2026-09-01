@@ -1,0 +1,241 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "AwardHome Mobile API",
+    "version": "1.0.0",
+    "description": "Versioned JSON API for the AwardHome family app (design v2 §9, development plan M5).\n\nAuthentication is an opaque bearer token, never a session cookie, so no CSRF token is involved: nothing attaches a bearer token automatically, so there is nothing for a cross-site request to forge.\n\nRead endpoints that mirror a public web page work with no token at all — guest browsing needs no account.\n\nNothing in this API writes a canonical award, event, or studio. Family input lands in staging and is promoted by a reviewer, by corroboration between unrelated households, or (for independent dancers, who have no studio owner to review them) automatically and labelled as such."
+  },
+  "servers": [{ "url": "/api/v1/mobile" }],
+  "security": [{ "bearerAuth": [] }],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Access token from /auth/verify or /auth/refresh. Short-lived (15 minutes by default); refresh tokens rotate on every use and a reused one revokes the whole session."
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string", "description": "Stable machine code." },
+          "message": { "type": "string", "description": "Human-readable, safe to show a family." }
+        },
+        "required": ["error"]
+      },
+      "Tokens": {
+        "type": "object",
+        "properties": {
+          "accessToken": { "type": "string" },
+          "refreshToken": { "type": "string" },
+          "expiresIn": { "type": "integer", "description": "Access token lifetime in seconds." }
+        }
+      },
+      "Award": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "place": { "type": "string", "nullable": true },
+          "performance_name": { "type": "string", "nullable": true },
+          "award_type": { "type": "string", "nullable": true },
+          "category": { "type": "string", "nullable": true },
+          "age_division": { "type": "string", "nullable": true },
+          "verification_status": {
+            "type": "string",
+            "nullable": true,
+            "description": "family_submitted | corroborated | studio_confirmed | source_verified. family_submitted awards are public but held out of competitive rankings."
+          },
+          "event_name": { "type": "string", "nullable": true },
+          "event_year": { "type": "integer", "nullable": true },
+          "org_name": { "type": "string", "nullable": true },
+          "studio_name": { "type": "string", "nullable": true, "description": "Independent dancers render as \"Independent\"." },
+          "dancer_count": { "type": "integer" },
+          "updated_at": { "type": "string", "nullable": true, "description": "Derived sync marker; pass back as updated_since." }
+        }
+      },
+      "Submission": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "client_submission_id": { "type": "string" },
+          "performance_name": { "type": "string" },
+          "group_size": { "type": "string", "enum": ["solo", "duet", "trio", "small_group", "large_group", "line", "grand_line", "production"] },
+          "cast_complete": { "type": "integer", "description": "0 for group formats, always — the record is explicitly partial." },
+          "status": { "type": "string", "enum": ["submitted", "needs_info", "accepted", "rejected", "withdrawn"] },
+          "verification_level": { "type": "string" },
+          "award_id": { "type": "integer", "nullable": true }
+        }
+      },
+      "EventOption": {
+        "type": "object",
+        "properties": {
+          "kind": { "type": "string", "enum": ["upcoming", "candidate", "event"], "description": "upcoming = the organizer's own announced tour stop; candidate = added by a family; event = canonical historical event." },
+          "id": { "type": "integer" },
+          "name": { "type": "string" },
+          "when": { "type": "string", "nullable": true },
+          "where": { "type": "string", "nullable": true },
+          "distance_miles": { "type": "number", "nullable": true },
+          "note": { "type": "string", "nullable": true }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/openapi.json": {
+      "get": { "summary": "This document", "security": [], "responses": { "200": { "description": "The contract" } } }
+    },
+    "/auth/request-code": {
+      "post": {
+        "summary": "Email a one-time sign-in code",
+        "description": "Always returns 200 with the same body whether or not the address has an account — this endpoint must not become an account-existence oracle.",
+        "security": [],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "email": { "type": "string" } }, "required": ["email"] } } } },
+        "responses": { "200": { "description": "Accepted" }, "429": { "description": "Rate limited" } }
+      }
+    },
+    "/auth/verify": {
+      "post": {
+        "summary": "Exchange a code for tokens",
+        "security": [],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "email": { "type": "string" }, "code": { "type": "string" }, "device_label": { "type": "string" }, "platform": { "type": "string" } }, "required": ["email", "code"] } } } },
+        "responses": {
+          "200": { "description": "Signed in", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Tokens" } } } },
+          "401": { "description": "Bad or expired code", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "summary": "Rotate tokens",
+        "description": "Refresh tokens are single-use. Presenting one that has already been rotated revokes the whole session — we cannot distinguish replay from theft, so we assume theft.",
+        "security": [],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "refresh_token": { "type": "string" } }, "required": ["refresh_token"] } } } },
+        "responses": { "200": { "description": "New tokens", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Tokens" } } } }, "401": { "description": "Sign in again" } }
+      }
+    },
+    "/auth/revoke": {
+      "post": {
+        "summary": "Revoke this device, or every device",
+        "requestBody": { "content": { "application/json": { "schema": { "type": "object", "properties": { "all": { "type": "boolean" } } } } } },
+        "responses": { "200": { "description": "Revoked; effective on the next request" } }
+      }
+    },
+    "/auth/sessions": {
+      "get": { "summary": "Devices signed in to this account", "responses": { "200": { "description": "Sessions" } } }
+    },
+    "/me": {
+      "get": { "summary": "The household: dancers managed, with derived studio affiliations", "responses": { "200": { "description": "Household" } } }
+    },
+    "/dancers/search": {
+      "get": {
+        "summary": "Search dancers by name",
+        "security": [],
+        "parameters": [{ "name": "q", "in": "query", "required": true, "schema": { "type": "string", "minLength": 2 } }],
+        "responses": { "200": { "description": "Matches" } }
+      }
+    },
+    "/dancers/{id}/awards": {
+      "get": {
+        "summary": "Trophy case",
+        "description": "Public, and honours the owner's per-card hide. Page with `cursor` (last id seen; ids only increase, so paging is stable under concurrent writes) and sync with `updated_since`.",
+        "security": [],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Numeric id or unique_id." },
+          { "name": "cursor", "in": "query", "schema": { "type": "integer" } },
+          { "name": "updated_since", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Awards", "content": { "application/json": { "schema": { "type": "object", "properties": { "awards": { "type": "array", "items": { "$ref": "#/components/schemas/Award" } }, "nextCursor": { "type": "integer", "nullable": true } } } } } }, "404": { "description": "No such dancer" } }
+      }
+    },
+    "/dancers/{id}/claim": {
+      "post": {
+        "summary": "Claim a dancer profile",
+        "description": "A second household claiming the same dancer contests both claims, which routes them to AwardHome and away from any studio.",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "requestBody": { "content": { "application/json": { "schema": { "type": "object", "properties": { "relationship": { "type": "string" }, "proof": { "type": "string" }, "studio_code": { "type": "string" } } } } } },
+        "responses": { "201": { "description": "Filed" }, "409": { "description": "Already claimed" }, "429": { "description": "Daily limit" } }
+      }
+    },
+    "/events/nearby": {
+      "get": {
+        "summary": "Event picker",
+        "description": "Ranks the organizer's geocoded tour stops, other families' candidates, and canonical events. Pass lat/lng/date for the one-tap case, or q to search by name.",
+        "security": [],
+        "parameters": [
+          { "name": "lat", "in": "query", "schema": { "type": "number" } },
+          { "name": "lng", "in": "query", "schema": { "type": "number" } },
+          { "name": "date", "in": "query", "schema": { "type": "string", "format": "date" } },
+          { "name": "q", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Options", "content": { "application/json": { "schema": { "type": "object", "properties": { "options": { "type": "array", "items": { "$ref": "#/components/schemas/EventOption" } } } } } } } }
+      }
+    },
+    "/events/candidates": {
+      "post": {
+        "summary": "Create an event candidate (never a canonical event)",
+        "description": "Send check_only:true to see likely duplicates without creating anything. Without confirm_new, a likely twin comes back as 409 with the duplicates instead of creating a second row.",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "name": { "type": "string" }, "start_date": { "type": "string", "format": "date" }, "end_date": { "type": "string", "format": "date" }, "city": { "type": "string" }, "state": { "type": "string" }, "venue": { "type": "string" }, "lat": { "type": "number" }, "lng": { "type": "number" }, "org_id": { "type": "integer" }, "check_only": { "type": "boolean" }, "confirm_new": { "type": "boolean" } }, "required": ["name", "start_date"] } } } },
+        "responses": { "201": { "description": "Created" }, "409": { "description": "Likely duplicates offered" } }
+      }
+    },
+    "/submissions": {
+      "get": {
+        "summary": "Status feed for this household",
+        "parameters": [{ "name": "cursor", "in": "query", "schema": { "type": "integer" } }, { "name": "updated_since", "in": "query", "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Submissions" } }
+      },
+      "post": {
+        "summary": "Submit a missing award",
+        "description": "Idempotent on (user, client_submission_id): a retried offline upload returns the ORIGINAL row. group_size is required — it decides the canonical write path. The studio is derived from affiliation and is never accepted as free text.",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "client_submission_id": { "type": "string", "format": "uuid" }, "dancer_id": { "type": "integer" }, "event_id": { "type": "integer" }, "event_candidate_id": { "type": "integer" }, "upcoming_event_id": { "type": "integer" }, "studio_id": { "type": "integer", "description": "Only honoured when the dancer has more than one affiliation." }, "performance_name": { "type": "string" }, "group_size": { "type": "string" }, "place": { "type": "string" }, "category": { "type": "string" }, "award_type": { "type": "string" }, "age_division": { "type": "string" }, "teacher": { "type": "string" }, "choreographer": { "type": "string" }, "cast_names": { "type": "array", "items": { "type": "string" } }, "notes": { "type": "string" } }, "required": ["client_submission_id", "dancer_id", "performance_name", "group_size"] } } } },
+        "responses": { "201": { "description": "Created" }, "200": { "description": "Idempotent replay of an earlier submission" }, "400": { "description": "Validation failed" }, "429": { "description": "Daily limit" } }
+      }
+    },
+    "/submissions/{id}/evidence": {
+      "post": {
+        "summary": "Request an upload grant",
+        "description": "Two-step so the storage driver can change (local disk today, S3/R2 later) without the client changing. Evidence is private and is never share media.",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": { "200": { "description": "Grant issued" }, "404": { "description": "No such submission" } }
+      }
+    },
+    "/uploads": {
+      "post": {
+        "summary": "Redeem an upload grant with the file bytes",
+        "description": "Send the raw bytes with the grant in the X-Upload-Grant header. The server identifies the file by its magic bytes, not by Content-Type, and strips EXIF/metadata before storing.",
+        "requestBody": { "required": true, "content": { "application/octet-stream": { "schema": { "type": "string", "format": "binary" } } } },
+        "responses": { "201": { "description": "Stored" }, "400": { "description": "Bad grant or unsupported type" }, "413": { "description": "Too large" } }
+      }
+    },
+    "/evidence/{id}": {
+      "get": {
+        "summary": "Download evidence (uploader and reviewers only)",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": { "200": { "description": "The file, as an attachment" }, "404": { "description": "Not found, or not yours" } }
+      }
+    },
+    "/corrections": {
+      "post": {
+        "summary": "Propose a correction to a published award",
+        "description": "A proposal, never an edit. Only a household whose own dancer is on the award may file one.",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "award_id": { "type": "integer" }, "dancer_id": { "type": "integer" }, "field": { "type": "string", "enum": ["performance_name", "place", "award_type", "category", "age_division"] }, "proposed_value": { "type": "string" }, "reason": { "type": "string" } }, "required": ["award_id", "dancer_id", "field", "proposed_value"] } } } },
+        "responses": { "201": { "description": "Filed" }, "403": { "description": "Not your dancer's award" } }
+      }
+    },
+    "/activity": {
+      "get": {
+        "summary": "Decisions and questions on this household's things",
+        "description": "Deliberately not an engagement feed — decisions and questions only, the same rule push notifications follow.",
+        "responses": { "200": { "description": "Activity" } }
+      }
+    },
+    "/devices": {
+      "post": {
+        "summary": "Register for push",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "platform": { "type": "string" }, "token": { "type": "string" }, "preferences": { "type": "object" } }, "required": ["platform", "token"] } } } },
+        "responses": { "201": { "description": "Registered" } }
+      }
+    }
+  }
+}

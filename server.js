@@ -54,6 +54,20 @@ app.use(morgan(':remote-addr :method :url :status :res[content-length]b :respons
 }));
 app.use(express.json()); // Added for JSON parsing
 app.use(express.urlencoded({ extended: true })); // Added for form parsing
+
+// ---- Mobile API (development plan M5) ----
+// MOUNT POSITION IS LOAD-BEARING — after express.json(), and BEFORE the
+// session store, the CSRF middleware and the private-beta gate:
+//   * before session: a bearer-authenticated request has no reason to create
+//     a session row, and a native client never returns the cookie anyway;
+//   * before CSRF: CSRF defends against a browser attaching an AMBIENT
+//     credential cross-site. A bearer token is not ambient — nothing attaches
+//     it automatically — so the check does not apply rather than being skipped;
+//   * outside the beta gate: the app ships to invited families through
+//     TestFlight and internal builds, which is its own gate.
+// This is the only place in the app where router order carries a security
+// argument; scripts/audit_get_routes.js is the check on it.
+app.use('/api/v1/mobile', require('./routes/api/mobile'));
 const SESSION_SECRET = process.env.SESSION_SECRET || (() => {
   if (process.env.NODE_ENV === 'production') {
     console.error('FATAL: SESSION_SECRET must be set in production.');
