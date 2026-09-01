@@ -187,6 +187,84 @@ async function initSubmissionsSchema(db) {
     CREATE INDEX IF NOT EXISTS idx_award_submission_evidence_sub
       ON award_submission_evidence(submission_id);
 
+    -- An event a family created because they genuinely could not find theirs
+    -- (design §6.4). Immediately selectable by other families in the same
+    -- place and week, so a second parent at the same competition is never
+    -- forced to create a duplicate — but NEVER a canonical events row. Only
+    -- a reviewer promotes, or the organizer's own import auto-merges.
+    --
+    -- Why the staging file: families write these at submission rate, in the
+    -- same Saturday-at-a-competition spike, and a provisional event is not
+    -- archive data until somebody says it is.
+    --
+    -- Orphan story: org_id / upcoming_event_id / promoted_event_id /
+    -- created_by are canonical ids across the database boundary. Reads
+    -- resolve them and tolerate absence; scripts/check_submission_orphans.js
+    -- reports dangles; nothing is deleted automatically.
+    CREATE TABLE IF NOT EXISTS event_candidates (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+      -- Two families creating the same event minutes apart are offered each
+      -- other's row first; if both proceed anyway, they share a cluster id so
+      -- a reviewer sees one decision instead of two unrelated rows.
+      dedup_cluster_id TEXT NOT NULL,
+
+      -- Canonical organizations.id when the family recognised the brand.
+      org_id INTEGER,
+      -- org_upcoming_events.id when this candidate was seeded from the
+      -- organizer's OWN announced tour stop — the highest-confidence case,
+      -- and the one that auto-merges cleanly when results land later.
+      upcoming_event_id INTEGER,
+
+      name TEXT NOT NULL,
+      name_key TEXT NOT NULL,
+      start_date TEXT,
+      end_date TEXT,
+      city TEXT,
+      state TEXT,
+      venue TEXT,
+      lat REAL,
+      lng REAL,
+
+      -- Optional banner/programme photo. PRIVATE to the creator and the
+      -- reviewer until an approval step exists: it is dedup evidence ("two
+      -- candidates with the same banner are the same event"), not public
+      -- content, and unmoderated family images must not reach other families.
+      photo_key TEXT,
+      photo_status TEXT NOT NULL DEFAULT 'private',
+
+      source TEXT NOT NULL DEFAULT 'family',
+      created_by INTEGER NOT NULL,
+
+      -- open -> promoted (a canonical event was created) | merged (absorbed
+      -- into an existing canonical event) | rejected. Only 'open' rows are
+      -- offered in the picker; promoted/merged ones redirect submissions to
+      -- their canonical event.
+      status TEXT NOT NULL DEFAULT 'open',
+      promoted_event_id INTEGER,
+      decided_by INTEGER,
+      decided_at DATETIME,
+      decision_note TEXT,
+
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+    -- One candidate per organizer-announced stop, ever: the seed is
+    -- get-or-create, so two households picking the same tour stop share a row.
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_event_candidates_upcoming
+      ON event_candidates(upcoming_event_id) WHERE upcoming_event_id IS NOT NULL;
+    CREATE INDEX IF NOT EXISTS idx_event_candidates_lookup
+      ON event_candidates(status, start_date);
+    CREATE INDEX IF NOT EXISTS idx_event_candidates_cluster
+      ON event_candidates(dedup_cluster_id);
+    CREATE INDEX IF NOT EXISTS idx_event_candidates_namekey
+      ON event_candidates(name_key, start_date);
+
+    -- Convergence (M4) must work whether the event is canonical or still a
+    -- candidate, so the key needs both shapes.
+    CREATE INDEX IF NOT EXISTS idx_award_submissions_converge_candidate
+      ON award_submissions(event_candidate_id, performance_name_key, studio_id, group_size);
+
     -- Per-household abuse ledger (design §9 "abuse limits"). One row per
     -- counted action; the limiter counts rows in a rolling day rather than
     -- keeping a mutable counter, so a limit change applies retroactively and

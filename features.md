@@ -769,3 +769,61 @@ vouched for it; it is written at promotion time in the same transaction as the
 award. `scripts/check_submission_orphans.js` reports cross-database dangling
 references (the weekly Sunday integrity cron runs it) and never deletes: a
 family's submission is their record of their own child's award.
+
+## Event candidates and the picker (2026-08-31)
+The second milestone of the mobile-app plan (`docs/mobile_app_development_plan.md`
+M2), still web-first. Event identity is the hardest free-text problem in this
+domain, so the picker asks the cheapest question first and only falls back to
+typing when it must.
+
+**Three sources, one list** (`utils/eventPicker.js`):
+- **Organizer tour stops** (`org_upcoming_events`) — ~1,080 of them geocoded with
+  real ISO dates, which is what makes *"Are you at Starpower — San Jose today?"*
+  a one-tap answer. Browsing writes nothing; picking one seeds its candidate
+  lazily at submit time.
+- **Other families' candidates**, labelled "Added by a family" so they read as
+  provisional.
+- **Canonical historical events**, by name only. They carry no geography and
+  their `date_string` is free text ("March 22 - 24, 2024", and in one case a
+  venue name), so they cannot answer a geo/date question — which is exactly why
+  the geocoded upcoming table carries the one-tap path.
+
+**Families may create an event, but only ever as a candidate.** No canonical
+`events` row is ever written by a family action — that invariant has its own
+smoke check. A candidate is selectable by other families at the same event
+immediately, because the alternative is every household at a new competition
+creating its own copy.
+
+**Dedup at creation, on the server.** Before a create is accepted, anything that
+looks like the same event is offered back: *"Someone here added 'Starquest
+Spring Classic' 20 minutes ago — is that yours?"* Only an explicit "mine is
+different" creates a second row, and the two are then filed under one
+`dedup_cluster_id` so a reviewer decides once instead of twice. Matching is
+date + geography + name (token overlap with containment, stopwords stripped —
+"dance", "competition", "nationals" identify nothing).
+
+**Lifecycle decisions**, closed here and env-overridable so they can be tuned
+against real traffic without a deploy:
+
+| Decision | Value | Why |
+|---|---|---|
+| Visibility scope | 75 miles, ±14 days | Wide enough for a family entering from home that evening; narrow enough that provisional data stays local noise |
+| Dedup match | 40 miles, ±3 days, name ≥ 0.5 | Tighter, because this decides "same event", not "might interest you" |
+| Promotion authority | AwardHome reviewers only | A studio owner promoting would let one studio mint canonical events platform-wide |
+| Auto-merge | Unambiguous match only, score ≥ 0.75 | Two plausible events is a tour with two nearby stops; guessing would file an award on the wrong weekend |
+
+**Two promotion paths.** A reviewer works `/admin/event-candidates` (superadmin;
+grouped by dedup cluster, with canonical-event suggestions ranked by name
+similarity plus a city bonus, since canonical event names usually carry the
+city). Or the organizer's own results import lands and
+`scripts/merge_event_candidates.js` merges the candidate into it with no human
+step — the organizer's published data outranks a family's guess by definition.
+That script runs automatically at the end of every successful weekly import.
+
+Both paths re-point the family's submissions at the canonical event and keep
+`event_candidate_id` as provenance. Promotion spans two SQLite files and so
+cannot be one transaction; it is therefore idempotent by construction — an
+already-promoted candidate returns its event, and an existing event with the
+same (org, name, year) is reused — so a crash between the halves costs a retry,
+never a duplicate event. Rejecting a candidate never deletes the family's
+submissions: the award still happened, it just needs a new home.

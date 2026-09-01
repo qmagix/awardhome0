@@ -327,3 +327,52 @@ Independent records never appear in the studio directory, public search, the
 featured rotation, the homepage leaderboards, the platform studio count, or
 merge suggestions; their award cards read simply **Independent**, and their
 studio URL redirects to the dancer.
+
+## 19. Event Candidates (reviewer queue)
+
+Part of family submissions (section 17), same `family_submissions` flag.
+
+**For families.** In the Add-an-Award flow, tap **📍 Events near me** and allow
+the location prompt — organizer tour stops within 75 miles of you on that date
+appear, and one tap picks the right one. No location, or a competition we have
+never heard of? Search by name, or use **Add the event**. Anything you add
+becomes selectable by other families at the same event straight away, marked
+"Added by a family" until a reviewer confirms it.
+
+If someone already added something that looks like your event, you will be shown
+it first — picking theirs is what makes both households' submissions land on one
+event instead of two.
+
+**For reviewers — `/admin/event-candidates` (superadmin).** Promotion authority
+is AwardHome's alone: a studio owner promoting a candidate would let one studio
+mint canonical events for the whole platform.
+
+The queue groups candidates by **dedup cluster** — two families who each
+insisted their event was different are one decision, not two. For each
+candidate you can:
+
+- **Merge into an existing event** — usually the right answer. Suggestions are
+  ranked by name similarity plus a city bonus (canonical event names normally
+  carry the city). You can also paste an event id directly.
+- **Promote to a canonical event** — set the organization first; a canonical
+  event cannot exist without one, so promotion refuses until you do.
+- **Reject** — this does *not* delete the families' submissions. The award still
+  happened; it needs a new home, and a later merge or promote gives it one.
+
+Promoting or merging re-points every submission on that candidate at the
+canonical event. Both operations are safe to repeat: a second promote returns
+the same event rather than creating another.
+
+**Auto-merge.** When an organizer's own results import lands an event that
+unambiguously matches an open candidate (same organization and year, strong name
+match), the candidate merges into it with no human step — the organizer's
+published data outranks a family's guess by definition. This runs at the end of
+every successful weekly import; run it by hand with:
+
+```bash
+node scripts/merge_event_candidates.js            # dry run
+node scripts/merge_event_candidates.js --apply
+```
+
+Two plausible matches are never guessed between — that would file an award on
+the wrong weekend of a tour. They are left in the queue with both options shown.

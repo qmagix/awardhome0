@@ -9,6 +9,10 @@ const { requireAdmin, requireSuperadmin } = require('../middleware/auth');
 const { approveDancerClaim, rejectDancerClaim } = require('../utils/claims');
 const { ensureMergeRequestTable, mergeStudios, notifyMergeDecision } = require('../utils/studioMerge');
 const { FLAG_DEFS, VALID_STATES, refreshFlags } = require('../utils/featureFlags');
+const { openSubmissionsDb } = require('../utils/submissionsDb');
+const {
+  findCanonicalMatches, promoteCandidate, mergeCandidateIntoEvent, rejectCandidate,
+} = require('../utils/eventCandidates');
 const bcrypt = require('bcrypt');
 const { runBackfillForEvent } = require('../backfill_utils');
 const fs = require('fs');
@@ -456,6 +460,100 @@ router.post('/admin/import-review/dismiss', requireSuperadmin, (req, res) => {
   const staging = path.join(__dirname, '..', 'staging_import.sqlite');
   for (const s of ['', '-wal', '-shm']) if (fs.existsSync(staging + s)) fs.unlinkSync(staging + s);
   res.redirect('/admin/import-review');
+});
+
+
+// ---- Event candidates (superadmin) ----
+//
+// PROMOTION AUTHORITY IS AWARDHOME'S ALONE (development plan §9.2/§9.3). A
+// studio owner promoting a family-created event would let one studio mint
+// canonical events for the whole platform — the same class of decision as a
+// contested claim, and reserved the same way. Owners and families can create
+// and use candidates all day; only this queue turns one into archive data.
+//
+// The queue groups by dedup cluster, because two families who both created
+// "the same" event are ONE decision, not two.
+router.get('/admin/event-candidates', requireSuperadmin, async (req, res) => {
+  const db = await openDb();
+  const sdb = await openSubmissionsDb();
+  const status = ['open', 'promoted', 'merged', 'rejected'].includes(req.query.status)
+    ? req.query.status : 'open';
+
+  const rows = await sdb.all(
+    'SELECT * FROM event_candidates WHERE status = ? ORDER BY created_at DESC LIMIT 300', [status]);
+
+  const clusters = new Map();
+  for (const c of rows) {
+    // Resolve across the database boundary, tolerating absence — these are
+    // canonical ids in another file with nothing enforcing them.
+    c.org = c.org_id ? await db.get('SELECT id, name FROM organizations WHERE id = ?', [c.org_id]) : null;
+    c.creator = await db.get('SELECT id, email FROM users WHERE id = ?', [c.created_by]);
+    c.submission_count = (await sdb.get(
+      'SELECT COUNT(*) AS n FROM award_submissions WHERE event_candidate_id = ?', [c.id])).n;
+    c.suggestions = status === 'open' ? await findCanonicalMatches(db, c) : [];
+    c.promoted_event = c.promoted_event_id
+      ? await db.get('SELECT id, name, year FROM events WHERE id = ?', [c.promoted_event_id]) : null;
+
+    if (!clusters.has(c.dedup_cluster_id)) clusters.set(c.dedup_cluster_id, []);
+    clusters.get(c.dedup_cluster_id).push(c);
+  }
+
+  const counts = {};
+  for (const s of ['open', 'promoted', 'merged', 'rejected']) {
+    counts[s] = (await sdb.get('SELECT COUNT(*) AS n FROM event_candidates WHERE status = ?', [s])).n;
+  }
+
+  const orgOptions = await db.all('SELECT id, name FROM organizations ORDER BY name');
+
+  res.render('admin_event_candidates', {
+    clusters: [...clusters.values()], status, counts, orgOptions,
+    query: { error: req.query.error || null },
+    pageTitle: 'Event Candidates',
+  });
+});
+
+// Set the organization on a candidate. Separate from promotion on purpose:
+// promoting needs an org, and the family often does not know the brand, so a
+// reviewer supplies it as its own reviewable step.
+router.post('/admin/event-candidates/:id/org', requireSuperadmin, async (req, res) => {
+  const sdb = await openSubmissionsDb();
+  const orgId = parseInt(req.body.org_id, 10) || null;
+  await sdb.run('UPDATE event_candidates SET org_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+    [orgId, req.params.id]);
+  res.redirect('/admin/event-candidates');
+});
+
+router.post('/admin/event-candidates/:id/promote', requireSuperadmin, async (req, res) => {
+  const db = await openDb();
+  const sdb = await openSubmissionsDb();
+  const result = await promoteCandidate(db, sdb, {
+    candidateId: parseInt(req.params.id, 10),
+    reviewerId: req.session.user.id,
+    note: (req.body.note || '').trim() || null,
+  });
+  res.redirect('/admin/event-candidates' + (result.ok ? '' : '?error=' + encodeURIComponent(result.error)));
+});
+
+router.post('/admin/event-candidates/:id/merge', requireSuperadmin, async (req, res) => {
+  const db = await openDb();
+  const sdb = await openSubmissionsDb();
+  const result = await mergeCandidateIntoEvent(db, sdb, {
+    candidateId: parseInt(req.params.id, 10),
+    eventId: parseInt(req.body.event_id, 10),
+    reviewerId: req.session.user.id,
+    note: (req.body.note || '').trim() || null,
+  });
+  res.redirect('/admin/event-candidates' + (result.ok ? '' : '?error=' + encodeURIComponent(result.error)));
+});
+
+router.post('/admin/event-candidates/:id/reject', requireSuperadmin, async (req, res) => {
+  const sdb = await openSubmissionsDb();
+  await rejectCandidate(sdb, {
+    candidateId: parseInt(req.params.id, 10),
+    reviewerId: req.session.user.id,
+    note: (req.body.note || '').trim() || null,
+  });
+  res.redirect('/admin/event-candidates');
 });
 
 

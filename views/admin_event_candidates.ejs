@@ -1,0 +1,135 @@
+<%- include('partials/header') %>
+
+<div class="container" style="margin-top: 4rem; padding-bottom: 4rem;">
+  <div class="header-section" style="margin-bottom: 1.5rem;">
+    <h1>Event Candidates</h1>
+    <p class="subtitle">
+      Events families created because they could not find theirs. They are selectable and usable
+      immediately, but they are not archive data until this page says so — only AwardHome promotes a
+      candidate to a canonical event.
+    </p>
+  </div>
+
+  <% if (locals.query && query.error) { %>
+    <div class="card glass-card" style="margin-bottom: 1rem; border-left: 3px solid #d98a8a;">
+      <p style="margin: 0;"><%= query.error %></p>
+    </div>
+  <% } %>
+
+  <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+    <% ['open', 'promoted', 'merged', 'rejected'].forEach(function (s) { %>
+      <a href="/admin/event-candidates?status=<%= s %>"
+         class="btn <%= status === s ? 'btn-primary' : 'btn-outline' %>"
+         style="text-decoration: none; padding: 0.4rem 0.9rem; font-size: 0.9rem;">
+        <%= s %> (<%= counts[s] %>)
+      </a>
+    <% }); %>
+  </div>
+
+  <% if (!clusters.length) { %>
+    <div class="card glass-card"><p style="margin: 0; color: var(--text-muted);">Nothing <%= status %>.</p></div>
+  <% } %>
+
+  <% clusters.forEach(function (cluster) { %>
+    <div class="card glass-card" style="margin-bottom: 1.5rem;" data-cluster="<%= cluster[0].dedup_cluster_id %>">
+      <% if (cluster.length > 1) { %>
+        <p style="margin: 0 0 1rem; padding: 0.5rem 0.75rem; background: rgba(212,175,55,0.12); border-radius: 6px; font-size: 0.9rem;">
+          ⚠ <strong><%= cluster.length %> candidates in one dedup cluster.</strong>
+          Separate households created these minutes apart and each said theirs was different.
+          Decide them together: promote or merge one, and merge the rest into the same event.
+        </p>
+      <% } %>
+
+      <% cluster.forEach(function (c) { %>
+        <div style="padding: 1rem 0; border-top: 1px solid rgba(255,255,255,0.08);" data-candidate-id="<%= c.id %>">
+          <div style="display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+            <div>
+              <strong style="font-size: 1.05rem;"><%= c.name %></strong>
+              <div style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">
+                <%= c.start_date || 'no date' %><% if (c.end_date && c.end_date !== c.start_date) { %> – <%= c.end_date %><% } %>
+                <% if (c.city || c.state) { %> · <%= [c.city, c.state].filter(Boolean).join(', ') %><% } %>
+                <% if (c.venue) { %> · <%= c.venue %><% } %>
+              </div>
+              <div style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem;">
+                <%= c.source === 'org_upcoming' ? 'Seeded from the organizer\'s own tour stop' : 'Created by a family' %>
+                · <%= c.creator ? c.creator.email : 'creator account deleted' %>
+                · <%= c.created_at %>
+                · <strong><%= c.submission_count %></strong> submission<%= c.submission_count === 1 ? '' : 's' %>
+              </div>
+              <% if (c.promoted_event) { %>
+                <div style="color: var(--gold-vivid); font-size: 0.85rem; margin-top: 0.25rem;">
+                  → canonical event #<%= c.promoted_event.id %>: <%= c.promoted_event.name %> (<%= c.promoted_event.year %>)
+                </div>
+              <% } %>
+              <% if (c.decision_note) { %>
+                <div style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem;">Note: <%= c.decision_note %></div>
+              <% } %>
+            </div>
+            <div style="min-width: 220px;">
+              <form method="POST" action="/admin/event-candidates/<%= c.id %>/org" style="display: flex; gap: 0.4rem;">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <select name="org_id" style="flex-grow: 1; padding: 0.4rem; background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px; font-size: 0.85rem;">
+                  <option value="">— organization —</option>
+                  <% (locals.orgOptions || []).forEach(function (o) { %>
+                    <option value="<%= o.id %>" <%= c.org_id === o.id ? 'selected' : '' %>><%= o.name %></option>
+                  <% }); %>
+                </select>
+                <button type="submit" class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">Set</button>
+              </form>
+              <p style="margin: 0.3rem 0 0; font-size: 0.8rem; color: var(--text-muted);">
+                <%= c.org ? c.org.name : 'No organization — promotion needs one.' %>
+              </p>
+            </div>
+          </div>
+
+          <% if (status === 'open') { %>
+            <% if (c.suggestions && c.suggestions.length) { %>
+              <div style="margin-top: 0.75rem; padding: 0.75rem; background: rgba(0,0,0,0.25); border-radius: 6px;">
+                <p style="margin: 0 0 0.5rem; font-size: 0.85rem; color: var(--text-muted);">
+                  Probably one of these events we already have — merging is almost always the right answer:
+                </p>
+                <% c.suggestions.forEach(function (s) { %>
+                  <form method="POST" action="/admin/event-candidates/<%= c.id %>/merge"
+                        style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.35rem;">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <input type="hidden" name="event_id" value="<%= s.id %>">
+                    <span style="flex-grow: 1; font-size: 0.9rem;">
+                      <%= s.name %> (<%= s.year %>)
+                      <span style="color: var(--text-muted); font-size: 0.8rem;">match <%= s.score.toFixed(2) %></span>
+                    </span>
+                    <button type="submit" class="btn btn-outline" style="padding: 0.25rem 0.7rem; font-size: 0.8rem;">Merge into this</button>
+                  </form>
+                <% }); %>
+              </div>
+            <% } %>
+
+            <div style="margin-top: 0.75rem; display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+              <form method="POST" action="/admin/event-candidates/<%= c.id %>/promote" style="display: inline;">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <button type="submit" class="btn btn-primary" style="padding: 0.35rem 0.9rem; font-size: 0.85rem;"
+                        <%= c.org_id ? '' : 'disabled title="Set the organization first"' %>>
+                  Promote to a canonical event
+                </button>
+              </form>
+              <form method="POST" action="/admin/event-candidates/<%= c.id %>/merge" style="display: flex; gap: 0.4rem; align-items: center;">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <input type="number" name="event_id" placeholder="event id" required
+                       style="width: 110px; padding: 0.35rem; background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px; font-size: 0.85rem;">
+                <button type="submit" class="btn btn-outline" style="padding: 0.35rem 0.8rem; font-size: 0.85rem;">Merge into event</button>
+              </form>
+              <form method="POST" action="/admin/event-candidates/<%= c.id %>/reject" style="display: inline;">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <button type="submit" class="btn btn-outline" style="padding: 0.35rem 0.8rem; font-size: 0.85rem; border-color: #d98a8a; color: #d98a8a;">Reject</button>
+              </form>
+            </div>
+            <p style="margin: 0.5rem 0 0; font-size: 0.8rem; color: var(--text-muted);">
+              Rejecting does not delete the families' submissions — they stay, needing a new home.
+            </p>
+          <% } %>
+        </div>
+      <% }); %>
+    </div>
+  <% }); %>
+</div>
+
+<%- include('partials/footer') %>

@@ -81,6 +81,12 @@ const CHECKS = [
   ['GET', '/manage/dancer/1/submissions', [302], 'anonymous family submissions redirected to login'],
   ['POST', '/manage/dancer/1/submissions', [403], 'anonymous family submission blocked (CSRF)'],
   ['GET', '/api/dancer/1/event-search?q=dance', [302], 'anonymous event search redirected to login'],
+  ['GET', '/api/dancer/1/event-picker?q=dance', [302], 'anonymous event picker redirected to login'],
+  ['POST', '/api/dancer/1/event-candidates', [403], 'anonymous event-candidate create blocked (CSRF)'],
+  ['POST', '/api/dancer/1/event-candidates/check', [403], 'anonymous dedup check blocked (CSRF)'],
+  ['GET', '/admin/event-candidates', [403], 'anonymous candidate queue blocked'],
+  ['POST', '/admin/event-candidates/1/promote', [403], 'anonymous candidate promotion blocked'],
+  ['POST', '/admin/event-candidates/1/merge', [403], 'anonymous candidate merge blocked'],
 ];
 
 // Family submissions stage in their OWN SQLite file (utils/submissionsDb.js).
@@ -257,7 +263,10 @@ async function main() {
       try {
         const u1 = await db.run("INSERT INTO users (email, password_hash, role, is_verified) VALUES ('smoke-owner@test.invalid', ?, 'studio_owner', 1)", [hash]);
         const u2 = await db.run("INSERT INTO users (email, password_hash, role, is_verified) VALUES ('smoke-claimant@test.invalid', ?, 'user', 1)", [hash]);
-        ids.users.push(u1.lastID, u2.lastID);
+        // Reviewer fixture: promoting an event candidate to a canonical event
+        // is AwardHome's decision alone, so the M2 promotion checks need one.
+        const u3 = await db.run("INSERT INTO users (email, password_hash, role, is_verified) VALUES ('smoke-super@test.invalid', ?, 'superadmin', 1)", [hash]);
+        ids.users.push(u1.lastID, u2.lastID, u3.lastID);
         // s2's name contains s1's base name so the manage page must show
         // it as a merge suggestion (with award context) for s1's owner.
         const s1 = await db.run("INSERT INTO studios (unique_id, name, status, is_claimed, owner_id) VALUES ('smoke-studio-1', 'Smoke Test Studio', 'active', 1, ?)", [u1.lastID]);
@@ -533,11 +542,190 @@ async function main() {
         const mdHtml = await md.text();
         check(md.status === 200 && mdHtml.includes('approval pending'),
           'my-dancers shows the studio-claim pending state', 'status ' + md.status);
+
+        // ---- M2: the event picker and event candidates ----
+        // The four acceptance criteria in order: one-tap pick at a known
+        // event, a created candidate selectable by a SECOND household
+        // immediately, the dedup offer + shared cluster when two families
+        // create the same event minutes apart, and — through all of it — not
+        // one canonical `events` row written by a family action.
+        const canonicalBefore = (await db.get('SELECT COUNT(*) AS n FROM events')).n;
+        const upcoming = await db.get(
+          "SELECT id, name, start_date, lat, lng FROM org_upcoming_events WHERE status = 'active' AND lat IS NOT NULL ORDER BY id LIMIT 1");
+
+        if (upcoming) {
+          const pickRes = await fetch(BASE + `/api/dancer/${famDancer.lastID}/event-picker` +
+            `?lat=${upcoming.lat}&lng=${upcoming.lng}&date=${upcoming.start_date}`,
+            { headers: { Cookie: owner.cookie } });
+          const pickJson = pickRes.status === 200 ? await pickRes.json() : { options: [] };
+          const hit = (pickJson.options || []).find(o => o.kind === 'upcoming' && o.id === upcoming.id);
+          check(pickRes.status === 200 && !!hit && hit.distance_miles != null && hit.distance_miles < 1,
+            'a family standing at a known event finds it in the picker, geo-matched',
+            pickRes.status + ' options=' + (pickJson.options || []).length + ' hit=' + !!hit);
+
+          // Picking an organizer-announced stop seeds exactly one candidate,
+          // lazily at submit time — browsing the picker must never write.
+          const preSeed = await sdb.get('SELECT COUNT(*) AS n FROM event_candidates WHERE upcoming_event_id = ?', [upcoming.id]);
+          const upSub = await fetch(BASE + `/manage/dancer/${famDancer.lastID}/submissions`, {
+            method: 'POST', redirect: 'manual',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: owner.cookie },
+            body: new URLSearchParams({
+              _csrf: subToken, client_submission_id: 'smoke-idem-up-1',
+              upcoming_event_id: String(upcoming.id),
+              performance_name: 'Smoke Upcoming Routine', group_size: 'solo', place: '2nd',
+            }).toString(),
+          });
+          const seeded = await sdb.get('SELECT * FROM event_candidates WHERE upcoming_event_id = ?', [upcoming.id]);
+          const upRow = await sdb.get("SELECT * FROM award_submissions WHERE client_submission_id = 'smoke-idem-up-1'");
+          check(preSeed.n === 0 && upSub.status === 302 && !!seeded && seeded.source === 'org_upcoming' &&
+                !!upRow && upRow.event_candidate_id === seeded.id && upRow.event_id === null,
+            'browsing writes nothing; submitting seeds one candidate from the organizer\'s own stop',
+            'preSeed=' + preSeed.n + ' status=' + upSub.status + ' seeded=' + !!seeded +
+            ' boundTo=' + (upRow ? upRow.event_candidate_id : null));
+        } else {
+          console.log('NOTE: geo picker check skipped (no geocoded upcoming events in this DB)');
+        }
+
+        // A family creates an event nobody has heard of.
+        const CE = {
+          name: 'Smoke Spring Classic', start_date: '2027-03-13',
+          city: 'San Jose', state: 'CA', lat: 37.3382, lng: -121.8863,
+        };
+        const ceHeaders = { 'Content-Type': 'application/json', Cookie: owner.cookie, 'X-CSRF-Token': subToken };
+        const ce1 = await fetch(BASE + `/api/dancer/${famDancer.lastID}/event-candidates`, {
+          method: 'POST', headers: ceHeaders, body: JSON.stringify(CE),
+        });
+        const ce1Json = ce1.status === 200 ? await ce1.json() : {};
+        check(ce1.status === 200 && ce1Json.offered === false && ce1Json.candidate && ce1Json.candidate.id,
+          'a family can create an event when they genuinely cannot find theirs',
+          ce1.status + ' ' + JSON.stringify(ce1Json).slice(0, 120));
+
+        // A SECOND household must see it immediately — that is the whole point
+        // of instant selectability, and the reason it is a candidate rather
+        // than a private draft.
+        const famDancer2 = await db.run(
+          "INSERT INTO dancers (unique_id, name, is_claimed, claimed_by_user_id) VALUES ('smoke-dancer-fam2', 'Smoke Dancer Family Two', 1, ?)",
+          [u2.lastID]);
+        const pick2 = await fetch(BASE + `/api/dancer/${famDancer2.lastID}/event-picker` +
+          `?lat=${CE.lat}&lng=${CE.lng}&date=${CE.start_date}`, { headers: { Cookie: claimant.cookie } });
+        const pick2Json = pick2.status === 200 ? await pick2.json() : { options: [] };
+        const seenByOther = (pick2Json.options || []).find(
+          o => o.kind === 'candidate' && ce1Json.candidate && o.id === ce1Json.candidate.id);
+        check(pick2.status === 200 && !!seenByOther && seenByOther.note === 'Added by a family',
+          'a second household sees the new event immediately, labelled as provisional',
+          pick2.status + ' options=' + (pick2Json.options || []).length + ' found=' + !!seenByOther);
+
+        // The race this design exists to lose gracefully: a second family
+        // creating the same event minutes later is OFFERED the first one.
+        const claimToken = (await (await fetch(BASE + '/my-dancers', { headers: { Cookie: claimant.cookie } })).text())
+          .match(/<meta name="csrf-token" content="([^"]+)"/)[1];
+        const ce2Headers = { 'Content-Type': 'application/json', Cookie: claimant.cookie, 'X-CSRF-Token': claimToken };
+        const ce2 = await fetch(BASE + `/api/dancer/${famDancer2.lastID}/event-candidates`, {
+          method: 'POST', headers: ce2Headers,
+          body: JSON.stringify({ ...CE, name: 'Smoke Spring Classic 2027' }),
+        });
+        const ce2Json = ce2.status === 200 ? await ce2.json() : {};
+        check(ce2.status === 200 && ce2Json.offered === true &&
+              (ce2Json.duplicates || []).some(d => d.id === (ce1Json.candidate || {}).id),
+          'a second family creating the same event is offered the existing one first',
+          ce2.status + ' offered=' + ce2Json.offered + ' dupes=' + ((ce2Json.duplicates || []).length));
+
+        // If they insist, both rows are filed as ONE dedup cluster so a
+        // reviewer decides once instead of twice.
+        const ce3 = await fetch(BASE + `/api/dancer/${famDancer2.lastID}/event-candidates`, {
+          method: 'POST', headers: ce2Headers,
+          body: JSON.stringify({ ...CE, name: 'Smoke Spring Classic 2027', confirm_new: '1' }),
+        });
+        const ce3Json = ce3.status === 200 ? await ce3.json() : {};
+        const clusterRows = ce3Json.candidate
+          ? await sdb.all('SELECT id, dedup_cluster_id FROM event_candidates WHERE id IN (?, ?)',
+              [ce1Json.candidate.id, ce3Json.candidate.id])
+          : [];
+        check(ce3.status === 200 && ce3Json.offered === false && clusterRows.length === 2 &&
+              clusterRows[0].dedup_cluster_id === clusterRows[1].dedup_cluster_id,
+          'two families who both insist are filed as one dedup cluster',
+          ce3.status + ' cluster=' + JSON.stringify(clusterRows.map(r => r.dedup_cluster_id)));
+
+        // The invariant across every family action above.
+        const canonicalAfter = (await db.get('SELECT COUNT(*) AS n FROM events')).n;
+        check(canonicalAfter === canonicalBefore,
+          'no canonical event row is ever written by a family action',
+          'before=' + canonicalBefore + ' after=' + canonicalAfter);
+
+        // ---- M2: promotion, the ONLY path from candidate to canonical ----
+        // The riskiest operation in this milestone: it writes to two SQLite
+        // files that cannot share a transaction, so it must be idempotent as
+        // well as correct.
+        const boundSub = await fetch(BASE + `/manage/dancer/${famDancer.lastID}/submissions`, {
+          method: 'POST', redirect: 'manual',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: owner.cookie },
+          body: new URLSearchParams({
+            _csrf: subToken, client_submission_id: 'smoke-idem-cand-1',
+            event_candidate_id: String(ce1Json.candidate.id),
+            performance_name: 'Smoke Candidate Routine', group_size: 'duet', place: '3rd',
+          }).toString(),
+        });
+
+        const superUser = await login('smoke-super@test.invalid');
+        const superPage = await fetch(BASE + '/admin/event-candidates', { headers: { Cookie: superUser.cookie } });
+        const superHtml = await superPage.text();
+        const superToken = (superHtml.match(/name="_csrf" value="([^"]+)"/) || [])[1];
+        check(superPage.status === 200 && superHtml.includes(`data-candidate-id="${ce1Json.candidate.id}"`),
+          'the reviewer queue lists the family-created candidate', 'status ' + superPage.status);
+
+        const org = await db.get('SELECT id FROM organizations ORDER BY id LIMIT 1');
+        const adminPost = (path, body) => fetch(BASE + path, {
+          method: 'POST', redirect: 'manual',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: superUser.cookie },
+          body: new URLSearchParams({ _csrf: superToken, ...body }).toString(),
+        });
+
+        // Promotion needs an organization — a canonical event cannot exist
+        // without one, so refusing here beats writing a half-formed row.
+        const noOrgPromote = await adminPost(`/admin/event-candidates/${ce1Json.candidate.id}/promote`, {});
+        check((noOrgPromote.headers.get('location') || '').includes('error='),
+          'promotion is refused while the candidate has no organization',
+          noOrgPromote.headers.get('location'));
+
+        await adminPost(`/admin/event-candidates/${ce1Json.candidate.id}/org`, { org_id: String(org.id) });
+        const promote1 = await adminPost(`/admin/event-candidates/${ce1Json.candidate.id}/promote`, {});
+        const promoted = await sdb.get('SELECT * FROM event_candidates WHERE id = ?', [ce1Json.candidate.id]);
+        const newEvent = promoted && promoted.promoted_event_id
+          ? await db.get('SELECT id, name, year FROM events WHERE id = ?', [promoted.promoted_event_id]) : null;
+        const movedSub = await sdb.get("SELECT * FROM award_submissions WHERE client_submission_id = 'smoke-idem-cand-1'");
+        if (newEvent) ids.promotedEventId = newEvent.id;
+        check(boundSub.status === 302 && promote1.status === 302 && promoted.status === 'promoted' &&
+              !!newEvent && newEvent.name === 'Smoke Spring Classic' && newEvent.year === 2027 &&
+              !!movedSub && movedSub.event_id === newEvent.id,
+          'promotion creates the canonical event and re-points the family\'s submission at it',
+          'candidate=' + (promoted && promoted.status) + ' event=' + (newEvent && newEvent.id) +
+          ' submissionEvent=' + (movedSub && movedSub.event_id));
+
+        // Two SQLite files, no shared transaction: a retry after a crash
+        // between the halves must not mint a second event.
+        const promote2 = await adminPost(`/admin/event-candidates/${ce1Json.candidate.id}/promote`, {});
+        const dupEvents = await db.get(
+          "SELECT COUNT(*) AS n FROM events WHERE name = 'Smoke Spring Classic'");
+        check(promote2.status === 302 && dupEvents.n === 1,
+          'promoting twice is idempotent — one canonical event, not two', 'events=' + dupEvents.n);
+
+        // Auto-merge: the other promotion path. The still-open twin from the
+        // dedup cluster now matches the canonical event by org, year and name,
+        // so the organizer-data path claims it without a reviewer.
+        await sdb.run('UPDATE event_candidates SET org_id = ? WHERE id = ?', [org.id, ce3Json.candidate.id]);
+        const { run: autoMerge } = require('../scripts/merge_event_candidates');
+        const mergeReport = await autoMerge({ apply: true });
+        const twin = await sdb.get('SELECT * FROM event_candidates WHERE id = ?', [ce3Json.candidate.id]);
+        check(twin.status === 'merged' && twin.promoted_event_id === newEvent.id &&
+              mergeReport.merged.some(m => m.candidate_id === ce3Json.candidate.id),
+          'a candidate matching the organizer\'s own event auto-merges into it, no reviewer needed',
+          'status=' + twin.status + ' event=' + twin.promoted_event_id);
       } finally {
         await db.run("DELETE FROM award_dancer_removals WHERE dancer_id IN (SELECT id FROM dancers WHERE name LIKE 'Smoke Dancer%')").catch(() => {});
         await db.run("DELETE FROM award_dancers WHERE dancer_id IN (SELECT id FROM dancers WHERE name LIKE 'Smoke Dancer%')").catch(() => {});
         await db.run("DELETE FROM dancer_studios WHERE dancer_id IN (SELECT id FROM dancers WHERE name LIKE 'Smoke Dancer%')").catch(() => {});
         await db.run("DELETE FROM dancers WHERE name LIKE 'Smoke Dancer%'").catch(() => {});
+        if (ids.promotedEventId) await db.run('DELETE FROM events WHERE id = ?', [ids.promotedEventId]).catch(() => {});
         for (const id of ids.claims) await db.run('DELETE FROM studio_claims WHERE id = ?', [id]).catch(() => {});
         for (const id of ids.awards) await db.run('DELETE FROM awards WHERE id = ?', [id]).catch(() => {});
         for (const id of ids.studios) await db.run('DELETE FROM studios WHERE id = ?', [id]).catch(() => {});

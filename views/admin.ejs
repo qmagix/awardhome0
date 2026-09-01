@@ -152,6 +152,15 @@
     </div>
     <% } %>
 
+    <!-- Event Candidates (families created these; only AwardHome promotes) -->
+    <% if (user && user.role === 'superadmin') { %>
+    <div class="card glass-card">
+      <h3 style="color: #7dd3fc; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">📍 Event Candidates</h3>
+      <p class="sub-text" style="margin-bottom: 1.5rem;">Events families added because they couldn't find theirs. Usable immediately, canonical only when you say so — merging into an event we already have is usually the right answer.</p>
+      <a href="/admin/event-candidates" class="btn btn-outline" style="display: block; text-align: center; border-color: #7dd3fc; color: #7dd3fc;">Open Candidate Queue</a>
+    </div>
+    <% } %>
+
     <!-- Accounts & Impersonation -->
     <div class="card glass-card">
       <h3 style="color: var(--accent-gold); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">🔑 Account Impersonation</h3>

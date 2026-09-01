@@ -316,3 +316,36 @@ keeping its awards.
 Detection is a reviewed per-organization list in `utils/independents.js`, never
 a regex on `independ` — `IndepenDANCE Studio` is a real studio. A rule fires
 only on studios whose awards come from that organization.
+
+## Event candidates: the second cross-database write (2026-08-31)
+
+`event_candidates` lives in `submissions.sqlite` alongside the family
+submissions — families write them at submission rate, in the same
+Saturday-at-a-competition spike, and a provisional event is not archive data
+until somebody says it is.
+
+**Promotion spans both files and cannot be one transaction.** A candidate
+becoming a canonical event means an INSERT into `database.sqlite` and an UPDATE
+in `submissions.sqlite`. There is no cross-file transaction in SQLite, so both
+promotion paths are **idempotent by construction** instead:
+
+- an already-promoted candidate returns its existing event rather than making
+  another;
+- before inserting, an existing canonical event with the same
+  `(org_id, name, year)` is reused.
+
+So a crash between the two halves costs a retry, never a duplicate event. That
+property is smoke-tested ("promoting twice is idempotent").
+
+**Auto-merge runs against LIVE only.** `scripts/merge_event_candidates.js` is
+called at the end of `weekly_update.js`'s `--promote` and `--direct` passes,
+where `DB_PATH` is unset — never during the staged pass, which runs against
+`staging_import.sqlite` and would merge candidates into events that may never
+reach live. It also never fails a good import: the call is wrapped and logs
+rather than throwing.
+
+**Ambiguity is queued, never guessed.** Two canonical events both scoring above
+the auto-merge threshold means a tour with two nearby stops; picking one would
+file a family's award on the wrong weekend. Those land in
+`/admin/event-candidates` with both options shown — the same principle as
+`resolveOrCreateDancer` refusing to choose between same-name dancers.

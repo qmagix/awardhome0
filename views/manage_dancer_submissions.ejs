@@ -65,18 +65,72 @@
         </p>
       </div>
 
-      <!-- Event: canonical events only. Families never create one here. -->
+      <!-- Event picker: organizer tour stops (geocoded, one tap), other
+           families' candidates, then canonical events by name. A family may
+           create an event, but only ever as a candidate — never a canonical
+           `events` row. -->
       <div>
-        <label for="eventSearch" style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Competition *</label>
-        <input type="text" id="eventSearch" autocomplete="off" placeholder="Start typing a competition or event name…"
-               style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+        <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Competition *</label>
+
+        <!-- Exactly one of these three carries the answer. -->
         <input type="hidden" name="event_id" id="eventId" value="<%= form.event_id || '' %>">
-        <div id="eventResults" style="margin-top: 0.5rem; display: none; max-height: 240px; overflow-y: auto; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px;"></div>
-        <p id="eventChosen" style="margin: 0.4rem 0 0; font-size: 0.85rem; color: var(--gold-vivid);"></p>
-        <p style="margin: 0.4rem 0 0; font-size: 0.8rem; color: var(--text-muted);">
-          Can't find it? Adding a brand-new event is coming soon — for now, tell us in the notes
-          and a reviewer will sort it out.
-        </p>
+        <input type="hidden" name="event_candidate_id" id="eventCandidateId" value="<%= form.event_candidate_id || '' %>">
+        <input type="hidden" name="upcoming_event_id" id="upcomingEventId" value="<%= form.upcoming_event_id || '' %>">
+
+        <div id="eventChosen" style="<%= chosenEvent ? '' : 'display: none;' %> padding: 0.75rem; background: rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.35); border-radius: 6px;">
+          <strong id="eventChosenName"><%= chosenEvent ? chosenEvent.name : '' %></strong>
+          <span id="eventChosenMeta" style="color: var(--text-muted);"><%= chosenEvent && chosenEvent.when ? ' · ' + chosenEvent.when : '' %><%= chosenEvent && chosenEvent.note ? ' · ' + chosenEvent.note : '' %></span>
+          <button type="button" id="eventClear" class="btn btn-outline" style="margin-left: 0.75rem; padding: 0.2rem 0.6rem; font-size: 0.8rem;">Change</button>
+        </div>
+
+        <div id="eventPicker" style="<%= chosenEvent ? 'display: none;' : '' %>">
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin-bottom: 0.5rem;">
+            <button type="button" id="nearMe" class="btn btn-outline" style="padding: 0.5rem 0.9rem;">📍 Events near me</button>
+            <input type="date" id="eventDate" title="Competition date"
+                   style="padding: 0.6rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+            <span style="color: var(--text-muted); font-size: 0.85rem;">or search by name:</span>
+          </div>
+          <input type="text" id="eventSearch" autocomplete="off" placeholder="Start typing a competition or event name…"
+                 style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+          <p id="pickerStatus" style="margin: 0.4rem 0 0; font-size: 0.8rem; color: var(--text-muted);"></p>
+          <div id="eventResults" style="margin-top: 0.5rem; display: none; max-height: 280px; overflow-y: auto; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px;"></div>
+
+          <p style="margin: 0.75rem 0 0; font-size: 0.85rem; color: var(--text-muted);">
+            Genuinely not there?
+            <button type="button" id="toggleCreate" class="btn btn-outline" style="padding: 0.2rem 0.6rem; font-size: 0.8rem;">Add the event</button>
+          </p>
+
+          <!-- Create an event candidate. Not part of the award form: it posts
+               on its own so the half-filled award beside it keeps its state. -->
+          <div id="createEvent" style="display: none; margin-top: 0.75rem; padding: 1rem; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.12); border-radius: 6px;">
+            <p style="margin: 0 0 0.75rem; font-size: 0.85rem; color: var(--text-muted);">
+              Whatever you add here becomes selectable by other families at the same event straight
+              away, so nobody has to add it twice. It is marked "added by a family" until a reviewer
+              confirms it.
+            </p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem;">
+              <input type="text" id="ceName" placeholder="Event name *" maxlength="140"
+                     style="padding: 0.6rem; background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+              <input type="date" id="ceStart" title="First day *"
+                     style="padding: 0.6rem; background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+              <input type="date" id="ceEnd" title="Last day (optional)"
+                     style="padding: 0.6rem; background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+              <input type="text" id="ceCity" placeholder="City" maxlength="80"
+                     style="padding: 0.6rem; background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+              <input type="text" id="ceState" placeholder="State (2 letters)" maxlength="2"
+                     style="padding: 0.6rem; background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+              <input type="text" id="ceVenue" placeholder="Venue (optional)" maxlength="140"
+                     style="padding: 0.6rem; background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+              <select id="ceOrg" style="padding: 0.6rem; background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+                <option value="">Competition company (if you know it)</option>
+                <% orgs.forEach(function (o) { %><option value="<%= o.id %>"><%= o.name %></option><% }); %>
+              </select>
+            </div>
+            <div id="ceDuplicates" style="display: none; margin-top: 0.75rem;"></div>
+            <p id="ceErrors" style="margin: 0.6rem 0 0; font-size: 0.85rem; color: #f3b0b0;"></p>
+            <button type="button" id="ceSubmit" class="btn btn-primary" style="margin-top: 0.75rem; padding: 0.5rem 1rem;">Add this event</button>
+          </div>
+        </div>
       </div>
 
       <div>
@@ -178,7 +232,9 @@
             <strong style="font-size: 1.05rem;"><%= s.performance_name %></strong>
             <span style="color: var(--text-muted);">— <%= s.group_size_label %></span>
             <div style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">
-              <% if (s.event) { %><%= s.event.name %><% if (s.event.year) { %> (<%= s.event.year %>)<% } %><% } %>
+              <% if (s.event) { %><%= s.event.name %><% if (s.event.year) { %> (<%= s.event.year %>)<% } %>
+              <% } else if (s.candidate) { %><%= s.candidate.name %><% if (s.candidate.start_date) { %> (<%= s.candidate.start_date %>)<% } %>
+                <span style="color: var(--gold-vivid);">· event pending confirmation</span><% } %>
               <% if (s.studio) { %> · <%= s.studio.is_independent ? 'Independent' : s.studio.name %><% } %>
               <% if (s.place) { %> · <%= s.place %><% } %>
             </div>
@@ -223,41 +279,199 @@
     sizeSel.addEventListener('change', syncCast);
     syncCast();
 
-    // Event picker. Canonical events only — there is deliberately no
-    // "create event" path here; families get one in M2 via event candidates.
+    // ---- Event picker ----
+    // Three sources, one list. The organizer's own tour stops are geocoded, so
+    // "events near me" answers the common case in one tap; other families'
+    // candidates and canonical historical events fill in the rest.
+    var DANCER = '<%= dancer.id %>';
+    var CSRF = '<%= csrfToken %>';
     var search = document.getElementById('eventSearch');
     var results = document.getElementById('eventResults');
-    var hidden = document.getElementById('eventId');
-    var chosen = document.getElementById('eventChosen');
+    var dateInput = document.getElementById('eventDate');
+    var picker = document.getElementById('eventPicker');
+    var chosenBox = document.getElementById('eventChosen');
+    var chosenName = document.getElementById('eventChosenName');
+    var chosenMeta = document.getElementById('eventChosenMeta');
+    var statusLine = document.getElementById('pickerStatus');
+    var ids = {
+      event: document.getElementById('eventId'),
+      candidate: document.getElementById('eventCandidateId'),
+      upcoming: document.getElementById('upcomingEventId'),
+    };
+    var coords = null;
     var timer = null;
 
-    function pick(ev) {
-      hidden.value = ev.id;
-      chosen.textContent = 'Selected: ' + ev.name + (ev.year ? ' (' + ev.year + ')' : '');
+    function clearIds() { ids.event.value = ''; ids.candidate.value = ''; ids.upcoming.value = ''; }
+
+    function choose(kind, id, name, meta) {
+      clearIds();
+      if (kind === 'event') ids.event.value = id;
+      else if (kind === 'candidate') ids.candidate.value = id;
+      else ids.upcoming.value = id;
+      chosenName.textContent = name;
+      chosenMeta.textContent = meta ? ' · ' + meta : '';
+      chosenBox.style.display = '';
+      picker.style.display = 'none';
       results.style.display = 'none';
-      search.value = '';
     }
+
+    document.getElementById('eventClear').addEventListener('click', function () {
+      clearIds();
+      chosenBox.style.display = 'none';
+      picker.style.display = '';
+    });
+
+    function metaFor(o) {
+      var bits = [];
+      if (o.when) bits.push(o.when);
+      if (o.where) bits.push(o.where);
+      if (o.distance_miles != null) bits.push(o.distance_miles + ' mi away');
+      if (o.org_name) bits.push(o.org_name);
+      if (o.note) bits.push(o.note);
+      return bits.join(' · ');
+    }
+
+    function renderOptions(options) {
+      results.innerHTML = '';
+      options.forEach(function (o) {
+        var row = document.createElement('div');
+        row.setAttribute('data-option', o.kind + ':' + o.id);
+        row.style.cssText = 'padding:0.6rem 0.75rem;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.08);';
+        var meta = metaFor(o);
+        row.innerHTML = '<strong></strong><div style="font-size:0.8rem;color:var(--text-muted);"></div>';
+        row.querySelector('strong').textContent = o.name;
+        row.querySelector('div').textContent = meta;
+        row.addEventListener('click', function () { choose(o.kind, o.id, o.name, meta); });
+        results.appendChild(row);
+      });
+      results.style.display = options.length ? 'block' : 'none';
+      if (!options.length) statusLine.textContent = 'Nothing matched — try a different spelling, or add the event below.';
+    }
+
+    function query(params) {
+      var qs = new URLSearchParams(params).toString();
+      return fetch('/api/dancer/' + DANCER + '/event-picker?' + qs)
+        .then(function (r) { return r.json(); })
+        .then(function (d) { return d.options || []; });
+    }
+
+    document.getElementById('nearMe').addEventListener('click', function () {
+      if (!navigator.geolocation) {
+        statusLine.textContent = 'Your browser will not share a location — search by name instead.';
+        return;
+      }
+      statusLine.textContent = 'Looking for events near you…';
+      navigator.geolocation.getCurrentPosition(function (pos) {
+        coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        var date = dateInput.value || new Date().toISOString().slice(0, 10);
+        dateInput.value = date;
+        statusLine.textContent = '';
+        query({ lat: coords.lat, lng: coords.lng, date: date }).then(function (options) {
+          if (!options.length) statusLine.textContent = 'No events found near you on that date — search by name, or add the event.';
+          renderOptions(options);
+        });
+      }, function () {
+        statusLine.textContent = 'Location was not shared — search by name instead.';
+      }, { timeout: 8000 });
+    });
+
+    dateInput.addEventListener('change', function () {
+      if (!coords) return;
+      query({ lat: coords.lat, lng: coords.lng, date: dateInput.value }).then(renderOptions);
+    });
 
     search.addEventListener('input', function () {
       clearTimeout(timer);
       var q = search.value.trim();
       if (q.length < 2) { results.style.display = 'none'; return; }
       timer = setTimeout(function () {
-        fetch('/api/dancer/<%= dancer.id %>/event-search?q=' + encodeURIComponent(q))
-          .then(function (r) { return r.json(); })
-          .then(function (data) {
-            results.innerHTML = '';
-            (data.events || []).forEach(function (ev) {
-              var row = document.createElement('div');
-              row.style.cssText = 'padding:0.6rem 0.75rem;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.08);';
-              row.textContent = ev.name + (ev.year ? ' (' + ev.year + ')' : '') + (ev.org_name ? ' — ' + ev.org_name : '');
-              row.addEventListener('click', function () { pick(ev); });
-              results.appendChild(row);
-            });
-            results.style.display = (data.events || []).length ? 'block' : 'none';
-          })
-          .catch(function () { results.style.display = 'none'; });
+        var params = { q: q };
+        if (dateInput.value) params.date = dateInput.value;
+        if (coords) { params.lat = coords.lat; params.lng = coords.lng; }
+        query(params).then(renderOptions).catch(function () { results.style.display = 'none'; });
       }, 200);
+    });
+
+    // ---- Add an event (a CANDIDATE, never a canonical event) ----
+    // The server checks for a likely twin first and offers it back; only an
+    // explicit "mine is different" creates a second row, and the two are then
+    // filed as one dedup cluster for the reviewer.
+    var createBox = document.getElementById('createEvent');
+    var ceDupes = document.getElementById('ceDuplicates');
+    var ceErrors = document.getElementById('ceErrors');
+    var ceSubmit = document.getElementById('ceSubmit');
+    var confirmNew = false;
+
+    document.getElementById('toggleCreate').addEventListener('click', function () {
+      createBox.style.display = createBox.style.display === 'none' ? 'block' : 'none';
+      if (!document.getElementById('ceStart').value && dateInput.value) {
+        document.getElementById('ceStart').value = dateInput.value;
+      }
+    });
+
+    ceSubmit.addEventListener('click', function () {
+      ceErrors.textContent = '';
+      var body = {
+        name: document.getElementById('ceName').value,
+        start_date: document.getElementById('ceStart').value,
+        end_date: document.getElementById('ceEnd').value,
+        city: document.getElementById('ceCity').value,
+        state: document.getElementById('ceState').value,
+        venue: document.getElementById('ceVenue').value,
+        org_id: document.getElementById('ceOrg').value,
+        confirm_new: confirmNew ? '1' : '',
+      };
+      // Coordinates are the strongest dedup signal we can get, and a family
+      // adding an event is usually standing in the venue.
+      if (coords) { body.lat = coords.lat; body.lng = coords.lng; }
+
+      ceSubmit.disabled = true;
+      fetch('/api/dancer/' + DANCER + '/event-candidates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF },
+        body: JSON.stringify(body),
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          ceSubmit.disabled = false;
+          if (data.errors) { ceErrors.textContent = data.errors.join(' '); return; }
+          if (data.offered) {
+            ceDupes.innerHTML = '<p style="margin:0 0 0.5rem;font-size:0.85rem;">' +
+              'Someone already added an event that looks like yours. Pick theirs if it is the same one — ' +
+              'then both of your submissions land on one event.</p>';
+            data.duplicates.forEach(function (d) {
+              var row = document.createElement('div');
+              row.setAttribute('data-duplicate-id', d.id);
+              row.style.cssText = 'padding:0.5rem 0.65rem;cursor:pointer;border:1px solid rgba(255,255,255,0.15);border-radius:6px;margin-bottom:0.4rem;';
+              row.innerHTML = '<strong></strong><div style="font-size:0.8rem;color:var(--text-muted);"></div>';
+              row.querySelector('strong').textContent = d.name;
+              row.querySelector('div').textContent = [d.start_date, [d.city, d.state].filter(Boolean).join(', ')].filter(Boolean).join(' · ');
+              row.addEventListener('click', function () {
+                choose('candidate', d.id, d.name, d.start_date || '');
+                createBox.style.display = 'none';
+              });
+              ceDupes.appendChild(row);
+            });
+            var mine = document.createElement('button');
+            mine.type = 'button';
+            mine.className = 'btn btn-outline';
+            mine.style.cssText = 'padding:0.3rem 0.7rem;font-size:0.85rem;';
+            mine.textContent = 'None of these — mine is a different event';
+            mine.addEventListener('click', function () { confirmNew = true; ceSubmit.click(); });
+            ceDupes.appendChild(mine);
+            ceDupes.style.display = 'block';
+            return;
+          }
+          confirmNew = false;
+          ceDupes.style.display = 'none';
+          createBox.style.display = 'none';
+          choose('candidate', data.candidate.id, data.candidate.name,
+            (data.candidate.start_date || '') + ' · Added by a family');
+        })
+        .catch(function () {
+          ceSubmit.disabled = false;
+          ceErrors.textContent = 'Something went wrong — please try again.';
+        });
     });
   })();
 </script>

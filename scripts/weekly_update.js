@@ -434,6 +434,26 @@ async function stagedFlow(opts, forwardArgs) {
 }
 
 // ---------------------------------------------------------------- entry
+// After the organizer's own data reaches LIVE, any family-created event
+// candidate that unambiguously matches a freshly-imported event stops being
+// provisional and merges into it — no reviewer needed, because the organizer's
+// published data outranks a family's guess by definition. Runs only against
+// live (never the staging copy: DB_PATH is unset on the promote/direct passes),
+// and never blocks the import — a merge failure must not fail a good run.
+async function autoMergeEventCandidates() {
+  try {
+    const { run } = require('./merge_event_candidates');
+    const r = await run({ apply: true });
+    console.log(`[candidates] scanned ${r.scanned}, auto-merged ${r.merged.length}, ` +
+      `${r.ambiguous.length} ambiguous left for /admin/event-candidates`);
+    for (const m of r.merged) {
+      console.log(`  merged candidate #${m.candidate_id} "${m.candidate}" -> event ${m.event_id} (${m.submissions} submission(s))`);
+    }
+  } catch (e) {
+    console.error('[candidates] auto-merge skipped:', e.message);
+  }
+}
+
 async function main() {
   const opts = {
     replay: process.argv.includes('--replay'),
@@ -455,11 +475,13 @@ async function main() {
     if (!failures.length) {
       const pending = path.join(REPORTS_DIR, 'PENDING_REVIEW.json');
       if (fs.existsSync(pending)) fs.unlinkSync(pending);
+      await autoMergeEventCandidates();
     }
     process.exit(failures.length ? 1 : 0);
   }
   if (process.argv.includes('--direct') || opts.pdfOnly) {
     const { failures } = await runPipeline(opts);
+    if (!failures.length) await autoMergeEventCandidates();
     process.exit(failures.length ? 1 : 0);
   }
   await stagedFlow(opts, forwardArgs);

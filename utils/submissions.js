@@ -133,6 +133,60 @@ async function dancerStudios(db, dancerId) {
   `, [dancerId]);
 }
 
+// ---- Event resolution (M2) -------------------------------------------------
+
+// Resolve whatever the client sent into { event, candidate }. Exactly one of
+// the two ends up set, except when a candidate has already been promoted or
+// merged — then the canonical event wins and the candidate rides along as
+// provenance, because that is the truer record of how the award got here.
+//
+// Deliberately does NOT accept a free-text event name. A family creates an
+// event through the candidate flow, which shows likely duplicates first; a
+// name typed straight into a submission would bypass that and is precisely
+// the race that produces two events for one competition.
+async function resolveEventRef(db, input, userId) {
+  const { openSubmissionsDb } = require('./submissionsDb');
+  const { seedCandidateFromUpcoming } = require('./eventCandidates');
+
+  const eventId = parseInt(input.event_id, 10);
+  const candidateId = parseInt(input.event_candidate_id, 10);
+  const upcomingId = parseInt(input.upcoming_event_id, 10);
+
+  if (eventId) {
+    const event = await db.get(`
+      SELECT e.id, e.name, e.year, e.date_string, o.name AS org_name
+      FROM events e LEFT JOIN organizations o ON o.id = e.org_id
+      WHERE e.id = ?`, [eventId]);
+    if (!event) return { event: null, candidate: null, error: 'That competition is no longer in the archive — pick another.' };
+    return { event, candidate: null, error: null };
+  }
+
+  if (candidateId || upcomingId) {
+    const sdb = await openSubmissionsDb();
+    let candidate = candidateId
+      ? await sdb.get('SELECT * FROM event_candidates WHERE id = ?', [candidateId])
+      : await seedCandidateFromUpcoming(db, sdb, upcomingId, userId);
+
+    if (!candidate) return { event: null, candidate: null, error: 'That event is no longer available — pick another.' };
+    if (candidate.status === 'rejected') {
+      return { event: null, candidate: null, error: 'A reviewer removed that event — please pick another.' };
+    }
+    // Promoted or merged since the form was rendered: bind to the canonical
+    // event the candidate became, so the submission never lands on a row that
+    // is no longer where the archive keeps this competition.
+    if (candidate.promoted_event_id) {
+      const event = await db.get(`
+        SELECT e.id, e.name, e.year, e.date_string, o.name AS org_name
+        FROM events e LEFT JOIN organizations o ON o.id = e.org_id
+        WHERE e.id = ?`, [candidate.promoted_event_id]);
+      if (event) return { event, candidate, error: null };
+    }
+    return { event: null, candidate, error: null };
+  }
+
+  return { event: null, candidate: null, error: 'Pick the competition this award came from.' };
+}
+
 // ---- Validation ------------------------------------------------------------
 
 // Returns { ok, errors[], value } — never throws on user input. `value` is
@@ -150,19 +204,13 @@ async function validateSubmission(db, input, { dancerId, userId }) {
   const groupSize = GROUP_SIZE_BY_KEY.get(normalizeText(input.group_size) || '');
   if (!groupSize) errors.push('Group size is required — it decides how the award is recorded.');
 
-  const eventId = parseInt(input.event_id, 10);
-  let event = null;
-  if (!eventId) {
-    // The rule that stays firm from v1: no submission floats free of an
-    // event. An award without one is unreviewable and unmergeable.
-    errors.push('Pick the competition this award came from.');
-  } else {
-    event = await db.get(`
-      SELECT e.id, e.name, e.year, e.date_string, o.name AS org_name
-      FROM events e LEFT JOIN organizations o ON o.id = e.org_id
-      WHERE e.id = ?`, [eventId]);
-    if (!event) errors.push('That competition is no longer in the archive — pick another.');
-  }
+  // The rule that stays firm from v1: no submission floats free of an event.
+  // An award without one is unreviewable and unmergeable. But "an event" now
+  // means any of three things (M2) — a canonical event, a family-created
+  // candidate, or the organizer's own announced tour stop, which is resolved
+  // to a candidate here rather than left as a dangling third id.
+  const { event, candidate, error: eventError } = await resolveEventRef(db, input, userId);
+  if (eventError) errors.push(eventError);
 
   // Studio comes from affiliation. When the dancer has several, the family
   // must have chosen one, and it must be one of theirs.
@@ -213,6 +261,7 @@ async function validateSubmission(db, input, { dancerId, userId }) {
       dancer_id: dancerId,
       studio_id: studioId,
       event_id: event ? event.id : null,
+      event_candidate_id: candidate ? candidate.id : null,
       event_session_id: normalizeText(input.event_session_id),
       performance_name: performanceName,
       performance_name_key: canonicalizeRoutine(performanceName),
@@ -225,6 +274,7 @@ async function validateSubmission(db, input, { dancerId, userId }) {
     },
     affiliations,
     event,
+    candidate,
   };
 }
 
@@ -253,13 +303,13 @@ async function createSubmission(value, cast = []) {
   try {
     const res = await sdb.run(`
       INSERT INTO award_submissions (
-        client_submission_id, user_id, dancer_id, studio_id, event_id, event_session_id,
+        client_submission_id, user_id, dancer_id, studio_id, event_id, event_candidate_id, event_session_id,
         performance_name, performance_name_key, group_size, group_size_n, cast_complete,
         place, award_type, category, age_division, teacher, choreographer, notes,
         raw_payload, status, visibility, verification_level
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'submitted', 'owner_visible', 'family_submitted')`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'submitted', 'owner_visible', 'family_submitted')`,
       [value.client_submission_id, value.user_id, value.dancer_id, value.studio_id,
-       value.event_id, value.event_session_id,
+       value.event_id, value.event_candidate_id, value.event_session_id,
        value.performance_name, value.performance_name_key, value.group_size,
        value.group_size_n, value.cast_complete,
        value.place, value.award_type, value.category, value.age_division,
@@ -294,6 +344,8 @@ async function createSubmission(value, cast = []) {
 // exists (the orphan story in utils/submissionsDb.js). A deleted event must
 // leave a family looking at a slightly thinner list, never at a 500.
 async function decorate(db, rows) {
+  const { openSubmissionsDb } = require('./submissionsDb');
+  const sdb = await openSubmissionsDb();
   const out = [];
   for (const r of rows) {
     const event = r.event_id
@@ -301,6 +353,11 @@ async function decorate(db, rows) {
                       FROM events e LEFT JOIN organizations o ON o.id = e.org_id WHERE e.id = ?`, [r.event_id])
       : null;
     if (r.event_id && !event) continue; // orphan: canonical event is gone
+    // A submission on a candidate shows the family the event they picked,
+    // labelled as still provisional — not a blank where the event should be.
+    const candidate = (!event && r.event_candidate_id)
+      ? await sdb.get('SELECT id, name, start_date, end_date, city, state, status FROM event_candidates WHERE id = ?', [r.event_candidate_id])
+      : null;
     const studio = r.studio_id
       ? await db.get('SELECT id, name, unique_id, COALESCE(is_independent, 0) AS is_independent FROM studios WHERE id = ?', [r.studio_id])
       : null;
@@ -308,6 +365,7 @@ async function decorate(db, rows) {
     out.push({
       ...r,
       event,
+      candidate,
       studio,
       group_size_label: sizeDef ? sizeDef.label : r.group_size,
     });
@@ -353,6 +411,6 @@ module.exports = {
   GROUP_SIZES, GROUP_SIZE_BY_KEY, LIMITS,
   normalizeText, normalizePersonName, nameKey,
   checkRateLimit, recordAction, consumeHouseholdAction,
-  dancerStudios, validateSubmission, createSubmission,
+  dancerStudios, resolveEventRef, validateSubmission, createSubmission,
   listForDancer, listForUser, castForSubmissions,
 };
