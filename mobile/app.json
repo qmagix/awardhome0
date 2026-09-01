@@ -35,7 +35,10 @@
       "typedRoutes": true
     },
     "extra": {
-      "apiBaseUrl": "https://awardhome.com"
+      "apiBaseUrl": "https://awardhome.com",
+      "eas": {
+        "projectId": "dd9b4bd8-5803-4661-a83d-ee052d92455d"
+      }
     }
   }
 }
