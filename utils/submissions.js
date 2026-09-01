@@ -409,6 +409,52 @@ async function listForStudio(studioId, { statuses = ['submitted', 'needs_info'] 
   return out.filter(r => r.dancer);
 }
 
+// The AwardHome queue: everything no studio owner will ever see.
+//
+// The operationally important case is the first one. A submission for a
+// dancer at an UNCLAIMED studio has no owner to review it, so under M3 alone
+// it would sit pending forever in nobody's inbox — invisible, and indistinguishable
+// from a system that is working. Most studios are unclaimed, so this is the
+// common case, not the edge.
+//
+// The rest are the decisions §7.1 reserves for AwardHome: independents (no
+// studio owner by definition), and anything touching a contested dancer claim,
+// which a studio must never adjudicate.
+async function listForReview({ statuses = ['submitted', 'needs_info'] } = {}) {
+  const db = await openDb();
+  const sdb = await openSubmissionsDb();
+  const rows = await sdb.all(
+    `SELECT * FROM award_submissions
+     WHERE status IN (${statuses.map(() => '?').join(',')})
+     ORDER BY created_at ASC, id ASC
+     LIMIT 300`, statuses);
+
+  const out = [];
+  for (const r of await decorate(db, rows)) {
+    r.dancer = await db.get('SELECT id, name, unique_id FROM dancers WHERE id = ?', [r.dancer_id]);
+    if (!r.dancer) continue;
+    r.submitter = await db.get('SELECT id, email FROM users WHERE id = ?', [r.user_id]);
+
+    const studio = r.studio_id
+      ? await db.get('SELECT id, name, owner_id, COALESCE(is_independent, 0) AS is_independent FROM studios WHERE id = ?', [r.studio_id])
+      : null;
+    let contested = null;
+    try {
+      contested = await db.get(
+        "SELECT 1 AS x FROM dancer_claims WHERE dancer_id = ? AND status = 'contested' LIMIT 1", [r.dancer_id]);
+    } catch (e) { /* pre-migration */ }
+
+    if (contested) r.reason = 'contested dancer claim — a studio must not decide this';
+    else if (!studio) r.reason = 'no studio on the submission';
+    else if (studio.is_independent) r.reason = 'independent dancer — no studio owner exists';
+    else if (!studio.owner_id) r.reason = `${studio.name} is unclaimed — nobody would ever see this`;
+    else continue; // a real studio owner has it; not AwardHome's problem
+
+    out.push(r);
+  }
+  return out;
+}
+
 async function listForUser(userId) {
   const db = await openDb();
   const sdb = await openSubmissionsDb();
@@ -439,5 +485,5 @@ module.exports = {
   normalizeText, normalizePersonName, nameKey,
   checkRateLimit, recordAction, consumeHouseholdAction,
   dancerStudios, resolveEventRef, validateSubmission, createSubmission,
-  listForDancer, listForUser, listForStudio, castForSubmissions,
+  listForDancer, listForUser, listForStudio, listForReview, castForSubmissions,
 };

@@ -152,6 +152,20 @@
     </div>
     <% } %>
 
+    <!-- Correction proposals: families propose, AwardHome decides -->
+    <div class="card glass-card">
+      <h3 style="color: #fca5a5; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">✏️ Correction Proposals</h3>
+      <p class="sub-text" style="margin-bottom: 1.5rem;">"Something's wrong with this award." Families can't edit a published fact — they propose, you decide, and both values stay on the record.</p>
+      <a href="/admin/corrections" class="btn btn-outline" style="display: block; text-align: center; border-color: #fca5a5; color: #fca5a5;">Open Corrections</a>
+    </div>
+
+    <!-- Family submissions nobody else will see -->
+    <div class="card glass-card">
+      <h3 style="color: #86efac; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">📨 Family Submissions</h3>
+      <p class="sub-text" style="margin-bottom: 1.5rem;">Only what no studio owner will decide: dancers at unclaimed studios, independents, and contested claims. Everything with a real owner stays in their inbox.</p>
+      <a href="/admin/submissions" class="btn btn-outline" style="display: block; text-align: center; border-color: #86efac; color: #86efac;">Open AwardHome Queue</a>
+    </div>
+
     <!-- Event Candidates (families created these; only AwardHome promotes) -->
     <% if (user && user.role === 'superadmin') { %>
     <div class="card glass-card">

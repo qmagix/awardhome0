@@ -88,5 +88,52 @@
       </tbody>
     </table>
   </div>
+
+  <!-- Contested: two or more households claiming one dancer. These never
+       reach a studio — a director asked to choose between two families is
+       being asked to arbitrate a private dispute (design §6.9). Grouped by
+       dancer so both sides of one argument are read together. -->
+  <% if (typeof contestedClaims !== 'undefined' && contestedClaims.length > 0) { %>
+    <div class="card glass-card" style="margin-top: 2rem;" id="contested-claims">
+      <h3 style="margin-top: 0; color: #f3b0b0;">⚠ Contested Dancer Claims — AwardHome only</h3>
+      <p style="color: var(--text-muted); font-size: 0.9rem;">
+        More than one household has claimed these dancers. Neither claimant wins silently, and no studio
+        sees them. Approving one settles the others and emails everybody.
+      </p>
+      <table style="width: 100%;">
+        <thead>
+          <tr><th>Dancer</th><th>Claimant</th><th>Proof</th><th>Filed</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+          <% var lastDancer = null; %>
+          <% contestedClaims.forEach(function (claim) { %>
+            <tr data-contested-claim="<%= claim.id %>"
+                style="<%= lastDancer !== null && lastDancer !== claim.dancer_id ? 'border-top: 2px solid rgba(255,255,255,0.15);' : '' %>">
+              <td>
+                <a href="/dancer/<%= claim.dancer_unique_id %>" style="color: var(--primary);"><%= claim.dancer_name %></a>
+                <% if (claim.code_valid) { %>
+                  <br><span class="badge" style="background: rgba(16,185,129,0.2); color: #10b981; font-size: 0.7rem;">✓ Code: <%= claim.code_studio_name %></span>
+                <% } %>
+              </td>
+              <td><%= claim.user_email %></td>
+              <td style="white-space: pre-wrap; font-size: 0.85rem;"><%= claim.proof_text %></td>
+              <td><%= new Date(claim.created_at).toLocaleDateString() %></td>
+              <td style="display: flex; gap: 0.5rem;">
+                <form action="/admin/claims/dancer/<%= claim.id %>/approve" method="POST">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <button type="submit" class="btn" style="background: #10b981; color: white; border: none; padding: 0.4rem 0.85rem; border-radius: 4px; cursor: pointer;">This one</button>
+                </form>
+                <form action="/admin/claims/dancer/<%= claim.id %>/reject" method="POST">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <button type="submit" class="btn btn-secondary" style="background: rgba(239,68,68,0.2); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); padding: 0.4rem 0.85rem; border-radius: 4px; cursor: pointer;">Reject</button>
+                </form>
+              </td>
+            </tr>
+            <% lastDancer = claim.dancer_id; %>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
 </div>
 <%- include('partials/footer') %>

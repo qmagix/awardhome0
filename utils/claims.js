@@ -129,6 +129,37 @@ async function notifyStudioOfProfileClaim(db, { studio, dancer, claimantEmail, r
   }
 }
 
+// Two households claiming the same dancer is a real scenario, not an edge
+// case (design §6.9): same-name dancers, separated parents, a studio and a
+// parent both claiming. Neither claimant may silently win, and the decision
+// is AwardHome's — NEVER a studio's, even when both claimants hold a valid
+// studio code, because a director asked to choose between two families is
+// being asked to arbitrate a private dispute.
+//
+// Marking both sides `contested` is what takes them out of the studio queue,
+// which filters on `pending`, and puts them in front of an AwardHome
+// reviewer. Called after a claim is filed.
+async function markContestedClaims(db, dancerId) {
+  const open = await db.all(
+    "SELECT id FROM dancer_claims WHERE dancer_id = ? AND status IN ('pending', 'contested')",
+    [dancerId]);
+  if (open.length < 2) return { contested: false, count: open.length };
+  await db.run(
+    "UPDATE dancer_claims SET status = 'contested' WHERE dancer_id = ? AND status = 'pending'",
+    [dancerId]);
+  return { contested: true, count: open.length };
+}
+
+async function isDancerContested(db, dancerId) {
+  try {
+    const row = await db.get(
+      "SELECT 1 AS x FROM dancer_claims WHERE dancer_id = ? AND status = 'contested' LIMIT 1", [dancerId]);
+    return !!row;
+  } catch (e) {
+    return false;
+  }
+}
+
 // Approve a dancer claim: assign ownership, upgrade the role, and settle
 // the queue — any competing pending claims for the same dancer are
 // auto-rejected (otherwise a later approval would silently reassign the
@@ -140,7 +171,7 @@ async function approveDancerClaim(db, claim) {
   await db.run('UPDATE users SET role = "dancer_owner" WHERE id = ? AND role = "user"', [claim.user_id]);
 
   const competing = await db.all(
-    "SELECT id FROM dancer_claims WHERE dancer_id = ? AND status = 'pending' AND id != ?",
+    "SELECT id FROM dancer_claims WHERE dancer_id = ? AND status IN ('pending', 'contested') AND id != ?",
     [claim.dancer_id, claim.id]);
   for (const c of competing) {
     await db.run('UPDATE dancer_claims SET status = "rejected" WHERE id = ?', [c.id]);
@@ -182,6 +213,7 @@ async function notifyRosterAttach(db, dancerId, studioId) {
 
 module.exports = {
   domainsMatch, approveStudioClaim,
-  matchDancerClaimCode, approveDancerClaim, rejectDancerClaim,
+  matchDancerClaimCode, markContestedClaims, isDancerContested,
+  approveDancerClaim, rejectDancerClaim,
   notifyDancerClaimDecision, notifyStudioOfProfileClaim, notifyRosterAttach,
 };

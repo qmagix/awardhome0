@@ -620,6 +620,36 @@ async function initDb() {
     CREATE INDEX IF NOT EXISTS idx_award_provenance_award ON award_provenance(award_id);
     CREATE INDEX IF NOT EXISTS idx_award_provenance_submission ON award_provenance(submission_id);
 
+    -- A family never edits an imported canonical fact directly (design §6.8).
+    -- "Something is wrong" becomes a PROPOSAL: the current value, the proposed
+    -- value, a reason, and a reviewer's decision. Field-level rather than
+    -- whole-row, so a reviewer accepts the placement fix without also
+    -- accepting a category change they disagree with.
+    --
+    -- Canonical DB, same reasoning as award_provenance: it points at an award
+    -- and is applied in the same transaction as the edit it authorises.
+    -- current_value is snapshotted at proposal time so a reviewer can see the
+    -- record has moved under them since — an accept that would overwrite a
+    -- DIFFERENT value than the one the family objected to is a different
+    -- decision, and the queue says so.
+    CREATE TABLE IF NOT EXISTS award_corrections (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      award_id INTEGER NOT NULL,
+      dancer_id INTEGER,
+      field TEXT NOT NULL,
+      current_value TEXT,
+      proposed_value TEXT,
+      reason TEXT,
+      submitted_by INTEGER REFERENCES users(id),
+      status TEXT NOT NULL DEFAULT 'open',
+      decided_by INTEGER REFERENCES users(id),
+      decided_at DATETIME,
+      decision_note TEXT,
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE INDEX IF NOT EXISTS idx_award_corrections_status ON award_corrections(status, created_at);
+    CREATE INDEX IF NOT EXISTS idx_award_corrections_award ON award_corrections(award_id);
+
     -- Known flags ship dark; releases happen at /admin/features
     INSERT OR IGNORE INTO feature_flags (key, state) VALUES ('family_submissions', 'off');
     INSERT OR IGNORE INTO feature_flags (key, state) VALUES ('thank_you_notes', 'off');

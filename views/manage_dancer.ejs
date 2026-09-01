@@ -258,6 +258,15 @@
                     </td>
                     <td style="color: var(--text-muted);">
                       <%= award.studio_name || 'Independent' %>
+                      <% if (typeof featureSubmissions !== 'undefined' && featureSubmissions) { %>
+                        <br>
+                        <button type="button" class="suggest-fix"
+                                data-award-id="<%= award.id %>"
+                                data-routine="<%= award.performance_name || '' %>"
+                                style="margin-top: 0.3rem; background: none; border: none; padding: 0; color: var(--primary); font-size: 0.78rem; cursor: pointer; text-decoration: underline;">
+                          Something's wrong?
+                        </button>
+                      <% } %>
                     </td>
                   </tr>
                 <% }) %>
@@ -449,6 +458,42 @@
       });
     });
   });
+
+  // "Something's wrong?" — files a correction PROPOSAL, never an edit. A
+  // published fact belongs to the archive; a family says what looks wrong and
+  // a reviewer decides, with both values on the record either way.
+  (function () {
+    var FIELDS = <%- JSON.stringify(typeof correctableFields !== 'undefined' ? correctableFields : {}) %>;
+    document.querySelectorAll('.suggest-fix').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var keys = Object.keys(FIELDS);
+        if (!keys.length) return;
+        var field = prompt('What looks wrong?\n\n' + keys.map(function (k, i) {
+          return (i + 1) + '. ' + FIELDS[k];
+        }).join('\n') + '\n\nEnter a number:');
+        var idx = parseInt(field, 10) - 1;
+        if (!(idx >= 0 && idx < keys.length)) return;
+        var proposed = prompt('What should "' + FIELDS[keys[idx]] + '" say for "' + btn.dataset.routine + '"?');
+        if (proposed === null) return;
+        var reason = prompt('Anything a reviewer should know? (optional)') || '';
+        fetch('/api/award/' + btn.dataset.awardId + '/correction', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            dancer_id: '<%= dancer.id %>', field: keys[idx],
+            proposed_value: proposed, reason: reason,
+          }),
+        })
+          .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+          .then(function (res) {
+            alert(res.ok
+              ? 'Thanks — a reviewer will look at this. Nothing changes until they agree.'
+              : (res.d.error || 'Could not file that.'));
+          })
+          .catch(function () { alert('Network error — please try again.'); });
+      });
+    });
+  })();
 </script>
 
 <%- include('partials/footer') %>

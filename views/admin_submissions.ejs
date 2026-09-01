@@ -1,0 +1,86 @@
+<%- include('partials/header') %>
+
+<div class="container" style="margin-top: 4rem; max-width: 980px; padding-bottom: 4rem;">
+  <div class="header-section" style="margin-bottom: 1.5rem;">
+    <h1>Family Submissions — AwardHome Queue</h1>
+    <p class="subtitle">
+      Only what no studio owner will decide: dancers at unclaimed studios (nobody would ever see these),
+      independents, and anything touching a contested claim. Anything with a real studio owner stays in
+      <em>their</em> inbox and never appears here.
+    </p>
+  </div>
+
+  <% if (notice) { %>
+    <div class="card glass-card" style="margin-bottom: 1.5rem; border-left: 3px solid #6bbf6b;">
+      <p style="margin: 0;"><%= notice %></p>
+    </div>
+  <% } %>
+  <% if (error) { %>
+    <div class="card glass-card" style="margin-bottom: 1.5rem; border-left: 3px solid #d98a8a;">
+      <p style="margin: 0;"><%= error %></p>
+    </div>
+  <% } %>
+
+  <% if (!submissions.length) { %>
+    <div class="card glass-card"><p style="margin: 0; color: var(--text-muted);">Nothing waiting on AwardHome.</p></div>
+  <% } %>
+
+  <% submissions.forEach(function (s) { %>
+    <div class="card glass-card" style="margin-bottom: 1.5rem;" data-submission-id="<%= s.id %>">
+      <form method="POST" action="/admin/submissions/<%= s.id %>/confirm">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+        <div style="margin-bottom: 0.75rem;">
+          <span style="display: inline-block; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.78rem; background: rgba(212,175,55,0.15); color: var(--gold-vivid);">
+            <%= s.reason %>
+          </span>
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+          <strong style="font-size: 1.05rem;"><%= s.dancer.name %></strong>
+          <span style="color: var(--text-muted);">· <%= s.group_size_label %></span>
+          <div style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">
+            <% if (s.event) { %><%= s.event.name %><% if (s.event.year) { %> (<%= s.event.year %>)<% } %>
+            <% } else if (s.candidate) { %>
+              <span style="color: var(--gold-vivid);">⏳ <%= s.candidate.name %> — settle the event first at
+              <a href="/admin/event-candidates" style="color: var(--gold-vivid);">Event Candidates</a></span>
+            <% } %>
+            <% if (s.studio) { %> · <%= s.studio.is_independent ? 'Independent' : s.studio.name %><% } %>
+          </div>
+          <div style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem;">
+            Submitted <%= s.created_at %> by <%= s.submitter ? s.submitter.email : 'an account since deleted' %>
+          </div>
+          <% var names = cast.get(s.id) || []; %>
+          <% if (names.length) { %>
+            <div style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem;">
+              Family also named: <%= names.join(', ') %> <em>(names only — no profiles are created from them)</em>
+            </div>
+          <% } %>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0.7rem;">
+          <% correctable.forEach(function (f) { %>
+            <div>
+              <label style="display: block; font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.2rem;"><%= f.replace(/_/g, ' ') %></label>
+              <input type="text" name="<%= f %>" value="<%= s[f] || '' %>"
+                     style="width: 100%; padding: 0.45rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+            </div>
+          <% }); %>
+        </div>
+
+        <div style="margin-top: 1rem; display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap;">
+          <input type="text" name="note" placeholder="Note or question (optional)"
+                 style="flex-grow: 1; min-width: 220px; padding: 0.5rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+          <button type="submit" class="btn btn-primary" style="padding: 0.45rem 1.1rem;"
+                  <%= s.event ? '' : 'disabled title="Settle the event first"' %>>Confirm &amp; publish</button>
+          <button type="submit" class="btn btn-outline" style="padding: 0.45rem 0.9rem;"
+                  formaction="/admin/submissions/<%= s.id %>/ask">Ask the family</button>
+          <button type="submit" class="btn btn-outline" style="padding: 0.45rem 0.9rem; border-color: #d98a8a; color: #d98a8a;"
+                  formaction="/admin/submissions/<%= s.id %>/reject">Reject</button>
+        </div>
+      </form>
+    </div>
+  <% }); %>
+</div>
+
+<%- include('partials/footer') %>

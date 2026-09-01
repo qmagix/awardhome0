@@ -13,6 +13,14 @@ const { openSubmissionsDb } = require('../utils/submissionsDb');
 const {
   findCanonicalMatches, promoteCandidate, mergeCandidateIntoEvent, rejectCandidate,
 } = require('../utils/eventCandidates');
+const { listForReview, castForSubmissions } = require('../utils/submissions');
+const {
+  CORRECTION_REASON_TEXT, fieldLabel: correctionFieldLabel, listOpen: listOpenCorrections,
+  accept: acceptCorrection, reject: rejectCorrection,
+} = require('../utils/corrections');
+const {
+  CORRECTABLE, REASON_TEXT, confirmSubmission, rejectSubmission, requestInfo,
+} = require('../utils/promotion');
 const bcrypt = require('bcrypt');
 const { runBackfillForEvent } = require('../backfill_utils');
 const fs = require('fs');
@@ -460,6 +468,100 @@ router.post('/admin/import-review/dismiss', requireSuperadmin, (req, res) => {
   const staging = path.join(__dirname, '..', 'staging_import.sqlite');
   for (const s of ['', '-wal', '-shm']) if (fs.existsSync(staging + s)) fs.unlinkSync(staging + s);
   res.redirect('/admin/import-review');
+});
+
+
+// ---- The AwardHome review queue (M4) ----
+//
+// What studios cannot decide, plus — operationally the important one —
+// everything no studio owner will ever SEE. A submission for a dancer at an
+// unclaimed studio has nobody to review it, and under M3 alone it would sit
+// pending forever in an inbox that does not exist. Most studios are unclaimed,
+// so that is the common case rather than the edge.
+router.get('/admin/submissions', requireAdmin, async (req, res) => {
+  const submissions = await listForReview();
+  const cast = await castForSubmissions(submissions.map(s => s.id));
+  res.render('admin_submissions', {
+    submissions, cast,
+    correctable: CORRECTABLE,
+    notice: req.query.ok ? 'Confirmed — the award is live.' : null,
+    error: req.query.error || null,
+    pageTitle: 'Family Submissions — AwardHome Queue',
+  });
+});
+
+router.post('/admin/submissions/:id/:action', requireAdmin, async (req, res) => {
+  const submissionId = parseInt(req.params.id, 10);
+  const reviewerId = req.session.user.id;
+  const note = (req.body.note || '').trim() || null;
+  let result;
+
+  if (req.params.action === 'confirm') {
+    const sdb = await openSubmissionsDb();
+    const sub = await sdb.get('SELECT * FROM award_submissions WHERE id = ?', [submissionId]);
+    const corrections = {};
+    if (sub) {
+      for (const field of CORRECTABLE) {
+        if (!(field in req.body)) continue;
+        const sent = (req.body[field] || '').replace(/\s+/g, ' ').trim() || null;
+        if (sent !== (sub[field] || null)) corrections[field] = req.body[field];
+      }
+    }
+    result = await confirmSubmission({ submissionId, reviewerId, corrections, note });
+  } else if (req.params.action === 'reject') {
+    result = await rejectSubmission({ submissionId, reviewerId, note });
+  } else if (req.params.action === 'ask') {
+    result = await requestInfo({ submissionId, reviewerId, note });
+  } else {
+    return res.status(404).send('Not found');
+  }
+
+  if (!result.ok) {
+    return res.redirect('/admin/submissions?error=' +
+      encodeURIComponent(REASON_TEXT[result.reason] || 'Could not update that submission.'));
+  }
+  res.redirect('/admin/submissions' + (req.params.action === 'confirm' ? '?ok=1' : ''));
+});
+
+
+// ---- Correction proposals (M4) ----
+//
+// Families propose, reviewers decide. Accepting applies the field AND writes
+// provenance in one transaction: a changed fact with no record of who changed
+// it is exactly the state provenance exists to prevent.
+router.get('/admin/corrections', requireAdmin, async (req, res) => {
+  const db = await openDb();
+  const corrections = await listOpenCorrections(db);
+  res.render('admin_corrections', {
+    corrections,
+    fieldLabel: correctionFieldLabel,
+    error: req.query.error || null,
+    notice: req.query.ok ? 'Applied — the award is updated and the change is on the record.' : null,
+    pageTitle: 'Correction Proposals',
+  });
+});
+
+router.post('/admin/corrections/:id/:action', requireAdmin, async (req, res) => {
+  const db = await openDb();
+  const correctionId = parseInt(req.params.id, 10);
+  const note = (req.body.note || '').trim() || null;
+  let result;
+  if (req.params.action === 'accept') {
+    result = await acceptCorrection(db, {
+      correctionId, reviewerId: req.session.user.id, note,
+      // The reviewer has seen the "value moved" warning and chosen anyway.
+      force: req.body.force === '1',
+    });
+  } else if (req.params.action === 'reject') {
+    result = await rejectCorrection(db, { correctionId, reviewerId: req.session.user.id, note });
+  } else {
+    return res.status(404).send('Not found');
+  }
+  if (!result.ok) {
+    return res.redirect('/admin/corrections?error=' +
+      encodeURIComponent(CORRECTION_REASON_TEXT[result.reason] || 'Could not update that correction.'));
+  }
+  res.redirect('/admin/corrections' + (req.params.action === 'accept' ? '?ok=1' : ''));
 });
 
 
@@ -1091,7 +1193,25 @@ router.get('/admin/claims', requireAdmin, async (req, res) => {
     ORDER BY dc.code_valid DESC, dc.created_at DESC
   `);
 
-  res.render('admin_claims', { claims, dancerClaims });
+  // Contested: two or more households claiming one dancer. These NEVER go to
+  // a studio (design §6.9) — a director asked to choose between two families
+  // is being asked to arbitrate a private dispute. Grouped by dancer so a
+  // reviewer sees both sides of the same argument together.
+  let contestedClaims = [];
+  try {
+    contestedClaims = await db.all(`
+      SELECT dc.*, u.email as user_email, d.name as dancer_name, d.unique_id as dancer_unique_id,
+             s.name as code_studio_name
+      FROM dancer_claims dc
+      JOIN users u ON dc.user_id = u.id
+      JOIN dancers d ON dc.dancer_id = d.id
+      LEFT JOIN studios s ON dc.studio_id = s.id
+      WHERE dc.status = 'contested'
+      ORDER BY dc.dancer_id, dc.created_at ASC
+    `);
+  } catch (e) { /* pre-migration */ }
+
+  res.render('admin_claims', { claims, dancerClaims, contestedClaims });
 });
 
 
@@ -1130,9 +1250,13 @@ router.post('/admin/claims/:id/reject', requireAdmin, async (req, res) => {
 // Dancer Claims logic — shared with the studio-director route
 // (utils/claims.js): approval also settles competing pending claims, and
 // both decisions email the claimant.
+// 'contested' is decidable HERE and only here — the studio routes filter on
+// 'pending', so a contested claim is invisible to a director by construction.
+// approveDancerClaim settles the losing side and emails both.
 router.post('/admin/claims/dancer/:id/approve', requireAdmin, async (req, res) => {
   const db = await openDb();
-  const claim = await db.get("SELECT * FROM dancer_claims WHERE id = ? AND status = 'pending'", [req.params.id]);
+  const claim = await db.get(
+    "SELECT * FROM dancer_claims WHERE id = ? AND status IN ('pending', 'contested')", [req.params.id]);
   if (!claim) return res.status(404).send('Claim not found');
 
   await approveDancerClaim(db, claim);
@@ -1142,7 +1266,8 @@ router.post('/admin/claims/dancer/:id/approve', requireAdmin, async (req, res) =
 
 router.post('/admin/claims/dancer/:id/reject', requireAdmin, async (req, res) => {
   const db = await openDb();
-  const claim = await db.get("SELECT id FROM dancer_claims WHERE id = ? AND status = 'pending'", [req.params.id]);
+  const claim = await db.get(
+    "SELECT id FROM dancer_claims WHERE id = ? AND status IN ('pending', 'contested')", [req.params.id]);
   if (claim) await rejectDancerClaim(db, claim.id);
   res.redirect('/admin/claims');
 });

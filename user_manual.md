@@ -435,3 +435,52 @@ picture of their child.
 The dancer's **default** card photo (set on their profile, used when a card has
 no photo of its own) still goes through the AwardHome team — it isn't tied to a
 routine, so there's no cast to ask.
+
+## 22. The AwardHome Queues (M4)
+
+Three admin surfaces, each for a decision nobody else can make.
+
+**`/admin/submissions` — family submissions.** Only what no studio owner will
+see: dancers at **unclaimed** studios (the common case — most studios are
+unclaimed, and without this the submission sits pending forever in an inbox
+that doesn't exist), independent dancers, and anything touching a contested
+claim. Every row says why it's here. Anything with a real studio owner stays in
+their inbox and never appears.
+
+**`/admin/corrections` — correction proposals.** Families can't edit a
+published fact; they propose a change to one field with a reason. Accepting
+applies it and records who asked and who approved. If the award changed since
+the proposal was filed you'll be told — accepting then would overwrite
+something the family never saw.
+
+**`/admin/claims` → Contested Dancer Claims.** Two or more households claiming
+one dancer. These never reach a studio: a director asked to choose between two
+families is being asked to arbitrate a private dispute. Rows are grouped by
+dancer so you read both sides together; approving one settles the others and
+emails everybody.
+
+### What happens without you
+
+Two things now publish with no reviewer, both labelled honestly:
+
+- **Corroboration.** Two *unrelated* households — different accounts, different
+  dancers — describing the same routine at the same event promote each other,
+  marked `corroborated`. Neither can see the other's entry, which is what makes
+  it evidence.
+- **Independents.** A dancer with no studio has no director to ask, so their
+  submissions go live immediately marked `family_submitted` — and are held out
+  of leaderboards and rankings until something corroborates them. Public
+  straight away, ranked only against reviewed data.
+
+### Guardrails
+
+```bash
+node scripts/archive_metrics.js          # human-readable
+node scripts/archive_metrics.js --json   # for a dashboard
+```
+
+Runs automatically at the end of every successful weekly import. Watch two
+numbers above all: **duplicate canonical awards** (6,408 as of 2026-09-01,
+all legacy import residue — must not rise) and **group awards with one linked
+dancer** (1,874 — must fall). A faster funnel that creates duplicates is a
+regression, not progress.

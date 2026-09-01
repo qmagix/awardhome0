@@ -9,6 +9,7 @@ const { unsubscribeToken } = require('../../utils/invites');
 const { resolveCardDesign } = require('../../utils/cardDesign');
 const { flagOn } = require('../../utils/featureFlags');
 const { studioDisplayNameSql, excludeIndependentSql } = require('../../utils/independents');
+const { rankableAwardSql } = require('../../utils/promotion');
 const { ensureUpcomingTable, upcomingForOrg, distanceMiles } = require('../../utils/upcoming');
 const { REACTION_TYPES, readReactorKey, ensureReactorKey, toggleReaction, countsForAwards, myReactions } = require('../../utils/reactions');
 const rateLimit = require('express-rate-limit');
@@ -237,6 +238,7 @@ async function loadHomepageData() {
     FROM studios s
     LEFT JOIN awards a ON s.id = a.studio_id
     WHERE s.id NOT IN (${excludeIds.join(',')}) AND ${excludeIndependentSql('s')}
+      AND ${rankableAwardSql('a')}
     GROUP BY s.id
     ORDER BY total_awards DESC
     LIMIT 100
@@ -248,7 +250,7 @@ async function loadHomepageData() {
     LEFT JOIN awards a ON s.id = a.studio_id
     LEFT JOIN events e ON a.event_id = e.id
     WHERE e.year = (SELECT MAX(year) FROM events) AND s.id NOT IN (${excludeIds.join(',')})
-      AND ${excludeIndependentSql('s')}
+      AND ${excludeIndependentSql('s')} AND ${rankableAwardSql('a')}
     GROUP BY s.id
     ORDER BY total_awards DESC
     LIMIT 100
@@ -262,7 +264,7 @@ async function loadHomepageData() {
     WHERE a.is_first_place = 1
       AND e.year = (SELECT MAX(year) FROM events)
       AND s.id NOT IN (${excludeIds.join(',')})
-      AND ${excludeIndependentSql('s')}
+      AND ${excludeIndependentSql('s')} AND ${rankableAwardSql('a')}
     GROUP BY s.id
     ORDER BY total_awards DESC
     LIMIT 100
@@ -274,6 +276,7 @@ async function loadHomepageData() {
     JOIN award_dancers ad ON d.id = ad.dancer_id
     JOIN awards a ON ad.award_id = a.id
     WHERE COALESCE(d.hide_from_rankings, 0) = 0 AND COALESCE(d.hide_from_search, 0) = 0
+      AND ${rankableAwardSql('a')}
     GROUP BY d.id
     ORDER BY total_awards DESC
     LIMIT 500
@@ -287,6 +290,7 @@ async function loadHomepageData() {
     JOIN events e ON a.event_id = e.id
     WHERE e.year = (SELECT MAX(year) FROM events)
       AND COALESCE(d.hide_from_rankings, 0) = 0 AND COALESCE(d.hide_from_search, 0) = 0
+      AND ${rankableAwardSql('a')}
     GROUP BY d.id
     ORDER BY total_awards DESC
     LIMIT 500
@@ -300,6 +304,7 @@ async function loadHomepageData() {
     JOIN events e ON a.event_id = e.id
     WHERE a.is_first_place = 1 AND e.year = (SELECT MAX(year) FROM events)
       AND COALESCE(d.hide_from_rankings, 0) = 0 AND COALESCE(d.hide_from_search, 0) = 0
+      AND ${rankableAwardSql('a')}
     GROUP BY d.id
     ORDER BY total_awards DESC
     LIMIT 500

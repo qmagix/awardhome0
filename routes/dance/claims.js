@@ -3,7 +3,7 @@ const router = express.Router();
 const { openDb } = require('../../database');
 const { logStudioActivity } = require('../../utils/activity');
 const { requireAuth } = require('../../middleware/auth');
-const { domainsMatch, approveStudioClaim, matchDancerClaimCode, notifyStudioOfProfileClaim } = require('../../utils/claims');
+const { domainsMatch, approveStudioClaim, matchDancerClaimCode, notifyStudioOfProfileClaim, markContestedClaims } = require('../../utils/claims');
 const { sendEmail } = require('../../utils/mailer');
 const { consumeHouseholdAction } = require('../../utils/submissions');
 const { BASE_URL } = require('../../config');
@@ -172,6 +172,14 @@ router.post('/claim/dancer/:id', requireAuth, async (req, res) => {
   await db.run(
     'INSERT INTO dancer_claims (user_id, dancer_id, proof_text, status, studio_id, code_valid) VALUES (?, ?, ?, ?, ?, ?)',
     [user.id, dancer.id, proof_text, 'pending', codeMatch.valid ? codeMatch.studio.id : null, codeMatch.valid ? 1 : 0]);
+
+  // A second household on the same dancer makes BOTH claims contested, and a
+  // contested claim leaves the studio queue entirely — a director must never
+  // be asked to choose between two families (design §6.9).
+  const contest = await markContestedClaims(db, dancer.id);
+  if (contest.contested) {
+    return res.send(`<script>alert("Claim submitted. Someone else has also claimed this dancer, so the AwardHome team will sort it out directly rather than asking your studio to choose — we'll email you with the outcome."); window.location.href="/dancer/${dancer.unique_id}";</script>`);
+  }
 
   if (codeMatch.valid) {
     notifyStudioOfProfileClaim(db, {

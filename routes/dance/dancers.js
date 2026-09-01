@@ -11,6 +11,9 @@ const { flagOn } = require('../../utils/featureFlags');
 const { moderateNote, getModerationMode } = require('../../utils/moderation');
 const { studioDisplayNameSql } = require('../../utils/independents');
 const { pendingForCastmates, canObject, PHOTO_REASON_TEXT } = require('../../utils/cardPhotos');
+const {
+  CORRECTABLE_FIELDS, CORRECTION_REASON_TEXT, canPropose, propose,
+} = require('../../utils/corrections');
 
 // ---- Flip-book card extras (photo + thank-you lines) ----
 
@@ -206,6 +209,32 @@ router.get('/manage/dancer/:id/card', requireAuth, async (req, res) => {
     featureNotes, featurePhotos, castmatePhotos,
     photoNotice: req.query.objected ? 'Thank you — that photo will not be published while we look at it.' : null,
   });
+});
+
+
+// "Something is wrong with this award." A family never edits a canonical
+// fact directly (design §6.8) — this files a proposal a reviewer decides,
+// with the current value snapshotted so nobody accepts a change to a value
+// the family never saw.
+router.post('/api/award/:awardId/correction', requireAuth, async (req, res) => {
+  if (!(await flagOn('family_submissions', req))) return res.status(404).json({ error: 'Not found' });
+  const db = await openDb();
+  const awardId = parseInt(req.params.awardId, 10);
+  const dancerId = parseInt((req.body || {}).dancer_id, 10);
+
+  if (!(await canPropose(db, req.session.user.id, awardId, dancerId))) {
+    return res.status(403).json({ error: 'You can only suggest corrections on your own dancer\'s awards.' });
+  }
+  const result = await propose(db, {
+    awardId, dancerId, userId: req.session.user.id,
+    field: (req.body || {}).field,
+    proposedValue: (req.body || {}).proposed_value,
+    reason: (req.body || {}).reason,
+  });
+  if (!result.ok) {
+    return res.status(400).json({ error: CORRECTION_REASON_TEXT[result.reason] || 'Could not file that.' });
+  }
+  res.json({ success: true, correctionId: result.correctionId });
 });
 
 
@@ -514,7 +543,11 @@ router.get('/manage/dancer/:id', requireAuth, async (req, res) => {
   const featurePhotos = await flagOn('award_photos', req);
   const featureSubmissions = await flagOn('family_submissions', req);
 
-  res.render('manage_dancer', { dancer, studios, awards, consent: consentRow || null, featurePhotos, featureSubmissions });
+  res.render('manage_dancer', {
+    dancer, studios, awards, consent: consentRow || null,
+    featurePhotos, featureSubmissions,
+    correctableFields: CORRECTABLE_FIELDS,
+  });
 });
 
 

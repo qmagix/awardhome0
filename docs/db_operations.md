@@ -349,3 +349,41 @@ the auto-merge threshold means a tour with two nearby stops; picking one would
 file a family's award on the wrong weekend. Those land in
 `/admin/event-candidates` with both options shown — the same principle as
 `resolveOrCreateDancer` refusing to choose between same-name dancers.
+
+## Convergence and the M4 write path (2026-09-01)
+
+Promotion's find-before-create is now the **convergence** lookup
+(`utils/convergence.js`), not an exact match. It reuses an award when
+(event, studio, routine key) match and the descriptive identity is
+*compatible*: normalised placement/category/award-type, where a field either
+side left blank matches and a field both filled differently does not. That
+keeps two descriptions of one win on one row while leaving genuinely different
+awards on the same routine apart.
+
+Enrichment fills only NULL/blank columns on the existing award. Published
+organizer data and earlier reviewer decisions are never overwritten by a later
+family description — the one-way rule that makes convergence safe to run
+automatically.
+
+`awards.verification_status` now carries the trust tier
+(`family_submitted` < `corroborated` < `studio_confirmed` < `source_verified`)
+and **only ever climbs**. A weaker later confirmation cannot demote an award
+that already earned a higher tier.
+
+### Guardrail metrics are calibrated, not assumed
+
+`scripts/archive_metrics.js` runs at the end of every successful weekly import.
+Two of its numbers were tuned against the real corpus, and the tuning is
+load-bearing:
+
+- **Duplicate canonical awards** must key on category, award type AND age
+  division, and must skip blank routine names. Without the extra fields it
+  reported 97,556 (one routine legitimately wins several awards at one event);
+  with blank routines included it reported 49,168 (per-dancer "TOP 12"
+  placement rows share every field by construction and are not duplicates).
+  The honest figure is **6,408**, all legacy import residue.
+- **Group awards with one linked dancer** reproduces the documented **1,874**
+  baseline exactly, which is what says the query is measuring the right thing.
+
+Re-measure before loosening either key. A guardrail that cries wolf gets
+ignored, and then it is not a guardrail.

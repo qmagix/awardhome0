@@ -27,7 +27,7 @@ const {
   listForDancer, listForStudio, castForSubmissions, normalizeText, consumeHouseholdAction,
 } = require('../../utils/submissions');
 const {
-  CORRECTABLE, REASON_TEXT, confirmSubmission, rejectSubmission, requestInfo,
+  CORRECTABLE, REASON_TEXT, confirmSubmission, rejectSubmission, requestInfo, runAutoPromotion,
 } = require('../../utils/promotion');
 const { openSubmissionsDb } = require('../../utils/submissionsDb');
 const { findEventOptions } = require('../../utils/eventPicker');
@@ -112,9 +112,17 @@ router.get('/manage/dancer/:id/submissions', requireAuth, async (req, res) => {
   if (!(await requireFlag(req, res))) return;
   const dancer = await loadOwnedDancer(req, res);
   if (!dancer) return;
-  const notice = req.query.added
-    ? 'Saved. It is pending review — you can see it below; nobody else can see it yet.'
-    : (req.query.duplicate ? 'That submission was already saved — we kept the original.' : null);
+  const NOTICES = {
+    added: 'Saved. It is pending review — you can see it below; nobody else can see it yet.',
+    duplicate: 'That submission was already saved — we kept the original.',
+    independent: 'Saved and published. Because this dancer has no studio, there is no director to ' +
+      'confirm it, so it goes live right away — labelled as added by your family until a competition\'s ' +
+      'own results confirm it.',
+    corroborated: 'Saved and published. Another family recorded the same result independently, which is ' +
+      'the strongest confirmation we can get without waiting for anyone.',
+  };
+  const notice = req.query.added ? NOTICES.added
+    : (req.query.duplicate ? NOTICES.duplicate : (NOTICES[req.query.auto] || null));
   await renderPage(req, res, dancer, { notice });
 });
 
@@ -139,7 +147,22 @@ router.post('/manage/dancer/:id/submissions', requireAuth, async (req, res) => {
       status: 429,
     });
   }
-  res.redirect(`/manage/dancer/${dancer.id}/submissions?${idempotent ? 'duplicate' : 'added'}=1`);
+  // Two paths reach the archive without a reviewer: an independent dancer
+  // (no studio owner exists to review them) and corroboration by an unrelated
+  // household. Both label honestly rather than claiming a human confirmed it.
+  // Never blocks the response — a family's submission is saved either way.
+  let auto = { promoted: [], reason: null };
+  if (!idempotent) {
+    try {
+      auto = await runAutoPromotion({ submissionId: submission.id });
+    } catch (e) {
+      console.error('[submissions] auto-promotion failed:', e.message);
+    }
+  }
+  const flag = idempotent ? 'duplicate=1'
+    : (auto.reason === 'independent' ? 'auto=independent'
+      : (auto.reason === 'corroborated' ? 'auto=corroborated' : 'added=1'));
+  res.redirect(`/manage/dancer/${dancer.id}/submissions?${flag}`);
 });
 
 // ---- The event picker (M2) -------------------------------------------------

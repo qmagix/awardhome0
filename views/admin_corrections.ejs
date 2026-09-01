@@ -1,0 +1,67 @@
+<%- include('partials/header') %>
+
+<div class="container" style="margin-top: 4rem; max-width: 980px; padding-bottom: 4rem;">
+  <div class="header-section" style="margin-bottom: 1.5rem;">
+    <h1>Correction Proposals</h1>
+    <p class="subtitle">
+      Families can't edit a published fact directly — they propose, you decide. Accepting applies the
+      change and records who asked for it and who approved it.
+    </p>
+  </div>
+
+  <% if (notice) { %>
+    <div class="card glass-card" style="margin-bottom: 1.5rem; border-left: 3px solid #6bbf6b;">
+      <p style="margin: 0;"><%= notice %></p>
+    </div>
+  <% } %>
+  <% if (error) { %>
+    <div class="card glass-card" style="margin-bottom: 1.5rem; border-left: 3px solid #d98a8a;">
+      <p style="margin: 0;"><%= error %></p>
+    </div>
+  <% } %>
+
+  <% if (!corrections.length) { %>
+    <div class="card glass-card"><p style="margin: 0; color: var(--text-muted);">No open proposals.</p></div>
+  <% } %>
+
+  <% corrections.forEach(function (c) { %>
+    <div class="card glass-card" style="margin-bottom: 1.25rem;" data-correction-id="<%= c.id %>">
+      <div style="color: var(--text-muted); font-size: 0.85rem;">
+        <%= c.event_name || 'unknown event' %><% if (c.event_year) { %> (<%= c.event_year %>)<% } %>
+        <% if (c.studio_name) { %> · <%= c.studio_name %><% } %>
+        <% if (c.dancer_name) { %> · <a href="/dancer/<%= c.dancer_uid %>" style="color: var(--primary);"><%= c.dancer_name %></a><% } %>
+      </div>
+      <strong style="font-size: 1.05rem;"><%= c.performance_name || '(no routine name)' %></strong>
+
+      <div style="margin-top: 0.75rem; display: flex; gap: 1rem; align-items: baseline; flex-wrap: wrap;">
+        <span style="color: var(--text-muted); font-size: 0.85rem;"><%= fieldLabel(c.field) %>:</span>
+        <span style="text-decoration: line-through; color: #d98a8a;"><%= c.current_value || '(blank)' %></span>
+        <span style="color: var(--text-muted);">→</span>
+        <span style="color: #6bbf6b; font-weight: 600;"><%= c.proposed_value || '(blank)' %></span>
+      </div>
+
+      <% if (c.reason) { %>
+        <p style="margin: 0.6rem 0 0; font-size: 0.9rem;">Family's reason: <%= c.reason %></p>
+      <% } %>
+      <p style="margin: 0.4rem 0 0; font-size: 0.8rem; color: var(--text-muted);">
+        Proposed <%= c.created_at %> by <%= c.submitter_email || 'an account since deleted' %>
+        <% if (!c.studio_owner_id) { %> · this studio is unclaimed, so nobody else will look at it<% } %>
+      </p>
+
+      <div style="margin-top: 1rem; display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap;">
+        <form method="POST" action="/admin/corrections/<%= c.id %>/accept" style="display: flex; gap: 0.6rem; flex-grow: 1; align-items: center;">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <input type="text" name="note" placeholder="Note (optional)"
+                 style="flex-grow: 1; min-width: 200px; padding: 0.5rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+          <button type="submit" class="btn btn-primary" style="padding: 0.4rem 1rem;">Accept &amp; apply</button>
+        </form>
+        <form method="POST" action="/admin/corrections/<%= c.id %>/reject">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button type="submit" class="btn btn-outline" style="padding: 0.4rem 0.9rem; border-color: #d98a8a; color: #d98a8a;">Reject</button>
+        </form>
+      </div>
+    </div>
+  <% }); %>
+</div>
+
+<%- include('partials/footer') %>

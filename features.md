@@ -904,3 +904,89 @@ Superadmin becomes exception handling — objections and public reports, not
 volume. The dancer-level default photo (`dancers.card_photo_*`) still goes
 through the superadmin queue: it is not scoped to a routine, so there is no
 cast to consult.
+
+## Convergence, corroboration, and the AwardHome queue (2026-09-01)
+Milestone M4 of the mobile-app plan. M1–M3 made family entry possible and
+reviewable; M4 is what keeps it from quietly re-creating the duplicate problem
+the 2026-08-30/31 repair removed.
+
+### Convergence — two households, one award
+Two parents at the same competition both submit *Small Group — Fireworks —
+1st*. Neither can see the other's entry, and neither types it identically.
+`utils/convergence.js` folds them onto one award with two dancer links:
+
+- **Normalise, don't guess.** "1st" / "1" / "First" / "1st Place" fold to one
+  key; text fields fold on case, punctuation and whitespace. Nothing semantic
+  is inferred — "Teen Contemporary" and "Contemporary Teen" stay different,
+  because deciding they are the same is a judgement no normaliser should make
+  silently.
+- **Absence is not disagreement.** A field one household left blank matches a
+  field the other filled in, and promotion then *enriches* the award with it.
+  A field both filled with different values is a real difference and keeps the
+  awards apart — which is how a routine's "1st in Teen Contemporary" and its
+  "Overall High Score" stay the two distinct awards they are.
+
+Enrichment never overwrites: published organizer data and earlier reviewer
+decisions outrank a later family description.
+
+### Corroboration — the cheapest trust signal available
+Two **unrelated** households describing the same result promote each other, at
+verification level `corroborated`, with no reviewer involved. Unrelated means a
+different account *and* a different dancer: a family agreeing with itself is
+not independent evidence, and two accounts submitting for the *same* dancer is
+a contested-ownership signal, not corroboration.
+
+### Independents auto-approve, honestly labelled
+An independent dancer has no studio owner to review them — that is what
+independent means here — so their submissions publish immediately at
+`family_submitted` (design §6.2.3). Latency and trust are separated: the award
+is public straight away, but `rankableAwardSql()` holds `family_submitted`
+awards out of every leaderboard and top-studio/top-dancer ranking until
+something corroborates them. Appearing in your own trophy case is a different
+claim from being ranked against reviewed data. Anomalies still queue — a dancer
+whose ownership is contested never gets published by the dispute itself.
+
+### The AwardHome queue — `/admin/submissions`
+What studios cannot decide, and — the operationally important one —
+**everything no studio owner will ever see**. A submission for a dancer at an
+*unclaimed* studio has nobody to review it and would otherwise sit pending
+forever in an inbox that does not exist. Most studios are unclaimed, so that is
+the common case, not the edge. Each row says why it is here; anything with a
+real studio owner stays in their inbox and never appears.
+
+### Contested claims never reach a studio
+A second household claiming one dancer marks **both** claims `contested`
+(design §6.9). Contested claims leave the studio queue by construction — the
+studio routes filter on `pending` — and are decided only at `/admin/claims`,
+grouped by dancer so both sides of one argument are read together. A director
+asked to choose between two families is being asked to arbitrate a private
+dispute.
+
+### Correction proposals — `award_corrections`
+A family never edits a published fact. "Something's wrong?" files a
+**field-level proposal** with the current value, the proposed value and a
+reason; a reviewer accepts or rejects at `/admin/corrections`. Accepting applies
+the field and writes provenance in one transaction, and re-derives
+`performance_name_key` when the routine name changes so convergence keeps
+finding the award. A proposal whose current value has moved since it was filed
+is refused with a warning: accepting would overwrite something the family never
+saw. Only a household whose own dancer is on the award may propose.
+
+### Archive-integrity guardrails — `scripts/archive_metrics.js`
+The design's §14 numbers, queryable, and printed at the end of every successful
+weekly import. These catch **silent decay** — the failure mode where nothing
+errors while the archive degrades:
+
+| Metric | Baseline (2026-09-01) | Direction |
+|---|---|---|
+| New studios per 100 accepted submissions | 0 | must stay ~0 — studios are derived, never typed |
+| Event candidates merged into events that existed | — | measures picker quality |
+| Duplicate canonical awards | 6,408 (legacy import residue) | must not rise |
+| Group awards with one linked dancer | 1,874 | must fall, never rise |
+| Convergence rate | — | share of family awards with more than one household |
+
+Both duplicate-style metrics were calibrated against the real corpus rather
+than assumed: keying duplicates on (event, studio, routine, place) alone
+reported 97,556, because one routine legitimately wins several awards at one
+event, and blank-routine per-dancer placement rows share every field by
+construction. A guardrail that cries wolf gets ignored.

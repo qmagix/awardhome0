@@ -92,6 +92,11 @@ const CHECKS = [
   ['POST', '/manage/studio/1/submissions/1/reject', [403], 'anonymous submission reject blocked (CSRF)'],
   ['POST', '/manage/studio/1/verifications/card-photo/1/approve', [403], 'anonymous studio photo approval blocked (CSRF)'],
   ['POST', '/api/card-photo/1/object', [403], 'anonymous photo objection blocked (CSRF)'],
+  ['GET', '/admin/submissions', [403], 'anonymous AwardHome submission queue blocked'],
+  ['POST', '/admin/submissions/1/confirm', [403], 'anonymous AwardHome confirm blocked'],
+  ['GET', '/admin/corrections', [403], 'anonymous corrections queue blocked'],
+  ['POST', '/admin/corrections/1/accept', [403], 'anonymous correction accept blocked'],
+  ['POST', '/api/award/1/correction', [403], 'anonymous correction proposal blocked (CSRF)'],
 ];
 
 // Family submissions stage in their OWN SQLite file (utils/submissionsDb.js).
@@ -898,6 +903,184 @@ async function main() {
         check(approved.status === 302 && approvedRow.status === 'approved',
           'an unobjected photo is published by the studio, with no superadmin step',
           'status=' + approvedRow.status);
+
+        // ---- M4: convergence and corroboration ----
+        // Two parents at one competition both submit the same group routine,
+        // neither able to see the other's entry, and neither types it
+        // identically. That has to be ONE award with two dancer links — not
+        // two awards, and not one award missing half its cast.
+        // Both households' dancers must be on the SAME studio roster — that is
+        // what makes them teammates rather than two unrelated entries, and the
+        // studio is derived from affiliation, never from what the form posts.
+        await db.run('INSERT OR IGNORE INTO dancer_studios (dancer_id, studio_id) VALUES (?, ?)',
+          [famDancer2.lastID, s1.lastID]);
+
+        const CONV = { routine: 'Smoke Convergence Fireworks', size: 'small_group' };
+        const convA = await postSubmission({
+          client_submission_id: 'smoke-conv-a', group_size: CONV.size,
+          performance_name: CONV.routine, place: '1st', category: 'Teen Contemporary',
+        });
+        // Read A back only AFTER B lands: corroboration promotes both, so a
+        // snapshot taken before the second household exists is stale by
+        // construction.
+        const subAPending = await sdb.get("SELECT status FROM award_submissions WHERE client_submission_id = 'smoke-conv-a'");
+
+        // Second household: different account, different dancer, and a
+        // different spelling of the same placement with the category left
+        // blank — exactly what two real people produce.
+        const convB = await fetch(BASE + `/manage/dancer/${famDancer2.lastID}/submissions`, {
+          method: 'POST', redirect: 'manual',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: claimant.cookie },
+          body: new URLSearchParams({
+            _csrf: claimToken, client_submission_id: 'smoke-conv-b',
+            event_id: String(event.id), studio_id: String(s1.lastID),
+            performance_name: CONV.routine, group_size: CONV.size, place: '1',
+          }).toString(),
+        });
+        const subA = await sdb.get("SELECT * FROM award_submissions WHERE client_submission_id = 'smoke-conv-a'");
+        const subB = await sdb.get("SELECT * FROM award_submissions WHERE client_submission_id = 'smoke-conv-b'");
+
+        const convAwards = await db.all(
+          "SELECT id, dancer_id, place, category FROM awards WHERE performance_name = ?", [CONV.routine]);
+        convAwards.forEach(a => ids.awards.push(a.id));
+        const convLinks = convAwards.length
+          ? await db.all('SELECT dancer_id FROM award_dancers WHERE award_id = ?', [convAwards[0].id]) : [];
+
+        check(convA.status === 302 && convB.status === 302 &&
+              subAPending.status === 'submitted' &&
+              subA.status === 'accepted' && subB.status === 'accepted' &&
+              subA.verification_level === 'corroborated' && subB.verification_level === 'corroborated' &&
+              convAwards.length === 1 && convLinks.length === 2,
+          'two households describing the same routine reach ONE award with two dancer links, promoted as corroborated',
+          'awards=' + convAwards.length + ' links=' + convLinks.length +
+          ' levels=' + subA.verification_level + '/' + subB.verification_level);
+
+        // "1st" vs "1" folded, and the blank category was FILLED from the
+        // household that knew it rather than splitting the award in two.
+        check(convAwards.length === 1 && convAwards[0].category === 'Teen Contemporary',
+          'cosmetic spelling differences converge, and a blank field is enriched rather than forked',
+          'category=' + (convAwards[0] && convAwards[0].category));
+
+        // A genuinely DIFFERENT award on the same routine must stay separate.
+        await postSubmission({
+          client_submission_id: 'smoke-conv-c', group_size: CONV.size,
+          performance_name: CONV.routine, place: '1st', category: 'Overall High Score',
+        });
+        const afterDistinct = await db.all(
+          'SELECT id, category FROM awards WHERE performance_name = ?', [CONV.routine]);
+        afterDistinct.forEach(a => { if (!ids.awards.includes(a.id)) ids.awards.push(a.id); });
+        check(afterDistinct.length === 2,
+          'a different award on the same routine stays a separate award, not a merge',
+          'awards=' + afterDistinct.length + ' categories=' + JSON.stringify(afterDistinct.map(a => a.category)));
+
+        // ---- M4: independents auto-approve, held out of rankings ----
+        const indepStudio = await db.run(
+          "INSERT INTO studios (unique_id, name, status, is_independent) VALUES ('smoke-indep-studio', 'Independent — Smoke Dancer Solo (smoke)', 'active', 1)");
+        ids.studios.push(indepStudio.lastID);
+        const indepDancer = await db.run(
+          "INSERT INTO dancers (unique_id, name, is_claimed, claimed_by_user_id) VALUES ('smoke-dancer-indep', 'Smoke Dancer Indie', 1, ?)",
+          [u1.lastID]);
+        await db.run('INSERT INTO dancer_studios (dancer_id, studio_id) VALUES (?, ?)', [indepDancer.lastID, indepStudio.lastID]);
+
+        const indepSub = await fetch(BASE + `/manage/dancer/${indepDancer.lastID}/submissions`, {
+          method: 'POST', redirect: 'manual',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: owner.cookie },
+          body: new URLSearchParams({
+            _csrf: subToken, client_submission_id: 'smoke-indep-1',
+            event_id: String(event.id), performance_name: 'Smoke Indie Solo', group_size: 'solo', place: '1st',
+          }).toString(),
+        });
+        const indepRow = await sdb.get("SELECT * FROM award_submissions WHERE client_submission_id = 'smoke-indep-1'");
+        const indepAward = indepRow && indepRow.award_id
+          ? await db.get('SELECT id, verification_status FROM awards WHERE id = ?', [indepRow.award_id]) : null;
+        if (indepAward) ids.awards.push(indepAward.id);
+        check((indepSub.headers.get('location') || '').includes('auto=independent') &&
+              indepRow.status === 'accepted' && indepRow.verification_level === 'family_submitted' &&
+              !!indepAward && indepAward.verification_status === 'family_submitted',
+          'an independent dancer\'s award publishes immediately, labelled family_submitted — no studio owner exists to review it',
+          'status=' + indepRow.status + ' level=' + indepRow.verification_level);
+
+        const { rankableAwardSql } = require('../utils/promotion');
+        const ranked = await db.get(
+          `SELECT COUNT(*) AS n FROM awards a WHERE a.id = ? AND ${rankableAwardSql('a')}`, [indepAward.id]);
+        check(ranked.n === 0,
+          'a family_submitted award is public but held OUT of competitive rankings until corroborated',
+          'rankable=' + ranked.n);
+
+        // ---- M4: contested claims go to AwardHome, never a studio ----
+        const contestDancer = await db.run(
+          "INSERT INTO dancers (unique_id, name) VALUES ('smoke-dancer-contest', 'Smoke Dancer Contested')");
+        await db.run('INSERT INTO dancer_studios (dancer_id, studio_id) VALUES (?, ?)', [contestDancer.lastID, s1.lastID]);
+        const fileClaim = (cookie, token) => fetch(BASE + `/claim/dancer/${contestDancer.lastID}`, {
+          method: 'POST', redirect: 'manual',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: cookie },
+          body: new URLSearchParams({ _csrf: token, relationship: 'parent', proof: 'smoke' }).toString(),
+        });
+        await fileClaim(owner.cookie, subToken);
+        await fileClaim(claimant.cookie, claimToken);
+        const claimRows = await db.all(
+          'SELECT id, status FROM dancer_claims WHERE dancer_id = ?', [contestDancer.lastID]);
+        claimRows.forEach(c => ids.claims.push(c.id));
+        const allContested = claimRows.length === 2 && claimRows.every(c => c.status === 'contested');
+
+        const studioVerif = await fetch(BASE + `/manage/studio/${s1.lastID}/verifications`, { headers: { Cookie: owner.cookie } });
+        const studioVerifHtml = await studioVerif.text();
+        const adminClaims = await fetch(BASE + '/admin/claims', { headers: { Cookie: superUser.cookie } });
+        const adminClaimsHtml = await adminClaims.text();
+        check(allContested && !studioVerifHtml.includes('Smoke Dancer Contested') &&
+              adminClaimsHtml.includes('Smoke Dancer Contested') &&
+              adminClaimsHtml.includes(`data-contested-claim="${claimRows[0].id}"`),
+          'a second household claiming one dancer contests both, and it leaves the studio queue for AwardHome',
+          'statuses=' + JSON.stringify(claimRows.map(c => c.status)) +
+          ' inStudio=' + studioVerifHtml.includes('Smoke Dancer Contested'));
+
+        // ---- M4: correction proposals ----
+        const corrTarget = convAwards[0];
+        const corrRes = await fetch(BASE + `/api/award/${corrTarget.id}/correction`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Cookie: owner.cookie, 'X-CSRF-Token': subToken },
+          body: JSON.stringify({
+            dancer_id: famDancer.lastID, field: 'place',
+            proposed_value: '2nd', reason: 'We were second, not first.',
+          }),
+        });
+        const corrJson = corrRes.status === 200 ? await corrRes.json() : {};
+        const beforeApply = await db.get('SELECT place FROM awards WHERE id = ?', [corrTarget.id]);
+        check(corrRes.status === 200 && !!corrJson.correctionId && beforeApply.place === '1st',
+          'a family PROPOSES a correction — the published fact does not move until a reviewer agrees',
+          corrRes.status + ' award still=' + beforeApply.place);
+
+        // Someone with no dancer on the award cannot propose against it.
+        const corrOutsider = await fetch(BASE + `/api/award/${corrTarget.id}/correction`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Cookie: superUser.cookie, 'X-CSRF-Token': superToken },
+          body: JSON.stringify({ dancer_id: famDancer.lastID, field: 'place', proposed_value: '3rd' }),
+        });
+        check(corrOutsider.status === 403,
+          'only a household whose own dancer is on the award may propose a correction',
+          'status=' + corrOutsider.status);
+
+        const corrPage = await fetch(BASE + '/admin/corrections', { headers: { Cookie: superUser.cookie } });
+        const corrPageHtml = await corrPage.text();
+        const applyCorr = await fetch(BASE + `/admin/corrections/${corrJson.correctionId}/accept`, {
+          method: 'POST', redirect: 'manual',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: superUser.cookie },
+          body: new URLSearchParams({ _csrf: superToken, note: 'checked the results sheet' }).toString(),
+        });
+        const afterApply = await db.get('SELECT place FROM awards WHERE id = ?', [corrTarget.id]);
+        const corrProv = await db.get(
+          "SELECT note FROM award_provenance WHERE award_id = ? AND source_type = 'correction'", [corrTarget.id]);
+        check(corrPage.status === 200 && corrPageHtml.includes(`data-correction-id="${corrJson.correctionId}"`) &&
+              applyCorr.status === 302 && afterApply.place === '2nd' && !!corrProv,
+          'accepting a correction applies it AND records who asked and who approved',
+          'place=' + afterApply.place + ' provenance=' + !!corrProv);
+
+        // ---- M4: the AwardHome queue catches what no studio owner sees ----
+        const orphanQueue = await fetch(BASE + '/admin/submissions', { headers: { Cookie: superUser.cookie } });
+        const orphanHtml = await orphanQueue.text();
+        check(orphanQueue.status === 200 && !orphanHtml.includes(`data-submission-id="${r1.id}"`),
+          'submissions with a real studio owner stay in THEIR inbox and never reach the AwardHome queue',
+          'status ' + orphanQueue.status);
       } finally {
         await db.run("DELETE FROM award_dancer_removals WHERE dancer_id IN (SELECT id FROM dancers WHERE name LIKE 'Smoke Dancer%')").catch(() => {});
         await db.run("DELETE FROM award_dancers WHERE dancer_id IN (SELECT id FROM dancers WHERE name LIKE 'Smoke Dancer%')").catch(() => {});

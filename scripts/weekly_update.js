@@ -454,6 +454,27 @@ async function autoMergeEventCandidates() {
   }
 }
 
+// Archive-integrity guardrails (design §14). Printed after every successful
+// run so a rising duplicate count or a falling convergence rate shows up in
+// the same log a human already reads. Never fails the import — a metric that
+// can break a good run stops being run.
+async function reportArchiveMetrics() {
+  try {
+    const { collect } = require('./archive_metrics');
+    const m = await collect();
+    console.log('[metrics] ' + JSON.stringify({
+      accepted: m.accepted_submissions,
+      new_studios_per_100: m.new_studios_per_100_accepted,
+      duplicate_awards: m.duplicate_canonical_awards,
+      single_dancer_groups: m.group_awards_with_one_dancer,
+      convergence_rate: m.convergence_rate,
+      candidates_merged_into_existing: m.event_candidates_merged_into_existing,
+    }));
+  } catch (e) {
+    console.error('[metrics] skipped:', e.message);
+  }
+}
+
 async function main() {
   const opts = {
     replay: process.argv.includes('--replay'),
@@ -476,12 +497,16 @@ async function main() {
       const pending = path.join(REPORTS_DIR, 'PENDING_REVIEW.json');
       if (fs.existsSync(pending)) fs.unlinkSync(pending);
       await autoMergeEventCandidates();
+      await reportArchiveMetrics();
     }
     process.exit(failures.length ? 1 : 0);
   }
   if (process.argv.includes('--direct') || opts.pdfOnly) {
     const { failures } = await runPipeline(opts);
-    if (!failures.length) await autoMergeEventCandidates();
+    if (!failures.length) {
+      await autoMergeEventCandidates();
+      await reportArchiveMetrics();
+    }
     process.exit(failures.length ? 1 : 0);
   }
   await stagedFlow(opts, forwardArgs);
