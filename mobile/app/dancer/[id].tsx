@@ -96,16 +96,28 @@ export default function TrophyCaseScreen() {
           </Text>
         }
         renderItem={({ item }) => {
-          // 16% of awards carry no routine name — a convention scholarship or a
-          // title has nothing to name. Falling back to the literal word
-          // "Routine" rendered a placeholder as if it were data. Fall back
-          // through REAL fields instead, and drop the line entirely when there
-          // is nothing true to put in it.
-          const heading = item.performance_name || item.award_type || item.category;
-          const sub = [item.category, item.award_type]
-            .filter(Boolean)
-            .filter(v => v !== heading)
-            .join(' · ');
+          // 16% of awards carry no routine name — a convention honour or a
+          // title has nothing to name. The old code printed the literal word
+          // "Routine" there, which rendered a placeholder as if it were data.
+          //
+          // The replacement must NOT pick one of award_type/category and hide
+          // the other, because which of them holds the real name varies by
+          // organization and there is no ordering that is right everywhere:
+          //
+          //   JUMP    award_type "SCHOLARSHIP"              category "Senior JUMP VIP"
+          //   NUVO    award_type "SCHOLARSHIP"              category "Teen BreakOut Artist"
+          //   KAR     award_type "KAR Convention Scholarship"  category (empty)
+          //   NYCDA   award_type "Outstanding Dancer"       category "Teen Outstanding Dancers"
+          //
+          // Preferring award_type labelled every JUMP and NUVO honour
+          // "SCHOLARSHIP" and threw away the name of the award. So when there
+          // is no routine, show BOTH — specific field first — and hide
+          // nothing.
+          const heading = item.performance_name
+            || [item.category, item.award_type].filter(Boolean).join(' · ');
+          const sub = item.performance_name
+            ? [item.category, item.award_type].filter(Boolean).join(' · ')
+            : '';
           return (
           <View style={styles.card}>
             {/* place_display is formatted by the server from the same helper
