@@ -145,6 +145,42 @@ async function main() {
     check(spec.status === 200 && spec.json && spec.json.openapi && spec.json.paths['/submissions'],
       'the OpenAPI contract ships with the code that implements it', 'status ' + spec.status);
 
+    // ---- CORS (browser clients only) ----
+    // `expo start --web` serves the app from another origin, so without these
+    // the browser discards a perfectly good 200 and the app reports that it
+    // cannot reach the server. Native clients are unaffected either way — CORS
+    // is a browser rule.
+    const corsGet = await fetch(BASE + '/dancers/search?q=api', {
+      headers: { Origin: 'http://localhost:8081' },
+    });
+    check(corsGet.headers.get('access-control-allow-origin') === 'http://localhost:8081' &&
+          (corsGet.headers.get('vary') || '').includes('Origin'),
+      'a browser origin gets Access-Control-Allow-Origin, varying on Origin',
+      'acao=' + corsGet.headers.get('access-control-allow-origin'));
+
+    const preflight = await fetch(BASE + '/submissions', {
+      method: 'OPTIONS',
+      headers: {
+        Origin: 'http://localhost:8081',
+        'Access-Control-Request-Method': 'POST',
+        'Access-Control-Request-Headers': 'authorization,content-type',
+      },
+    });
+    check(preflight.status === 204 &&
+          (preflight.headers.get('access-control-allow-headers') || '').toLowerCase().includes('authorization'),
+      'preflight answers 204 and allows Authorization — before any token check',
+      preflight.status + ' ' + preflight.headers.get('access-control-allow-headers'));
+
+    // The one that must never appear: this API has no cookie, so allowing
+    // credentials would invite exactly the attack its absence prevents.
+    check(!corsGet.headers.get('access-control-allow-credentials') &&
+          !preflight.headers.get('access-control-allow-credentials'),
+      'Access-Control-Allow-Credentials is never sent — there is no cookie to ride');
+
+    const noOrigin = await fetch(BASE + '/dancers/search?q=api');
+    check(!noOrigin.headers.get('access-control-allow-origin'),
+      'a request with no Origin (a native client) gets no CORS headers at all');
+
     // ---- guest reads ----
     const search = await api('GET', '/dancers/search?q=API%20Test');
     check(search.status === 200 && search.json.dancers.some(d => d.unique_id === 'DNC-api-dancer'),

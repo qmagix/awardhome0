@@ -53,6 +53,45 @@ const PAGE_SIZE = 50;
 
 const fail = (res, status, error, message) => res.status(status).json({ error, message });
 
+// ---- CORS, for browser clients only ----------------------------------------
+//
+// Native clients never need this: CORS is a browser rule. But `expo start
+// --web` serves the app from localhost:8081 and calls this API on another
+// origin, and without these headers the browser discards a perfectly good 200
+// and the app reports "we couldn't reach AwardHome".
+//
+// Safe here in a way it would NOT be on the session-authenticated web app:
+// this API carries no cookie, so there is no ambient credential for a hostile
+// page to ride. That is also why `Access-Control-Allow-Credentials` is
+// deliberately absent — setting it would invite exactly the attack that its
+// absence prevents.
+//
+// Policy, least-privilege by default:
+//   MOBILE_API_CORS_ORIGINS   comma-separated allowlist; always honoured
+//   unset + not production    any origin (local development convenience)
+//   unset + production        no CORS headers at all — nothing is deployed as
+//                             a browser client, and native clients don't care
+const CORS_ALLOWLIST = (process.env.MOBILE_API_CORS_ORIGINS || '')
+  .split(',').map(s => s.trim()).filter(Boolean);
+const CORS_OPEN_IN_DEV = CORS_ALLOWLIST.length === 0 && process.env.NODE_ENV !== 'production';
+
+router.use((req, res, next) => {
+  const origin = req.get('origin');
+  if (origin && (CORS_OPEN_IN_DEV || CORS_ALLOWLIST.includes(origin))) {
+    res.set('Access-Control-Allow-Origin', origin);
+    // The response varies by Origin, so a cache must not serve one origin's
+    // response to another.
+    res.set('Vary', 'Origin');
+    res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.set('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-Upload-Grant');
+    res.set('Access-Control-Max-Age', '600');
+  }
+  // Preflight must answer before anything that could require a token: the
+  // browser sends OPTIONS with no Authorization header by design.
+  if (req.method === 'OPTIONS') return res.status(204).end();
+  next();
+});
+
 // Every response is JSON, including the ones Express would otherwise render as
 // an HTML error page.
 router.use(express.json({ limit: '1mb' }));
