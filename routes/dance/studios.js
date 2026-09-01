@@ -81,7 +81,8 @@ async function submissionsNavState(req, studioId) {
     const { openSubmissionsDb } = require('../../utils/submissionsDb');
     const sdb = await openSubmissionsDb();
     const row = await sdb.get(
-      "SELECT COUNT(*) AS n FROM award_submissions WHERE studio_id = ? AND status IN ('submitted', 'needs_info')",
+      "SELECT COUNT(*) AS n FROM award_submissions WHERE studio_id = ? " +
+      "AND status IN ('submitted', 'needs_info') AND IFNULL(unverified_household, 0) = 0",
       [studioId]);
     return { featureSubmissions: true, pendingSubmissionCount: row ? row.n : 0 };
   } catch (e) {

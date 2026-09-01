@@ -481,13 +481,69 @@ router.post('/admin/import-review/dismiss', requireSuperadmin, (req, res) => {
 router.get('/admin/submissions', requireAdmin, async (req, res) => {
   const submissions = await listForReview();
   const cast = await castForSubmissions(submissions.map(s => s.id));
+
+  // Independent dancers asking to publish (M9). A separate decision from the
+  // per-award queue above, and a much cheaper one: it is asked once per
+  // dancer, and the answer is "do we let this household put unreviewed
+  // entries on a public page?", not "is this particular award real?".
+  const db = await openDb();
+  let publishRequests = [];
+  try {
+    publishRequests = await db.all(`
+      SELECT d.id, d.unique_id, d.name, d.independent_publish_status AS status,
+             u.email AS owner_email,
+             (SELECT COUNT(*) FROM award_dancers ad WHERE ad.dancer_id = d.id) AS award_count
+      FROM dancers d
+      LEFT JOIN users u ON u.id = d.claimed_by_user_id
+      WHERE d.independent_publish_status = 'requested'
+      ORDER BY d.independent_publish_at ASC, d.id ASC
+      LIMIT 100`);
+    for (const r of publishRequests) {
+      const sdb = await openSubmissionsDb();
+      const q = await sdb.get(
+        "SELECT COUNT(*) AS n FROM award_submissions WHERE dancer_id = ? AND status = 'submitted'",
+        [r.id]);
+      r.curated_count = q ? q.n : 0;
+    }
+  } catch (e) { /* pre-migration */ }
+
   res.render('admin_submissions', {
-    submissions, cast,
+    submissions, cast, publishRequests,
     correctable: CORRECTABLE,
-    notice: req.query.ok ? 'Confirmed — the award is live.' : null,
+    notice: req.query.ok ? 'Confirmed — the award is live.'
+      : (req.query.granted ? 'Approved. Everything this family has recorded is now public, and new entries publish as they are added.'
+        : (req.query.revoked ? 'Publishing turned off. What is already public stays public; new entries are kept privately.' : null)),
     error: req.query.error || null,
     pageTitle: 'Family Submissions — AwardHome Queue',
   });
+});
+
+// Grant or withdraw an independent dancer's right to publish without review.
+// Superadmin only: plain admins are kept out of the surfaces that decide what
+// the public sees under AwardHome's name.
+router.post('/admin/independents/:id/publish/:action', requireSuperadmin, async (req, res) => {
+  const db = await openDb();
+  const dancerId = parseInt(req.params.id, 10);
+  const grant = req.params.action === 'approve';
+  const dancer = await db.get(
+    'SELECT id, claimed_by_user_id FROM dancers WHERE id = ?', [dancerId]);
+  if (!dancer) return res.redirect('/admin/submissions?error=No+such+dancer');
+
+  await db.run(
+    'UPDATE dancers SET independent_publish_status = ?, independent_publish_by = ?, ' +
+    'independent_publish_at = CURRENT_TIMESTAMP WHERE id = ?',
+    [grant ? 'approved' : 'none', req.session.user.id, dancerId]);
+
+  // Granting is retroactive: the whole private record publishes at once.
+  // That is the point — she kept it while nobody could confirm it, and one
+  // decision releases the lot. Revoking is NOT retroactive: awards already
+  // public stay public (unpublishing is a different, heavier decision), it
+  // only stops new ones.
+  if (grant && dancer.claimed_by_user_id) {
+    const { releaseIndependentQueue } = require('../utils/promotion');
+    await releaseIndependentQueue(dancerId, db);
+  }
+  res.redirect('/admin/submissions?' + (grant ? 'granted=1' : 'revoked=1'));
 });
 
 router.post('/admin/submissions/:id/:action', requireAdmin, async (req, res) => {

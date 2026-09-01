@@ -21,6 +21,34 @@
     </div>
   <% } %>
 
+  <% if (typeof publishRequests !== 'undefined' && publishRequests.length) { %>
+    <div class="card glass-card" style="margin-bottom: 2rem; border-left: 3px solid var(--gold-vivid);">
+      <h2 style="margin-top: 0; font-size: 1.15rem;">Independent dancers asking to publish</h2>
+      <p style="color: var(--text-muted); font-size: 0.92rem;">
+        These families have no studio director, so nobody else can confirm their awards. They have
+        been keeping a private record. Approving is a decision about the <em>household</em>, not
+        about one award: everything they have recorded publishes at once, and later entries publish
+        as they add them — marked "added by a family" and kept out of rankings until something
+        corroborates them. Check that the dancer and the events look real before approving.
+      </p>
+      <% publishRequests.forEach(function (r) { %>
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.75rem 0; border-top: 1px solid rgba(255,255,255,0.08); flex-wrap: wrap;">
+          <div>
+            <a href="/dancer/<%= r.unique_id %>" target="_blank" rel="noopener"><strong><%= r.name %></strong></a>
+            <div style="color: var(--text-muted); font-size: 0.85rem;">
+              <%= r.owner_email || 'no owner on file' %> ·
+              <%= r.award_count %> published · <%= r.curated_count %> waiting privately
+            </div>
+          </div>
+          <form method="POST" action="/admin/independents/<%= r.id %>/publish/approve" style="margin: 0;">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <button type="submit" class="btn btn-primary" style="padding: 0.45rem 1rem;">Approve publishing</button>
+          </form>
+        </div>
+      <% }); %>
+    </div>
+  <% } %>
+
   <% if (!submissions.length) { %>
     <div class="card glass-card"><p style="margin: 0; color: var(--text-muted);">Nothing waiting on AwardHome.</p></div>
   <% } %>

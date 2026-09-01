@@ -112,6 +112,13 @@ async function confirmSubmission({ submissionId, reviewerId = null, corrections 
   }
   if (raw.status === 'rejected') return { ok: false, reason: 'already_decided' };
 
+  // An unconfirmed household's entry cannot be promoted by ANYONE, including
+  // a reviewer acting on a guessed id (M8). Filtering it out of the two
+  // queues is a display rule; this is the invariant. The claim is the
+  // prerequisite decision, and approving it releases the queue through
+  // releaseQueuedSubmissions().
+  if (raw.unverified_household) return { ok: false, reason: 'claim_pending' };
+
   // Rule 4.
   if (!raw.event_id) return { ok: false, reason: 'event_pending' };
   const event = await db.get('SELECT id FROM events WHERE id = ?', [raw.event_id]);
@@ -324,9 +331,37 @@ async function requestInfo({ submissionId, reviewerId, note = null, sdb: sdbIn }
 // not apply. Detected on the data, not on a name: the M1 migration gives every
 // independent a synthetic studio flagged is_independent.
 async function isIndependentSubmission(db, s) {
-  if (!s.studio_id) return true;
+  // A missing studio is a DATA GAP, not a declaration of independence. 493
+  // dancers currently have no affiliation on file; treating them as
+  // independent handed the auto-publish door to every one of them. Being
+  // independent is a reviewed per-org determination that produces a synthetic
+  // studio (utils/independents.js) — it is never inferred from absence.
+  if (!s.studio_id) return false;
   const studio = await db.get('SELECT COALESCE(is_independent, 0) AS ind, owner_id FROM studios WHERE id = ?', [s.studio_id]);
-  return !studio || !!studio.ind;
+  return !!studio && !!studio.ind;
+}
+
+/**
+ * May this independent dancer's family publish without a reviewer? (M9)
+ *
+ * Auto-approval for independents exists because there is no director to ask —
+ * not because the entry has been checked. That made one weak decision (an
+ * AwardHome reviewer approving a profile claim they cannot really verify)
+ * grant an unbounded, ongoing right to put unreviewed claims about a child on
+ * a public page. The two questions are different and are now asked
+ * separately: "is this your child?" is the claim; "do we publish your
+ * unreviewed entries?" is this grant.
+ *
+ * Default 'none' — she curates privately. Nothing is lost by waiting: the
+ * record is kept, and it publishes the moment the grant arrives.
+ */
+async function independentMayPublish(db, dancerId) {
+  try {
+    const d = await db.get('SELECT independent_publish_status AS st FROM dancers WHERE id = ?', [dancerId]);
+    return !!d && d.st === 'approved';
+  } catch (e) {
+    return false; // pre-migration: default to the safe answer
+  }
 }
 
 // Anomalies still queue. Auto-approval is the DEFAULT for independents, never
@@ -365,8 +400,14 @@ async function runAutoPromotion({ submissionId, db: dbIn, sdb: sdbIn } = {}) {
   // claim clears the marker and runs this again.
   if (s.unverified_household) return { promoted: [], reason: 'claim_pending' };
 
-  // Path 1 — independent: publish immediately, label family_submitted.
-  if (await isIndependentSubmission(db, s)) {
+  // Path 1 — independent WITH a publish grant: publish immediately, label
+  // family_submitted. Without the grant we fall through to corroboration
+  // rather than stopping here, which matters: an independent at a real
+  // competition can still be published by another household recognising the
+  // same result, with no AwardHome involvement at all. That is the door the
+  // "friends who are already in studios" idea eventually widens.
+  const independent = await isIndependentSubmission(db, s);
+  if (independent && await independentMayPublish(db, s.dancer_id)) {
     const r = await confirmSubmission({ submissionId: s.id, level: 'family_submitted', db, sdb });
     return { promoted: r.ok ? [s.id] : [], reason: r.ok ? 'independent' : r.reason };
   }
@@ -376,7 +417,11 @@ async function runAutoPromotion({ submissionId, db: dbIn, sdb: sdbIn } = {}) {
   // available, and what makes a group routine's cast fill in over a season
   // without any single parent typing eight names.
   const mates = await findCorroborating(sdb, s);
-  if (!mates.length) return { promoted: [], reason: 'awaiting_review' };
+  if (!mates.length) {
+    // An independent with no grant and no corroborator has nobody to review
+    // it — saying "awaiting review" would be a lie. It is kept, privately.
+    return { promoted: [], reason: independent ? 'independent_curating' : 'awaiting_review' };
+  }
 
   const promoted = [];
   // An already-accepted mate means the award exists; this submission
@@ -390,6 +435,36 @@ async function runAutoPromotion({ submissionId, db: dbIn, sdb: sdbIn } = {}) {
     if (r.ok) promoted.push(p.id);
   }
   return { promoted, reason: promoted.length ? 'corroborated' : 'awaiting_review' };
+}
+
+/**
+ * Publish everything an independent dancer curated while she had no grant.
+ *
+ * The mirror of releaseQueuedSubmissions() in claims.js, and deliberately the
+ * same shape: one considered decision releases a whole private record rather
+ * than asking a reviewer to approve a season of awards one at a time. Review
+ * that cannot actually check anything becomes rubber-stamping, which is worse
+ * than an honest single grant.
+ *
+ * Errors are logged per submission and never abort the rest — a grant must
+ * not half-apply because one row has a stale event.
+ */
+async function releaseIndependentQueue(dancerId, dbIn) {
+  const db = dbIn || await openDb();
+  const sdb = await openSubmissionsDb();
+  const rows = await sdb.all(
+    "SELECT id FROM award_submissions WHERE dancer_id = ? AND status = 'submitted' " +
+    'AND IFNULL(unverified_household, 0) = 0', [dancerId]);
+  const promoted = [];
+  for (const r of rows) {
+    try {
+      const out = await runAutoPromotion({ submissionId: r.id, db, sdb });
+      promoted.push(...out.promoted);
+    } catch (e) {
+      console.error('[promotion] independent release failed for', r.id, e.message);
+    }
+  }
+  return { promoted };
 }
 
 // Competitive aggregates — leaderboards, top-studio and top-dancer rankings —
@@ -413,6 +488,9 @@ const REASON_TEXT = {
   tombstoned: 'This dancer was previously removed from this routine, so confirming would ' +
     'undo that decision. Re-add them from Group Routine Dancers first if it was a mistake.',
   dancer_missing: 'That dancer profile no longer exists.',
+  independent_curating: 'Saved to this dancer\'s private record. Because there is no studio ' +
+    'director to confirm it, it stays private until another family records the same result — or ' +
+    'until AwardHome approves this dancer for publishing. Nothing is lost by adding the rest now.',
   claim_pending: 'Saved. It will be submitted once your claim on this dancer is approved — ' +
     'we can\'t publish an award for a dancer whose family hasn\'t been confirmed yet.',
 };
@@ -421,5 +499,6 @@ module.exports = {
   CORRECTABLE, REASON_TEXT, VERIFICATION_LEVELS,
   applyCorrections, findExistingAward,
   confirmSubmission, rejectSubmission, requestInfo,
-  isIndependentSubmission, hasAnomaly, runAutoPromotion, rankableAwardSql,
+  isIndependentSubmission, independentMayPublish, releaseIndependentQueue,
+  hasAnomaly, runAutoPromotion, rankableAwardSql,
 };

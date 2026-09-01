@@ -29,6 +29,10 @@ export interface HouseholdDancer {
   /** 'owner' — the claim was approved. 'pending_claim' — she has asked and
    *  nobody has decided yet; she may still record awards, but they wait. */
   standing: 'owner' | 'pending_claim';
+  /** Independent dancers only: may this family publish without a reviewer?
+   *  'none' — curating privately. 'requested' — asked AwardHome.
+   *  'approved' — publishes on submit, labelled family_submitted. */
+  independent_publish_status: 'none' | 'requested' | 'approved';
   studios: { id: number; name: string; unique_id: string; is_independent: number }[];
 }
 
@@ -105,6 +109,12 @@ export function claimDancer(
     method: 'POST',
     body: JSON.stringify(body),
   });
+}
+
+/** Ask AwardHome to publish an independent dancer's record. Owner only, and
+ *  only for a dancer with no studio director to ask instead. */
+export function requestIndependentPublish(dancerId: number): Promise<{ ok: boolean; status: string }> {
+  return auth.request(`/dancers/${dancerId}/publish-request`, { method: 'POST' });
 }
 
 export function getActivity(): Promise<{ activity: ActivityItem[] }> {

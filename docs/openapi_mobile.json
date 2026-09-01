@@ -392,7 +392,7 @@
             "description": "Household"
           }
         },
-        "description": "Dancers this household manages, plus any it has a PENDING claim on. `standing` is 'owner' or 'pending_claim' \u2014 a pending claimant may record awards, but they stage and are sent only when the claim is approved."
+        "description": "Dancers this household manages, plus any it has a PENDING claim on. `standing` is 'owner' or 'pending_claim' \u2014 a pending claimant may record awards, but they stage and are sent only when the claim is approved. Each dancer also carries `independent_publish_status` ('none' | 'requested' | 'approved') \u2014 meaningful only for independents, and the difference between an app that promises review and one that admits there is no reviewer."
       }
     },
     "/dancers/search": {
@@ -1113,6 +1113,37 @@
           },
           "409": {
             "description": "Already claimed"
+          }
+        }
+      }
+    },
+    "/dancers/{id}/publish-request": {
+      "post": {
+        "summary": "Ask AwardHome to publish an independent dancer's record",
+        "description": "Independent dancers have no studio director, so family-entered awards are kept PRIVATELY by default rather than auto-published: 'is this your child?' and 'do we publish your unreviewed entries on a public page?' are different questions, and only the second is one AwardHome can meaningfully answer. This asks for the second. A superadmin grant is retroactive \u2014 the whole private record publishes at once, still labelled family_submitted and still held out of rankings. Corroboration by another household publishes an independent record with no grant at all.\n\nOwner only. 400 `not_independent` if the dancer has a studio: their director confirms awards, so there is nothing to ask for.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Numeric id or unique_id."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "State after the request ('requested', or 'approved' if already granted)"
+          },
+          "400": {
+            "description": "Not an independent dancer"
+          },
+          "403": {
+            "description": "Not this household's dancer"
+          },
+          "404": {
+            "description": "No such dancer"
           }
         }
       }

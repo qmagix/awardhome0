@@ -1309,6 +1309,55 @@ The trophy case returns `myClaim` for a signed-in caller, so the app shows
 where the claim stands and what happens next rather than a button that makes
 things worse.
 
+### Independents curate; publishing is a separate grant (M9)
+Auto-approval for independent dancers existed because there is no director to
+ask — **not** because anything had been checked. That quietly turned one weak
+decision into an unbounded one: an AwardHome reviewer approves a profile claim
+they cannot really verify (parentage is exactly what AwardHome cannot judge),
+and that single yes granted an ongoing right to put unreviewed claims about a
+child on a public page, forever, with nothing looking at them again.
+
+Those are two different questions, and they are now asked separately:
+
+| Question | Who answers | What it grants |
+| --- | --- | --- |
+| Is this your child? | the profile claim (superadmin, for independents) | management of the profile |
+| Do we publish your unreviewed entries? | `dancers.independent_publish_status` | auto-publish, still `family_submitted`, still unranked |
+
+Default is `none`: **she curates privately.** Entries stay in staging, visible
+only to her, and nothing is public. The record is kept, not queued — the app
+and the web page say so plainly, because "pending review" would name a reviewer
+who does not exist. Two things publish it:
+
+1. **Corroboration**, unchanged and deliberately still automatic. Another
+   household recording the same result publishes both, with no AwardHome
+   involvement at all. An independent at a real competition surrounded by
+   studio families is published by the people who were there. This is the door
+   the "friends who are already in studios" idea eventually widens, and it is
+   why the grant check sits on path 1 only and falls through to path 2 rather
+   than returning early.
+2. **A superadmin grant**, asked for by the family (`requested`) and decided
+   once per dancer. It is **retroactive** — the whole private record publishes
+   together (`releaseIndependentQueue`), which is the point: one considered
+   decision instead of a queue of per-award reviews nobody can actually check.
+   Revoking is deliberately *not* retroactive; it stops new entries, and
+   unpublishing what is already public is a heavier decision than this surface
+   should make.
+
+Granting is superadmin-only, like the org logo coin — plain admins are kept out
+of what the public sees under AwardHome's name.
+
+**Absence is not independence.** `isIndependentSubmission` used to return true
+when a submission had no `studio_id`, which handed the auto-publish door to
+every dancer with no affiliation on file — 493 of them, a data gap rather than
+a statement about anyone. Independence is a reviewed per-org determination that
+produces a synthetic studio (`utils/independents.js`); it is never inferred
+from a missing row.
+
+Nothing was retroactively unpublished: zero awards existed at
+`family_submitted` when this landed, because `family_submissions` has never
+been released.
+
 ### Queuing while you wait (M8)
 A pending claimant may enter awards. They stage; they do not publish.
 

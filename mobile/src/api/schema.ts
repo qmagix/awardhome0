@@ -280,7 +280,7 @@ export interface paths {
         };
         /**
          * The household: dancers managed, with derived studio affiliations
-         * @description Dancers this household manages, plus any it has a PENDING claim on. `standing` is 'owner' or 'pending_claim' — a pending claimant may record awards, but they stage and are sent only when the claim is approved.
+         * @description Dancers this household manages, plus any it has a PENDING claim on. `standing` is 'owner' or 'pending_claim' — a pending claimant may record awards, but they stage and are sent only when the claim is approved. Each dancer also carries `independent_publish_status` ('none' | 'requested' | 'approved') — meaningful only for independents, and the difference between an app that promises review and one that admits there is no reviewer.
          */
         get: {
             parameters: {
@@ -1188,6 +1188,69 @@ export interface paths {
                 };
                 /** @description Already claimed */
                 409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/dancers/{id}/publish-request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ask AwardHome to publish an independent dancer's record
+         * @description Independent dancers have no studio director, so family-entered awards are kept PRIVATELY by default rather than auto-published: 'is this your child?' and 'do we publish your unreviewed entries on a public page?' are different questions, and only the second is one AwardHome can meaningfully answer. This asks for the second. A superadmin grant is retroactive — the whole private record publishes at once, still labelled family_submitted and still held out of rankings. Corroboration by another household publishes an independent record with no grant at all.
+         *
+         *     Owner only. 400 `not_independent` if the dancer has a studio: their director confirms awards, so there is nothing to ask for.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Numeric id or unique_id. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description State after the request ('requested', or 'approved' if already granted) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not an independent dancer */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not this household's dancer */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No such dancer */
+                404: {
                     headers: {
                         [name: string]: unknown;
                     };

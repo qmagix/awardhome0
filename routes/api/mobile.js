@@ -729,7 +729,8 @@ router.get('/me', requireBearer, async (req, res) => {
     dancers = await db.all(`
       SELECT d.id, d.unique_id, d.name,
         (SELECT COUNT(*) FROM award_dancers ad WHERE ad.dancer_id = d.id) AS award_count,
-        CASE WHEN d.claimed_by_user_id = ? THEN 'owner' ELSE 'pending_claim' END AS standing
+        CASE WHEN d.claimed_by_user_id = ? THEN 'owner' ELSE 'pending_claim' END AS standing,
+        IFNULL(d.independent_publish_status, 'none') AS independent_publish_status
       FROM dancers d
       WHERE d.claimed_by_user_id = ?
          OR EXISTS (SELECT 1 FROM dancer_claims c
@@ -750,6 +751,34 @@ router.get('/me', requireBearer, async (req, res) => {
     dancers,
     groupSizes: GROUP_SIZES,
   });
+});
+
+// An independent dancer's family asking AwardHome to publish their record.
+// The app's equivalent of the web button; same one-grant-per-household shape.
+router.post('/dancers/:id/publish-request', requireBearer, async (req, res) => {
+  const db = await openDb();
+  const dancer = await db.get(
+    'SELECT id, claimed_by_user_id, independent_publish_status AS st FROM dancers WHERE id = ? OR unique_id = ?',
+    [parseInt(req.params.id, 10) || -1, req.params.id]);
+  if (!dancer) return fail(res, 404, 'not_found', 'No such dancer.');
+  // Owner only: a pending claimant asking us to publish a record she has not
+  // yet been confirmed to have any part in is the wrong order of operations.
+  if (dancer.claimed_by_user_id !== req.mobileUser.id) {
+    return fail(res, 403, 'forbidden', 'You can only do this for a dancer you manage.');
+  }
+  const indep = await db.get(
+    'SELECT 1 AS x FROM dancer_studios ds JOIN studios s ON s.id = ds.studio_id ' +
+    'WHERE ds.dancer_id = ? AND COALESCE(s.is_independent, 0) = 1', [dancer.id]);
+  if (!indep) {
+    return fail(res, 400, 'not_independent',
+      'This dancer has a studio, so their director confirms awards — there is nothing to ask us for.');
+  }
+  await db.run(
+    "UPDATE dancers SET independent_publish_status = 'requested', " +
+    'independent_publish_at = CURRENT_TIMESTAMP ' +
+    "WHERE id = ? AND IFNULL(independent_publish_status, 'none') = 'none'", [dancer.id]);
+  const after = await db.get('SELECT independent_publish_status AS st FROM dancers WHERE id = ?', [dancer.id]);
+  res.json({ ok: true, status: after.st });
 });
 
 router.post('/devices', requireBearer, async (req, res) => {

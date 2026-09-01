@@ -995,15 +995,77 @@ async function main() {
             event_id: String(event.id), performance_name: 'Smoke Indie Solo', group_size: 'solo', place: '1st',
           }).toString(),
         });
+        // M9: an independent CURATES by default. Auto-approval existed because
+        // no director exists to ask — not because anything had been checked,
+        // which quietly made one weak decision (an AwardHome reviewer
+        // approving a claim they cannot really verify) into an unbounded right
+        // to publish unreviewed claims about a child on a public page.
         const indepRow = await sdb.get("SELECT * FROM award_submissions WHERE client_submission_id = 'smoke-indep-1'");
-        const indepAward = indepRow && indepRow.award_id
-          ? await db.get('SELECT id, verification_status FROM awards WHERE id = ?', [indepRow.award_id]) : null;
+        const noAwardYet = await db.get(
+          "SELECT id FROM awards WHERE performance_name = 'Smoke Indie Solo'");
+        check((indepSub.headers.get('location') || '').includes('auto=independent_curating') &&
+              indepRow.status === 'submitted' && !indepRow.award_id && !noAwardYet,
+          'an independent dancer\'s award is kept PRIVATELY by default — nothing publishes without a grant',
+          'loc=' + (indepSub.headers.get('location') || '') + ' status=' + indepRow.status);
+
+        // And it is genuinely private: not on the public trophy case, and not
+        // in AwardHome's per-award queue either (the ask is one grant per
+        // household, not a review of each award).
+        const indepPublic = await fetch(BASE + '/dancer/smoke-dancer-indep');
+        const indepPublicHtml = await indepPublic.text();
+        const indepAdminQ = await fetch(BASE + '/admin/submissions', { headers: { Cookie: superUser.cookie } });
+        const indepAdminHtml = await indepAdminQ.text();
+        check(!indepPublicHtml.includes('Smoke Indie Solo'),
+          'a curated independent award is absent from the public trophy case',
+          'onPage=' + indepPublicHtml.includes('Smoke Indie Solo'));
+
+        // The family asks; a SUPERADMIN grants; the whole private record
+        // publishes at once. One considered decision instead of a queue of
+        // reviews nobody can actually check.
+        const askRes = await fetch(BASE + `/manage/dancer/${indepDancer.lastID}/publish-request`, {
+          method: 'POST', redirect: 'manual',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: owner.cookie },
+          body: new URLSearchParams({ _csrf: subToken }).toString(),
+        });
+        const askedRow = await db.get(
+          'SELECT independent_publish_status AS st FROM dancers WHERE id = ?', [indepDancer.lastID]);
+        const adminAfterAsk = await fetch(BASE + '/admin/submissions', { headers: { Cookie: superUser.cookie } });
+        const adminAfterAskHtml = await adminAfterAsk.text();
+        check(askRes.status === 302 && askedRow.st === 'requested' &&
+              adminAfterAskHtml.includes('Smoke Dancer Indie'),
+          'an independent family can ask AwardHome to publish, and the request reaches the superadmin queue',
+          'status=' + askedRow.st + ' inQueue=' + adminAfterAskHtml.includes('Smoke Dancer Indie'));
+
+        // A plain admin must not be able to grant it: this decides what the
+        // public sees under AwardHome's name.
+        const grantAsAdmin = await fetch(
+          BASE + `/admin/independents/${indepDancer.lastID}/publish/approve`, {
+            method: 'POST', redirect: 'manual',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: owner.cookie },
+            body: new URLSearchParams({ _csrf: subToken }).toString(),
+          });
+        const stillRequested = await db.get(
+          'SELECT independent_publish_status AS st FROM dancers WHERE id = ?', [indepDancer.lastID]);
+        check(grantAsAdmin.status >= 400 || grantAsAdmin.status === 302
+              ? stillRequested.st === 'requested' : false,
+          'a non-superadmin cannot grant independent publishing',
+          'status=' + grantAsAdmin.status + ' still=' + stillRequested.st);
+
+        const grantRes = await fetch(
+          BASE + `/admin/independents/${indepDancer.lastID}/publish/approve`, {
+            method: 'POST', redirect: 'manual',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: superUser.cookie },
+            body: new URLSearchParams({ _csrf: superToken }).toString(),
+          });
+        const indepRowAfter = await sdb.get("SELECT * FROM award_submissions WHERE client_submission_id = 'smoke-indep-1'");
+        const indepAward = indepRowAfter && indepRowAfter.award_id
+          ? await db.get('SELECT id, verification_status FROM awards WHERE id = ?', [indepRowAfter.award_id]) : null;
         if (indepAward) ids.awards.push(indepAward.id);
-        check((indepSub.headers.get('location') || '').includes('auto=independent') &&
-              indepRow.status === 'accepted' && indepRow.verification_level === 'family_submitted' &&
+        check(grantRes.status === 302 && indepRowAfter.status === 'accepted' &&
+              indepRowAfter.verification_level === 'family_submitted' &&
               !!indepAward && indepAward.verification_status === 'family_submitted',
-          'an independent dancer\'s award publishes immediately, labelled family_submitted — no studio owner exists to review it',
-          'status=' + indepRow.status + ' level=' + indepRow.verification_level);
+          'the grant is RETROACTIVE — the whole private record publishes on one decision',
+          'status=' + indepRowAfter.status + ' award=' + (indepAward && indepAward.id));
 
         const { rankableAwardSql } = require('../utils/promotion');
         const ranked = await db.get(

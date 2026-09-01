@@ -99,6 +99,11 @@ async function renderPage(req, res, dancer, { errors = [], form = {}, notice = n
   res.status(status).render('manage_dancer_submissions', {
     dancer,
     affiliations,
+    // An independent with no publish grant is keeping a private record, and
+    // the page has to say so — otherwise "pending review" names a reviewer
+    // who does not exist (M9).
+    independentPublish: affiliations.some(a => a.is_independent)
+      ? (dancer.independent_publish_status || 'none') : null,
     submissions,
     cast,
     groupSizes: GROUP_SIZES,
@@ -133,14 +138,49 @@ router.get('/manage/dancer/:id/submissions', requireAuth, async (req, res) => {
     // A different promise from "pending review", and worth keeping distinct:
     // nothing has been sent to anyone yet, and what unblocks it is the claim,
     // not a queue.
+    // Named for what it is: kept, not queued. There is no reviewer waiting.
+    independent_curating: 'Saved to this dancer\'s private record. There is no studio director to ' +
+      'confirm it, so it stays private until another family records the same result — or until ' +
+      'AwardHome reviews the record and approves it. Keep adding: nothing is lost by entering the ' +
+      'rest of the weekend now.',
+    requested: 'Thanks — we\'ll take a look. Because this dancer has no studio director, AwardHome ' +
+      'reviews the record once and then everything you have added goes public together, with new ' +
+      'entries publishing as you add them.',
     queued: 'Saved to your own list. It will be submitted automatically as soon as your claim on ' +
       'this dancer is approved — nobody else can see it before then, so nothing is lost by ' +
       'entering the rest of the weekend now while you remember it.',
   };
   const notice = req.query.added ? NOTICES.added
-    : (req.query.queued ? NOTICES.queued
-      : (req.query.duplicate ? NOTICES.duplicate : (NOTICES[req.query.auto] || null)));
+    : (req.query.requested ? NOTICES.requested
+      : (req.query.queued ? NOTICES.queued
+        : (req.query.duplicate ? NOTICES.duplicate : (NOTICES[req.query.auto] || null))));
   await renderPage(req, res, dancer, { notice });
+});
+
+// An independent dancer's family asking AwardHome to publish their record.
+//
+// Only meaningful for an independent: everyone else has a studio director who
+// can confirm awards one at a time. This is the ask that exists because there
+// is nobody else to ask.
+router.post('/manage/dancer/:id/publish-request', requireAuth, async (req, res) => {
+  if (!(await requireFlag(req, res))) return;
+  const dancer = await loadDancerForSubmission(req, res);
+  if (!dancer) return;
+  if (dancer.standing !== 'owner') {
+    return res.redirect(`/manage/dancer/${dancer.id}/submissions?error=claim_pending`);
+  }
+  const db = await openDb();
+  const indep = await db.get(
+    'SELECT 1 AS x FROM dancer_studios ds JOIN studios s ON s.id = ds.studio_id ' +
+    'WHERE ds.dancer_id = ? AND COALESCE(s.is_independent, 0) = 1', [dancer.id]);
+  if (!indep) return res.redirect(`/manage/dancer/${dancer.id}/submissions`);
+  // Only ever moves 'none' -> 'requested'. Asking twice is not an escalation,
+  // and asking must never undo a grant already given.
+  await db.run(
+    "UPDATE dancers SET independent_publish_status = 'requested', " +
+    "independent_publish_at = CURRENT_TIMESTAMP " +
+    "WHERE id = ? AND IFNULL(independent_publish_status, 'none') = 'none'", [dancer.id]);
+  res.redirect(`/manage/dancer/${dancer.id}/submissions?requested=1`);
 });
 
 router.post('/manage/dancer/:id/submissions', requireAuth, async (req, res) => {
@@ -179,7 +219,8 @@ router.post('/manage/dancer/:id/submissions', requireAuth, async (req, res) => {
   const flag = idempotent ? 'duplicate=1'
     : (auto.reason === 'independent' ? 'auto=independent'
       : (auto.reason === 'corroborated' ? 'auto=corroborated'
-        : (auto.reason === 'claim_pending' ? 'queued=1' : 'added=1')));
+        : (auto.reason === 'independent_curating' ? 'auto=independent_curating'
+          : (auto.reason === 'claim_pending' ? 'queued=1' : 'added=1'))));
   res.redirect(`/manage/dancer/${dancer.id}/submissions?${flag}`);
 });
 

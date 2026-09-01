@@ -468,6 +468,61 @@ async function main() {
       'submit: a queued entry writes nothing canonical',
       'award_id=' + (queued.json.submission || {}).award_id);
 
+    // ---- M9: independents curate until AwardHome grants publishing ----
+    const indepStudio = await db.run(
+      "INSERT INTO studios (unique_id, name, status, is_independent) VALUES ('api-indep-studio', 'Independent — API Indie (api)', 'active', 1)");
+    const indepDancer = await db.run(
+      "INSERT INTO dancers (unique_id, name, is_claimed, claimed_by_user_id) VALUES ('DNC-api-indep', 'API Indie Dancer', 1, ?)",
+      [u1.lastID]);
+    await db.run('INSERT INTO dancer_studios (dancer_id, studio_id) VALUES (?, ?)',
+      [indepDancer.lastID, indepStudio.lastID]);
+
+    const indepSubmit = await api('POST', '/submissions', {
+      token: access,
+      body: {
+        ...submitBody, client_submission_id: crypto.randomUUID(),
+        dancer_id: indepDancer.lastID, performance_name: 'API Indie Solo', group_size: 'solo',
+      },
+    });
+    const indepPublicAward = await db.get(
+      "SELECT id FROM awards WHERE performance_name = 'API Indie Solo'");
+    check(indepSubmit.status === 201 && indepSubmit.json.published === false &&
+          indepSubmit.json.reason === 'independent_curating' && !indepPublicAward,
+      'an independent dancer\'s award is curated privately, not published, without a grant',
+      'reason=' + indepSubmit.json.reason + ' published=' + indepSubmit.json.published);
+
+    const askPublish = await api('POST', `/dancers/${indepDancer.lastID}/publish-request`, { token: access });
+    const askedRow = await db.get(
+      'SELECT independent_publish_status AS st FROM dancers WHERE id = ?', [indepDancer.lastID]);
+    check(askPublish.status === 200 && askedRow.st === 'requested',
+      'the family can ask AwardHome to publish an independent record from the app',
+      'status=' + askPublish.status + ' state=' + askedRow.st);
+
+    // A dancer WITH a studio has a director; there is nothing to ask us for.
+    const askWrong = await api('POST', `/dancers/${dn.lastID}/publish-request`, { token: access });
+    check(askWrong.status === 400 && askWrong.json.error === 'not_independent',
+      'asking for a dancer who has a studio director is refused with the reason',
+      'status ' + askWrong.status);
+
+    // A dancer with NO affiliation on file is a DATA GAP, not an independent:
+    // it must not take the independent door. 493 real dancers are in that
+    // state, and treating absence as independence handed them all the
+    // auto-publish path.
+    const orphanDancer = await db.run(
+      "INSERT INTO dancers (unique_id, name, is_claimed, claimed_by_user_id) VALUES ('DNC-api-noaffil', 'API No Affiliation', 1, ?)",
+      [u1.lastID]);
+    const orphanSubmit = await api('POST', '/submissions', {
+      token: access,
+      body: {
+        ...submitBody, client_submission_id: crypto.randomUUID(),
+        dancer_id: orphanDancer.lastID, performance_name: 'API Orphan Solo', group_size: 'solo',
+      },
+    });
+    const orphanAward = await db.get("SELECT id FROM awards WHERE performance_name = 'API Orphan Solo'");
+    check(orphanSubmit.status === 201 && orphanSubmit.json.published === false && !orphanAward,
+      'a dancer with no studio on file is not treated as independent — absence is a data gap',
+      'published=' + orphanSubmit.json.published + ' reason=' + orphanSubmit.json.reason);
+
     // ---- status feed ----
     const feed = await api('GET', '/submissions', { token: access });
     check(feed.status === 200 && feed.json.submissions.some(s => s.client_submission_id === IDEM),

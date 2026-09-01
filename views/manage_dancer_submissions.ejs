@@ -14,6 +14,30 @@
     </p>
   </div>
 
+  <% if (typeof independentPublish !== 'undefined' && independentPublish && independentPublish !== 'approved') { %>
+    <div class="card glass-card" style="margin-bottom: 1.5rem; border-left: 3px solid var(--gold-vivid);">
+      <p style="margin: 0 0 0.5rem;"><strong>This is a private record for now.</strong></p>
+      <p style="margin: 0 0 0.75rem; color: var(--text-muted); font-size: 0.92rem;">
+        <%= dancer.name %> dances independently, so there is no studio director to confirm awards.
+        Everything you add is kept for you and stays private — nobody else can see it. It goes public
+        automatically if another family records the same result, or when AwardHome reviews the record
+        and approves it. Keep adding: nothing is lost by entering the rest now.
+      </p>
+      <% if (independentPublish === 'requested') { %>
+        <p style="margin: 0; color: var(--text-muted); font-size: 0.92rem;">
+          ✓ You&rsquo;ve asked AwardHome to review this record. We&rsquo;ll email you.
+        </p>
+      <% } else { %>
+        <form method="POST" action="/manage/dancer/<%= dancer.id %>/publish-request" style="margin: 0;">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1.1rem;">
+            Ask AwardHome to publish this record
+          </button>
+        </form>
+      <% } %>
+    </div>
+  <% } %>
+
   <% if (notice) { %>
     <div class="card glass-card" style="margin-bottom: 1.5rem; border-left: 3px solid #6bbf6b;">
       <p style="margin: 0;"><%= notice %></p>

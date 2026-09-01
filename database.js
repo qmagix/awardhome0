@@ -728,6 +728,12 @@ async function initDb() {
   try { await db.exec("ALTER TABLE dancer_claims ADD COLUMN code_valid INTEGER DEFAULT 0"); } catch(e) {}
   try { await db.exec("ALTER TABLE dancers ADD COLUMN card_photo_url TEXT"); } catch(e) {}
   try { await db.exec("ALTER TABLE dancers ADD COLUMN card_photo_status TEXT DEFAULT 'none'"); } catch(e) {}
+  // Independent dancers: permission to PUBLISH family-entered awards without
+  // a reviewer (M9). 'none' | 'requested' | 'approved'. Default off — an
+  // independent curates privately until someone vouches for the household.
+  try { await db.exec("ALTER TABLE dancers ADD COLUMN independent_publish_status TEXT DEFAULT 'none'"); } catch(e) {}
+  try { await db.exec('ALTER TABLE dancers ADD COLUMN independent_publish_by INTEGER'); } catch(e) {}
+  try { await db.exec('ALTER TABLE dancers ADD COLUMN independent_publish_at DATETIME'); } catch(e) {}
   try { await db.exec("ALTER TABLE dancers ADD COLUMN card_photo_uploaded_by INTEGER REFERENCES users(id)"); } catch(e) {}
   
   try { await db.exec("ALTER TABLE organizations ADD COLUMN owner_id INTEGER REFERENCES users(id)"); } catch(e) {}

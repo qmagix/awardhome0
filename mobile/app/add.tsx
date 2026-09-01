@@ -4,7 +4,10 @@ import {
   TextInput, View,
 } from 'react-native';
 import { router } from 'expo-router';
-import { findEvents, openEventSession, type EventOption, type EventSession } from '@/api/client';
+import {
+  findEvents, openEventSession, requestIndependentPublish,
+  type EventOption, type EventSession,
+} from '@/api/client';
 import { outbox, flushIfPossible } from '@/outbox';
 import { kvGet, kvSet } from '@/outbox/store';
 import { useSession } from '@/ui/Session';
@@ -36,6 +39,7 @@ interface StoredSession { session: EventSession; label: string }
  */
 export default function AddAwardScreen() {
   const { dancers, signedIn, ready } = useSession();
+  const [askedPublish, setAskedPublish] = useState(false);
   const [stored, setStored] = useState<StoredSession | null>(null);
   const [loadingSession, setLoadingSession] = useState(true);
 
@@ -46,6 +50,8 @@ export default function AddAwardScreen() {
 
   // The award itself
   const [dancerId, setDancerId] = useState<number | null>(null);
+  // The dancer this entry is for, resolved once — several blocks below need it.
+  const selected = dancers.find(d => d.id === dancerId) ?? null;
   const [routine, setRoutine] = useState('');
   const [groupSize, setGroupSize] = useState('');
   const [place, setPlace] = useState('');
@@ -235,6 +241,38 @@ export default function AddAwardScreen() {
         ))}
       </View>
 
+      {/* An independent has no director, so "pending review" would name a
+          reviewer who does not exist. Say what is true: it is kept, privately,
+          and there are two honest ways out — another family recording the same
+          result, or AwardHome reviewing the record once. */}
+      {selected?.standing === 'owner'
+        && selected.studios.some(st => st.is_independent)
+        && selected.independent_publish_status !== 'approved' && (
+        <View style={styles.privateNote}>
+          <Text style={styles.hint}>
+            {selected.name} dances independently, so there is no studio director to confirm awards.
+            What you add is kept privately for you until another family records the same result — or
+            until AwardHome reviews the record. Keep going: nothing is lost by entering it now.
+          </Text>
+          {selected.independent_publish_status === 'requested' ? (
+            <Text style={styles.hint}>✓ You&rsquo;ve asked AwardHome to review this record.</Text>
+          ) : (
+            <Pressable
+              onPress={() => {
+                void requestIndependentPublish(selected.id)
+                  .then(() => setAskedPublish(true))
+                  .catch(() => setAskedPublish(false));
+              }}
+              accessibilityRole="button"
+            >
+              <Text style={styles.askLink}>
+                {askedPublish ? 'Asked — we\u2019ll email you' : 'Ask AwardHome to publish this record'}
+              </Text>
+            </Pressable>
+          )}
+        </View>
+      )}
+
       {/* Say what will actually happen. Recording a weekend you remember is
           worth doing now; pretending it was submitted when it is waiting on a
           claim is how families conclude their entries vanished. */}
@@ -250,7 +288,7 @@ export default function AddAwardScreen() {
           affiliation, which is what keeps duplicates out of the archive. */}
       {dancerId !== null && (
         <Text style={styles.hint}>
-          Studio: {dancers.find(d => d.id === dancerId)?.studios
+          Studio: {selected?.studios
             .map(s => (s.is_independent ? 'Independent' : s.name)).join(', ') || 'none on file'}
         </Text>
       )}
@@ -335,6 +373,12 @@ const styles = StyleSheet.create({
   h1: { color: theme.text, fontSize: 22, fontWeight: '700' },
   label: { color: theme.text, fontWeight: '600', marginTop: theme.space(2), marginBottom: theme.space(0.5) },
   muted: { color: theme.muted, lineHeight: 20, marginTop: theme.space(1) },
+  privateNote: {
+    marginTop: theme.space(1.5), padding: theme.space(1.5),
+    backgroundColor: 'rgba(212,175,55,0.08)',
+    borderColor: theme.border, borderWidth: 1, borderRadius: theme.radius,
+  },
+  askLink: { color: theme.gold, marginTop: theme.space(1), fontWeight: '600' },
   hint: { color: theme.muted, fontSize: 12, marginTop: theme.space(0.5), lineHeight: 17 },
   input: {
     backgroundColor: 'rgba(0,0,0,0.35)', borderColor: theme.border, borderWidth: 1,
