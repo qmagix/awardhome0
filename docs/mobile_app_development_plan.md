@@ -138,8 +138,10 @@ without assistance, and the independent-dancer decision is written down.
 ### M2 — Event candidates and the picker
 
 **Deliverables**
-- `event_candidates` table: org (optional), name, date, city/state, geo, photo
-  key, creator, dedup cluster, promotion state.
+- `event_candidates` table: org (optional), name, date, city/state, geo,
+  creator, dedup cluster, promotion state. *(Event photo cut 2026-08-31 — it
+  cannot serve its stated dedup purpose without perceptual hashing; see design
+  §6.4.)*
 - Picker service: geo + date lookup against `org_upcoming_events` (**1,056
   active, 1,080 geocoded**) and canonical `events` (4,214), then candidates.
 - **Dedup at creation** — before the create form opens, show candidates already

@@ -226,12 +226,15 @@ async function initSubmissionsSchema(db) {
       lat REAL,
       lng REAL,
 
-      -- Optional banner/programme photo. PRIVATE to the creator and the
-      -- reviewer until an approval step exists: it is dedup evidence ("two
-      -- candidates with the same banner are the same event"), not public
-      -- content, and unmoderated family images must not reach other families.
-      photo_key TEXT,
-      photo_status TEXT NOT NULL DEFAULT 'private',
+      -- NO EVENT PHOTO (decided 2026-08-31, reversing design v2 §6.4).
+      -- The design wanted one as dedup evidence — "two candidates with the
+      -- same banner are the same event" — but that never pays off with the
+      -- matcher actually built: two candidates only reach a reviewer side by
+      -- side when name + date + geography ALREADY matched them, so nobody
+      -- ever compares two banners. It would need perceptual image hashing to
+      -- work at all. Against that, it costs an upload path, storage, and a
+      -- moderation surface for family photographs. Name, date and city carry
+      -- the identity; the photo is dropped.
 
       source TEXT NOT NULL DEFAULT 'family',
       created_by INTEGER NOT NULL,

@@ -309,10 +309,19 @@ One tap. Every submission that weekend binds to the same event. Fall back to
 browse-by-organization-and-date when location is unavailable or declined.
 
 **Creating (the exception).** If the family genuinely cannot find it, they may
-create one, with an optional **event photo** (banner, programme cover,
-backdrop). Per Q's decision it becomes **immediately selectable by other
+create one. Per Q's decision it becomes **immediately selectable by other
 families**, so a second parent at the same event is not forced to create a
 duplicate.
+
+> **Event photo: CUT 2026-08-31 (Q).** This section originally proposed an
+> optional event photo — banner, programme cover, backdrop — doubling as dedup
+> evidence. It does not survive contact with the matcher that was actually
+> built in M2. Two candidates only reach a reviewer side by side when name,
+> date and geography have *already* matched them, so no human ever compares
+> two banners; the photo would only add signal with perceptual image hashing,
+> which is a separate feature. Against no benefit it costs an upload path,
+> object storage, and a moderation surface for family photographs. The event
+> name, date and city carry the identity. Dropped from the schema.
 
 To get both — instant availability *and* an archive that stays clean — new
 events are `event_candidates`, not canonical `events`:
@@ -326,8 +335,7 @@ events are `event_candidates`, not canonical `events`:
   otherwise produces two candidates for one event within minutes.
 - Promoted to canonical by a reviewer, or auto-merged into a canonical event
   when the organizer's own data lands later through the import pipeline.
-- The event photo doubles as **dedup evidence**: two candidates with the same
-  banner are the same event.
+- ~~The event photo doubles as **dedup evidence**~~ — cut, see the note above.
 
 The rule that stays firm from v1: **no new canonical award without a matched
 event** — candidate or canonical. An award floating free of an event is
@@ -668,10 +676,14 @@ out of rankings until corroborated. Full model in §6.2.1–§6.2.3.
 `Independent, <region>` rosters (459 dancers) to per-dancer studios, and route
 the 4 existing same-name collisions to a human.
 
-### 16.2 Event-candidate lifecycle
-Visibility radius and date window; who promotes a candidate to canonical; what
-happens when the organizer's own import later lands the same event (auto-merge
-rule); whether an event photo is retained after promotion.
+### 16.2 Event-candidate lifecycle ✔ *closed 2026-08-31*
+Visibility 75 miles / ±14 days; dedup match 40 miles / ±3 days plus name;
+promotion is AwardHome's alone (a studio owner promoting would let one studio
+mint canonical events platform-wide); the organizer's own import auto-merges an
+**unambiguous** match and queues anything ambiguous rather than guessing between
+two stops on one tour. Constants are env-overridable for tuning on real
+traffic. Event photos were cut (see §6.4), so retention-after-promotion is moot.
+Implemented in M2 — `utils/eventCandidates.js`, `utils/eventPicker.js`.
 
 ### 16.3 Reviewer model
 Confirm studio owners as the primary pool; define what only AwardHome may
