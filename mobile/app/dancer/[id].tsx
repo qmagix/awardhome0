@@ -95,23 +95,36 @@ export default function TrophyCaseScreen() {
             Nothing here yet. Competitions publish results at their own pace.
           </Text>
         }
-        renderItem={({ item }) => (
+        renderItem={({ item }) => {
+          // 16% of awards carry no routine name — a convention scholarship or a
+          // title has nothing to name. Falling back to the literal word
+          // "Routine" rendered a placeholder as if it were data. Fall back
+          // through REAL fields instead, and drop the line entirely when there
+          // is nothing true to put in it.
+          const heading = item.performance_name || item.award_type || item.category;
+          const sub = [item.category, item.award_type]
+            .filter(Boolean)
+            .filter(v => v !== heading)
+            .join(' · ');
+          return (
           <View style={styles.card}>
-            <Text style={styles.place}>{item.place ?? 'Award'}</Text>
-            <Text style={styles.routine}>{item.performance_name ?? 'Routine'}</Text>
+            {/* place_display is formatted by the server from the same helper
+                the web uses: "1" -> "1st", and an unplaced scholarship reads
+                "Winner" rather than blank. */}
+            <Text style={styles.place}>{item.place_display ?? item.place ?? ''}</Text>
+            {heading ? <Text style={styles.routine}>{heading}</Text> : null}
             <Text style={styles.meta}>
               {[item.event_name, item.event_year, item.studio_name].filter(Boolean).join(' · ')}
             </Text>
-            {[item.category, item.award_type].filter(Boolean).length > 0 && (
-              <Text style={styles.meta}>{[item.category, item.award_type].filter(Boolean).join(' · ')}</Text>
-            )}
+            {sub.length > 0 && <Text style={styles.meta}>{sub}</Text>}
             {/* Honest labelling, exactly as the web renders it: an award added
                 by a family and not yet corroborated says so. */}
             {item.verification_status === 'family_submitted' && (
               <Text style={styles.badge}>Added by a family · not yet confirmed</Text>
             )}
           </View>
-        )}
+          );
+        }}
       />
     </View>
   );

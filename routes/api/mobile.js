@@ -44,6 +44,7 @@ const {
 const { CORRECTABLE_FIELDS, CORRECTION_REASON_TEXT, canPropose, propose } = require('../../utils/corrections');
 const { markContestedClaims, matchDancerClaimCode } = require('../../utils/claims');
 const { studioDisplayNameSql } = require('../../utils/independents');
+const { formatPlacement } = require('../../utils/format');
 const { issueGrant, storeEvidence, canServe, readEvidence, MAX_BYTES } = require('../../utils/evidence');
 const { openSession, sessionContext } = require('../../utils/eventSessions');
 const { flagOn } = require('../../utils/featureFlags');
@@ -216,7 +217,7 @@ router.get('/dancers/:id/awards', async (req, res) => {
 
   const rows = await db.all(`
     SELECT * FROM (
-      SELECT DISTINCT a.id, a.place, a.performance_name, a.award_type, a.category, a.age_division,
+      SELECT DISTINCT a.id, a.place, a.award_class, a.performance_name, a.award_type, a.category, a.age_division,
              a.verification_status, a.is_self_added,
              e.name AS event_name, e.year AS event_year, o.name AS org_name,
              ${studioDisplayNameSql('s')} AS studio_name, s.unique_id AS studio_unique_id,
@@ -240,6 +241,9 @@ router.get('/dancers/:id/awards', async (req, res) => {
 
   const hasMore = rows.length > PAGE_SIZE;
   const page = hasMore ? rows.slice(0, PAGE_SIZE) : rows;
+  // Formatted server-side from the shared helper the web pages use, so the two
+  // surfaces cannot disagree about what an unplaced scholarship is called.
+  page.forEach(a => { a.place_display = formatPlacement(a); });
   res.json({
     dancer: { id: dancer.id, unique_id: dancer.unique_id, name: dancer.name, is_claimed: !!dancer.is_claimed },
     awards: page,

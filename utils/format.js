@@ -27,4 +27,39 @@ function formatEventTitle(eventName, orgName, extra) {
   return title;
 }
 
-module.exports = { formatEventTitle };
+
+// Placement as a reader should see it. Extracted from server.js app.locals so
+// the web pages and the mobile API cannot drift — the app was rendering raw
+// values ("1" instead of "1st") and, worse, a literal placeholder word where
+// there was no data.
+//
+// The empty-place case is the interesting one: 240,833 of 1.5M awards carry no
+// placement, because a scholarship, a title or a special award has no rank. For
+// those the honest word is "Winner"; for everything else it is "N/A".
+function formatPlacement(award) {
+  let place = award;
+  let awardClass = null;
+  if (award && typeof award === 'object') {
+    place = award.place;
+    awardClass = award.award_class;
+  }
+
+  if (!place || place === 'N/A' || place === 'null') {
+    if (awardClass === 'scholarship' || awardClass === 'title' || awardClass === 'special' || awardClass === 'studio') {
+      return 'Winner';
+    }
+    return 'N/A';
+  }
+  const strPlace = String(place).trim();
+  const num = parseInt(strPlace, 10);
+  if (!isNaN(num) && num.toString() === strPlace) {
+    const j = num % 10, k = num % 100;
+    if (j === 1 && k !== 11) return num + 'st';
+    if (j === 2 && k !== 12) return num + 'nd';
+    if (j === 3 && k !== 13) return num + 'rd';
+    return num + 'th';
+  }
+  return String(place);
+}
+
+module.exports = { formatEventTitle, formatPlacement };

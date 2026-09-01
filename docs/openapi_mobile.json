@@ -110,6 +110,15 @@
             "type": "string",
             "nullable": true,
             "description": "Derived sync marker; pass back as updated_since."
+          },
+          "award_class": {
+            "type": "string",
+            "nullable": true,
+            "description": "overall | title | scholarship | special | studio. Decides how an empty placement reads."
+          },
+          "place_display": {
+            "type": "string",
+            "description": "Placement as a reader should see it: ordinals normalised (\"1\" -> \"1st\"), and an empty placement rendered as \"Winner\" for scholarships/titles/special/studio awards \u2014 which have no rank \u2014 or \"N/A\" otherwise. Formatted by the same helper the web pages use; prefer this over `place`."
           }
         }
       },

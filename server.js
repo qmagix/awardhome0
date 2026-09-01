@@ -101,32 +101,7 @@ app.use(session({
 
 app.locals.formatEventTitle = require('./utils/format').formatEventTitle;
 
-app.locals.formatPlacement = function (award) {
-  // Backwards compatibility if a string/null is passed directly
-  let place = award;
-  let awardClass = null;
-  if (award && typeof award === 'object') {
-    place = award.place;
-    awardClass = award.award_class;
-  }
-
-  if (!place || place === 'N/A' || place === 'null') {
-    if (awardClass === 'scholarship' || awardClass === 'title' || awardClass === 'special' || awardClass === 'studio') {
-      return 'Winner';
-    }
-    return 'N/A';
-  }
-  const strPlace = String(place).trim();
-  const num = parseInt(strPlace, 10);
-  if (!isNaN(num) && num.toString() === strPlace) {
-    const j = num % 10, k = num % 100;
-    if (j == 1 && k != 11) return num + "st";
-    if (j == 2 && k != 12) return num + "nd";
-    if (j == 3 && k != 13) return num + "rd";
-    return num + "th";
-  }
-  return String(place);
-};
+app.locals.formatPlacement = require('./utils/format').formatPlacement;
 
 app.locals.getPremiumDetails = function (award) {
   const text = [award.category, award.award_type, award.performance_name].filter(Boolean).join(' ').toLowerCase();

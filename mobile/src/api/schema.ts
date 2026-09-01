@@ -624,6 +624,15 @@ export interface paths {
                         choreographer?: string;
                         cast_names?: string[];
                         notes?: string;
+                        /** @description From /event-sessions. Validated against the caller; an id belonging to another household is dropped, not rejected. */
+                        event_session_id?: string;
+                        /** @description Object key from an evidence upload, reused as the award card's photo. Enters moderation at 'pending' when the award is promoted — never published by submitting. */
+                        card_photo_object_key?: string;
+                        card_photo_media_type?: string;
+                        /** @description Card acknowledgement. Also enters moderation at 'pending' on promotion. */
+                        thank_you_note?: string;
+                        /** @description Parent/guardian affirmation, or permission from everyone pictured. Recorded once per (uploader, dancer). */
+                        card_consent_affirmed?: boolean;
                     };
                 };
             };
@@ -942,6 +951,110 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/event-sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Open (or rejoin) the session for a weekend at one event
+         * @description Get-or-create. A client that lost its local copy — reinstalled, switched devices mid-weekend — rejoins the same session rather than starting a second one, which is why the id is issued by the server rather than minted on the device. 201 when created, 200 when rejoining.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        event_id?: number;
+                        event_candidate_id?: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Existing session rejoined */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Session created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description An event is required */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/event-sessions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * What this session already knows
+         * @description Suggested dancer, studio, teacher and choreographer from earlier submissions in the same batch — suggestions, never silently applied.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Session context */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No such session */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -975,6 +1088,10 @@ export interface components {
             dancer_count?: number;
             /** @description Derived sync marker; pass back as updated_since. */
             updated_at?: string | null;
+            /** @description overall | title | scholarship | special | studio. Decides how an empty placement reads. */
+            award_class?: string | null;
+            /** @description Placement as a reader should see it: ordinals normalised ("1" -> "1st"), and an empty placement rendered as "Winner" for scholarships/titles/special/studio awards — which have no rank — or "N/A" otherwise. Formatted by the same helper the web pages use; prefer this over `place`. */
+            place_display?: string;
         };
         Submission: {
             id?: number;
