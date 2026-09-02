@@ -48,6 +48,7 @@ const {
 } = require('../../utils/claims');
 const { studioDisplayNameSql, excludeIndependentSql } = require('../../utils/independents');
 const { formatPlacement } = require('../../utils/format');
+const { sniff, stripMetadata, newObjectKey, currentDriver } = require('../../utils/evidence');
 const { issueGrant, storeEvidence, canServe, readEvidence, MAX_BYTES } = require('../../utils/evidence');
 const { openSession, sessionContext } = require('../../utils/eventSessions');
 const { flagOn } = require('../../utils/featureFlags');
@@ -443,6 +444,49 @@ router.post('/studios/:id/claim', requireBearer, async (req, res) => {
   }
   res.status(201).json({ ok: true, status: 'pending' });
 });
+
+// A claimant's photo, attached to their pending studio claim.
+//
+// Two arguments, and they are different. RECOGNITION: a family who is told
+// "Dana Reyes manages this studio" still has to find Dana in a lobby.
+// DETERRENCE: being asked for your own face raises the cost of a speculative
+// claim, and gives a reviewer something checkable — a studio's own "meet the
+// staff" page is public, so a photo is evidence in a way a typed name is not.
+//
+// PRIVATE by default. It rides the same treatment as award evidence — the
+// bytes are believed rather than the Content-Type header, camera metadata is
+// stripped, and it is written 0600 OUTSIDE the served tree — and it is shown
+// to reviewers, not to the public. Putting a real person's face on a public
+// page is a larger step than naming them and needs its own moderation, so
+// manager_photo_public exists and stays 0.
+router.post('/studios/:id/claim-photo', requireBearer,
+  express.raw({ type: '*/*', limit: 6 * 1024 * 1024 }),
+  async (req, res) => {
+    const db = await openDb();
+    const studio = await db.get(
+      'SELECT id FROM studios WHERE unique_id = ? OR id = ?',
+      [req.params.id, parseInt(req.params.id, 10) || -1]);
+    if (!studio) return fail(res, 404, 'not_found', 'No such studio.');
+
+    // Only against your OWN pending claim: an upload endpoint keyed on a
+    // studio id alone would let anyone attach a face to anyone's claim.
+    const claim = await db.get(
+      "SELECT id FROM studio_claims WHERE studio_id = ? AND user_id = ? AND status = 'pending' " +
+      'ORDER BY id DESC LIMIT 1', [studio.id, req.mobileUser.id]);
+    if (!claim) return fail(res, 404, 'not_found', 'No pending claim to attach that to.');
+
+    const buf = req.body;
+    if (!buf || !buf.length) return fail(res, 400, 'invalid', 'No image received.');
+    const kind = sniff(buf);
+    if (!kind || !['image/jpeg', 'image/png'].includes(kind.mime)) {
+      return fail(res, 400, 'invalid', 'Please send a JPEG or PNG photo.');
+    }
+    const clean = stripMetadata(buf, kind.mime);
+    const key = newObjectKey(kind.ext);
+    await currentDriver().put(key, clean);
+    await db.run('UPDATE studio_claims SET photo_object_key = ? WHERE id = ?', [key, claim.id]);
+    res.status(201).json({ ok: true });
+  });
 
 router.post('/dancers/:id/claim', requireBearer, async (req, res) => {
   const db = await openDb();

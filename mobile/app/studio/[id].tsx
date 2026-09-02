@@ -4,7 +4,8 @@ import {
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import {
-  claimStudio, getStudio, type Award, type StudioEvent, type StudioSummary,
+  claimStudio, getStudio, uploadClaimPhoto,
+  type Award, type StudioEvent, type StudioSummary,
 } from '@/api/client';
 import { useSession } from '@/ui/Session';
 import { theme } from '@/ui/theme';
@@ -38,6 +39,7 @@ export default function StudioScreen() {
   const [address, setAddress] = useState('');
   const [proof, setProof] = useState('');
   const [showPublicly, setShowPublicly] = useState(true);
+  const [photo, setPhoto] = useState<{ uri: string; mimeType?: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<{ status: string; reason?: string } | null>(null);
@@ -64,13 +66,19 @@ export default function StudioScreen() {
         proof: proof.trim(),
         show_publicly: showPublicly,
       });
+      // After the claim exists, not before — the upload attaches to a pending
+      // claim, and a photo with nothing to attach to is just an orphan file.
+      // A failed photo must not fail the claim: the claim is the thing.
+      if (photo) {
+        try { await uploadClaimPhoto(id, photo); } catch { /* claim still stands */ }
+      }
       setDone({ status: res.status, ...(res.reason ? { reason: res.reason } : {}) });
     } catch (e) {
       setError(e instanceof Error ? e.message : 'We couldn’t file that claim.');
     } finally {
       setBusy(false);
     }
-  }, [id, contactName, role, address, proof]);
+  }, [id, contactName, role, address, proof, showPublicly, photo]);
 
   if (loading) return <View style={styles.screen}><ActivityIndicator color={theme.gold} /></View>;
   if (!studio) return <View style={styles.screen}><Text style={styles.error}>{error ?? 'Not found.'}</Text></View>;
@@ -201,6 +209,38 @@ export default function StudioScreen() {
               This is how we tell studios with the same name apart — there are a lot of them.
             </Text>
 
+            <Text style={styles.label}>A photo of you</Text>
+            <Pressable
+              style={styles.photoPick}
+              onPress={() => {
+                void (async () => {
+                  try {
+                    // Lazily required like every other native module here: a
+                    // build without it degrades to no photo, not a dead screen.
+                    // eslint-disable-next-line @typescript-eslint/no-var-requires
+                    const ImagePicker = require('expo-image-picker') as typeof import('expo-image-picker');
+                    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+                    if (!perm.granted) return;
+                    const r = await ImagePicker.launchImageLibraryAsync({
+                      mediaTypes: ['images'], quality: 0.7,
+                    });
+                    const a = r.canceled ? null : r.assets[0];
+                    if (a) setPhoto({ uri: a.uri, ...(a.mimeType ? { mimeType: a.mimeType } : {}) });
+                  } catch { /* no picker in this build */ }
+                })();
+              }}
+              accessibilityRole="button"
+            >
+              <Text style={styles.photoPickText}>
+                {photo ? '✓ Photo attached — tap to change' : 'Choose a photo'}
+              </Text>
+            </Pressable>
+            <Text style={styles.hint}>
+              Only the AwardHome team sees this. It helps us check you against your studio’s own
+              website, which is the quickest way to get a claim approved — and it is why
+              speculative claims rarely bother.
+            </Text>
+
             <Text style={styles.label}>Anything else that helps us confirm</Text>
             <TextInput value={proof} onChangeText={setProof} multiline
               style={[styles.input, styles.multiline]} />
@@ -287,6 +327,11 @@ const styles = StyleSheet.create({
     gap: theme.space(1), marginTop: theme.space(1),
   },
   check: { color: theme.gold, fontSize: 18, lineHeight: 22 },
+  photoPick: {
+    borderColor: theme.border, borderWidth: 1, borderStyle: 'dashed',
+    borderRadius: theme.radius, padding: theme.space(1.5), alignItems: 'center',
+  },
+  photoPickText: { color: theme.gold, fontWeight: '600' },
   checkLabel: { color: theme.muted, fontSize: 13, lineHeight: 19, flex: 1 },
   section: { marginTop: theme.space(2.5) },
   sectionLabel: {

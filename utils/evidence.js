@@ -296,4 +296,9 @@ module.exports = {
   storageRoot, sniff, stripJpegMetadata, stripPngMetadata, stripMetadata,
   localDriver, setDriver, currentDriver, newObjectKey,
   signGrant, verifyGrant, issueGrant, storeEvidence, canServe, readEvidence, scanFile,
+  // Exported so other private-upload paths (the studio-claim photo, M10) get
+  // the SAME treatment rather than a second, weaker copy of it: the bytes are
+  // believed instead of the Content-Type header, camera metadata is stripped,
+  // and the file lands 0600 outside the publicly served tree.
+  sniff, stripMetadata, newObjectKey, currentDriver,
 };

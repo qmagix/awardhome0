@@ -251,6 +251,26 @@ export function getStudio(id: string): Promise<{
   return auth.publicRequest(`/studios/${encodeURIComponent(id)}`);
 }
 
+/**
+ * Attach the claimant's own photo to their pending studio claim.
+ *
+ * Private: it goes to reviewers, not to the studio page. The value is that a
+ * studio's own "meet the staff" page is public, so a face is checkable in a
+ * way a typed name is not — and being asked for one raises the cost of a
+ * speculative claim.
+ */
+export async function uploadClaimPhoto(
+  studioId: string, file: { uri: string; mimeType?: string },
+): Promise<void> {
+  const bytes = await (await fetch(file.uri)).blob();
+  const res = await auth.authedFetch(`/studios/${encodeURIComponent(studioId)}/claim-photo`, {
+    method: 'POST',
+    headers: { 'Content-Type': file.mimeType ?? 'application/octet-stream' },
+    body: bytes as unknown as BodyInit,
+  });
+  if (!res.ok) throw new Error('We couldn’t upload that photo.');
+}
+
 export function claimStudio(id: string, body: {
   contact_name: string; role?: string; phone?: string;
   studio_address: string; proof?: string;

@@ -24,7 +24,25 @@
             <tr>
               <td><%= claim.user_email %></td>
               <td><a href="/dance/studio/<%= claim.studio_uid %>" style="color: var(--primary);"><%= claim.studio_name %></a></td>
-              <td style="white-space: pre-wrap; font-size: 0.9rem;"><%= claim.proof_text %></td>
+              <td style="white-space: pre-wrap; font-size: 0.9rem;">
+                <%= claim.proof_text %>
+                <% if (claim.photo_object_key) { %>
+                  <%# The claimant's own photo. Private storage — this route is
+                      the only way to see it. Worth checking against the
+                      studio's public "meet the staff" page: that comparison is
+                      real evidence, and being asked for a face is itself a
+                      deterrent to a speculative claim. %>
+                  <div style="margin-top: 0.6rem;">
+                    <img src="/admin/claims/<%= claim.id %>/photo" alt="Claimant photo"
+                         style="width: 96px; height: 96px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2);">
+                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">
+                      Sent by the claimant<%= claim.show_publicly ? ' · agreed to be named publicly' : ' · asked not to be named publicly' %>
+                    </div>
+                  </div>
+                <% } else { %>
+                  <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.4rem;">No photo sent</div>
+                <% } %>
+              </td>
               <td><%= new Date(claim.created_at).toLocaleDateString() %></td>
               <td style="display: flex; gap: 0.5rem;">
                 <form action="/admin/claims/<%= claim.id %>/approve" method="POST">

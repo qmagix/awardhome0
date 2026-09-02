@@ -1065,7 +1065,7 @@
     "/studios/{id}/claim": {
       "post": {
         "summary": "Claim a studio",
-        "description": "Mirrors the web flow including the domain fast-track: a claimant whose verified email domain matches the studio's website is approved immediately. Safe on mobile for the same reason it is on the web \u2014 the address is verified, here by the sign-in code itself.",
+        "description": "Mirrors the web flow including the domain fast-track: a claimant whose verified email domain matches the studio's website is approved immediately. Safe on mobile for the same reason it is on the web \u2014 the address is verified, here by the sign-in code itself.\n\n`contact_name`, `role` and `show_publicly` are stored structurally as well as in the reviewer's proof text. On approval they become studios.manager_name / manager_role / manager_public, so a claimed studio page can answer \"who manages this?\" \u2014 but only when the claimant ticked the box saying families would see it. A contact name given as verification evidence is not a public byline, so consent is asked at collection and never inferred.",
         "parameters": [
           {
             "name": "id",
@@ -1145,6 +1145,33 @@
           },
           "404": {
             "description": "No such dancer"
+          }
+        }
+      }
+    },
+    "/studios/{id}/claim-photo": {
+      "post": {
+        "summary": "Attach the claimant's photo to their pending studio claim",
+        "description": "Raw image bytes (JPEG or PNG). PRIVATE \u2014 it goes to reviewers, never to the studio page. Two different arguments for it: a studio's own \"meet the staff\" page is public, so a face is checkable evidence in a way a typed name is not; and being asked for your own face raises the cost of a speculative claim.\n\nSame treatment as award evidence: the bytes are believed rather than the Content-Type header, camera metadata is stripped, and the file is written 0600 outside the served tree. Only ever attachable to the caller's OWN pending claim \u2014 404 otherwise, so a studio id alone cannot be used to put a face on someone else's claim. Public display of a manager photo is a separate, unbuilt decision (`studios.manager_photo_public` exists and stays 0).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Stored"
+          },
+          "400": {
+            "description": "Not a JPEG or PNG once sniffed"
+          },
+          "404": {
+            "description": "No pending claim of yours on that studio"
           }
         }
       }

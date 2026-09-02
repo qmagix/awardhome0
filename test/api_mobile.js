@@ -470,6 +470,52 @@ async function main() {
       'the studio address is required — it is how same-named studios are told apart',
       'status ' + noAddress.status);
 
+    // The claimant photo: private, and only ever attachable to YOUR OWN
+    // pending claim. An endpoint keyed on a studio id alone would let anyone
+    // put a face on anyone's claim.
+    const PNG = Buffer.from(
+      '89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000a49444154789c6360000002000100ffff03000006000557bfabd40000000049454e44ae426082',
+      'hex');
+    const photoRes = await fetch(BASE + '/studios/api-unclaimed-studio/claim-photo', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${newSignIn.json.accessToken}`, 'Content-Type': 'image/png' },
+      body: PNG,
+    });
+    const photoRow = await db.get(
+      'SELECT photo_object_key FROM studio_claims WHERE studio_id = ' +
+      "(SELECT id FROM studios WHERE unique_id = 'api-unclaimed-studio') ORDER BY id DESC LIMIT 1");
+    check(photoRes.status === 201 && photoRow && !!photoRow.photo_object_key,
+      'a claimant can attach their own photo to their pending claim',
+      'status ' + photoRes.status + ' key=' + ((photoRow || {}).photo_object_key || 'none'));
+
+    // Not stored anywhere the public can reach.
+    check(!(photoRow.photo_object_key || '').includes('public'),
+      'the claimant photo is not written into the served tree',
+      photoRow.photo_object_key);
+
+    // A studio this caller has no pending claim on: 404, and nothing written.
+    // (The first version of this test tripped over exactly this: it uploaded
+    // as a different household than the one that filed the claim, and the
+    // endpoint correctly refused.)
+    const wrongClaim = await fetch(BASE + '/studios/api-studio/claim-photo', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${newSignIn.json.accessToken}`, 'Content-Type': 'image/png' },
+      body: PNG,
+    });
+    check(wrongClaim.status === 404,
+      'a photo cannot be attached to a claim that is not yours',
+      'status ' + wrongClaim.status);
+
+    // The bytes are believed, not the header — same rule as award evidence.
+    const notAnImage = await fetch(BASE + '/studios/api-unclaimed-studio/claim-photo', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${newSignIn.json.accessToken}`, 'Content-Type': 'image/png' },
+      body: Buffer.from('<?php echo 1; ?>'),
+    });
+    check(notAnImage.status === 400,
+      'a claim photo is sniffed, so a mislabelled non-image is refused',
+      'status ' + notAnImage.status);
+
     // ---- household ----
     const me = await api('GET', '/me', { token: access });
     check(me.status === 200 && me.json.dancers.length === 1 && me.json.dancers[0].studios.length === 1,

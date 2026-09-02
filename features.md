@@ -1368,6 +1368,33 @@ published. The page then says *"Dana Reyes manages this studio · Director"*, or
 says plainly that the manager has not chosen to be named — never a vaguer
 version of the same dead end.
 
+### A face on a studio claim
+A claimant may attach a photo of themselves. It is **private** — it goes to
+reviewers at `/admin/claims`, not onto the studio page — and it earns its place
+for two separate reasons:
+
+- **It is checkable.** A studio's own "meet the staff" page is public, so a
+  reviewer can hold a face against it. A typed name cannot be checked against
+  anything; this is the first piece of claim evidence that can.
+- **It deters.** Being asked for your own face raises the cost of a
+  speculative claim in a way another text field does not.
+
+It rides the exact treatment award evidence gets — the bytes are believed
+rather than the `Content-Type` header, camera metadata is stripped, the file
+lands 0600 outside the served tree — because those primitives are now exported
+from `utils/evidence.js` rather than copied into a second, weaker version.
+
+Attachable only to the caller's **own pending claim**; anything else is 404, so
+a studio id alone cannot be used to put a face on someone else's claim. The
+claim never fails because the photo did: a photo is supporting evidence, not
+the claim.
+
+**Public display is deliberately not built.** `studios.manager_photo_public`
+exists and stays 0. Putting a real person's face on a public page is a larger
+step than naming them, and it wants the moderation this codebase already
+applies to photographs elsewhere — not an implicit yes carried along by a claim
+form.
+
 ### The beta gate is a production concern
 `BETA_MODE=true` now only gates when `NODE_ENV=production`, or when a
 developer explicitly asks with `BETA_MODE_DEV=true` to test the gate itself.

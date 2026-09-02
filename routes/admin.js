@@ -1227,6 +1227,26 @@ router.get('/admin/studios', requireAdmin, async (req, res) => {
 });
 
 
+// Serve a claimant's photo to REVIEWERS only. Private storage, so this is the
+// only way to see it — and seeing it is the point: a studio's own "meet the
+// staff" page is public, so a face is checkable evidence in a way a typed name
+// is not. Rendered as an attachment-free inline image for the queue.
+router.get('/admin/claims/:id/photo', requireAdmin, async (req, res) => {
+  const db = await openDb();
+  const claim = await db.get(
+    'SELECT photo_object_key FROM studio_claims WHERE id = ?', [req.params.id]);
+  if (!claim || !claim.photo_object_key) return res.status(404).send('Not found');
+  try {
+    const { currentDriver } = require('../utils/evidence');
+    const buf = await currentDriver().get(claim.photo_object_key);
+    res.set('Content-Type', claim.photo_object_key.endsWith('.png') ? 'image/png' : 'image/jpeg');
+    res.set('Cache-Control', 'private, no-store');
+    res.send(buf);
+  } catch (e) {
+    res.status(404).send('Not found');
+  }
+});
+
 router.get('/admin/claims', requireAdmin, async (req, res) => {
   const db = await openDb();
   const claims = await db.all(`
