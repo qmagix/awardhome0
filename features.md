@@ -1675,3 +1675,26 @@ Idempotent — a merge whose source is already gone is reported and skipped, so
 the identical run on local and prod is how parity is reached. Re-run the
 independent migration afterwards to move each survivor onto its own synthetic
 studio.
+
+### Addressing rows across two databases (2026-09-02)
+
+Folding the Zixi Yu cluster turned up a rule worth keeping. Local and prod
+agree on ids for rows that predate their split, but **not** for anything
+imported separately on each machine: the ADC IBC rows carry different `id`s
+*and* different `unique_id`s on the two sides — prod `321833`/`321895`, local
+`325181`/`325243`. Id `321833` is Zixi Yu on prod and an unrelated dancer on
+local, so an id-keyed merge run on both sides would have deleted the wrong
+child's profile on one of them. The same-name guard refused it.
+
+So a data script that must run identically on both sides addresses rows by a
+**natural key** — `{name, studio}` for a dancer, name for a studio — and
+refuses when the key resolves to anything other than exactly one row. Ids are
+safe only where both databases demonstrably agree, and `unique_id` is not the
+escape hatch it looks like: it is minted at insert, so an import run twice
+mints it twice. This is the same principle as ETL idempotency (find before
+create on a natural key), applied to maintenance scripts rather than importers.
+
+A corollary for `POST /api/merge/dancers`: it takes raw ids from the caller and
+deletes the source with no identity check at all. Fine from the admin compare
+screen, where a human just looked at both records; not something to drive from
+a list of ids copied between environments.
