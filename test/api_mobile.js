@@ -372,6 +372,46 @@ async function main() {
           studioSearch.json.studios.some(s2 => s2.unique_id === 'api-unclaimed-studio'),
       'studios are searchable, so a director can find their own', 'status ' + studioSearch.status);
 
+    // A name and three counts cannot answer "is this my studio?" — there are
+    // a great many studios with the same name, which is why the claim form
+    // asks for an address. The preview is what makes the page decidable.
+    // Asserted against the studio that actually HAS awards — an empty array
+    // from an empty studio would pass this check while proving nothing.
+    const studioView = await api('GET', '/studios/api-studio');
+    const pv = studioView.json;
+    check(studioView.status === 200 &&
+          (pv.recentEvents || []).length > 0 && (pv.recentAwards || []).length > 0 &&
+          pv.recentEvents.every(e => e.name && typeof e.award_count === 'number') &&
+          pv.recentAwards.every(a => typeof a.place_display === 'string'),
+      'the studio page carries a recognition preview, not just counts',
+      'events=' + (pv.recentEvents || []).length +
+      ' awards=' + (pv.recentAwards || []).length +
+      ' first=' + JSON.stringify((pv.recentEvents || [])[0] || null));
+
+    // Newest season first, and named routines before nameless ones: a
+    // convention scholarship is a real award but identifies nothing.
+    const previewYears = (pv.recentEvents || []).map(e => e.year);
+    check(previewYears.every((y, i) => i === 0 || previewYears[i - 1] >= y),
+      'the preview leads with the most recent seasons',
+      previewYears.join(','));
+
+    // PRIVACY: roster lists are not public — a dancer appears only on awards
+    // they have claimed. A page whose job is "do you recognise this studio?"
+    // is the last place that should start listing children.
+    const previewJson = JSON.stringify(pv.recentAwards || []);
+    check(!/dancer_name|"dancers"|roster/.test(previewJson),
+      'the studio preview carries no dancer names — roster lists stay private',
+      previewJson.slice(0, 80));
+
+    // is_mine is only ever true for the person it is about; a guest must not
+    // learn who owns what beyond the is_claimed flag already shown.
+    const guestView = await api('GET', '/studios/api-studio');
+    const ownerView = await api('GET', '/studios/api-studio', { token: access });
+    check(guestView.status === 200 && guestView.json.studio.is_mine === false &&
+          ownerView.json.studio.is_mine === true,
+      'a studio reports is_mine to its owner and to nobody else',
+      'guest=' + guestView.json.studio.is_mine + ' owner=' + ownerView.json.studio.is_mine);
+
     const studioClaim = await api('POST', '/studios/api-unclaimed-studio/claim', {
       token: newSignIn.json.accessToken,
       body: { contact_name: 'A Director', studio_address: '1 Test Street', role: 'owner' },

@@ -333,12 +333,59 @@ router.get('/studios/:id', async (req, res) => {
     [req.params.id, parseInt(req.params.id, 10) || -1]);
   if (!studio || studio.is_independent) return fail(res, 404, 'not_found', 'No such studio.');
 
+  // Is it the CALLER's? "Already managed by its director" is a dead end for
+  // the director reading it — they may simply be signed out, or signed in as
+  // themselves and unable to tell that they already own it. Only ever
+  // reported to the person it is about; a guest learns nothing beyond the
+  // is_claimed flag the page already shows.
+  studio.is_mine = !!(req.mobileUser && (await db.get(
+    'SELECT 1 AS x FROM studios WHERE id = ? AND owner_id = ?',
+    [studio.id, req.mobileUser.id])));
+
   const stats = await db.get(`
     SELECT COUNT(*) AS awards, COUNT(DISTINCT a.event_id) AS events
     FROM awards a WHERE a.studio_id = ?`, [studio.id]);
   const dancers = await db.get(
     'SELECT COUNT(*) AS n FROM dancer_studios WHERE studio_id = ?', [studio.id]);
-  res.json({ studio, stats: { ...stats, dancers: dancers.n } });
+
+  // Enough to RECOGNISE the studio by. A name and three counts cannot answer
+  // "is this mine?" — there are a lot of studios called Dance Unlimited, and
+  // the claim form itself says so. Competitions are what a director actually
+  // remembers, and the event names carry the city ("Rainbow - Pueblo, CO"),
+  // which is why they identify a studio better than the address column does:
+  // only 1,340 of 25,081 studios have an address on file, while every studio
+  // with awards has events.
+  const recentEvents = await db.all(`
+    SELECT e.name, e.year, COUNT(*) AS award_count
+    FROM awards a JOIN events e ON e.id = a.event_id
+    WHERE a.studio_id = ?
+    GROUP BY e.id
+    ORDER BY IFNULL(e.year, 0) DESC, award_count DESC
+    LIMIT 5`, [studio.id]);
+
+  // Deliberately NO dancer names: roster lists are not public (a dancer
+  // appears only on awards they have claimed), and a claim-decision page has
+  // no business being the one place a roster leaks. Routine, placement and
+  // event are what make a studio recognisable anyway.
+  const recentAwards = await db.all(`
+    SELECT a.id, a.place, a.award_class, a.performance_name, a.award_type, a.category,
+           e.name AS event_name, e.year AS event_year
+    FROM awards a LEFT JOIN events e ON e.id = a.event_id
+    WHERE a.studio_id = ?
+    -- Named routines first. A convention scholarship with no routine name is
+    -- a real award but tells a director nothing about whether this is their
+    -- studio; "A Pale'" does.
+    ORDER BY (a.performance_name IS NULL OR a.performance_name = ''),
+             IFNULL(e.year, 0) DESC, a.id DESC
+    LIMIT 6`, [studio.id]);
+  recentAwards.forEach(a => { a.place_display = formatPlacement(a); });
+
+  res.json({
+    studio,
+    stats: { ...stats, dancers: dancers.n },
+    recentEvents,
+    recentAwards,
+  });
 });
 
 // Claim a studio. Mirrors the web flow including the domain fast-track — and

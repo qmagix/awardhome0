@@ -231,9 +231,19 @@ export function searchStudios(q: string): Promise<{ studios: StudioSummary[] }> 
   return auth.publicRequest(`/studios/search?q=${encodeURIComponent(q)}`);
 }
 
+export interface StudioEvent { name: string; year: number | null; award_count: number }
+
 export function getStudio(id: string): Promise<{
-  studio: StudioSummary & { bio: string | null; website_url: string | null };
+  studio: StudioSummary & {
+    bio: string | null; website_url: string | null;
+    /** True only for the caller who owns it — never leaked to anyone else. */
+    is_mine: boolean;
+  };
   stats: { awards: number; events: number; dancers: number };
+  /** Enough to recognise the studio by. Event names carry the city. */
+  recentEvents: StudioEvent[];
+  /** No dancer names: roster lists are not public. */
+  recentAwards: Award[];
 }> {
   return auth.publicRequest(`/studios/${encodeURIComponent(id)}`);
 }

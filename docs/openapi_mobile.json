@@ -1058,7 +1058,8 @@
           "404": {
             "description": "No such studio (independent dancers' synthetic studios are never returned)"
           }
-        }
+        },
+        "description": "Public. Returns the studio, aggregate stats, and a RECOGNITION PREVIEW \u2014 `recentEvents` (newest season first; event names carry the city, which identifies a studio better than the address column, on file for only 1,340 of 25,081) and `recentAwards` (named routines first, since a nameless convention scholarship identifies nothing). `recentAwards` deliberately carries NO dancer names: roster lists are not public, and a page asking \"do you recognise this studio?\" is the last place that should change. `studio.is_mine` is true only for the caller who owns it \u2014 a guest learns nothing beyond `is_claimed`."
       }
     },
     "/studios/{id}/claim": {

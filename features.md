@@ -1309,6 +1309,37 @@ The trophy case returns `myClaim` for a signed-in caller, so the app shows
 where the claim stands and what happens next rather than a button that makes
 things worse.
 
+### The studio page has to be recognisable, not just accurate
+A name and three counts cannot answer the question the page exists to ask.
+"Is this your studio?" under *Dance Unlimited · 5,672 awards · 802 dancers* is
+not a decidable question — there are a great many studios with that name, which
+is exactly why the claim form below it asks for an address.
+
+`/studios/:id` now returns a recognition preview:
+
+- **`recentEvents`**, newest season first. The strongest signal available, for
+  a reason worth recording: event names carry the city ("Rainbow - Pueblo, CO",
+  "JUMP 2026 ORLANDO, FL"), so they identify a studio better than the `address`
+  column does — that is on file for 1,340 of 25,081 studios, while every studio
+  with awards has events.
+- **`recentAwards`**, named routines first. A convention scholarship with no
+  routine name is a real award that identifies nothing; "Sunny's Delight" is
+  instantly recognisable to whoever choreographed it.
+
+**No dancer names, deliberately.** Roster lists are not public — a dancer
+appears only on awards they have claimed — and a page whose entire job is "do
+you recognise this studio?" is the last place that should start listing
+children. Routines and placements do the recognising perfectly well. A contract
+test fails if a dancer name ever appears in the preview.
+
+**"Already claimed" was a dead end.** The page said the studio was managed by
+its director and stopped — the least useful thing to tell the director reading
+it, who may simply be signed out. Three cases now: `studio.is_mine` (yours, say
+so), claimed-and-signed-out (offer sign-in, returning to this page), and
+claimed-as-someone-else (explain, point at us). `is_mine` is reported only to
+the person it is about; a guest learns nothing beyond the `is_claimed` flag the
+page already showed.
+
 ### The beta gate is a production concern
 `BETA_MODE=true` now only gates when `NODE_ENV=production`, or when a
 developer explicitly asks with `BETA_MODE_DEV=true` to test the gate itself.

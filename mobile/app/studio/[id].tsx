@@ -3,11 +3,15 @@ import {
   ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { claimStudio, getStudio, type StudioSummary } from '@/api/client';
+import {
+  claimStudio, getStudio, type Award, type StudioEvent, type StudioSummary,
+} from '@/api/client';
 import { useSession } from '@/ui/Session';
 import { theme } from '@/ui/theme';
 
-type Studio = StudioSummary & { bio: string | null; website_url: string | null };
+type Studio = StudioSummary & {
+  bio: string | null; website_url: string | null; is_mine: boolean;
+};
 
 /**
  * A studio, and the way a director claims it from a phone.
@@ -24,6 +28,8 @@ export default function StudioScreen() {
   const { signedIn } = useSession();
   const [studio, setStudio] = useState<Studio | null>(null);
   const [stats, setStats] = useState<{ awards: number; events: number; dancers: number } | null>(null);
+  const [events, setEvents] = useState<StudioEvent[]>([]);
+  const [awards, setAwards] = useState<Award[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [contactName, setContactName] = useState('');
@@ -37,7 +43,10 @@ export default function StudioScreen() {
   useEffect(() => {
     if (!id) return;
     void getStudio(id)
-      .then((r) => { setStudio(r.studio); setStats(r.stats); })
+      .then((r) => {
+        setStudio(r.studio); setStats(r.stats);
+        setEvents(r.recentEvents); setAwards(r.recentAwards);
+      })
       .catch(() => setError('We couldn’t load this studio.'))
       .finally(() => setLoading(false));
   }, [id]);
@@ -94,8 +103,64 @@ export default function StudioScreen() {
       )}
       {studio.bio ? <Text style={styles.bio}>{studio.bio}</Text> : null}
 
-      {studio.is_claimed ? (
-        <Text style={styles.claimed}>This studio is already managed by its director.</Text>
+      {/* Enough to answer "is this mine?". A name and three counts cannot —
+          there are a great many studios with the same name, which is exactly
+          why the claim form below asks for an address. Competitions are what a
+          director remembers, and the event names carry the city. */}
+      {events.length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Recently competed at</Text>
+          {events.map((e, i) => (
+            <Text key={`${e.name}-${i}`} style={styles.row}>
+              {e.name}{e.year ? ` · ${e.year}` : ''}
+              <Text style={styles.rowMeta}>
+                {'  '}{e.award_count} award{e.award_count === 1 ? '' : 's'}
+              </Text>
+            </Text>
+          ))}
+        </View>
+      )}
+
+      {/* No dancer names on purpose: roster lists are not public, and a page
+          whose job is "do you recognise this studio?" is the last place that
+          should change. Routines and placements do the recognising. */}
+      {awards.length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Recent awards</Text>
+          {awards.map((a) => {
+            const name = a.performance_name
+              || [a.category, a.award_type].filter(Boolean).join(' · ');
+            return (
+              <Text key={a.id} style={styles.row}>
+                <Text style={styles.place}>{a.place_display ?? a.place ?? ''}</Text>
+                {name ? `  ${name}` : ''}
+                {a.event_name ? <Text style={styles.rowMeta}>{`\n${a.event_name}`}</Text> : null}
+              </Text>
+            );
+          })}
+        </View>
+      )}
+
+      {studio.is_mine ? (
+        <Text style={styles.claimed}>You manage this studio.</Text>
+      ) : studio.is_claimed ? (
+        <View style={styles.pitch}>
+          <Text style={styles.pitchTitle}>This studio is already claimed</Text>
+          <Text style={styles.muted}>
+            {signedIn
+              ? 'Someone at the studio manages it. If that should be you, ask them to add you — or contact us and we’ll sort it out.'
+              : 'Its director manages it on AwardHome. If that’s you, sign in to pick up where you left off.'}
+          </Text>
+          {!signedIn && (
+            <Pressable
+              style={styles.cta}
+              onPress={() => router.push({ pathname: '/sign-in', params: { next: `/studio/${id}` } })}
+              accessibilityRole="button"
+            >
+              <Text style={styles.ctaText}>Sign in</Text>
+            </Pressable>
+          )}
+        </View>
       ) : !showForm ? (
         <>
           <View style={styles.pitch}>
@@ -160,6 +225,18 @@ const styles = StyleSheet.create({
   muted: { color: theme.muted, lineHeight: 20, marginTop: theme.space(0.5) },
   bio: { color: theme.text, marginTop: theme.space(1.5), lineHeight: 20 },
   claimed: { color: theme.good, marginTop: theme.space(2) },
+  section: { marginTop: theme.space(2.5) },
+  sectionLabel: {
+    color: theme.muted, fontSize: 12, fontWeight: '700', letterSpacing: 1,
+    textTransform: 'uppercase', marginBottom: theme.space(1),
+  },
+  row: {
+    color: theme.text, fontSize: 14, lineHeight: 20,
+    paddingVertical: theme.space(0.75),
+    borderBottomColor: theme.border, borderBottomWidth: 1,
+  },
+  rowMeta: { color: theme.muted, fontSize: 12 },
+  place: { color: theme.gold, fontWeight: '700' },
   pitch: {
     marginTop: theme.space(2.5), padding: theme.space(1.5),
     backgroundColor: theme.goldSoft, borderRadius: theme.radius,
