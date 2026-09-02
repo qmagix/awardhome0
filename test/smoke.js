@@ -1285,6 +1285,59 @@ async function main() {
         check(orphanQueue.status === 200 && !orphanHtml.includes(`data-submission-id="${r1.id}"`),
           'submissions with a real studio owner stay in THEIR inbox and never reach the AwardHome queue',
           'status ' + orphanQueue.status);
+
+        // ---- Rankings are objective: featuring is a bonus, never a swap ----
+        // Regression guard for the bug where the homepage subtracted featured
+        // studio ids from every leaderboard, so the studio holding a rotation
+        // slot silently vanished from the Top 100 for its whole tenure. Pins
+        // the true #1 studio as featured and requires it in BOTH the Marquee
+        // and the all-time board. Operates on a real studio (nothing seeded
+        // can reach the top 100), so the pin is always restored.
+        const topStudio = await db.get(`
+          SELECT s.id, s.unique_id, s.name, s.is_featured, COUNT(a.id) AS total_awards
+          FROM studios s
+          LEFT JOIN awards a ON s.id = a.studio_id
+          WHERE COALESCE(s.is_independent, 0) = 0
+            AND COALESCE(a.verification_status, '') != 'family_submitted'
+          GROUP BY s.id ORDER BY total_awards DESC LIMIT 1`);
+        if (!topStudio || !topStudio.unique_id) {
+          check(false, 'ranking fixture: a top studio exists to pin as featured', 'none found');
+        } else {
+          const setFeatured = (on) => fetch(BASE + `/api/studios/${topStudio.id}/feature`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Cookie: superUser.cookie, 'X-CSRF-Token': superToken },
+            body: JSON.stringify({ feature: on }),
+          });
+          try {
+            const featRes = await setFeatured(true);
+            // The feature toggle kicks a BACKGROUND homepage refresh (see
+            // utils/cache.js) — poll rather than assume it has landed.
+            const link = `/dance/studio/${topStudio.unique_id}`;
+            // Slice on section ids, not bare anchors: the page's jump nav
+            // emits "#v2h-rafters" *above* the Marquee, so a bare-string
+            // search finds the nav link and cuts the section off.
+            const between = (html, from, to) => {
+              const a = html.indexOf(from), b = html.indexOf(to);
+              return a >= 0 && b > a ? html.slice(a, b) : '';
+            };
+            let html = '', marquee = false, board = false;
+            for (let i = 0; i < 40; i++) {
+              await new Promise(r => setTimeout(r, 500));
+              html = await (await fetch(BASE + '/dance')).text();
+              marquee = between(html, 'id="v2h-marquee"', 'id="v2h-rafters"').includes(link);
+              board = between(html, 'id="leaderboard-alltime"', 'id="leaderboard-thisyear"').includes(link);
+              if (marquee) break;
+            }
+            const dbFlag = await db.get('SELECT is_featured FROM studios WHERE id = ?', [topStudio.id]);
+            check(featRes.status === 200 && marquee && board,
+              'a featured studio keeps its earned rank — the Marquee is a bonus, not a substitute for the leaderboard',
+              `${topStudio.name}: post=${featRes.status} dbFlag=${dbFlag && dbFlag.is_featured} marquee=${marquee} board=${board}`);
+          } finally {
+            await setFeatured(!!topStudio.is_featured).catch(() => {});
+            await db.run('UPDATE studios SET is_featured = ? WHERE id = ?',
+              [topStudio.is_featured || 0, topStudio.id]).catch(() => {});
+          }
+        }
       } finally {
         await db.run("DELETE FROM award_dancer_removals WHERE dancer_id IN (SELECT id FROM dancers WHERE name LIKE 'Smoke Dancer%')").catch(() => {});
         await db.run("DELETE FROM award_dancers WHERE dancer_id IN (SELECT id FROM dancers WHERE name LIKE 'Smoke Dancer%')").catch(() => {});

@@ -3,6 +3,7 @@
 ## TODO
 
 ### Release
+- [x] (FIXED 2026-09-01) **Featured studios were being subtracted from the leaderboards.** The homepage removed every featured studio id from all three studio boards, so a studio vanished from the Top 100 for the 14 days it held an auto-rotation slot. Surfaced on prod as "Jun Lu Performing Arts has 1,827 awards but isn't ranked" — it was rank #76 and the only studio holding a slot. Invisible locally because no studio there had ever been auto-featured. Rankings are now decided by awards alone; featured studios appear in both the Marquee and their earned rank. Smoke guard + FAQ §14. See features.md "Rankings are objective; featuring is additive".
 - [x] (SHIPPED 2026-08-28) **Dancer privacy controls**: per-card Public/Hidden toggle (card editor) + rankings opt-out checkbox (Manage Profile). See features.md "Dancer privacy controls".
 - [x] (SHIPPED 2026-08-28) **Community flagging** — user-added content only, auto-dark once then human-decides (griefing guard). See features.md "Community flagging".
 - [x] (SHIPPED 2026-08-27) **/partners page** — sponsor/press inbound media-kit + inquiry form (see features.md "Partners page"). Investor strategy: NO public page; TODO below.

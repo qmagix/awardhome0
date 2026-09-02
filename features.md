@@ -1611,3 +1611,35 @@ Three things changed for her:
 guest browsing the same public page is told nothing about it: which studios are
 unclaimed is precisely the list an outreach scraper would want, and the family
 already knows which studio her child dances for.
+
+## Rankings are objective; featuring is additive (2026-09-01)
+
+The homepage built its Featured strip first and then **subtracted those studio
+ids from every leaderboard** — all-time, this-year, and 1st-places-this-year.
+The intent was to avoid listing a studio twice on one page. The effect was that
+a studio silently disappeared from the Top 100 for the entire 14 days it held
+an auto-rotation slot, then reappeared.
+
+Found in production: Jun Lu Performing Arts (1,827 awards, rank #76 all-time)
+was absent from the Top 100. Nothing was wrong with its data — the nightly
+rotation (`utils/featured.js`, 3:30 AM) had given it `auto_featured_rank = 1`
+on 2026-08-30, and it was the only studio holding a slot, so it was the only
+studio being subtracted. Locally no studio had ever been auto-featured, so the
+same page looked correct — which is why review never caught it.
+
+**A ranking is decided by awards and nothing else.** Featuring is a bonus laid
+on top of the board, never a swap for a place on it. The exclusion is gone
+(`routes/dance/public.js`), and featured studios now deliberately appear twice
+on the homepage: in the Marquee, and at the rank they earned.
+
+This matters beyond one page of HTML. The rotation's published policy (FAQ §14)
+promises "no payment, no favoritism"; a spotlight that quietly costs a studio
+its leaderboard position is a real penalty attached to a reward, and the studio
+owner has no way to discover why their placement vanished. It also made the
+board wrong on its own terms — a Top 100 that omits #76 is not a Top 100.
+
+Guarded by a smoke check that pins the true #1 studio as featured and requires
+it in **both** the Marquee and the all-time board (the toggle at
+`POST /api/studios/:id/feature` kicks a background cache refresh, so the check
+polls). Restoring the old `NOT IN (...)` clause fails it. FAQ §14 now states
+plainly that being featured never changes a ranking in either direction.

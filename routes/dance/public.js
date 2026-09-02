@@ -230,14 +230,18 @@ async function loadHomepageData() {
     LIMIT 12
   `);
 
-  let excludeIds = featuredStudios.map(s => s.id);
-  if (excludeIds.length === 0) excludeIds = [-1];
-
+  // Rankings are objective: a studio's place is decided by its awards and
+  // nothing else. Being featured is a bonus on top of the leaderboard, never
+  // a substitute for it — so featured studios are NOT subtracted here. They
+  // deliberately appear twice on the homepage (Featured strip + their earned
+  // rank). The old exclusion made a studio silently vanish from the Top 100
+  // for the 14 days it held a rotation slot, then reappear; from the owner's
+  // side that reads as lost data, and it made the board wrong on its own terms.
   const topStudios = await db.all(`
     SELECT s.id, s.unique_id, s.name, COUNT(a.id) as total_awards
     FROM studios s
     LEFT JOIN awards a ON s.id = a.studio_id
-    WHERE s.id NOT IN (${excludeIds.join(',')}) AND ${excludeIndependentSql('s')}
+    WHERE ${excludeIndependentSql('s')}
       AND ${rankableAwardSql('a')}
     GROUP BY s.id
     ORDER BY total_awards DESC
@@ -249,7 +253,7 @@ async function loadHomepageData() {
     FROM studios s
     LEFT JOIN awards a ON s.id = a.studio_id
     LEFT JOIN events e ON a.event_id = e.id
-    WHERE e.year = (SELECT MAX(year) FROM events) AND s.id NOT IN (${excludeIds.join(',')})
+    WHERE e.year = (SELECT MAX(year) FROM events)
       AND ${excludeIndependentSql('s')} AND ${rankableAwardSql('a')}
     GROUP BY s.id
     ORDER BY total_awards DESC
@@ -263,7 +267,6 @@ async function loadHomepageData() {
     LEFT JOIN events e ON a.event_id = e.id
     WHERE a.is_first_place = 1
       AND e.year = (SELECT MAX(year) FROM events)
-      AND s.id NOT IN (${excludeIds.join(',')})
       AND ${excludeIndependentSql('s')} AND ${rankableAwardSql('a')}
     GROUP BY s.id
     ORDER BY total_awards DESC
