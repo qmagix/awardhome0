@@ -342,6 +342,17 @@ router.get('/studios/:id', async (req, res) => {
     'SELECT 1 AS x FROM studios WHERE id = ? AND owner_id = ?',
     [studio.id, req.mobileUser.id])));
 
+  // WHO manages it. Present only when the manager agreed to be named — the
+  // name is theirs to publish, not ours, and an existing claimant who was
+  // never asked is not retroactively published.
+  try {
+    const m = await db.get(
+      'SELECT manager_name, manager_role, manager_public FROM studios WHERE id = ?', [studio.id]);
+    studio.manager = (m && m.manager_public && m.manager_name)
+      ? { name: m.manager_name, role: m.manager_role || null }
+      : null;
+  } catch (e) { studio.manager = null; }
+
   const stats = await db.get(`
     SELECT COUNT(*) AS awards, COUNT(DISTINCT a.event_id) AS events
     FROM awards a WHERE a.studio_id = ?`, [studio.id]);
@@ -399,7 +410,10 @@ router.post('/studios/:id/claim', requireBearer, async (req, res) => {
   if (!studio || studio.is_independent) return fail(res, 404, 'not_found', 'No such studio.');
   if (studio.owner_id) return fail(res, 409, 'already_claimed', 'This studio is already claimed.');
 
-  const { contact_name: contactName, role, phone, studio_address: address, proof } = req.body || {};
+  const {
+    contact_name: contactName, role, phone, studio_address: address, proof,
+    show_publicly: showPublicly,
+  } = req.body || {};
   if (!normalizeText(contactName)) return fail(res, 400, 'invalid', 'Please tell us your name.');
   if (!normalizeText(address)) {
     return fail(res, 400, 'invalid',
@@ -415,9 +429,13 @@ router.post('/studios/:id/claim', requireBearer, async (req, res) => {
     'Filed from the mobile app',
   ].join('\n');
 
+  // Stored structurally as well as in proof_text: the reviewer reads the
+  // narrative, the studio page needs fields.
   await db.run(
-    'INSERT INTO studio_claims (user_id, studio_id, proof_text, status) VALUES (?, ?, ?, ?)',
-    [req.mobileUser.id, studio.id, proofText, 'pending']);
+    'INSERT INTO studio_claims (user_id, studio_id, proof_text, status, contact_name, contact_role, show_publicly) ' +
+    'VALUES (?, ?, ?, ?, ?, ?, ?)',
+    [req.mobileUser.id, studio.id, proofText, 'pending',
+     normalizeText(contactName), normalizeText(role) || null, showPublicly ? 1 : 0]);
 
   if (domainsMatch(studio.website_url, req.mobileUser.email)) {
     await approveStudioClaim(db, { userId: req.mobileUser.id, studioId: studio.id });

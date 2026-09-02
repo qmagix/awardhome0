@@ -31,6 +31,28 @@ async function approveStudioClaim(db, { userId, studioId }) {
     [userId, studioId]
   );
   await db.run(`UPDATE users SET role = 'studio_owner' WHERE id = ? AND role = 'user'`, [userId]);
+
+  // Promote the claimant's identity onto the studio, so the page can answer
+  // the question a family actually asks when it says the studio is claimed:
+  // WHO? "Someone at the studio manages it" is a dead end — it gives no name
+  // to look for and no next step.
+  //
+  // Only what the claimant agreed to publish (show_publicly), and only from
+  // the structured fields — never scraped back out of proof_text, which was
+  // given as verification evidence rather than as a public byline.
+  try {
+    const c = await db.get(
+      'SELECT contact_name, contact_role, photo_object_key, show_publicly FROM studio_claims ' +
+      "WHERE user_id = ? AND studio_id = ? AND status = 'approved' ORDER BY id DESC LIMIT 1",
+      [userId, studioId]);
+    if (c && c.contact_name) {
+      await db.run(
+        'UPDATE studios SET manager_name = ?, manager_role = ?, manager_public = ?, manager_photo_key = ? WHERE id = ?',
+        [c.contact_name, c.contact_role || null, c.show_publicly ? 1 : 0,
+         c.photo_object_key || null, studioId]);
+    }
+  } catch (e) { /* pre-migration */ }
+
   logStudioActivity(studioId, 'claim_approved');
 }
 

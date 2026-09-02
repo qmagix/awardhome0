@@ -92,6 +92,8 @@ async function main() {
   // and no claim from any test household. Needed because `unclaimed` acquires
   // a pending claim partway through the run, which legitimately grants the
   // right to QUEUE (M8) — so it can no longer stand in for a stranger.
+  await db.run("INSERT INTO studios (unique_id, name, status) VALUES ('api-consent-studio', 'API Consent Studio', 'active')");
+  await db.run("INSERT INTO studios (unique_id, name, status) VALUES ('api-quiet-studio', 'API Quiet Studio', 'active')");
   const stranger = await db.run("INSERT INTO dancers (unique_id, name) VALUES ('DNC-api-stranger', 'API Stranger Dancer')");
   await db.run('INSERT INTO dancer_studios (dancer_id, studio_id) VALUES (?, ?)', [stranger.lastID, st.lastID]);
   const event = await db.get('SELECT id, year FROM events WHERE year IS NOT NULL ORDER BY id LIMIT 1');
@@ -411,6 +413,45 @@ async function main() {
           ownerView.json.studio.is_mine === true,
       'a studio reports is_mine to its owner and to nobody else',
       'guest=' + guestView.json.studio.is_mine + ' owner=' + ownerView.json.studio.is_mine);
+
+    // WHO manages it. Consent is asked at collection: the contact name on a
+    // claim form is verification evidence, and publishing it later would
+    // repurpose data given for one thing into something else.
+    const consented = await api('POST', '/studios/api-consent-studio/claim', {
+      token: access,
+      body: {
+        contact_name: 'Dana Reyes', role: 'Director',
+        studio_address: '9 Test Way', show_publicly: true,
+      },
+    });
+    await db.run("UPDATE studio_claims SET status = 'approved' WHERE studio_id = " +
+      "(SELECT id FROM studios WHERE unique_id = 'api-consent-studio')");
+    const { approveStudioClaim } = require('../utils/claims');
+    await approveStudioClaim(db, {
+      userId: (await db.get('SELECT id FROM users WHERE email = ?', ['api-family@test.invalid'])).id,
+      studioId: (await db.get("SELECT id FROM studios WHERE unique_id = 'api-consent-studio'")).id,
+    });
+    const named = await api('GET', '/studios/api-consent-studio');
+    check(consented.status === 201 && named.json.studio.manager &&
+          named.json.studio.manager.name === 'Dana Reyes' &&
+          named.json.studio.manager.role === 'Director',
+      'an approved claimant who agreed to be named is shown as the studio manager',
+      JSON.stringify((named.json.studio || {}).manager));
+
+    // And one who did NOT agree is not published — including every claim
+    // filed before we started asking, which defaults to 0.
+    const quiet = await api('POST', '/studios/api-quiet-studio/claim', {
+      token: access,
+      body: { contact_name: 'Private Person', studio_address: '11 Test Way' },
+    });
+    await approveStudioClaim(db, {
+      userId: (await db.get('SELECT id FROM users WHERE email = ?', ['api-family@test.invalid'])).id,
+      studioId: (await db.get("SELECT id FROM studios WHERE unique_id = 'api-quiet-studio'")).id,
+    });
+    const quietView = await api('GET', '/studios/api-quiet-studio');
+    check(quiet.status === 201 && quietView.json.studio.manager === null,
+      'a claimant who did not agree to be named is never published',
+      JSON.stringify((quietView.json.studio || {}).manager));
 
     const studioClaim = await api('POST', '/studios/api-unclaimed-studio/claim', {
       token: newSignIn.json.accessToken,

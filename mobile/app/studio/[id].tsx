@@ -11,6 +11,7 @@ import { theme } from '@/ui/theme';
 
 type Studio = StudioSummary & {
   bio: string | null; website_url: string | null; is_mine: boolean;
+  manager: { name: string; role: string | null } | null;
 };
 
 /**
@@ -36,6 +37,7 @@ export default function StudioScreen() {
   const [role, setRole] = useState('');
   const [address, setAddress] = useState('');
   const [proof, setProof] = useState('');
+  const [showPublicly, setShowPublicly] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<{ status: string; reason?: string } | null>(null);
@@ -60,6 +62,7 @@ export default function StudioScreen() {
         role: role.trim(),
         studio_address: address.trim(),
         proof: proof.trim(),
+        show_publicly: showPublicly,
       });
       setDone({ status: res.status, ...(res.reason ? { reason: res.reason } : {}) });
     } catch (e) {
@@ -93,15 +96,128 @@ export default function StudioScreen() {
   }
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={{ paddingBottom: theme.space(6) }}>
-      <Text style={styles.h1}>{studio.name}</Text>
-      {stats && (
-        <Text style={styles.muted}>
-          {stats.awards} award{stats.awards === 1 ? '' : 's'} · {stats.dancers} dancer
-          {stats.dancers === 1 ? '' : 's'} · {stats.events} event{stats.events === 1 ? '' : 's'}
-        </Text>
-      )}
-      {studio.bio ? <Text style={styles.bio}>{studio.bio}</Text> : null}
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={{ paddingBottom: theme.space(6) }}
+      // The claim block is child index 1 and STICKS to the top. The action was
+      // previously below the awards preview, so on a studio with a real
+      // history you had to scroll past two lists to find out you could claim
+      // it at all — the one thing this page exists to offer. It is now visible
+      // before any scrolling, and stays reachable while reading the evidence
+      // that answers "is this mine?".
+      //
+      // Not sticky once the form is open: a pinned block would cover the
+      // fields it just revealed.
+      stickyHeaderIndices={showForm ? undefined : [1]}
+    >
+      <View>
+        <Text style={styles.h1}>{studio.name}</Text>
+        {stats && (
+          <Text style={styles.muted}>
+            {stats.awards} award{stats.awards === 1 ? '' : 's'} · {stats.dancers} dancer
+            {stats.dancers === 1 ? '' : 's'} · {stats.events} event{stats.events === 1 ? '' : 's'}
+          </Text>
+        )}
+        {studio.bio ? <Text style={styles.bio}>{studio.bio}</Text> : null}
+      </View>
+
+      <View style={styles.stickyClaim}>
+        {studio.is_mine ? (
+          <Text style={styles.claimed}>You manage this studio.</Text>
+        ) : studio.is_claimed ? (
+          <>
+            <Text style={styles.pitchTitle}>
+              {studio.manager
+                ? `${studio.manager.name} manages this studio`
+                : 'This studio is already claimed'}
+            </Text>
+            <Text style={styles.pitchLine}>
+              {/* Naming them is the whole point: "someone at the studio
+                  manages it" leaves a family with no name to ask for. When
+                  the manager did not agree to be named we say so plainly
+                  rather than inventing a vaguer version of the same dead end. */}
+              {studio.manager
+                ? `${studio.manager.role ? `${studio.manager.role} · ` : ''}`
+                  + (signedIn
+                    ? 'Ask them to add you if you also need access.'
+                    : 'If that’s you, sign in to pick up where you left off.')
+                : (signedIn
+                  ? 'Someone at the studio manages it, but they haven’t chosen to be named here. Contact us and we’ll put you in touch.'
+                  : 'Its director manages it on AwardHome. If that’s you, sign in to pick up where you left off.')}
+            </Text>
+            {!signedIn && (
+              <Pressable
+                style={[styles.cta, styles.ctaTight]}
+                onPress={() => router.push({ pathname: '/sign-in', params: { next: `/studio/${id}` } })}
+                accessibilityRole="button"
+              >
+                <Text style={styles.ctaText}>Sign in</Text>
+              </Pressable>
+            )}
+          </>
+        ) : !showForm ? (
+          <>
+            <Text style={styles.pitchTitle}>Is this your studio?</Text>
+            <Text style={styles.pitchLine}>
+              Claiming it lets you confirm the awards families add for your dancers — until
+              someone does, nobody at the studio sees them at all.
+            </Text>
+            <Pressable
+              style={[styles.cta, styles.ctaTight]}
+              onPress={() => (signedIn
+                ? setShowForm(true)
+                : router.push({ pathname: '/sign-in', params: { next: `/studio/${id}` } }))}
+              accessibilityRole="button"
+            >
+              <Text style={styles.ctaText}>Claim this studio</Text>
+            </Pressable>
+          </>
+        ) : (
+          <>
+            <Text style={styles.label}>Your name *</Text>
+            <TextInput value={contactName} onChangeText={setContactName} style={styles.input} />
+            {/* Consent at the point of collection. A name given as proof is
+                not a name given as a public byline, so we ask here rather
+                than quietly publishing what the form already had. */}
+            <Pressable
+              style={styles.checkRow}
+              onPress={() => setShowPublicly(v => !v)}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: showPublicly }}
+            >
+              <Text style={styles.check}>{showPublicly ? '☑' : '☐'}</Text>
+              <Text style={styles.checkLabel}>
+                Show my name on the studio page, so families know who to ask for
+              </Text>
+            </Pressable>
+
+            <Text style={styles.label}>Your role</Text>
+            <TextInput value={role} onChangeText={setRole} style={styles.input}
+              placeholder="Owner, director, office manager" placeholderTextColor={theme.muted} />
+
+            <Text style={styles.label}>Studio address *</Text>
+            <TextInput value={address} onChangeText={setAddress} style={styles.input} />
+            <Text style={styles.hint}>
+              This is how we tell studios with the same name apart — there are a lot of them.
+            </Text>
+
+            <Text style={styles.label}>Anything else that helps us confirm</Text>
+            <TextInput value={proof} onChangeText={setProof} multiline
+              style={[styles.input, styles.multiline]} />
+            <Text style={styles.hint}>
+              If your email is on the studio’s own website domain, we can approve it on the spot.
+            </Text>
+
+            <Pressable
+              style={[styles.cta, (!contactName.trim() || !address.trim()) && styles.ctaOff]}
+              onPress={() => void submit()}
+              disabled={busy || !contactName.trim() || !address.trim()}
+            >
+              {busy ? <ActivityIndicator color={theme.gold} /> : <Text style={styles.ctaText}>Send claim</Text>}
+            </Pressable>
+          </>
+        )}
+      </View>
 
       {/* Enough to answer "is this mine?". A name and three counts cannot —
           there are a great many studios with the same name, which is exactly
@@ -141,75 +257,6 @@ export default function StudioScreen() {
         </View>
       )}
 
-      {studio.is_mine ? (
-        <Text style={styles.claimed}>You manage this studio.</Text>
-      ) : studio.is_claimed ? (
-        <View style={styles.pitch}>
-          <Text style={styles.pitchTitle}>This studio is already claimed</Text>
-          <Text style={styles.muted}>
-            {signedIn
-              ? 'Someone at the studio manages it. If that should be you, ask them to add you — or contact us and we’ll sort it out.'
-              : 'Its director manages it on AwardHome. If that’s you, sign in to pick up where you left off.'}
-          </Text>
-          {!signedIn && (
-            <Pressable
-              style={styles.cta}
-              onPress={() => router.push({ pathname: '/sign-in', params: { next: `/studio/${id}` } })}
-              accessibilityRole="button"
-            >
-              <Text style={styles.ctaText}>Sign in</Text>
-            </Pressable>
-          )}
-        </View>
-      ) : !showForm ? (
-        <>
-          <View style={styles.pitch}>
-            <Text style={styles.pitchTitle}>Is this your studio?</Text>
-            <Text style={styles.muted}>
-              Claiming it lets you confirm the awards families add for your dancers — and until
-              someone does, nobody at the studio sees them at all.
-            </Text>
-          </View>
-          <Pressable
-            style={styles.cta}
-            onPress={() => (signedIn
-              ? setShowForm(true)
-              : router.push({ pathname: '/sign-in', params: { next: `/studio/${id}` } }))}
-          >
-            <Text style={styles.ctaText}>Claim this studio</Text>
-          </Pressable>
-        </>
-      ) : (
-        <>
-          <Text style={styles.label}>Your name *</Text>
-          <TextInput value={contactName} onChangeText={setContactName} style={styles.input} />
-
-          <Text style={styles.label}>Your role</Text>
-          <TextInput value={role} onChangeText={setRole} style={styles.input}
-            placeholder="Owner, director, office manager" placeholderTextColor={theme.muted} />
-
-          <Text style={styles.label}>Studio address *</Text>
-          <TextInput value={address} onChangeText={setAddress} style={styles.input} />
-          <Text style={styles.hint}>
-            This is how we tell studios with the same name apart — there are a lot of them.
-          </Text>
-
-          <Text style={styles.label}>Anything else that helps us confirm</Text>
-          <TextInput value={proof} onChangeText={setProof} multiline
-            style={[styles.input, styles.multiline]} />
-          <Text style={styles.hint}>
-            If your email is on the studio’s own website domain, we can approve it on the spot.
-          </Text>
-
-          <Pressable
-            style={[styles.cta, (!contactName.trim() || !address.trim()) && styles.ctaOff]}
-            onPress={() => void submit()}
-            disabled={busy || !contactName.trim() || !address.trim()}
-          >
-            {busy ? <ActivityIndicator color={theme.gold} /> : <Text style={styles.ctaText}>Send claim</Text>}
-          </Pressable>
-        </>
-      )}
       {error && <Text style={styles.error}>{error}</Text>}
 
       <Pressable onPress={() => router.replace('/')} style={styles.escape}>
@@ -225,6 +272,22 @@ const styles = StyleSheet.create({
   muted: { color: theme.muted, lineHeight: 20, marginTop: theme.space(0.5) },
   bio: { color: theme.text, marginTop: theme.space(1.5), lineHeight: 20 },
   claimed: { color: theme.good, marginTop: theme.space(2) },
+  // Opaque on purpose: a sticky block with a transparent background lets the
+  // list scroll visibly underneath it, which reads as a rendering fault.
+  stickyClaim: {
+    backgroundColor: theme.bg,
+    paddingTop: theme.space(1), paddingBottom: theme.space(1.25),
+    borderBottomColor: theme.border, borderBottomWidth: 1,
+  },
+  // A pinned bar has to stay short or it eats the page it is pinned over.
+  pitchLine: { color: theme.muted, fontSize: 13, lineHeight: 18, marginTop: 2 },
+  ctaTight: { marginTop: theme.space(1), padding: theme.space(1.25) },
+  checkRow: {
+    flexDirection: 'row', alignItems: 'flex-start',
+    gap: theme.space(1), marginTop: theme.space(1),
+  },
+  check: { color: theme.gold, fontSize: 18, lineHeight: 22 },
+  checkLabel: { color: theme.muted, fontSize: 13, lineHeight: 19, flex: 1 },
   section: { marginTop: theme.space(2.5) },
   sectionLabel: {
     color: theme.muted, fontSize: 12, fontWeight: '700', letterSpacing: 1,

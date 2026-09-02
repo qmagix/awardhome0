@@ -238,6 +238,9 @@ export function getStudio(id: string): Promise<{
     bio: string | null; website_url: string | null;
     /** True only for the caller who owns it — never leaked to anyone else. */
     is_mine: boolean;
+    /** Who manages it, when that person agreed to be named. Null otherwise —
+     *  including for every claim filed before we started asking. */
+    manager: { name: string; role: string | null } | null;
   };
   stats: { awards: number; events: number; dancers: number };
   /** Enough to recognise the studio by. Event names carry the city. */
@@ -251,6 +254,8 @@ export function getStudio(id: string): Promise<{
 export function claimStudio(id: string, body: {
   contact_name: string; role?: string; phone?: string;
   studio_address: string; proof?: string;
+  /** Consent to be named on the public studio page. Off unless asked. */
+  show_publicly?: boolean;
 }): Promise<{ ok: boolean; status: string; reason?: string }> {
   return auth.request(`/studios/${encodeURIComponent(id)}/claim`, {
     method: 'POST', body: JSON.stringify(body),

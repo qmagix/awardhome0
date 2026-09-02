@@ -731,6 +731,28 @@ async function initDb() {
   // Independent dancers: permission to PUBLISH family-entered awards without
   // a reviewer (M9). 'none' | 'requested' | 'approved'. Default off — an
   // independent curates privately until someone vouches for the household.
+  // Who manages a studio, shown on its public page (M10).
+  //
+  // Structured and SEPARATE from studio_claims.proof_text on purpose. The
+  // contact name on a claim form is verification evidence, given so a reviewer
+  // can check it; publishing it later would repurpose data collected for one
+  // thing into something else. These columns are filled only from a field
+  // whose label says families will see it, and manager_public gates display —
+  // so an existing claimant is never retroactively published.
+  try { await db.exec('ALTER TABLE studios ADD COLUMN manager_name TEXT'); } catch(e) {}
+  try { await db.exec('ALTER TABLE studios ADD COLUMN manager_role TEXT'); } catch(e) {}
+  try { await db.exec('ALTER TABLE studios ADD COLUMN manager_public INTEGER DEFAULT 0'); } catch(e) {}
+  // A claimant's photo. Private by default and used for REVIEW: a reviewer can
+  // hold it against the studio's own "meet the staff" page, which is real
+  // evidence, and being asked for a face raises the cost of a speculative
+  // claim. Public display is a second, separate opt-in (manager_photo_public).
+  try { await db.exec('ALTER TABLE studio_claims ADD COLUMN contact_name TEXT'); } catch(e) {}
+  try { await db.exec('ALTER TABLE studio_claims ADD COLUMN contact_role TEXT'); } catch(e) {}
+  try { await db.exec('ALTER TABLE studio_claims ADD COLUMN photo_object_key TEXT'); } catch(e) {}
+  try { await db.exec('ALTER TABLE studio_claims ADD COLUMN show_publicly INTEGER DEFAULT 0'); } catch(e) {}
+  try { await db.exec('ALTER TABLE studios ADD COLUMN manager_photo_key TEXT'); } catch(e) {}
+  try { await db.exec('ALTER TABLE studios ADD COLUMN manager_photo_public INTEGER DEFAULT 0'); } catch(e) {}
+
   try { await db.exec("ALTER TABLE dancers ADD COLUMN independent_publish_status TEXT DEFAULT 'none'"); } catch(e) {}
   try { await db.exec('ALTER TABLE dancers ADD COLUMN independent_publish_by INTEGER'); } catch(e) {}
   try { await db.exec('ALTER TABLE dancers ADD COLUMN independent_publish_at DATETIME'); } catch(e) {}

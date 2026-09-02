@@ -1340,6 +1340,34 @@ claimed-as-someone-else (explain, point at us). `is_mine` is reported only to
 the person it is about; a guest learns nothing beyond the `is_claimed` flag the
 page already showed.
 
+### The claim action is pinned, and "already claimed" names a person
+Two things a director could not act on.
+
+**The action was below the fold.** With a recognition preview above it, a
+studio with a real history pushed "Is this your studio?" past two lists — the
+one thing the page exists to offer, discoverable only by scrolling. The claim
+block is now a **sticky child** (`stickyHeaderIndices`), visible before any
+scrolling and still reachable while reading the evidence that answers the
+question. It is deliberately compact: a pinned bar that takes a third of the
+screen is worse than one you have to scroll to. Stickiness switches off once
+the form opens, or the pinned block would cover the fields it just revealed.
+
+**"Someone at the studio manages it" was a dead end.** The immediate question
+is *who*, and the page had no answer — no name to ask for, no next step.
+
+Answering it needed new structure, not a new query. `users` has no name column,
+and a studio claim's contact name lived only inside free-text `proof_text`.
+That text is **verification evidence**, given so a reviewer could check it;
+publishing it afterwards would repurpose data collected for one purpose into
+another. So `studio_claims.contact_name` / `contact_role` / `show_publicly` are
+captured structurally, behind a checkbox whose label says families will see it,
+and `approveStudioClaim` promotes them to `studios.manager_name` /
+`manager_role` / `manager_public` on approval. Consent is asked at collection;
+a claimant who was never asked defaults to 0 and is never retroactively
+published. The page then says *"Dana Reyes manages this studio · Director"*, or
+says plainly that the manager has not chosen to be named — never a vaguer
+version of the same dead end.
+
 ### The beta gate is a production concern
 `BETA_MODE=true` now only gates when `NODE_ENV=production`, or when a
 developer explicitly asks with `BETA_MODE_DEV=true` to test the gate itself.
