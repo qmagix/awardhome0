@@ -182,3 +182,47 @@ bothers — it tells the AI summary writer what to lead with. Because inflation
 buys nothing public and accuracy buys a better summary, the pooled marks are an
 honest signal of what the field values, feeding canonical award classification
 that we otherwise guess with keyword rules. IP: maybe_patentable.md §A11.
+
+## 15. THE PIVOT: family memory space, mobile-first (decided in principle 2026-09-02)
+Organizer outreach went quiet, and the read is that the top-down model —
+partner with orgs, then reach families through them — has the incentives
+backwards: orgs' scarce resource is attention, and we asked for it while
+holding data we took from their sites. Invert it. AwardHome becomes a
+**private-first awards-and-milestones memory space for students and
+families**, mobile app first, web as marketing surface and backup. Not
+dance-only: any student award or milestone. Dance is the beachhead because it
+is where the archive lives.
+
+**The magic moment — auto-discovery.** A family enters one award (event,
+routine, studio, dancer name); the backend matches against the 1.5M-award
+archive and answers with the child's entire competitive history: "we found 43
+more from 2019–2026 — are these yours?" Yes/no, keep/hide, per award. No
+competitor can copy this without the archive and the weekly pipeline that
+keeps it current. Architecturally it turns our hardest data problem —
+same-name identity resolution, adjudicated by hand for Zixi Yu — into a
+user-facing question answered by the one person who actually knows.
+Parent-adjudicated identity beats any auto-merge heuristic.
+
+**The retention engine — the Monday scrape becomes push.** Awards are
+episodic (4–8 weekends/year); memory apps die of infrequency. But every
+weekly import that matches a claimed dancer is a push notification the family
+did nothing to earn: "We found a new award for Emma from this weekend." The
+pipeline built for data freshness doubles as the re-engagement loop.
+
+**Privacy inversion.** Scraped data was published by the competition — it is
+already public and stays so (and remains the SEO/acquisition funnel: a parent
+googling their kid finds the trophy case, the trophy case sells the app).
+Family-added content is private until the family chooses to share — which is
+literally the shipped staging/canonical split. Private-first is also the
+defensible posture for a product substantially about minors.
+
+**Studios/clubs/schools become a second-order effect**: accounts created and
+data aggregated from family activity, approached later holding engagement
+evidence instead of a cold letter (the org_card_clicks instrument, one level
+up). Strava/Slack shape: individual utility first, org accounts follow.
+
+**Sequencing note:** M1–M9 already built most of this — family submission
+staging, private independents, corroboration, offline outbox, claims, the app
+itself. The pivot is ~70% positioning, ~30% code. Monetization moves from B2B
+sponsorship to B2C family subscription (memory space, keepsakes — §13 becomes
+a premium feature, not a side idea). Full plan: docs/pivot_plan.md.
