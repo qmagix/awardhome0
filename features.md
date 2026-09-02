@@ -1643,3 +1643,35 @@ it in **both** the Marquee and the all-time board (the toggle at
 `POST /api/studios/:id/feature` kicks a background cache refresh, so the check
 polls). Restoring the old `NOT IN (...)` clause fails it. FAQ §14 now states
 plainly that being featured never changes a ranking in either direction.
+
+## Adjudicated dancer merges (2026-09-02)
+
+`scripts/merge_duplicate_dancers.js` carries out a human's decision on the
+same-name pairs that `migrate_independent_studios.js` deliberately refuses to
+touch. Dry run by default; `--apply` writes.
+
+**Why not the admin button.** `POST /api/merge/dancers` moves three tables —
+`awards.dancer_id`, `award_dancers`, `dancer_studios` — and runs outside a
+transaction. Ten tables carry a `dancer_id` today (add claims,
+acknowledgements, card photos, consents, tombstones, hidden cards,
+corrections), so the button orphans rows in the other seven, and a mid-flight
+failure leaves a dancer half merged. It also deletes the source with no check
+that the two records are the same person, so one mistyped id destroys an
+unrelated child's profile. The script moves every table, wraps each merge in
+one transaction, refuses unless both records carry the same normalised name,
+and fills in profile fields the survivor lacks without ever overwriting one.
+
+**The evidence pattern, worth reusing.** YAGP publishes a single result at
+several tiers — a podium placement plus the Top 6 / Top 12 / Top 24 lists — and
+the scraper writes each tier as its own award row. Normally they all land on
+one dancer; where the importer name-matched them to different profiles you get
+a split identity. So **two records holding nested tiers of the same event and
+category are provably one dancer**: a 1st place is inside the top 6. That
+proved two of the three merges. The third (Takdanai McLeod-Smith) rested on a
+globally-unique name plus a valid progression inside YAGP Senior (15–19), and
+the script says so rather than dressing judgment up as proof.
+
+Idempotent — a merge whose source is already gone is reported and skipped, so
+the identical run on local and prod is how parity is reached. Re-run the
+independent migration afterwards to move each survivor onto its own synthetic
+studio.
