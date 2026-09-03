@@ -94,6 +94,14 @@ h1 .g{color:var(--gold)}
   margin:10px 0 4px;letter-spacing:-.01em}
 .app-sub{color:var(--muted);font-size:.83rem;margin:0 0 14px;line-height:1.5}
 
+/* app buttons */
+.btn-gold{display:block;width:100%;background:var(--gold);color:#12100d;border:none;
+  border-radius:14px;padding:15px;font-family:var(--disp);font-weight:800;
+  font-size:.95rem;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.btn-ghost{display:block;width:100%;background:none;color:var(--text);
+  border:1px solid var(--line);border-radius:14px;padding:14px;
+  font-family:var(--disp);font-weight:700;font-size:.9rem}
+
 /* tab bar */
 .tabbar{position:absolute;left:0;right:0;bottom:0;height:72px;z-index:20;
   background:linear-gradient(to top,var(--bg-deep) 60%,rgba(12,11,8,0));
@@ -124,7 +132,90 @@ h1 .g{color:var(--gold)}
 .coin.plat{background:radial-gradient(circle at 35% 30%,#e8e6e0,#8d8a82);color:#2a2925}
 .coin.slv{background:radial-gradient(circle at 35% 30%,#d9d7d0,#7e7b73);color:#2a2925}
 
-/* ————— screen 1: discover ————— */
+/* ————— screen 0: welcome ————— */
+.welcome{flex:1;display:flex;flex-direction:column;align-items:center;
+  padding:0 26px 34px;text-align:center}
+.w-coin{width:84px;height:84px;border-radius:50%;margin-top:74px;
+  background:radial-gradient(circle at 35% 30%,var(--gold-bright),var(--gold-deep));
+  box-shadow:inset 0 0 0 3px rgba(255,255,255,.25),0 14px 40px rgba(212,175,55,.3);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--disp);font-weight:800;font-size:2rem;color:#241c06}
+.w-brand{font-family:var(--disp);font-weight:800;font-size:1.7rem;margin-top:22px;
+  letter-spacing:-.01em}
+.w-brand .g{color:var(--gold)}
+.w-line{font-family:var(--serif);font-style:italic;color:var(--muted);
+  font-size:.95rem;line-height:1.55;margin:10px 0 0;max-width:24ch}
+.w-btns{margin-top:auto;width:100%;display:flex;flex-direction:column;gap:10px}
+.w-note{color:var(--faint);font-size:.7rem;line-height:1.5;margin-top:14px}
+
+/* ————— add screen ————— */
+.type-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:6px}
+.type{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  padding:14px 12px;display:flex;flex-direction:column;gap:8px;min-height:88px;
+  color:var(--text);text-align:left;transition:border-color .15s}
+.type:hover{border-color:var(--gold)}
+.type svg{width:22px;height:22px;color:var(--gold)}
+.type .t{font-family:var(--disp);font-weight:700;font-size:.82rem;line-height:1.2}
+.type .s{color:var(--faint);font-size:.66rem;line-height:1.35}
+.add-note{margin-top:14px;background:var(--gold-soft);border:1px solid rgba(212,175,55,.3);
+  border-radius:var(--r);padding:11px 13px;font-size:.76rem;color:var(--gold-bright);line-height:1.5}
+.add-note b{font-family:var(--disp)}
+
+/* ————— save gate ————— */
+.gate{flex:1;display:flex;flex-direction:column;padding:0 22px 30px}
+.gate-card{background:var(--panel-2);border:1px solid rgba(212,175,55,.35);
+  border-radius:16px;padding:16px;display:flex;gap:13px;align-items:center;
+  margin-top:26px;box-shadow:0 16px 40px -16px rgba(0,0,0,.7)}
+.gate-card .t{font-family:var(--disp);font-weight:800;font-size:1rem}
+.gate-card .s{color:var(--muted);font-size:.75rem;margin-top:2px}
+.gate-btns{margin-top:auto;display:flex;flex-direction:column;gap:10px}
+.gate-note{color:var(--faint);font-size:.72rem;line-height:1.55;text-align:center;
+  margin-top:14px;font-family:var(--serif);font-style:italic}
+.saved-chip{display:inline-flex;align-items:center;gap:6px;margin:18px auto 0;
+  font-family:var(--disp);font-weight:700;font-size:.68rem;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--good);
+  background:rgba(107,191,107,.1);border:1px solid rgba(107,191,107,.3);
+  border-radius:999px;padding:5px 12px}
+
+/* ————— the space ————— */
+.space-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.seg{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);
+  border-radius:999px;padding:3px;margin:10px 0 4px;width:max-content}
+.seg span{padding:4px 12px;border-radius:999px;font-family:var(--disp);
+  font-weight:600;font-size:.7rem;color:var(--muted)}
+.seg .cur{background:var(--gold-soft);color:var(--gold-bright)}
+.apill{width:100%;display:flex;gap:11px;align-items:center;text-align:left;
+  background:linear-gradient(120deg,rgba(212,175,55,.16),rgba(212,175,55,.06));
+  border:1px solid var(--gold);border-radius:14px;padding:12px 13px;margin:10px 0 6px;
+  color:var(--text);box-shadow:0 8px 26px -10px rgba(212,175,55,.35)}
+.apill .star{width:34px;height:34px;border-radius:50%;flex:none;
+  background:var(--gold);color:#12100d;display:flex;align-items:center;
+  justify-content:center;font-size:1rem}
+.apill .t{font-family:var(--disp);font-weight:700;font-size:.82rem;line-height:1.3}
+.apill .s{color:var(--muted);font-size:.7rem;margin-top:1px}
+.apill .go{margin-left:auto;flex:none;color:var(--gold);font-family:var(--disp);
+  font-weight:800;font-size:.78rem}
+.mem{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  padding:12px;margin-bottom:10px;display:flex;gap:11px;align-items:flex-start}
+.mem .body{flex:1;min-width:0}
+.mem .t{font-family:var(--disp);font-weight:700;font-size:.9rem;line-height:1.25}
+.mem .s{color:var(--muted);font-size:.73rem;line-height:1.45;margin-top:2px}
+.mem .tags{display:flex;gap:5px;margin-top:7px;flex-wrap:wrap}
+.yr{font-family:var(--disp);font-weight:700;font-size:.68rem;letter-spacing:.14em;
+  color:var(--faint);text-transform:uppercase;margin:18px 2px 8px;
+  display:flex;align-items:center;gap:10px}
+.yr::after{content:"";flex:1;height:1px;background:var(--line-soft)}
+.photo-mem{padding:0;overflow:hidden;flex-direction:column;gap:0}
+.photo{height:120px;position:relative;
+  background:linear-gradient(150deg,#3a2f1c 0%,#241d10 55%,#191510 100%)}
+.photo::after{content:"";position:absolute;inset:0;
+  background:radial-gradient(220px 120px at 30% 25%,rgba(232,200,96,.28),transparent 70%)}
+.photo .cap{position:absolute;left:12px;bottom:9px;z-index:2;
+  font-family:var(--serif);font-style:italic;font-size:.92rem;color:#f5edd8;
+  text-shadow:0 1px 8px rgba(0,0,0,.7)}
+.photo-mem .inner{padding:11px 12px;display:flex;gap:11px;align-items:flex-start}
+
+/* ————— discover ————— */
 .d-summary{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
   padding:12px 14px;display:flex;justify-content:space-between;align-items:center;
   position:sticky;top:0;z-index:10;box-shadow:0 8px 20px -8px rgba(12,11,8,.9)}
@@ -132,10 +223,6 @@ h1 .g{color:var(--gold)}
 .d-summary .n{color:var(--gold-bright)}
 .keepall{background:none;border:1px solid var(--gold);color:var(--gold);
   border-radius:999px;padding:5px 12px;font-family:var(--disp);font-weight:700;font-size:.72rem}
-.yr{font-family:var(--disp);font-weight:700;font-size:.68rem;letter-spacing:.14em;
-  color:var(--faint);text-transform:uppercase;margin:18px 2px 8px;
-  display:flex;align-items:center;gap:10px}
-.yr::after{content:"";flex:1;height:1px;background:var(--line-soft)}
 .frow{display:flex;gap:10px;align-items:center;background:var(--panel);
   border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;margin-bottom:8px;
   transition:border-color .2s,opacity .2s}
@@ -157,41 +244,7 @@ h1 .g{color:var(--gold)}
   box-shadow:0 10px 30px rgba(0,0,0,.6);transition:opacity .2s}
 .d-cta[disabled]{opacity:.35;cursor:default}
 
-/* ————— screen 2: space ————— */
-.space-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
-.seg{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);
-  border-radius:999px;padding:3px;margin:10px 0 4px;width:max-content}
-.seg span{padding:4px 12px;border-radius:999px;font-family:var(--disp);
-  font-weight:600;font-size:.7rem;color:var(--muted)}
-.seg .cur{background:var(--gold-soft);color:var(--gold-bright)}
-.mem{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
-  padding:12px;margin-bottom:10px;display:flex;gap:11px;align-items:flex-start}
-.mem .body{flex:1;min-width:0}
-.mem .t{font-family:var(--disp);font-weight:700;font-size:.9rem;line-height:1.25}
-.mem .s{color:var(--muted);font-size:.73rem;line-height:1.45;margin-top:2px}
-.mem .tags{display:flex;gap:5px;margin-top:7px;flex-wrap:wrap}
-.photo-mem{padding:0;overflow:hidden;flex-direction:column;gap:0}
-.photo{height:120px;position:relative;
-  background:linear-gradient(150deg,#3a2f1c 0%,#241d10 55%,#191510 100%)}
-.photo::after{content:"";position:absolute;inset:0;
-  background:radial-gradient(220px 120px at 30% 25%,rgba(232,200,96,.28),transparent 70%)}
-.photo .cap{position:absolute;left:12px;bottom:9px;z-index:2;
-  font-family:var(--serif);font-style:italic;font-size:.92rem;color:#f5edd8;
-  text-shadow:0 1px 8px rgba(0,0,0,.7)}
-.photo-mem .inner{padding:11px 12px;display:flex;gap:11px;align-items:flex-start}
-
-/* ————— screen 3: add ————— */
-.type-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:6px}
-.type{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
-  padding:14px 12px;display:flex;flex-direction:column;gap:8px;min-height:88px}
-.type svg{width:22px;height:22px;color:var(--gold)}
-.type .t{font-family:var(--disp);font-weight:700;font-size:.82rem;line-height:1.2}
-.type .s{color:var(--faint);font-size:.66rem;line-height:1.35}
-.add-note{margin-top:14px;background:var(--gold-soft);border:1px solid rgba(212,175,55,.3);
-  border-radius:var(--r);padding:11px 13px;font-size:.76rem;color:var(--gold-bright);line-height:1.5}
-.add-note b{font-family:var(--disp)}
-
-/* ————— screen 4: push ————— */
+/* ————— push ————— */
 .lock{position:absolute;inset:0;padding-top:46px;display:flex;flex-direction:column;
   align-items:center;background:
     radial-gradient(500px 340px at 50% 0%,rgba(212,175,55,.16),transparent 70%),
@@ -219,7 +272,7 @@ h1 .g{color:var(--gold)}
   display:flex;flex-direction:column;align-items:center;gap:9px}
 .lock-hint::after{content:"";width:120px;height:4px;border-radius:2px;background:rgba(245,242,234,.3)}
 
-/* ————— screen 5: share ————— */
+/* ————— share ————— */
 .mini-award{background:var(--panel-2);border:1px solid var(--line);border-radius:14px;
   padding:14px;display:flex;gap:12px;align-items:center;margin-top:8px}
 .mini-award .t{font-family:var(--disp);font-weight:800;font-size:.95rem}
@@ -244,27 +297,27 @@ h1 .g{color:var(--gold)}
 .rail-head{font-family:var(--disp);font-weight:700;font-size:.72rem;letter-spacing:.16em;
   text-transform:uppercase;color:var(--faint);margin:0 0 16px}
 .rentry{width:100%;text-align:left;display:flex;gap:16px;background:none;
-  border:1px solid transparent;border-radius:var(--r);padding:16px;
-  color:var(--text);transition:all .18s;margin-bottom:6px}
+  border:1px solid transparent;border-radius:var(--r);padding:14px 16px;
+  color:var(--text);transition:all .18s;margin-bottom:5px}
 .rentry:hover{background:var(--panel)}
 .rentry.cur{background:var(--panel);border-color:var(--line)}
 .rnum{font-family:var(--disp);font-weight:800;font-size:.9rem;color:var(--faint);
   flex:none;width:30px;padding-top:1px;transition:color .18s}
 .rentry.cur .rnum{color:var(--gold)}
-.rbody .rt{font-family:var(--disp);font-weight:700;font-size:1.02rem;
+.rbody .rt{font-family:var(--disp);font-weight:700;font-size:1rem;
   display:flex;align-items:center;gap:9px;flex-wrap:wrap}
 .rtag{font-family:var(--disp);font-weight:700;font-size:.6rem;letter-spacing:.1em;
   padding:2px 7px;border-radius:4px;background:var(--gold-soft);color:var(--gold-bright)}
-.rbody .rs{color:var(--muted);font-size:.83rem;line-height:1.55;margin-top:5px;max-width:52ch}
+.rbody .rs{color:var(--muted);font-size:.82rem;line-height:1.55;margin-top:4px;max-width:52ch}
 .rentry .rmore{display:none;color:var(--faint);font-size:.78rem;line-height:1.55;
-  margin-top:8px;max-width:52ch}
+  margin-top:7px;max-width:52ch}
 .rentry.cur .rmore{display:block}
 
 /* ————— mapping strip ————— */
 .mapping{border-top:1px solid var(--line-soft);padding:44px 0 8px}
 .mapping h2{font-family:var(--disp);font-weight:800;font-size:1.25rem;margin:0 0 4px}
 .mapping .sub{color:var(--muted);font-size:.9rem;margin:0 0 24px;max-width:60ch}
-.map-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.map-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
 .map{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px}
 .map .from{font-family:var(--disp);font-weight:500;font-size:.72rem;letter-spacing:.06em;
   text-transform:uppercase;color:var(--faint)}
@@ -298,14 +351,14 @@ h1 .g{color:var(--gold)}
 
 <header class="hero">
   <div class="wrap">
-    <p class="eyebrow">AwardHome <span class="dim">·</span> app concept <span class="dim">· pivot draft 1 · 2026-09-02</span></p>
+    <p class="eyebrow">AwardHome <span class="dim">·</span> app concept <span class="dim">· pivot draft 2 · 2026-09-02</span></p>
     <h1>Every award your kid ever earned. <span class="g">One place, forever.</span></h1>
-    <p class="lede">A private memory space for families — that already knows most of the story before you tell it.</p>
+    <p class="lede">A private memory space for families — that opens on adding, and only ever surprises you with more.</p>
     <div class="chips">
+      <span class="chip"><b>Add first</b> · account at save</span>
       <span class="chip"><b>Private</b> first</span>
-      <span class="chip"><b>Mobile</b> first</span>
-      <span class="chip"><b>1.5M</b> awards behind discovery</span>
-      <span class="chip">Web as funnel &amp; backup</span>
+      <span class="chip">Discovery <b>never says no</b></span>
+      <span class="chip"><b>1.5M</b> awards behind it</span>
     </div>
   </div>
 </header>
@@ -324,12 +377,116 @@ h1 .g{color:var(--gold)}
         </span>
       </div>
 
-      <!-- ————— SCREEN 1 · DISCOVER ————— -->
-      <section class="screen on" id="s0" aria-label="Discovery screen">
+      <!-- ————— 0 · WELCOME ————— -->
+      <section class="screen on" id="s0" aria-label="Welcome screen">
+        <div class="welcome">
+          <div class="w-coin">A</div>
+          <div class="w-brand">Award<span class="g">Home</span></div>
+          <p class="w-line">Every award and milestone your kid ever earned — kept, privately, forever.</p>
+          <div class="w-btns">
+            <button class="btn-gold" data-go="1">Add an award or milestone</button>
+            <button class="btn-ghost" data-go="3">Sign in</button>
+          </div>
+          <p class="w-note">No account needed to start.<br>Everything you add is private to your family.</p>
+        </div>
+      </section>
+
+      <!-- ————— 1 · ADD ————— -->
+      <section class="screen" id="s1" aria-label="Add screen">
         <div class="scroll">
-          <h2 class="app-h">We found her<br>history.</h2>
-          <p class="app-sub">You added <b>1 award</b> for Emma at Star Dance Academy.
-            Our archive matched <b>43 more</b>, 2019–2026. Are these hers?</p>
+          <h2 class="app-h">What happened?</h2>
+          <p class="app-sub">Pick a type — takes about a minute. Private to your family until you choose to share.</p>
+          <div class="type-grid">
+            <button class="type" data-go="2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 21h8m-4-4v4m-6-17h12v5a6 6 0 0 1-12 0V4Z"/><path d="M6 6H4a2 2 0 0 0 0 4h2M18 6h2a2 2 0 0 1 0 4h-2"/></svg>
+              <span class="t">Competition award</span><span class="s">Placements, overalls, adjudications</span></button>
+            <button class="type" data-go="2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5v14Z"/><path d="M9 8h6"/></svg>
+              <span class="t">Exam or level</span><span class="s">RAD, ABRSM, belts, grades</span></button>
+            <button class="type" data-go="2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3v3m0 12v3M3 12h3m12 0h3"/><circle cx="12" cy="12" r="5"/></svg>
+              <span class="t">Recital role</span><span class="s">Casts, solos, features</span></button>
+            <button class="type" data-go="2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="8" r="3"/><circle cx="16" cy="9" r="2.4"/><path d="M4 19c0-2.8 2.2-5 5-5s5 2.2 5 5m0-3c.8-1.2 2-2 3.5-2 1.4 0 2.5.7 3.5 2"/></svg>
+              <span class="t">Team selection</span><span class="s">Comp team, all-stars, squads</span></button>
+            <button class="type" data-go="2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5"/></svg>
+              <span class="t">Academic honor</span><span class="s">Honor roll, science fair, spelling bee</span></button>
+            <button class="type" data-go="2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m12 3 1.9 5.8H20l-5 3.7 1.9 5.8-4.9-3.6-4.9 3.6L9 12.5 4 8.8h6.1L12 3Z"/></svg>
+              <span class="t">A first ✦</span><span class="s">First pointe shoes, first stage, first goal</span></button>
+          </div>
+          <div class="add-note"><b>No sign-up wall.</b> Your entry saves on this phone as you type —
+            an account only comes up when it&rsquo;s time to keep it forever.</div>
+        </div>
+      </section>
+
+      <!-- ————— 2 · SAVE GATE ————— -->
+      <section class="screen" id="s2" aria-label="Save gate">
+        <div class="gate">
+          <h2 class="app-h" style="margin-top:14px">Keep this forever?</h2>
+          <p class="app-sub">Emma&rsquo;s first memory is ready.</p>
+          <div class="gate-card">
+            <div class="coin">1st</div>
+            <div><div class="t">Firebird Variation — 1st Place</div>
+              <div class="s">Peacock Cup Regionals · Junior Solo · Star Dance Academy</div></div>
+          </div>
+          <span class="saved-chip">✓ Already saved on this phone</span>
+          <div class="gate-btns">
+            <button class="btn-gold" data-go="3">Create a free account &amp; keep it</button>
+            <button class="btn-ghost" data-go="3">I have an account</button>
+          </div>
+          <p class="gate-note">Nothing you typed is lost either way — your draft stays right here
+            until it has a home.</p>
+        </div>
+      </section>
+
+      <!-- ————— 3 · THE SPACE ————— -->
+      <section class="screen" id="s3" aria-label="Home screen — Emma's space">
+        <div class="scroll">
+          <div class="space-head">
+            <h2 class="app-h">Emma&rsquo;s Space</h2>
+            <span class="pill pill-private">🔒 Private</span>
+          </div>
+
+          <button class="apill" data-go="4">
+            <span class="star">✦</span>
+            <span><span class="t">We may have found 43 more awards for Emma</span><br>
+              <span class="s">From the archive, 2019–2026 — only you can see this</span></span>
+            <span class="go">Review</span>
+          </button>
+
+          <div class="seg"><span class="cur">All</span><span>Awards</span><span>Milestones</span><span>Firsts</span></div>
+
+          <p class="yr">2026 season</p>
+          <div class="mem"><div class="coin">1st</div><div class="body">
+            <div class="t">Firebird Variation — 1st Place</div>
+            <div class="s">Peacock Cup Regionals · Junior Solo · Aug 2026 · added by Mom</div>
+            <div class="tags"><span class="pill pill-type">Award</span><span class="pill pill-private">Private</span></div>
+          </div></div>
+          <div class="mem photo-mem">
+            <div class="photo"><span class="cap">First time en pointe</span></div>
+            <div class="inner"><div class="body">
+              <div class="t">First en pointe</div>
+              <div class="s">Sep 2026 · Star Dance Academy</div>
+              <div class="tags"><span class="pill pill-type">First ✦</span><span class="pill pill-private">Private</span></div>
+            </div></div>
+          </div>
+          <div class="mem"><div class="coin" style="background:radial-gradient(circle at 35% 30%,#c9b8e8,#6a5a8e);color:#241c3a">G5</div><div class="body">
+            <div class="t">RAD Ballet Grade 5 — Distinction</div>
+            <div class="s">Royal Academy of Dance exam · Jun 2026</div>
+            <div class="tags"><span class="pill pill-type">Exam</span><span class="pill pill-private">Private</span></div>
+          </div></div>
+
+          <p class="yr">2025 season</p>
+          <div class="mem"><div class="coin" style="background:radial-gradient(circle at 35% 30%,#a8d8b8,#4e7e5e);color:#12301e">★</div><div class="body">
+            <div class="t">Cast as Clara — The Nutcracker</div>
+            <div class="s">Winter recital lead role · Dec 2025</div>
+            <div class="tags"><span class="pill pill-type">Recital</span><span class="pill pill-private">Private</span></div>
+          </div></div>
+        </div>
+      </section>
+
+      <!-- ————— 4 · DISCOVER ————— -->
+      <section class="screen" id="s4" aria-label="Discovery review screen">
+        <div class="scroll">
+          <h2 class="app-h">While you were adding&hellip;</h2>
+          <p class="app-sub">We searched 1.5&thinsp;million archived results for
+            <b>Emma at Star Dance Academy</b> and matched <b>43</b>, 2019–2026. Are these hers?</p>
           <div class="d-summary">
             <div><b class="n" id="keptN">0</b> <b>of 43 kept</b><br>
               <span style="font-size:.68rem;color:var(--faint)" id="revN">6 to review here · 37 below</span></div>
@@ -337,13 +494,13 @@ h1 .g{color:var(--gold)}
           </div>
 
           <p class="yr">2026 season</p>
-          <div class="frow" data-f><div class="coin">1st</div>
-            <div class="meta"><div class="t">Firebird Variation</div>
-              <div class="s">Peacock Cup Regionals · Junior Solo · 1st Place</div></div>
-            <div class="fbtns"><button class="fb fb-k" aria-label="Keep">✓</button><button class="fb fb-x" aria-label="Not hers">✕</button></div></div>
           <div class="frow" data-f><div class="coin plat">PL</div>
             <div class="meta"><div class="t">Paper Cranes</div>
               <div class="s">Peacock Cup Regionals · Junior Small Group · Platinum</div></div>
+            <div class="fbtns"><button class="fb fb-k" aria-label="Keep">✓</button><button class="fb fb-x" aria-label="Not hers">✕</button></div></div>
+          <div class="frow" data-f><div class="coin">HS</div>
+            <div class="meta"><div class="t">Firebird Variation</div>
+              <div class="s">Peacock Cup Regionals · Junior High Score · Top 10</div></div>
             <div class="fbtns"><button class="fb fb-k" aria-label="Keep">✓</button><button class="fb fb-x" aria-label="Not hers">✕</button></div></div>
 
           <p class="yr">2025 season</p>
@@ -371,75 +528,8 @@ h1 .g{color:var(--gold)}
         <button class="d-cta" id="dCta" disabled>Review to continue</button>
       </section>
 
-      <!-- ————— SCREEN 2 · THE SPACE ————— -->
-      <section class="screen" id="s1" aria-label="Home screen — Emma's space">
-        <div class="scroll">
-          <div class="space-head">
-            <h2 class="app-h">Emma&rsquo;s Space</h2>
-            <span class="pill pill-private">🔒 Private</span>
-          </div>
-          <div class="seg"><span class="cur">All</span><span>Awards</span><span>Milestones</span><span>Firsts</span></div>
-
-          <p class="yr">2026 season</p>
-          <div class="mem photo-mem">
-            <div class="photo"><span class="cap">First time en pointe</span></div>
-            <div class="inner"><div class="body">
-              <div class="t">First en pointe</div>
-              <div class="s">Sep 2026 · Star Dance Academy · added by Mom</div>
-              <div class="tags"><span class="pill pill-type">First ✦</span><span class="pill pill-private">Private</span></div>
-            </div></div>
-          </div>
-          <div class="mem"><div class="coin">1st</div><div class="body">
-            <div class="t">Firebird Variation — 1st Place</div>
-            <div class="s">Peacock Cup Regionals · Junior Solo · Aug 2026</div>
-            <div class="tags"><span class="pill pill-found">Found · kept</span><span class="pill pill-type">Award</span></div>
-          </div></div>
-          <div class="mem"><div class="coin" style="background:radial-gradient(circle at 35% 30%,#c9b8e8,#6a5a8e);color:#241c3a">G5</div><div class="body">
-            <div class="t">RAD Ballet Grade 5 — Distinction</div>
-            <div class="s">Royal Academy of Dance exam · Jun 2026</div>
-            <div class="tags"><span class="pill pill-type">Exam</span><span class="pill pill-private">Private</span></div>
-          </div></div>
-
-          <p class="yr">2025 season</p>
-          <div class="mem"><div class="coin slv">2nd</div><div class="body">
-            <div class="t">Clockwork — 2nd Overall</div>
-            <div class="s">Velocity Dance Challenge · Mini Solo · Mar 2025</div>
-            <div class="tags"><span class="pill pill-found">Found · kept</span><span class="pill pill-type">Award</span></div>
-          </div></div>
-          <div class="mem"><div class="coin" style="background:radial-gradient(circle at 35% 30%,#a8d8b8,#4e7e5e);color:#12301e">★</div><div class="body">
-            <div class="t">Cast as Clara — The Nutcracker</div>
-            <div class="s">Winter recital lead role · Dec 2025</div>
-            <div class="tags"><span class="pill pill-type">Recital</span><span class="pill pill-private">Private</span></div>
-          </div></div>
-        </div>
-      </section>
-
-      <!-- ————— SCREEN 3 · ADD ————— -->
-      <section class="screen" id="s2" aria-label="Add screen">
-        <div class="scroll">
-          <h2 class="app-h">What happened?</h2>
-          <p class="app-sub">Everything you add is private to your family until you choose to share it.</p>
-          <div class="type-grid">
-            <div class="type"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 21h8m-4-4v4m-6-17h12v5a6 6 0 0 1-12 0V4Z"/><path d="M6 6H4a2 2 0 0 0 0 4h2M18 6h2a2 2 0 0 1 0 4h-2"/></svg>
-              <div class="t">Competition award</div><div class="s">We&rsquo;ll check the archive for the rest</div></div>
-            <div class="type"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5v14Z"/><path d="M9 8h6"/></svg>
-              <div class="t">Exam or level</div><div class="s">RAD, ABRSM, belts, grades</div></div>
-            <div class="type"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3v3m0 12v3M3 12h3m12 0h3"/><circle cx="12" cy="12" r="5"/></svg>
-              <div class="t">Recital role</div><div class="s">Casts, solos, features</div></div>
-            <div class="type"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="8" r="3"/><circle cx="16" cy="9" r="2.4"/><path d="M4 19c0-2.8 2.2-5 5-5s5 2.2 5 5m0-3c.8-1.2 2-2 3.5-2 1.4 0 2.5.7 3.5 2"/></svg>
-              <div class="t">Team selection</div><div class="s">Comp team, all-stars, squads</div></div>
-            <div class="type"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5"/></svg>
-              <div class="t">Academic honor</div><div class="s">Honor roll, science fair, spelling bee</div></div>
-            <div class="type"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m12 3 1.9 5.8H20l-5 3.7 1.9 5.8-4.9-3.6-4.9 3.6L9 12.5 4 8.8h6.1L12 3Z"/></svg>
-              <div class="t">A first ✦</div><div class="s">First pointe shoes, first stage, first goal</div></div>
-          </div>
-          <div class="add-note"><b>Adding a competition award?</b> Tell us once — dancer, routine,
-            studio, event — and we&rsquo;ll search 1.5&thinsp;million archived results for the story so far.</div>
-        </div>
-      </section>
-
-      <!-- ————— SCREEN 4 · MONDAY PUSH ————— -->
-      <section class="screen" id="s3" aria-label="Lock screen with push notification">
+      <!-- ————— 5 · MONDAY PUSH ————— -->
+      <section class="screen" id="s5" aria-label="Lock screen with push notification">
         <div class="lock">
           <div class="lock-date">Monday, September 7</div>
           <div class="lock-time">9:41</div>
@@ -456,8 +546,8 @@ h1 .g{color:var(--gold)}
         </div>
       </section>
 
-      <!-- ————— SCREEN 5 · SHARE ————— -->
-      <section class="screen" id="s4" aria-label="Share sheet">
+      <!-- ————— 6 · SHARE ————— -->
+      <section class="screen" id="s6" aria-label="Share sheet">
         <div class="scroll" style="display:flex;flex-direction:column;padding-bottom:0">
           <h2 class="app-h">Share, or don&rsquo;t.</h2>
           <div class="mini-award">
@@ -483,63 +573,81 @@ h1 .g{color:var(--gold)}
         </div>
       </section>
 
-      <!-- tab bar (hidden on lock screen) -->
-      <nav class="tabbar" id="tabbar" aria-hidden="true">
+      <!-- tab bar: only inside the signed-in app (Space / Discover / Share) -->
+      <nav class="tabbar" id="tabbar" aria-hidden="true" style="display:none">
         <span class="tab cur"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1V10Z"/></svg>Space</span>
         <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Discover</span>
         <span class="tab-add" aria-hidden="true">+</span>
         <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.2"/><circle cx="16.5" cy="9.5" r="2.5"/><path d="M3.5 19c0-3 2.5-5.2 5.5-5.2s5.5 2.2 5.5 5.2m.5-3.4c.9-1 2-1.6 3.3-1.4 1.2.1 2.2.8 2.7 1.8"/></svg>Family</span>
-        <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.8-3.2 3.6-5.5 7-5.5s6.2 2.3 7 5.5"/></svg>You</span>
+        <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.8-3.2 3.6-5.5 7-5.5s7 2.3 7 5.5"/></svg>You</span>
       </nav>
     </div>
   </div>
 
   <aside class="rail" aria-label="Screen guide">
-    <p class="rail-head">Five screens · tap to switch · the phone is live</p>
+    <p class="rail-head">Seven screens · tap to switch · the phone is live — or walk the flow inside it</p>
 
     <button class="rentry cur" data-s="0">
       <span class="rnum">01</span>
-      <span class="rbody"><span class="rt">Discover <span class="rtag">P1</span></span>
-        <span class="rs">Enter one award; we hand back the history. The 1.5M-award archive
-          becomes the onboarding moment no competitor can copy.</span>
-        <span class="rmore">Offer-only, never auto-merge: the parent adjudicates identity —
-          the Zixi Yu lesson as product design. Wrong &ldquo;yes&rdquo; is undoable; a wrong
-          merge wouldn&rsquo;t be. Try the ✓/✕ buttons.</span></span>
+      <span class="rbody"><span class="rt">Welcome <span class="rtag">P1</span></span>
+        <span class="rs">Two buttons, no tour, no search box, no account wall. The app opens
+          on doing, not browsing.</span>
+        <span class="rmore">Discovery is deliberately NOT here: not every family has a dance
+          kid, and a first screen that can come back empty is a first screen that can fail.
+          Returning users never see this — secure-store token auto-logs them in.</span></span>
     </button>
 
     <button class="rentry" data-s="1">
       <span class="rnum">02</span>
-      <span class="rbody"><span class="rt">The Space <span class="rtag">P2</span></span>
-        <span class="rs">One timeline for the whole story: found awards, family-added
-          milestones, exams, firsts. Private by default, provenance visible.</span>
-        <span class="rmore">&ldquo;Found · kept&rdquo; vs &ldquo;Private&rdquo; chips make the two
-          provenances legible — archive facts can be hidden from the space; family
-          memories can be deleted outright.</span></span>
+      <span class="rbody"><span class="rt">Add anything <span class="rtag">P1·P2</span></span>
+        <span class="rs">Six types, none privileged: competition awards, exams, recital roles,
+          team selections, academic honors, firsts.</span>
+        <span class="rmore">The entry drafts locally with no account — the shipped M7 outbox
+          (id minted at draft creation, on-phone SQLite) already works exactly this way.
+          Tap any type to continue.</span></span>
     </button>
 
     <button class="rentry" data-s="2">
       <span class="rnum">03</span>
-      <span class="rbody"><span class="rt">Add anything <span class="rtag">P2</span></span>
-        <span class="rs">Not just dance, not just trophies: exams, recital roles, team
-          selections, academic honors, firsts.</span>
-        <span class="rmore">Dance is the beachhead — the only type where discovery fires
-          today, and the note on this screen says so honestly. Other verticals join as the
-          archive grows.</span></span>
+      <span class="rbody"><span class="rt">The save gate <span class="rtag">P1</span></span>
+        <span class="rs">The account ask comes AFTER the first memory exists — value before
+          commitment, and the draft is already safe on the phone.</span>
+        <span class="rmore">&ldquo;Already saved on this phone&rdquo; is true, not copy: signup
+          just attaches and syncs the outbox. Nothing typed is ever lost to the wall.</span></span>
     </button>
 
     <button class="rentry" data-s="3">
       <span class="rnum">04</span>
-      <span class="rbody"><span class="rt">The Monday push <span class="rtag">P3</span></span>
-        <span class="rs">The weekly scrape becomes the retention engine: she danced Saturday,
-          results posted Monday, the family did nothing.</span>
-        <span class="rmore">Awards are episodic and memory apps die of infrequency — this is
-          the counter. Every import that matches a claimed dancer is a push the family
-          didn&rsquo;t have to earn.</span></span>
+      <span class="rbody"><span class="rt">The Space <span class="rtag">P2</span></span>
+        <span class="rs">One private timeline for the whole story — and the discovery
+          <b>alert pill</b>, which appears only because the archive found a match.</span>
+        <span class="rmore">Discovery never says no: no match, no pill, no empty state. The
+          family that just added a spelling-bee ribbon simply never meets this feature.
+          Tap the pill.</span></span>
     </button>
 
     <button class="rentry" data-s="4">
       <span class="rnum">05</span>
-      <span class="rbody"><span class="rt">Share, or don&rsquo;t <span class="rtag">P4</span></span>
+      <span class="rbody"><span class="rt">Discover <span class="rtag">P3</span></span>
+        <span class="rs">&ldquo;While you were adding&hellip;&rdquo; — the first entry carried
+          exactly the keys the archive needed. No search form exists.</span>
+        <span class="rmore">Offer-only, parent-adjudicated (the Zixi Yu lesson): a wrong
+          &ldquo;yes&rdquo; is undoable, a wrong auto-merge wouldn&rsquo;t be. Deterministic
+          matching under the hood — it cannot hallucinate. Try ✓/✕.</span></span>
+    </button>
+
+    <button class="rentry" data-s="5">
+      <span class="rnum">06</span>
+      <span class="rbody"><span class="rt">The Monday push <span class="rtag">P4</span></span>
+        <span class="rs">The weekly scrape becomes the retention engine: she danced Saturday,
+          results posted Monday, the family did nothing.</span>
+        <span class="rmore">Same matcher as the pill, on a schedule, fed by fresh imports.
+          Awards are episodic and memory apps die of infrequency — this is the counter.</span></span>
+    </button>
+
+    <button class="rentry" data-s="6">
+      <span class="rnum">07</span>
+      <span class="rbody"><span class="rt">Share, or don&rsquo;t <span class="rtag">P5</span></span>
         <span class="rs">A four-rung ladder per memory: household → invited family → link →
           public. Everything starts on the bottom rung.</span>
         <span class="rmore">The defensible posture for a product about minors — and it&rsquo;s
@@ -554,6 +662,8 @@ h1 .g{color:var(--gold)}
     <p class="sub">The pivot is ~70% positioning, ~30% code. Each pillar of the app is an
       existing, tested system wearing new product clothes.</p>
     <div class="map-grid">
+      <div class="map"><div class="from">Offline outbox (M7)</div>
+        <div class="arrow">→</div><div class="to">is add-before-account</div></div>
       <div class="map"><div class="from">Staging ↔ canonical split (M1)</div>
         <div class="arrow">→</div><div class="to">is the privacy model</div></div>
       <div class="map"><div class="from">Claims + convergence (M4)</div>
@@ -568,8 +678,9 @@ h1 .g{color:var(--gold)}
 
 <footer class="foot">
   <div class="wrap">
-    <b>Where we go from here</b> — docs/pivot_plan.md: P1 discovery API → P2 milestone model →
-    P3 push loop → P4 privacy defaults → P5 web-as-funnel → P6 studio accounts → P7 family premium.
+    <b>Where we go from here</b> — docs/pivot_plan.md: P1 add-first onboarding → P2 milestone
+    model → P3 discovery-as-surprise → P4 push loop → P5 privacy defaults → P6 web-as-funnel →
+    P7 studio accounts → P8 family premium.
     Names and results on this page are fictional (Peacock Cup is the in-house demo org).
   </div>
 </footer>
@@ -583,6 +694,7 @@ h1 .g{color:var(--gold)}
   var screens = Array.prototype.slice.call(document.querySelectorAll('.screen'));
   var tabbar = document.getElementById('tabbar');
   var mchips = document.getElementById('mchips');
+  var TABBED = { 3: true, 4: true, 6: true };   // signed-in surfaces only
 
   entries.forEach(function (e) {
     var chip = document.createElement('button');
@@ -600,13 +712,18 @@ h1 .g{color:var(--gold)}
     entries.forEach(function (e) { e.classList.toggle('cur', e.dataset.s === i); });
     chips.forEach(function (c, j) { c.classList.toggle('cur', String(j) === i); });
     screens.forEach(function (s, j) { s.classList.toggle('on', String(j) === i); });
-    tabbar.style.display = (i === '3') ? 'none' : 'flex';   // lock screen hides tabs
+    tabbar.style.display = TABBED[i] ? 'flex' : 'none';
   }
   entries.forEach(function (e) {
     e.addEventListener('click', function () { select(e.dataset.s); });
   });
 
-  /* ——— screen 1: keep / not-hers ——— */
+  /* in-phone flow buttons: welcome → add → save gate → space → discover */
+  Array.prototype.forEach.call(document.querySelectorAll('[data-go]'), function (b) {
+    b.addEventListener('click', function () { select(b.dataset.go); });
+  });
+
+  /* ——— discover: keep / not-hers ——— */
   var rows = Array.prototype.slice.call(document.querySelectorAll('[data-f]'));
   var keptN = document.getElementById('keptN');
   var revN = document.getElementById('revN');
@@ -652,9 +769,9 @@ h1 .g{color:var(--gold)}
     });
     recount();
   });
-  cta.addEventListener('click', function () { select(1); });  // kept awards land in the Space
+  cta.addEventListener('click', function () { select(3); });  // kept awards land in the Space
 
-  /* ——— screen 5: privacy ladder ——— */
+  /* ——— share: privacy ladder ——— */
   var rungs = Array.prototype.slice.call(document.querySelectorAll('.rung'));
   var state = document.getElementById('shareState');
   rungs.forEach(function (r) {

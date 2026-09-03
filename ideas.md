@@ -226,3 +226,14 @@ staging, private independents, corroboration, offline outbox, claims, the app
 itself. The pivot is ~70% positioning, ~30% code. Monetization moves from B2B
 sponsorship to B2C family subscription (memory space, keepsakes — §13 becomes
 a premium feature, not a side idea). Full plan: docs/pivot_plan.md.
+
+**Refined 2026-09-02 (Q):** discovery must never be the FIRST screen — not
+every family has a dance kid, and a first screen that can come back empty is
+a first screen that can fail. The app opens on ADDING: welcome → add an award
+or milestone with no account → save gate ("create an account to keep this",
+draft already safe locally via the M7 outbox) → returning users auto-login
+into their Space. Discovery resequences to a later **alert pill / email** that
+fires only on a match — it either delights or stays silent, so the empty case
+costs nothing. The first entered award carries exactly the keys discovery
+needs, so discovery has no form of its own. Plan restructured: P1 add-first
+onboarding, P3 discovery-as-surprise (pivot_plan.md).
