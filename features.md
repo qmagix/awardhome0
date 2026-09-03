@@ -1710,10 +1710,15 @@ can fail. A device with a live session skips all of it: the secure-store
 refresh token auto-logs the family straight into their household.
 
 **Adding with no account.** The Add flow no longer redirects guests to
-sign-in. A guest names the dancer by TYPED NAME (there is no household to
-pick from), picks the event through the same public picker (`/events/nearby`
-is guest-capable; no server event session is opened — the chosen event's id
-rides the draft, exactly like the pre-existing 'upcoming' case), and saves.
+sign-in — and for guests, THE FORM COMES FIRST. The M7 "Which competition?"
+pre-step stays only for signed-in users (the venue weekend flow: pick the
+event once, enter all night offline under it — right for the tenth award of
+a weekend, wrong for the first memory of a lifetime). A guest gets one form:
+dancer by TYPED NAME (there is no household to pick from), the competition
+as an inline search FIELD inside the form (`/events/nearby` is
+guest-capable; results render inline, not as a nested FlatList; no server
+event session is opened — the chosen event's id rides the draft, exactly
+like the pre-existing 'upcoming' case), routine, size, placement, and Save.
 The draft goes into the M7 outbox as always — id minted at creation,
 expo-sqlite storage — which is what makes "already saved on this phone" on
 the save gate a fact rather than reassurance copy.

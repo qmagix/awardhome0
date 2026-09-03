@@ -166,7 +166,9 @@ export default function AddAwardScreen() {
   }, []);
 
   const size = GROUP_SIZES.find(g => g.key === groupSize);
-  const canSave = (signedIn ? dancerId !== null : guestName.trim().length > 0)
+  // A guest also needs the competition chosen in-form (signed-in users can't
+  // reach the form without one — Step 0 gates them).
+  const canSave = (signedIn ? dancerId !== null : (guestName.trim().length > 0 && stored !== null))
     && routine.trim().length > 0 && !!groupSize;
 
   const save = useCallback(async () => {
@@ -219,8 +221,13 @@ export default function AddAwardScreen() {
     return <View style={styles.screen}><ActivityIndicator color={theme.gold} /></View>;
   }
 
-  // ---- Step 0: which competition ----
-  if (!stored) {
+  // ---- Step 0 (SIGNED IN ONLY): which competition ----
+  // The weekend flow: a family at a venue picks the event once and enters all
+  // night offline under it. That ordering is right for the tenth award of a
+  // weekend and wrong for the first memory of a lifetime — a guest's very
+  // first screen must be the FORM (pivot P1), with the competition as one
+  // field inside it, not a gate in front of it.
+  if (!stored && signedIn) {
     return (
       <View style={styles.screen}>
         <Text style={styles.h1}>Which competition?</Text>
@@ -253,15 +260,18 @@ export default function AddAwardScreen() {
     );
   }
 
-  // ---- Steps 1–8: the award ----
+  // ---- The form (guests start HERE) ----
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={{ paddingBottom: theme.space(6) }}>
-      <View style={styles.sessionBar}>
-        <Text style={styles.sessionText}>{stored.label}</Text>
-        <Pressable onPress={() => { void kvSet(SESSION_KEY, null); setStored(null); }}>
-          <Text style={styles.link}>Change</Text>
-        </Pressable>
-      </View>
+    <ScrollView style={styles.screen} contentContainerStyle={{ paddingBottom: theme.space(6) }}
+      keyboardShouldPersistTaps="handled">
+      {stored && signedIn && (
+        <View style={styles.sessionBar}>
+          <Text style={styles.sessionText}>{stored.label}</Text>
+          <Pressable onPress={() => { void kvSet(SESSION_KEY, null); setStored(null); }}>
+            <Text style={styles.link}>Change</Text>
+          </Pressable>
+        </View>
+      )}
 
       {signedIn ? (
         <>
@@ -297,6 +307,47 @@ export default function AddAwardScreen() {
             Saved privately on this phone for now. When you create your account, we&apos;ll connect
             this to their profile.
           </Text>
+
+          {/* The competition is a FIELD, not a gate. Inline results rather
+              than a FlatList: this sits inside the form's ScrollView, and a
+              nested VirtualizedList is both a warning and a scroll trap. */}
+          <Text style={styles.label}>Competition *</Text>
+          {stored ? (
+            <View style={styles.sessionBar}>
+              <Text style={styles.sessionText}>{stored.label}</Text>
+              <Pressable onPress={() => { void kvSet(SESSION_KEY, null); setStored(null); }}>
+                <Text style={styles.link}>Change</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <>
+              <TextInput
+                value={query}
+                onChangeText={(t) => { setQuery(t); void search(t); }}
+                placeholder="Search competitions, e.g. Peacock Cup"
+                placeholderTextColor={theme.muted}
+                style={styles.input}
+                accessibilityLabel="Search competitions"
+              />
+              {searching && <ActivityIndicator color={theme.gold} style={{ marginTop: theme.space(1) }} />}
+              {options.slice(0, 6).map(item => (
+                <Pressable
+                  key={`${item.kind}:${item.id}`}
+                  style={styles.row}
+                  onPress={() => { void chooseEvent(item); setQuery(''); setOptions([]); }}
+                >
+                  <Text style={styles.rowName}>{item.name}</Text>
+                  <Text style={styles.rowMeta}>
+                    {[item.when, item.where, item.note].filter(Boolean).join(' · ')}
+                  </Text>
+                </Pressable>
+              ))}
+              <Text style={styles.hint}>
+                Matching the real event keeps every award connected to its competition — and lets
+                us find more of the story later.
+              </Text>
+            </>
+          )}
         </>
       )}
 
