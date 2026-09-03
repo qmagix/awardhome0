@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { router } from 'expo-router';
 import { outbox, onOutboxChange, flushIfPossible, type Draft } from '@/outbox';
+import { useSession } from '@/ui/Session';
 import { theme } from '@/ui/theme';
 
 /**
@@ -12,6 +14,7 @@ import { theme } from '@/ui/theme';
  * assuming a weekend was recorded when it is still sitting on the phone.
  */
 export default function OutboxScreen() {
+  const { signedIn } = useSession();
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [busy, setBusy] = useState(false);
 
@@ -48,15 +51,30 @@ export default function OutboxScreen() {
             data={drafts}
             keyExtractor={(d) => d.clientSubmissionId}
             renderItem={({ item }) => {
-              const p = item.payload as { performance_name?: string; place?: string };
+              const p = item.payload as { performance_name?: string; place?: string; dancer_name?: string };
               const stuck = item.status === 'failed' && item.attempts >= 8;
+              // A guest draft (pivot P1): named dancer, no id yet. It is not
+              // failing — it is waiting for an account, or for the household
+              // dancer this name belongs to.
+              const waiting = !outbox.isSendable(item);
               return (
                 <View style={styles.card}>
                   <Text style={styles.name}>{p.performance_name ?? 'Award'}</Text>
                   <Text style={styles.meta}>
                     {p.place ? `${p.place} · ` : ''}
-                    {stuck ? 'Needs your attention' : item.attempts > 0 ? `Retrying (${item.attempts})` : 'Waiting to send'}
+                    {waiting
+                      ? (signedIn
+                        ? `Waiting for ${p.dancer_name ?? 'a dancer'}’s profile in your household`
+                        : 'Safe on this phone — create an account to send it')
+                      : stuck ? 'Needs your attention' : item.attempts > 0 ? `Retrying (${item.attempts})` : 'Waiting to send'}
                   </Text>
+                  {waiting && (
+                    <Pressable onPress={() => router.push(signedIn ? '/search' : '/keep')}>
+                      <Text style={styles.link}>
+                        {signedIn ? `Find and claim ${p.dancer_name ?? 'this dancer'} →` : 'Keep it forever →'}
+                      </Text>
+                    </Pressable>
+                  )}
                   {item.lastError && <Text style={styles.err}>{item.lastError}</Text>}
                   {stuck && (
                     <View style={styles.actions}>

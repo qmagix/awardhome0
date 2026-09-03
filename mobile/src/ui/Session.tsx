@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { auth, getHousehold, type HouseholdDancer } from '@/api/client';
+import { attachGuestDrafts } from '@/outbox';
 
 /**
  * Whether this device has a session, and who it belongs to.
@@ -41,6 +42,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       setEmail(me.user.email);
       setDancers(me.dancers);
       setEndedReason(null);
+      // Pivot P1: any drafts written before this account existed get their
+      // dancer ids now, and send themselves. Fire-and-forget — the household
+      // screen must not wait on the outbox.
+      void attachGuestDrafts(me.dancers);
     } catch {
       // A failed /me on launch means the refresh token is gone or rejected.
       // tokens.ts has already cleared it; there is nothing to retry.

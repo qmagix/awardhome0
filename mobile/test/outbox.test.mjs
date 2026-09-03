@@ -209,3 +209,96 @@ test('a weekend batches under one event session', async () => {
   assert.equal([...sessions][0], sessionId);
   assert.equal(server.uniqueCount, 3);
 });
+
+// ---- Pivot P1: add first, account at save ---------------------------------
+//
+// "A family adds their first memory with NO account. The draft lives on the
+// phone; signing in attaches it to the household by dancer name and it sends
+// itself." The dangerous outcomes are (a) a guest draft burning its retry
+// budget on sends that cannot succeed, and (b) a memory attaching to the
+// WRONG child because two household dancers share a name.
+
+const guestPolicy = { sendable: (p) => p.dancer_id != null };
+
+test('a guest draft is waiting, not failing — no retries burned before an account exists', async () => {
+  const store = memoryStore();
+  const server = fakeServer();
+  const outbox = createOutbox({ store, send: server.send, uuid: seq, ...guestPolicy });
+
+  const draft = await outbox.enqueue({ dancer_name: 'Emma Chen', performance_name: 'Firebird' });
+  await outbox.flush();
+  await outbox.flush();
+
+  assert.equal(server.received.length, 0, 'nothing was sent for a draft with no dancer id');
+  const row = await store.get(draft.clientSubmissionId);
+  assert.equal(row.status, 'pending');
+  assert.equal(row.attempts, 0, 'skipping is free — the retry budget is intact');
+  assert.equal((await outbox.counts()).waiting, 1);
+  assert.equal((await outbox.counts()).pending, 0);
+});
+
+test('sign-in attaches the guest draft by folded name and it sends exactly once', async () => {
+  const store = memoryStore();
+  const server = fakeServer();
+  const outbox = createOutbox({ store, send: server.send, uuid: seq, ...guestPolicy });
+
+  const draft = await outbox.enqueue({ dancer_name: '  emma   CHEN ', performance_name: 'Firebird' });
+  const attached = await outbox.attach([{ id: 7, name: 'Emma Chen' }]);
+  await outbox.flush();
+
+  assert.equal(attached, 1);
+  assert.equal(server.uniqueCount, 1);
+  assert.equal(server.received[0].dancer_id, 7, 'the typed name became the household dancer');
+  assert.equal(server.received[0].client_submission_id, draft.clientSubmissionId,
+    'the id minted at guest-draft creation survived the attach — still exactly-once');
+});
+
+test('an ambiguous name attaches NOTHING — a memory must never land on the wrong child', async () => {
+  const store = memoryStore();
+  const server = fakeServer();
+  const outbox = createOutbox({ store, send: server.send, uuid: seq, ...guestPolicy });
+
+  await outbox.enqueue({ dancer_name: 'Zixi Yu', performance_name: 'Clockwork' });
+  const attached = await outbox.attach([
+    { id: 1, name: 'Zixi Yu' },
+    { id: 2, name: 'zixi yu' }, // two household profiles folding to one name
+  ]);
+  await outbox.flush();
+
+  assert.equal(attached, 0, 'ambiguity waits for a person');
+  assert.equal(server.received.length, 0);
+  assert.equal((await outbox.counts()).waiting, 1, 'the draft is still safe and visible');
+});
+
+test('a name with no household match keeps waiting; a later attach picks it up', async () => {
+  const store = memoryStore();
+  const server = fakeServer();
+  const outbox = createOutbox({ store, send: server.send, uuid: seq, ...guestPolicy });
+
+  await outbox.enqueue({ dancer_name: 'Emma Chen', performance_name: 'Firebird' });
+  assert.equal(await outbox.attach([{ id: 9, name: 'Someone Else' }]), 0);
+  await outbox.flush();
+  assert.equal(server.received.length, 0);
+
+  // The family claims Emma; the household refresh attaches and the draft goes.
+  assert.equal(await outbox.attach([{ id: 9, name: 'Someone Else' }, { id: 7, name: 'Emma Chen' }]), 1);
+  await outbox.flush();
+  assert.equal(server.uniqueCount, 1);
+  assert.equal(server.received[0].dancer_id, 7);
+});
+
+test('attach never rewrites a signed-in draft or a sent one', async () => {
+  const store = memoryStore();
+  const server = fakeServer();
+  const outbox = createOutbox({ store, send: server.send, uuid: seq, ...guestPolicy });
+
+  // A signed-in draft (has its id already) and a sent guest draft.
+  await outbox.enqueue({ dancer_id: 3, dancer_name: 'Emma Chen', performance_name: 'Rise' });
+  await outbox.flush();
+  assert.equal(server.uniqueCount, 1);
+
+  const attached = await outbox.attach([{ id: 7, name: 'Emma Chen' }]);
+  assert.equal(attached, 0, 'an id already chosen is never second-guessed');
+  await outbox.flush();
+  assert.equal(server.received.every(r => r.dancer_id === 3), true);
+});

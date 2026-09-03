@@ -56,6 +56,15 @@ export interface OutboxOptions {
   uuid?: () => string;
   /** Called after every flush so the UI can re-render counts. */
   onChange?: () => void;
+  /**
+   * May this draft be sent at all yet? (Pivot P1: a draft written before an
+   * account exists names its dancer by TYPED NAME, not id — the server would
+   * reject it, so sending would burn its retry budget on a draft that is not
+   * wrong, just early.) A draft that is not sendable is skipped by flushes
+   * without an attempt: it is WAITING, not failing. Default: everything is
+   * sendable.
+   */
+  sendable?: (payload: Record<string, unknown>) => boolean;
 }
 
 /** Give up retrying automatically after this many failures. The draft is NOT
@@ -64,9 +73,18 @@ export interface OutboxOptions {
  *  outcome worse than a stuck queue. */
 const MAX_AUTO_ATTEMPTS = 8;
 
+/** One name-shape for matching a typed dancer name to a household profile:
+ *  case- and whitespace-insensitive, nothing cleverer. Anything fuzzier than
+ *  this is an identity guess, and identity guesses are the parent's to make,
+ *  not ours (the Zixi Yu lesson). */
+export function foldName(name: string): string {
+  return name.toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
 export function createOutbox(opts: OutboxOptions) {
   const now = opts.now ?? (() => Date.now());
   const uuid = opts.uuid ?? (() => globalThis.crypto.randomUUID());
+  const sendable = opts.sendable ?? (() => true);
   // Single-flight, for the same reason the token refresh is: two concurrent
   // flushes would send the same drafts twice, and while the server would
   // deduplicate them, it doubles the traffic on exactly the bad network this
@@ -106,6 +124,9 @@ export function createOutbox(opts: OutboxOptions) {
 
     for (const draft of queue) {
       if (draft.attempts >= MAX_AUTO_ATTEMPTS) continue;
+      // Waiting, not failing: skipped with no attempt recorded, so the retry
+      // budget is intact for when the draft becomes sendable.
+      if (!sendable(draft.payload)) continue;
       await opts.store.put({ ...draft, status: 'sending' });
       try {
         const res = await opts.send({
@@ -171,12 +192,61 @@ export function createOutbox(opts: OutboxOptions) {
       opts.onChange?.();
     },
 
-    async counts(): Promise<{ pending: number; sent: number; stuck: number }> {
+    /** Is this draft eligible to send, per the injected policy? */
+    isSendable(draft: Draft): boolean {
+      return sendable(draft.payload);
+    },
+
+    /**
+     * Connect drafts written before the account existed to the household that
+     * now does (pivot P1). A guest draft names its dancer by typed name; once
+     * the family signs in and their household loads, any draft whose folded
+     * name matches EXACTLY ONE household dancer gets that dancer's id and
+     * becomes sendable. An ambiguous name — two household dancers folding the
+     * same — attaches nothing: the one wrong outcome here is a memory landing
+     * on the wrong child, so ambiguity waits for a person.
+     *
+     * The typed name is kept on the payload after attaching: it is what the
+     * family actually wrote, and the server ignores fields it doesn't know.
+     */
+    async attach(dancers: { id: number; name: string }[]): Promise<number> {
+      const byFold = new Map<string, number[]>();
+      for (const d of dancers) {
+        const k = foldName(d.name);
+        byFold.set(k, [...(byFold.get(k) ?? []), d.id]);
+      }
+      let attached = 0;
+      for (const draft of await opts.store.all()) {
+        const p = draft.payload;
+        if (typeof p['dancer_name'] !== 'string' || p['dancer_id'] != null) continue;
+        if (draft.status === 'sent') continue;
+        const ids = byFold.get(foldName(p['dancer_name']));
+        if (!ids || ids.length !== 1) continue; // unknown or ambiguous: wait
+        await opts.store.put({
+          ...draft,
+          payload: { ...p, dancer_id: ids[0] },
+          // A guest draft may sit failed from before policy skipping existed;
+          // attaching is new information, so retries start fresh.
+          status: 'pending',
+          attempts: 0,
+          lastError: null,
+        });
+        attached++;
+      }
+      if (attached > 0) opts.onChange?.();
+      return attached;
+    },
+
+    async counts(): Promise<{ pending: number; sent: number; stuck: number; waiting: number }> {
       const all = await opts.store.all();
+      const live = all.filter(d => (d.status === 'pending' || d.status === 'failed') && d.attempts < MAX_AUTO_ATTEMPTS);
       return {
-        pending: all.filter(d => (d.status === 'pending' || d.status === 'failed') && d.attempts < MAX_AUTO_ATTEMPTS).length,
+        pending: live.filter(d => sendable(d.payload)).length,
         sent: all.filter(d => d.status === 'sent').length,
         stuck: all.filter(d => d.status === 'failed' && d.attempts >= MAX_AUTO_ATTEMPTS).length,
+        /** On the phone, safe, and not eligible to send yet — guest drafts
+         *  waiting for an account or a dancer profile. */
+        waiting: live.filter(d => !sendable(d.payload)).length,
       };
     },
   };

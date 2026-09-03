@@ -66,9 +66,14 @@ discovery arrives later, as a surprise that only ever speaks when it has
 something to show. Discovery never says no — it either delights or stays
 silent.)*
 
-### P1 — Add-first onboarding: value before account
+### P1 — Add-first onboarding: value before account (SHIPPED 2026-09-02)
 The welcome screen has two buttons: **Add an award or milestone**, and
 **Sign in**. No feature tour, no search box, no account wall.
+*Shipped: welcome + guest add + save gate + attach-on-sign-in, client-side
+only (the wall was entirely client-side; no server changes). See features.md
+"Pivot P1". Limit carried to P2: a typed dancer with no household match parks
+visibly — creating a profile for a child not in the archive is the milestone
+model's work.*
 
 - A new user adds their first memory with NO account. The draft lives on the
   phone — the M7 outbox already does exactly this (`client_submission_id`

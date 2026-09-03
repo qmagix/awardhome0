@@ -22,7 +22,25 @@ export const outbox = createOutbox({
   store: sqliteDraftStore,
   send: postSubmission,
   onChange: () => { listeners.forEach(l => l()); },
+  // Pivot P1: a draft made before the account exists names its dancer by
+  // typed name. It is safe on disk but not yet sendable — the flush skips it
+  // without burning retries until attach() gives it a dancer id.
+  sendable: (p) => p['dancer_id'] != null,
 });
+
+/**
+ * After sign-in (or any household refresh): connect guest drafts to the
+ * household's dancers by typed name, then try to drain whatever that made
+ * sendable. Never throws — a failed attach costs the sync, not the caller.
+ */
+export async function attachGuestDrafts(dancers: { id: number; name: string }[]): Promise<void> {
+  try {
+    const attached = await outbox.attach(dancers);
+    if (attached > 0) await flushIfPossible();
+  } catch {
+    // Drafts are still on disk; the next refresh retries the attach.
+  }
+}
 
 export function onOutboxChange(fn: () => void): () => void {
   listeners.add(fn);

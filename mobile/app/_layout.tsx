@@ -36,13 +36,15 @@ export default function RootLayout() {
             contentStyle: { backgroundColor: theme.bg },
           }}
         >
-          <Stack.Screen name="index" options={{ title: 'AwardHome' }} />
+          <Stack.Screen name="index" options={{ title: 'AwardHome', headerShown: false }} />
+          <Stack.Screen name="search" options={{ title: 'Find a dancer' }} />
           <Stack.Screen name="dancer/[id]" options={{ title: 'Trophy case' }} />
           <Stack.Screen name="claim/[id]" options={{ title: 'Is this your dancer?' }} />
           <Stack.Screen name="studio/[id]" options={{ title: 'Studio' }} />
           <Stack.Screen name="sign-in" options={{ title: 'Sign in', presentation: 'modal' }} />
           <Stack.Screen name="household" options={{ title: 'My dancers' }} />
           <Stack.Screen name="add" options={{ title: 'Add an award' }} />
+          <Stack.Screen name="keep" options={{ title: 'Keep it forever' }} />
           <Stack.Screen name="outbox" options={{ title: 'Waiting to send' }} />
         </Stack>
       </SessionProvider>

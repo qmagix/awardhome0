@@ -38,7 +38,7 @@ interface StoredSession { session: EventSession; label: string }
  * against the archive or it becomes a duplicate, but a placement does not.
  */
 export default function AddAwardScreen() {
-  const { dancers, signedIn, ready } = useSession();
+  const { dancers, signedIn } = useSession();
   const [askedPublish, setAskedPublish] = useState(false);
   const [stored, setStored] = useState<StoredSession | null>(null);
   const [loadingSession, setLoadingSession] = useState(true);
@@ -50,6 +50,10 @@ export default function AddAwardScreen() {
 
   // The award itself
   const [dancerId, setDancerId] = useState<number | null>(null);
+  // Pivot P1: with no account there is no household to pick from, so the
+  // dancer is a TYPED NAME. The draft stays on this phone until an account
+  // exists; signing in attaches it to the household dancer with this name.
+  const [guestName, setGuestName] = useState('');
   // The dancer this entry is for, resolved once — several blocks below need it.
   const selected = dancers.find(d => d.id === dancerId) ?? null;
   const [routine, setRoutine] = useState('');
@@ -70,10 +74,11 @@ export default function AddAwardScreen() {
     })();
   }, []);
 
+  // Pivot P1: no sign-in wall. A guest completes the whole form; the account
+  // ask comes at the save gate, after the memory exists.
   useEffect(() => {
-    if (ready && !signedIn) router.replace('/sign-in');
     if (dancers.length === 1 && dancerId === null) setDancerId(dancers[0]!.id);
-  }, [ready, signedIn, dancers, dancerId]);
+  }, [dancers, dancerId]);
 
   const search = useCallback(async (q: string) => {
     if (q.trim().length < 2) { setOptions([]); return; }
@@ -95,6 +100,25 @@ export default function AddAwardScreen() {
       const ref = opt.kind === 'event' ? { event_id: opt.id }
         : opt.kind === 'candidate' ? { event_candidate_id: opt.id }
           : { event_id: undefined };
+      if (!signedIn && opt.kind !== 'upcoming') {
+        // A guest cannot open a server event session (bearer-only), and does
+        // not need one for a first memory: the picker is public, so the
+        // chosen event's id rides the draft directly, exactly like the
+        // 'upcoming' case below. The weekend-session machinery starts
+        // mattering with an account and a second routine.
+        const s: StoredSession = {
+          session: {
+            id: '',
+            event_id: (opt.kind === 'event' ? opt.id : null) ?? null,
+            event_candidate_id: (opt.kind === 'candidate' ? opt.id : null) ?? null,
+            created_at: '',
+          },
+          label: opt.name ?? 'This competition',
+        };
+        await kvSet(SESSION_KEY, s);
+        setStored(s);
+        return;
+      }
       if (opt.kind === 'upcoming') {
         // An organizer's announced stop has no canonical event yet; the server
         // seeds a candidate for it at submit time, so the session hangs off
@@ -114,7 +138,7 @@ export default function AddAwardScreen() {
     } catch {
       Alert.alert('Could not start', 'We couldn\'t reach AwardHome to set up this event.');
     }
-  }, []);
+  }, [signedIn]);
 
   // expo-image-picker is loaded only when the button is tapped. A top-level
   // import throws "Cannot find native module 'ExponentImagePicker'" on a
@@ -142,14 +166,21 @@ export default function AddAwardScreen() {
   }, []);
 
   const size = GROUP_SIZES.find(g => g.key === groupSize);
+  const canSave = (signedIn ? dancerId !== null : guestName.trim().length > 0)
+    && routine.trim().length > 0 && !!groupSize;
 
   const save = useCallback(async () => {
-    if (!dancerId || !routine.trim() || !groupSize) return;
+    const guest = !signedIn;
+    if (guest ? !guestName.trim() : !dancerId) return;
+    if (!routine.trim() || !groupSize) return;
     setSaving(true);
     try {
       const active = await kvGet<StoredSession & { upcoming_event_id?: number }>(SESSION_KEY);
       await outbox.enqueue({
-        dancer_id: dancerId,
+        // A guest draft names its dancer; sign-in turns the name into an id
+        // (outbox.attach) and only then does the draft become sendable.
+        dancer_id: dancerId ?? undefined,
+        dancer_name: guest ? guestName.trim() : undefined,
         event_id: active?.session?.event_id ?? undefined,
         event_candidate_id: active?.session?.event_candidate_id ?? undefined,
         upcoming_event_id: active?.upcoming_event_id,
@@ -172,11 +203,17 @@ export default function AddAwardScreen() {
       // Keep the weekend's context; clear only what changes per routine.
       setRoutine(''); setPlace(''); setCategory(''); setNote('');
       setCastComplete(false); setPhotoUri(null);
-      Alert.alert('Saved', 'Added to your queue. It will send itself when you have signal.');
+      if (guest) {
+        // The save gate, not an alert: the memory exists now, so THIS is the
+        // moment the account ask has something to offer (pivot P1).
+        router.push('/keep');
+      } else {
+        Alert.alert('Saved', 'Added to your queue. It will send itself when you have signal.');
+      }
     } finally {
       setSaving(false);
     }
-  }, [dancerId, routine, groupSize, place, category, teacher, choreographer, note, castComplete, size]);
+  }, [signedIn, guestName, dancerId, routine, groupSize, place, category, teacher, choreographer, note, castComplete, size]);
 
   if (loadingSession) {
     return <View style={styles.screen}><ActivityIndicator color={theme.gold} /></View>;
@@ -226,20 +263,42 @@ export default function AddAwardScreen() {
         </Pressable>
       </View>
 
-      <Text style={styles.label}>Dancer</Text>
-      <View style={styles.chips}>
-        {dancers.map(d => (
-          <Pressable
-            key={d.id}
-            onPress={() => setDancerId(d.id)}
-            style={[styles.chip, dancerId === d.id && styles.chipOn]}
-          >
-            <Text style={dancerId === d.id ? styles.chipTextOn : styles.chipText}>
-              {d.name}{d.standing === 'pending_claim' ? ' · pending' : ''}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
+      {signedIn ? (
+        <>
+          <Text style={styles.label}>Dancer</Text>
+          <View style={styles.chips}>
+            {dancers.map(d => (
+              <Pressable
+                key={d.id}
+                onPress={() => setDancerId(d.id)}
+                style={[styles.chip, dancerId === d.id && styles.chipOn]}
+              >
+                <Text style={dancerId === d.id ? styles.chipTextOn : styles.chipText}>
+                  {d.name}{d.standing === 'pending_claim' ? ' · pending' : ''}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </>
+      ) : (
+        <>
+          <Text style={styles.label}>Who is this for? *</Text>
+          <TextInput
+            value={guestName}
+            onChangeText={setGuestName}
+            style={styles.input}
+            placeholder="Dancer's name, e.g. Emma Chen"
+            placeholderTextColor={theme.muted}
+            autoCapitalize="words"
+            autoCorrect={false}
+            accessibilityLabel="Dancer's name"
+          />
+          <Text style={styles.hint}>
+            Saved privately on this phone for now. When you create your account, we&apos;ll connect
+            this to their profile.
+          </Text>
+        </>
+      )}
 
       {/* An independent has no director, so "pending review" would name a
           reviewer who does not exist. Say what is true: it is kept, privately,
@@ -352,18 +411,20 @@ export default function AddAwardScreen() {
       <TextInput value={note} onChangeText={setNote} style={[styles.input, styles.multiline]} multiline />
 
       <Pressable
-        style={[styles.cta, (!dancerId || !routine.trim() || !groupSize) && styles.ctaOff]}
+        style={[styles.cta, !canSave && styles.ctaOff]}
         onPress={() => void save()}
-        disabled={saving || !dancerId || !routine.trim() || !groupSize}
+        disabled={saving || !canSave}
       >
         {saving ? <ActivityIndicator color={theme.gold} />
-          : <Text style={styles.ctaText}>Add to queue</Text>}
+          : <Text style={styles.ctaText}>{signedIn ? 'Add to queue' : 'Save this memory'}</Text>}
       </Pressable>
-      <Pressable onPress={() => router.push('/outbox')}>
-        <Text style={[styles.link, { textAlign: 'center', marginTop: theme.space(2) }]}>
-          See what&apos;s waiting to send →
-        </Text>
-      </Pressable>
+      {signedIn && (
+        <Pressable onPress={() => router.push('/outbox')}>
+          <Text style={[styles.link, { textAlign: 'center', marginTop: theme.space(2) }]}>
+            See what&apos;s waiting to send →
+          </Text>
+        </Pressable>
+      )}
     </ScrollView>
   );
 }

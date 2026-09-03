@@ -1698,3 +1698,52 @@ A corollary for `POST /api/merge/dancers`: it takes raw ids from the caller and
 deletes the source with no identity check at all. Fine from the admin compare
 screen, where a human just looked at both records; not something to drive from
 a list of ids copied between environments.
+
+## Pivot P1 — add first, account at save (2026-09-02)
+
+The app opens on doing. `mobile/app/index.tsx` is now a welcome screen with
+two buttons — **Add an award or milestone** and **Sign in** — no tour, no
+search box, no account wall. Guest search still exists at `/search` (the
+archive door, reached by choice), because for every family outside the
+scraped orgs a first screen that can come back empty is a first screen that
+can fail. A device with a live session skips all of it: the secure-store
+refresh token auto-logs the family straight into their household.
+
+**Adding with no account.** The Add flow no longer redirects guests to
+sign-in. A guest names the dancer by TYPED NAME (there is no household to
+pick from), picks the event through the same public picker (`/events/nearby`
+is guest-capable; no server event session is opened — the chosen event's id
+rides the draft, exactly like the pre-existing 'upcoming' case), and saves.
+The draft goes into the M7 outbox as always — id minted at creation,
+expo-sqlite storage — which is what makes "already saved on this phone" on
+the save gate a fact rather than reassurance copy.
+
+**Waiting, not failing.** The outbox gained a `sendable` policy: a draft
+whose payload has no `dancer_id` is skipped by every flush WITHOUT burning an
+attempt — it is early, not wrong. `counts()` now reports it under `waiting`,
+and the outbox screen says what is actually true: "Safe on this phone —
+create an account to send it."
+
+**The save gate** (`mobile/app/keep.tsx`) appears after a guest save: the
+memory as a card, "✓ Already saved on this phone", create-account / sign-in
+(both the same emailed-code flow — entering the code creates the account),
+and "Add another first". Declining is allowed; the welcome screen shows a
+"N memories saved on this phone" resume pill while anything is waiting.
+
+**Attach on sign-in.** When the household loads (`Session.refresh`),
+`outbox.attach(dancers)` connects waiting drafts to household dancers by
+FOLDED NAME — lowercase, whitespace-collapsed, nothing cleverer. A name
+matching exactly one household dancer gets that dancer's id and the draft
+sends itself (same client_submission_id from guest-draft creation, so still
+exactly-once). Two household dancers folding to the same name attach
+NOTHING: the one wrong outcome is a memory landing on the wrong child, so
+ambiguity waits for a person — the Zixi Yu lesson, enforced in the client
+too. A name with no household match parks visibly with "Find and claim
+{name} →"; creating a profile for a child not in the archive at all is P2's
+milestone-model work, and until then this is the stated limit.
+
+Five new outbox tests (guest draft burns no retries; attach-by-folded-name
+sends exactly once; ambiguity attaches nothing; late match picks up; an id
+already chosen is never second-guessed). No server changes — the wall was
+entirely client-side. Known pre-existing limitation, unchanged: `expo export
+--platform web` fails on expo-sqlite's wasm (since M7); iOS export is clean.

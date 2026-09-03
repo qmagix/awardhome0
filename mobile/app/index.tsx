@@ -1,141 +1,130 @@
-import { useCallback, useState } from 'react';
-import {
-  ActivityIndicator, FlatList, Pressable, StyleSheet, Text, TextInput, View,
-} from 'react-native';
-import { Link, router } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Link, Redirect, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { searchDancers, searchStudios, type DancerSummary, type StudioSummary } from '@/api/client';
+import { outbox, onOutboxChange } from '@/outbox';
 import { useSession } from '@/ui/Session';
 import { theme } from '@/ui/theme';
 
 /**
- * The first screen, and the whole first-launch argument: search works with no
- * account (design §6.1). A parent types their child's name, sees the trophy
- * case, and only then decides whether to sign in and claim it.
+ * The first screen (pivot P1): two buttons, no tour, no search box, no
+ * account wall. The app opens on DOING — add an award or milestone — because
+ * that is the value, and because the alternative first screens can fail:
+ * a search box comes back empty for every family outside the scraped orgs,
+ * and an account wall asks for commitment before anything has been given.
+ *
+ * A returning family never sees this at all: the refresh token in secure
+ * storage signs them in and they land in their household.
  */
-export default function SearchScreen() {
+export default function WelcomeScreen() {
   const insets = useSafeAreaInsets();
-  const { signedIn, dancers } = useSession();
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState<DancerSummary[]>([]);
-  const [studios, setStudios] = useState<StudioSummary[]>([]);
-  const [state, setState] = useState<'idle' | 'searching' | 'done' | 'error'>('idle');
+  const { ready, signedIn } = useSession();
+  const [waiting, setWaiting] = useState(0);
 
-  const run = useCallback(async (q: string) => {
-    if (q.trim().length < 2) { setResults([]); setState('idle'); return; }
-    setState('searching');
+  const loadCounts = useCallback(async () => {
     try {
-      // Both, in one pass. A parent is looking for a child; a director is
-      // looking for their studio. Neither should have to know which tab to be
-      // on to find the thing they came for.
-      const [d, s2] = await Promise.all([searchDancers(q.trim()), searchStudios(q.trim())]);
-      setResults(d.dancers);
-      setStudios(s2.studios);
-      setState('done');
+      const c = await outbox.counts();
+      setWaiting(c.waiting);
     } catch {
-      setState('error');
+      // No queue is not an error on this screen; the buttons still work.
     }
   }, []);
 
+  useEffect(() => {
+    void loadCounts();
+    return onOutboxChange(() => { void loadCounts(); });
+  }, [loadCounts]);
+
+  if (!ready) {
+    return (
+      <View style={[styles.screen, styles.center]}>
+        <ActivityIndicator color={theme.gold} />
+      </View>
+    );
+  }
+
+  // Auto-login: a device with a live session goes straight to its Space.
+  if (signedIn) return <Redirect href="/household" />;
+
   return (
     <View style={[styles.screen, { paddingTop: insets.top ? 0 : theme.space(2) }]}>
-      <Text style={styles.lede}>All their awards, one lasting home.</Text>
-
-      <TextInput
-        value={query}
-        onChangeText={(t) => { setQuery(t); void run(t); }}
-        placeholder="Search a dancer or a studio"
-        placeholderTextColor={theme.muted}
-        autoCorrect={false}
-        autoCapitalize="words"
-        style={styles.input}
-        returnKeyType="search"
-        accessibilityLabel="Search for a dancer or a studio by name"
-      />
-
-      {state === 'searching' && <ActivityIndicator color={theme.gold} style={{ marginTop: theme.space(2) }} />}
-      {state === 'error' && <Text style={styles.error}>We couldn&apos;t reach AwardHome. Please try again.</Text>}
-      {state === 'done' && results.length === 0 && studios.length === 0 && (
-        <Text style={styles.muted}>
-          Nothing by that name yet. Competitions publish results at different speeds — try a
-          different spelling, or check back after the next event.
+      <View style={styles.hero}>
+        <View style={styles.coin}><Text style={styles.coinText}>A</Text></View>
+        <Text style={styles.brand}>
+          Award<Text style={styles.brandGold}>Home</Text>
         </Text>
+        <Text style={styles.lede}>
+          Every award and milestone your kid ever earned — kept, privately, forever.
+        </Text>
+      </View>
+
+      {waiting > 0 && (
+        <Pressable style={styles.resume} onPress={() => router.push('/keep')} accessibilityRole="button">
+          <Text style={styles.resumeText}>
+            {waiting} memor{waiting === 1 ? 'y' : 'ies'} saved on this phone — keep {waiting === 1 ? 'it' : 'them'} forever →
+          </Text>
+        </Pressable>
       )}
 
-      {state === 'done' && studios.length > 0 && (
-        <View style={styles.studios}>
-          <Text style={styles.sectionLabel}>Studios</Text>
-          {studios.slice(0, 3).map((s2) => (
-            <Pressable
-              key={s2.unique_id}
-              style={styles.row}
-              onPress={() => router.push({ pathname: '/studio/[id]', params: { id: s2.unique_id } })}
-              accessibilityRole="button"
-            >
-              <Text style={styles.rowName}>{s2.name}</Text>
-              <Text style={styles.rowMeta}>
-                {s2.award_count} award{s2.award_count === 1 ? '' : 's'}
-                {s2.is_claimed ? '' : ' · not claimed yet'}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-      )}
-
-      <FlatList
-        data={results}
-        ListHeaderComponent={state === 'done' && results.length > 0
-          ? <Text style={styles.sectionLabel}>Dancers</Text> : null}
-        keyExtractor={(d) => d.unique_id}
-        keyboardShouldPersistTaps="handled"
-        renderItem={({ item }) => (
-          <Pressable
-            style={styles.row}
-            onPress={() => router.push({ pathname: '/dancer/[id]', params: { id: item.unique_id } })}
-            accessibilityRole="button"
-            accessibilityLabel={`${item.name}, ${item.award_count} awards`}
-          >
-            <Text style={styles.rowName}>{item.name}</Text>
-            <Text style={styles.rowMeta}>
-              {item.award_count} award{item.award_count === 1 ? '' : 's'}
-              {item.studios ? ` · ${item.studios}` : ''}
-            </Text>
-          </Pressable>
-        )}
-      />
-
-      <View style={styles.footer}>
-        {signedIn ? (
-          <Link href="/household" style={styles.link}>
-            My dancers{dancers.length ? ` (${dancers.length})` : ''} →
-          </Link>
-        ) : (
-          <Link href="/sign-in" style={styles.link}>Sign in →</Link>
-        )}
+      <View style={styles.actions}>
+        <Pressable
+          style={styles.cta}
+          onPress={() => router.push('/add')}
+          accessibilityRole="button"
+          accessibilityLabel="Add an award or milestone, no account needed"
+        >
+          <Text style={styles.ctaText}>Add an award or milestone</Text>
+        </Pressable>
+        <Pressable
+          style={styles.secondary}
+          onPress={() => router.push('/sign-in')}
+          accessibilityRole="button"
+        >
+          <Text style={styles.secondaryText}>Sign in</Text>
+        </Pressable>
+        <Text style={styles.note}>
+          No account needed to start. Everything you add is private to your family.
+        </Text>
+        <Link href="/search" style={styles.link}>Look up a dancer in the archive →</Link>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: theme.bg, padding: theme.space(2) },
-  lede: { color: theme.text, fontSize: 22, fontWeight: '600', marginBottom: theme.space(2) },
-  input: {
-    backgroundColor: 'rgba(0,0,0,0.35)', borderColor: theme.border, borderWidth: 1,
-    borderRadius: theme.radius, color: theme.text, padding: theme.space(1.5), fontSize: 16,
+  screen: { flex: 1, backgroundColor: theme.bg, padding: theme.space(3) },
+  center: { alignItems: 'center', justifyContent: 'center' },
+  hero: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  coin: {
+    width: 84, height: 84, borderRadius: 42, backgroundColor: theme.gold,
+    alignItems: 'center', justifyContent: 'center',
   },
-  row: {
-    borderBottomColor: theme.border, borderBottomWidth: 1, paddingVertical: theme.space(1.5),
+  coinText: { color: theme.bg, fontSize: 40, fontWeight: '800' },
+  brand: { color: theme.text, fontSize: 30, fontWeight: '800', marginTop: theme.space(2.5) },
+  brandGold: { color: theme.gold },
+  lede: {
+    color: theme.muted, fontSize: 15, lineHeight: 22, textAlign: 'center',
+    marginTop: theme.space(1.5), maxWidth: 280,
   },
-  rowName: { color: theme.text, fontSize: 17, fontWeight: '600' },
-  rowMeta: { color: theme.muted, fontSize: 13, marginTop: 2 },
-  muted: { color: theme.muted, marginTop: theme.space(2), lineHeight: 20 },
-  error: { color: theme.danger, marginTop: theme.space(2) },
-  studios: { marginTop: theme.space(2) },
-  sectionLabel: {
-    color: theme.muted, fontSize: 12, fontWeight: '700', letterSpacing: 1,
-    textTransform: 'uppercase', marginTop: theme.space(1.5), marginBottom: theme.space(0.5),
+  resume: {
+    backgroundColor: theme.goldSoft, borderColor: theme.gold, borderWidth: 1,
+    borderRadius: theme.radius, padding: theme.space(1.5), marginBottom: theme.space(1.5),
   },
-  footer: { paddingVertical: theme.space(2) },
-  link: { color: theme.gold, fontSize: 16 },
+  resumeText: { color: theme.gold, fontWeight: '600', textAlign: 'center' },
+  actions: { paddingBottom: theme.space(2) },
+  cta: {
+    backgroundColor: theme.gold, borderRadius: theme.radius,
+    padding: theme.space(2), alignItems: 'center',
+  },
+  ctaText: { color: theme.bg, fontWeight: '700', fontSize: 16 },
+  secondary: {
+    borderColor: theme.border, borderWidth: 1, borderRadius: theme.radius,
+    padding: theme.space(1.75), alignItems: 'center', marginTop: theme.space(1.25),
+  },
+  secondaryText: { color: theme.text, fontWeight: '600', fontSize: 15 },
+  note: {
+    color: theme.muted, fontSize: 12, lineHeight: 17, textAlign: 'center',
+    marginTop: theme.space(2),
+  },
+  link: { color: theme.gold, textAlign: 'center', marginTop: theme.space(2), fontSize: 14 },
 });

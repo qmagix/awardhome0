@@ -114,10 +114,10 @@ export default function SignInScreen() {
       {error && <Text style={styles.error}>{error}</Text>}
 
       {/* Always an escape. This screen is reached with router.replace() from
-          the household and Add screens, so there is no back button on the
-          stack — without this, a family that opened it by accident is stuck. */}
+          the household screen, so there may be no back button on the stack —
+          without this, a family that opened it by accident is stuck. */}
       <Pressable onPress={() => router.replace('/')} style={styles.escape}>
-        <Text style={styles.link}>← Back to search</Text>
+        <Text style={styles.link}>← Back</Text>
       </Pressable>
     </View>
   );
