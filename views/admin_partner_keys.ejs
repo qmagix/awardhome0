@@ -45,6 +45,10 @@
         <input type="number" id="daily_quota" name="daily_quota" class="form-control" value="200" min="1" style="width: 100%;">
       </div>
       <div>
+        <label for="rate_per_minute" style="display: block; font-size: 0.9rem; margin-bottom: 0.3rem;">Burst / min</label>
+        <input type="number" id="rate_per_minute" name="rate_per_minute" class="form-control" value="60" min="1" style="width: 100%;">
+      </div>
+      <div>
         <label for="agreement_note" style="display: block; font-size: 0.9rem; margin-bottom: 0.3rem;">Data agreement reference</label>
         <input type="text" id="agreement_note" name="agreement_note" class="form-control" required style="width: 100%;" placeholder="DPA signed 2026-09-04, Drive folder …">
       </div>
@@ -59,7 +63,9 @@
     <table class="premium-table">
       <thead>
         <tr>
-          <th>Partner</th><th>Contact</th><th>Quota/day</th><th>Today</th><th>Total</th>
+          <th>Partner</th><th>Contact</th>
+          <th title="Per-partner: daily quota and burst rate/min — edit and Save; applies on the key's next request">Limits (day · /min)</th>
+          <th>Today</th><th>Total</th>
           <th title="Unique dancer records this calendar month — $10 per 100 (agreement §9)">Billable (mo.)</th>
           <th>Last used</th><th>Agreement</th><th>Status</th><th>Actions</th>
         </tr>
@@ -72,7 +78,16 @@
             <tr>
               <td><%= k.partner_name %></td>
               <td><%= k.contact_email || '—' %></td>
-              <td><%= k.daily_quota %></td>
+              <td>
+                <% if (!k.revoked_at) { %>
+                <form action="/admin/partner-keys/<%= k.id %>/limits" method="POST" style="margin: 0; display: flex; gap: 0.3rem; align-items: center;">
+                  <input type="number" name="daily_quota" value="<%= k.daily_quota %>" min="1" style="width: 4.5rem;" title="Daily quota">
+                  <span style="color: var(--text-muted);">·</span>
+                  <input type="number" name="rate_per_minute" value="<%= k.rate_per_minute %>" min="1" style="width: 3.8rem;" title="Burst per minute">
+                  <button type="submit" class="btn btn-secondary" style="padding: 0.3rem 0.6rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">Save</button>
+                </form>
+                <% } else { %><%= k.daily_quota %> · <%= k.rate_per_minute %><% } %>
+              </td>
               <td><%= k.queries_today %></td>
               <td><%= k.queries_total %></td>
               <td><%= k.billable_month %> <span style="color: var(--text-muted); font-size: 0.8rem;">($<%= (k.billable_month * 0.10).toFixed(2) %>)</span></td>

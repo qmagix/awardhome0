@@ -19,23 +19,39 @@ const crypto = require('crypto');
 const { openDb } = require('../database');
 
 const DEFAULT_DAILY_QUOTA = parseInt(process.env.PARTNER_DAILY_QUOTA, 10) || 200;
+const DEFAULT_RATE_PER_MINUTE = parseInt(process.env.PARTNER_RATE_PER_MINUTE, 10) || 60;
 
 const hashKey = (raw) => crypto.createHash('sha256').update(String(raw)).digest('hex');
 
 // Issue a new key. Returns the RAW key exactly once — it is never stored
 // and cannot be recovered; a lost key is revoked and reissued.
-async function issueKey({ partnerName, contactEmail, dailyQuota, agreementNote, adminUserId }) {
+async function issueKey({ partnerName, contactEmail, dailyQuota, ratePerMinute, agreementNote, adminUserId }) {
   const name = String(partnerName || '').trim();
   if (!name) return { ok: false, reason: 'name_required' };
   const raw = 'apk_' + crypto.randomBytes(32).toString('hex');
   const db = await openDb();
   const res = await db.run(
-    `INSERT INTO partner_keys (partner_name, contact_email, key_hash, daily_quota, agreement_note, created_by)
-     VALUES (?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO partner_keys (partner_name, contact_email, key_hash, daily_quota, rate_per_minute, agreement_note, created_by)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
     [name, String(contactEmail || '').trim() || null, hashKey(raw),
      parseInt(dailyQuota, 10) > 0 ? parseInt(dailyQuota, 10) : DEFAULT_DAILY_QUOTA,
+     parseInt(ratePerMinute, 10) > 0 ? parseInt(ratePerMinute, 10) : DEFAULT_RATE_PER_MINUTE,
      String(agreementNote || '').trim() || null, adminUserId || null]);
   return { ok: true, keyId: res.lastID, rawKey: raw };
+}
+
+// Superadmin tuning after issuance — partners differ in trust and usage
+// shape (a school in admissions season vs. a pilot), so limits live per
+// key, not across the board. Takes effect on the key's next request.
+async function updateLimits(keyId, { dailyQuota, ratePerMinute }) {
+  const quota = parseInt(dailyQuota, 10);
+  const rate = parseInt(ratePerMinute, 10);
+  if (!(quota > 0) || !(rate > 0)) return { ok: false, reason: 'invalid' };
+  const db = await openDb();
+  const res = await db.run(
+    'UPDATE partner_keys SET daily_quota = ?, rate_per_minute = ? WHERE id = ? AND revoked_at IS NULL',
+    [quota, rate, keyId]);
+  return { ok: res.changes > 0 };
 }
 
 async function revokeKey(keyId, reason) {
@@ -105,7 +121,7 @@ async function requirePartnerKey(req, res, next) {
     }
     const db = await openDb();
     const key = await db.get(
-      'SELECT id, partner_name, daily_quota FROM partner_keys WHERE key_hash = ? AND revoked_at IS NULL',
+      'SELECT id, partner_name, daily_quota, rate_per_minute FROM partner_keys WHERE key_hash = ? AND revoked_at IS NULL',
       [hashKey(m[1])]);
     if (!key) {
       return res.status(401).json({ error: 'unauthorized', message: 'A partner API key is required.' });
@@ -119,7 +135,7 @@ async function requirePartnerKey(req, res, next) {
 }
 
 module.exports = {
-  DEFAULT_DAILY_QUOTA, hashKey,
-  issueKey, revokeKey, listKeys, recentLog, logQuery, usedToday,
+  DEFAULT_DAILY_QUOTA, DEFAULT_RATE_PER_MINUTE, hashKey,
+  issueKey, revokeKey, updateLimits, listKeys, recentLog, logQuery, usedToday,
   requirePartnerKey,
 };

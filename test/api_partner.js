@@ -67,9 +67,10 @@ async function main() {
     seasons.push({ year: y, awardId: aw.lastID });
   }
 
-  const { issueKey, revokeKey } = require('../utils/partnerAuth');
+  const { issueKey, revokeKey, updateLimits } = require('../utils/partnerAuth');
   const good = await issueKey({ partnerName: 'Test School', agreementNote: 'test agreement' });
   const tiny = await issueKey({ partnerName: 'Tiny Quota School', dailyQuota: 3, agreementNote: 'test agreement' });
+  const slow = await issueKey({ partnerName: 'Slow Burst School', ratePerMinute: 2, agreementNote: 'test agreement' });
   const dead = await issueKey({ partnerName: 'Revoked School', agreementNote: 'test agreement' });
   await revokeKey(dead.keyId, 'test');
 
@@ -192,6 +193,21 @@ async function main() {
     const quotaRow = await db.get(
       "SELECT COUNT(*) AS n FROM partner_query_log WHERE key_id = ? AND status = 'quota_exceeded'", [tiny.keyId]);
     check(quotaRow.n >= 1, 'the refused lookup is audited too — refusals are part of the record');
+
+    // ---- per-partner burst rate, tunable live ----
+    // Limits are per KEY, not across the board: a 2/min key stops at its
+    // third request while other keys are unaffected, and a superadmin
+    // raise applies on the key's next request — no restart, no reissue.
+    let burst;
+    for (let i = 0; i < 3; i++) {
+      burst = await api('/dancers?name=Partner%20Test%20Dancer&studio=Partner%20Test%20Studio', slow.rawKey);
+    }
+    check(burst.status === 429 && burst.json.error === 'rate_limited',
+      "a key's own burst ceiling (2/min) stops its third request", 'status ' + burst.status);
+    await updateLimits(slow.keyId, { dailyQuota: 200, ratePerMinute: 100 });
+    const raised = await api('/dancers?name=Partner%20Test%20Dancer&studio=Partner%20Test%20Studio', slow.rawKey);
+    check(raised.status === 200,
+      'a superadmin limit raise applies on the very next request', 'status ' + raised.status);
 
     // ---- pre-auth flood control (LAST: it poisons this IP's window) ----
     // A buggy retry loop — or no key at all — must hit a 429 before the

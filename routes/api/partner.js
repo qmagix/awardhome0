@@ -72,10 +72,12 @@ router.use(async (req, res, next) => {
 
 router.use(requirePartnerKey);
 
-// Burst ceiling per key, on top of the daily quota. A partner checking
-// applicants does tens of lookups a day; sixty a minute is generous.
+// Burst ceiling per key, on top of the daily quota — read from the key's
+// own row (superadmin-tunable at /admin/partner-keys), because partners
+// differ in trust and usage shape. Takes effect on the next request.
 router.use(rateLimit({
-  windowMs: 60 * 1000, max: 60,
+  windowMs: 60 * 1000,
+  max: (req) => req.partnerKey.rate_per_minute || 60,
   standardHeaders: true, legacyHeaders: false,
   keyGenerator: (req) => 'pk' + req.partnerKey.id,
   handler: (req, res) => fail(res, 429, 'rate_limited', 'Too many requests. Please slow down.'),

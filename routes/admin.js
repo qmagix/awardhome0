@@ -26,7 +26,7 @@ const { runBackfillForEvent } = require('../backfill_utils');
 const {
   suppressDancer, unsuppressDancer, listSuppressed, carrySuppressionOnMerge,
 } = require('../utils/suppression');
-const { issueKey, revokeKey, listKeys, recentLog } = require('../utils/partnerAuth');
+const { issueKey, revokeKey, updateLimits, listKeys, recentLog } = require('../utils/partnerAuth');
 const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
@@ -1509,6 +1509,7 @@ router.post('/admin/partner-keys/issue', requireSuperadmin, async (req, res) => 
     partnerName: req.body.partner_name,
     contactEmail: req.body.contact_email,
     dailyQuota: req.body.daily_quota,
+    ratePerMinute: req.body.rate_per_minute,
     agreementNote,
     adminUserId: req.session.user.id,
   });
@@ -1529,6 +1530,19 @@ router.post('/admin/partner-keys/:id/revoke', requireSuperadmin, async (req, res
   await revokeKey(parseInt(req.params.id, 10), req.body.reason);
   res.redirect('/admin/partner-keys?success=' + encodeURIComponent(
     'Key revoked — it stops working on the next request.'));
+});
+
+// Per-partner limits: trust and usage patterns differ (a school in
+// admissions season vs. a brand-new pilot), so quota and burst rate are
+// tuned per key rather than across the board.
+router.post('/admin/partner-keys/:id/limits', requireSuperadmin, async (req, res) => {
+  const result = await updateLimits(parseInt(req.params.id, 10), {
+    dailyQuota: req.body.daily_quota,
+    ratePerMinute: req.body.rate_per_minute,
+  });
+  res.redirect('/admin/partner-keys?' + (result.ok
+    ? 'success=' + encodeURIComponent('Limits updated — they apply from the key\'s next request.')
+    : 'error=' + encodeURIComponent('Limits must be positive numbers (and the key must be active).')));
 });
 
 

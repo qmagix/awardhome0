@@ -663,6 +663,7 @@ async function initDb() {
       contact_email TEXT,
       key_hash TEXT NOT NULL UNIQUE,
       daily_quota INTEGER NOT NULL DEFAULT 200,
+      rate_per_minute INTEGER NOT NULL DEFAULT 60,
       agreement_note TEXT,
       created_by INTEGER REFERENCES users(id),
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -858,6 +859,11 @@ async function initDb() {
   // Applied to existing data by scripts/migrate_independent_studios.js.
   try { await db.exec('ALTER TABLE studios ADD COLUMN is_independent INTEGER DEFAULT 0'); } catch(e) {}
   try { await db.exec('CREATE INDEX IF NOT EXISTS idx_studios_independent ON studios(is_independent)'); } catch(e) {}
+
+  // Per-partner burst ceiling (requests/min), superadmin-editable at
+  // /admin/partner-keys beside daily_quota — partners differ in trust and
+  // usage shape, so neither limit is across-the-board.
+  try { await db.exec('ALTER TABLE partner_keys ADD COLUMN rate_per_minute INTEGER NOT NULL DEFAULT 60'); } catch(e) {}
 
   // Safety suppression (superadmin-only, /admin/suppressions): hides the
   // dancer from EVERY public surface — profile page, search, rankings,
