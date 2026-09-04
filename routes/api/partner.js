@@ -43,6 +43,19 @@ const fail = (res, status, error, message) => res.status(status).json({ error, m
 router.use(express.json({ limit: '64kb' }));
 router.use((req, res, next) => { res.set('Cache-Control', 'no-store'); next(); });
 
+// Pre-auth throttle, per IP, in front of EVERYTHING — the flag check and
+// the key lookup below each cost a database read, and a flood (a partner's
+// buggy retry loop, or no key at all) should be refused before touching
+// any of it. Layered with the per-key limits after auth: 60/min burst per
+// key, then the daily quota — which counts REPEAT lookups too (only
+// billing dedupes re-checks), so a runaway loop with a valid key stops
+// itself within minutes, not at month-end.
+router.use(rateLimit({
+  windowMs: 60 * 1000, max: parseInt(process.env.PARTNER_IP_RATE_LIMIT, 10) || 120,
+  standardHeaders: true, legacyHeaders: false,
+  handler: (req, res) => fail(res, 429, 'rate_limited', 'Too many requests from this address.'),
+}));
+
 // Deliberately NO CORS headers: partners are servers. A browser-based
 // integration would put the key in client-side code, which is exactly the
 // deployment shape this API refuses to encourage.

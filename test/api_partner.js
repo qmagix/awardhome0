@@ -193,6 +193,16 @@ async function main() {
       "SELECT COUNT(*) AS n FROM partner_query_log WHERE key_id = ? AND status = 'quota_exceeded'", [tiny.keyId]);
     check(quotaRow.n >= 1, 'the refused lookup is audited too — refusals are part of the record');
 
+    // ---- pre-auth flood control (LAST: it poisons this IP's window) ----
+    // A buggy retry loop — or no key at all — must hit a 429 before the
+    // key-lookup database read, not hammer it for a month.
+    let flood = null;
+    for (let i = 0; i < 130 && (!flood || flood.status !== 429); i++) {
+      flood = await api('/openapi.json');
+    }
+    check(flood.status === 429 && flood.json.error === 'rate_limited',
+      'a keyless flood is refused per-IP before authentication', 'status ' + flood.status);
+
     // ---- the property the mount position exists for ----
     check(cookiesSeen.length === 0,
       'no partner API response ever set a cookie (mounted before the session store)',
