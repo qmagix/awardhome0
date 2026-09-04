@@ -70,6 +70,13 @@ app.use(express.urlencoded({ extended: true })); // Added for form parsing
 // argument; scripts/audit_get_routes.js is the check on it.
 app.use('/api/v1/mobile', require('./routes/api/mobile'));
 
+// Partner API (schools verifying dancers' records) — same mount argument as
+// the mobile API verbatim: bearer-only, so before session (never issues a
+// cookie), before CSRF (no ambient credential to forge), outside the beta
+// gate (partners are vetted and keyed, which is its own gate). Ships dark
+// behind the 'partner_api' feature flag. See routes/api/partner.js.
+app.use('/api/v1/partner', require('./routes/api/partner'));
+
 // Universal / App Links association files. Mounted here for the same reason as
 // the API — Apple and Google fetch them with no cookie and must not meet the
 // beta gate or a CSRF token. They 404 until the real app IDs are configured;

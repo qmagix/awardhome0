@@ -8,6 +8,14 @@ This document outlines the core features of the Dance Awards Platform.
 - **Studio Profiles:** Public pages displaying bio, logo, social links, and a searchable awards table.
 - **Dancer Profiles:** Public pages displaying verified affiliations and a consolidated list of solo and group awards.
 
+## 1b. Partner API (`/api/v1/partner`, ships dark behind the `partner_api` flag)
+- **What it is:** keyed, audited, exact-match dancer-award lookups for vetted partner organizations (the driving case: a school verifying an applicant's competition record). Contract at `/api/v1/partner/openapi.json` (`docs/openapi_partner.json`).
+- **Two endpoints, deliberately no more:** `GET /dancers?name=&studio=` (exact name at a named studio → same-name dancers come back as minimal summaries with opaque `unique_id`s) and `GET /dancers/:uniqueId/awards` (the full public trophy case, structured). No prefix search, no roster listing, no pagination over the corpus — the partner must already know who they're asking about; this is what keeps a child-lookup API from being a dataset-export tool.
+- **Keys** (`utils/partnerAuth.js`, issued at `/admin/partner-keys`, superadmin): one long-lived bearer key per partner, SHA-256 hash stored only, shown once at issuance, issued only after a signed data agreement (the form requires an agreement reference). Missing/bogus/revoked keys all get byte-identical 401s.
+- **Audit + quotas:** every lookup lands append-only in `partner_query_log` — which key, what was asked, which dancer ids came back. It is the abuse signal, the quota ledger (daily quota is counted from the log), and the answer to "who has looked up my child?" — including retroactively after a safety suppression. Burst limit 60/min per key on top.
+- **Visibility = the public dancer page, exactly:** suppressed dancers don't exist here, `hide_from_search` is honored, owner-hidden cards are filtered, every award carries `verification_status`. Numeric ids are refused (the enumeration-oracle rule survives authentication).
+- **Mounted like the mobile API** (before session/CSRF/beta gate — bearer-only, never issues a cookie) and contract-tested by `test/api_partner.js` (`npm run test:partner`), gate stage 3.
+
 ## 2. Studio Management Portal
 - **Claim System:** Two-tiered approval (Automated Fast-Track vs Admin Review) to take ownership of a studio.
 - **Profile Customizer:** Edit bio, update logos, and link Instagram/TikTok handles.

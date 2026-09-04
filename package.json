@@ -11,6 +11,7 @@
     "dev": "node --watch server.js",
     "smoke": "node test/smoke.js",
     "test:api": "node test/api_mobile.js",
+    "test:partner": "node test/api_partner.js",
     "test": "node test/smoke.js",
     "gate": "node scripts/predeploy_gate.js",
     "mobile:typecheck": "npm --prefix mobile run typecheck",

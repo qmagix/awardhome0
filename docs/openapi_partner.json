@@ -1,0 +1,126 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "AwardHome Partner API",
+    "version": "1.0.0",
+    "description": "Dancer-award lookups for vetted partner organizations (e.g. schools verifying an applicant's competition record). Two endpoints, deliberately: exact-match disambiguation by dancer name + studio, then the detail record by the dancer's opaque unique_id. There is no browse, no prefix search, and no listing surface — the partner must already know who they are asking about. Every request requires a partner key issued by AwardHome after a signed data agreement, every lookup is audited, and per-key daily quotas apply. Data visibility matches the public dancer profile exactly: safety-suppressed dancers do not exist here, search honors family opt-outs, and each award carries its verification_status so provenance can be weighed."
+  },
+  "servers": [{ "url": "/api/v1/partner" }],
+  "components": {
+    "securitySchemes": {
+      "partnerKey": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Partner API key (apk_…), issued by AwardHome, sent as Authorization: Bearer <key>. Keys are server-to-server credentials; never ship one in client-side code."
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string", "example": "unauthorized" },
+          "message": { "type": "string" }
+        }
+      },
+      "DancerSummary": {
+        "type": "object",
+        "description": "Enough to tell same-name dancers apart, deliberately not the full record.",
+        "properties": {
+          "unique_id": { "type": "string", "description": "Opaque id; pass to /dancers/{uniqueId}/awards." },
+          "name": { "type": "string" },
+          "is_claimed": { "type": "integer", "description": "1 when a family manages this profile." },
+          "award_count": { "type": "integer" },
+          "first_year": { "type": "integer", "nullable": true },
+          "last_year": { "type": "integer", "nullable": true },
+          "studios": { "type": "string", "nullable": true, "description": "Comma-joined studio display names." }
+        }
+      },
+      "Award": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "place": { "type": "string", "nullable": true },
+          "place_display": { "type": "string", "description": "Human-readable placement, formatted by the same helper the public pages use." },
+          "award_class": { "type": "string", "nullable": true },
+          "performance_name": { "type": "string", "nullable": true },
+          "award_type": { "type": "string", "nullable": true },
+          "category": { "type": "string", "nullable": true },
+          "age_division": { "type": "string", "nullable": true },
+          "verification_status": { "type": "string", "nullable": true, "description": "Provenance: e.g. unverified (scraped from official results), family_submitted, corroborated, studio_confirmed." },
+          "is_self_added": { "type": "integer" },
+          "event_name": { "type": "string", "nullable": true },
+          "event_year": { "type": "string", "nullable": true },
+          "org_name": { "type": "string", "nullable": true },
+          "studio_name": { "type": "string", "nullable": true },
+          "dancer_count": { "type": "integer", "description": "Cast size; 1 = solo." }
+        }
+      }
+    }
+  },
+  "security": [{ "partnerKey": [] }],
+  "paths": {
+    "/dancers": {
+      "get": {
+        "summary": "Find dancers by exact name at a studio",
+        "description": "Exact-match (case- and whitespace-folded) dancer name at the named studio. Studio names tolerate the spelling variance real paperwork contains (case, spacing, punctuation) but never resolve to more than one studio. Same-name dancers at one studio all come back; choose by summary and query the detail endpoint with the unique_id.",
+        "parameters": [
+          { "name": "name", "in": "query", "required": true, "schema": { "type": "string" }, "description": "The dancer's full name, exactly as known." },
+          { "name": "studio", "in": "query", "required": true, "schema": { "type": "string" }, "description": "The studio's name." }
+        ],
+        "responses": {
+          "200": {
+            "description": "Zero or more matches. studio_matched=false means the studio name resolved to nothing (and no dancer search ran).",
+            "content": { "application/json": { "schema": {
+              "type": "object",
+              "properties": {
+                "studio_matched": { "type": "boolean" },
+                "dancers": { "type": "array", "items": { "$ref": "#/components/schemas/DancerSummary" } }
+              }
+            } } }
+          },
+          "400": { "description": "Missing name or studio.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "401": { "description": "Missing, unknown, or revoked key.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "429": { "description": "Burst rate limit or daily quota exceeded.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/dancers/{uniqueId}/awards": {
+      "get": {
+        "summary": "Full public award record for one dancer",
+        "description": "Addressed by the opaque unique_id from the search step only — numeric ids are refused. Returns exactly what the dancer's public profile shows, structured: both solo and group awards, family-hidden cards excluded, newest season first.",
+        "parameters": [
+          { "name": "uniqueId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "The record.",
+            "content": { "application/json": { "schema": {
+              "type": "object",
+              "properties": {
+                "dancer": {
+                  "type": "object",
+                  "properties": {
+                    "unique_id": { "type": "string" },
+                    "name": { "type": "string" },
+                    "is_claimed": { "type": "boolean" }
+                  }
+                },
+                "awards": { "type": "array", "items": { "$ref": "#/components/schemas/Award" } }
+              }
+            } } }
+          },
+          "401": { "description": "Missing, unknown, or revoked key.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "404": { "description": "No such dancer (including numeric-id refusal).", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "429": { "description": "Burst rate limit or daily quota exceeded.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/openapi.json": {
+      "get": {
+        "summary": "This contract",
+        "security": [],
+        "responses": { "200": { "description": "The OpenAPI document." } }
+      }
+    }
+  }
+}

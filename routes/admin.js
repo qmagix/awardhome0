@@ -26,6 +26,7 @@ const { runBackfillForEvent } = require('../backfill_utils');
 const {
   suppressDancer, unsuppressDancer, listSuppressed, carrySuppressionOnMerge,
 } = require('../utils/suppression');
+const { issueKey, revokeKey, listKeys, recentLog } = require('../utils/partnerAuth');
 const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
@@ -1479,6 +1480,55 @@ router.post('/admin/suppressions/add', requireSuperadmin, async (req, res) => {
 router.post('/admin/suppressions/:id/remove', requireSuperadmin, async (req, res) => {
   await unsuppressDancer(parseInt(req.params.id, 10));
   res.redirect('/admin/suppressions?success=' + encodeURIComponent('Suppression removed — the dancer is public again.'));
+});
+
+// ---- Partner API keys (utils/partnerAuth.js, routes/api/partner.js) ----
+//
+// A key is issued only AFTER a signed data agreement exists; the form's
+// agreement field records where that agreement lives. The raw key is shown
+// exactly once, in the response to the issuing POST (never in a redirect —
+// query strings land in logs), and only its hash is stored.
+router.get('/admin/partner-keys', requireSuperadmin, async (req, res) => {
+  res.render('admin_partner_keys', {
+    keys: await listKeys(),
+    log: await recentLog(50),
+    issued: null,
+    error: req.query.error || null,
+    success: req.query.success || null,
+    user: req.session.user,
+  });
+});
+
+router.post('/admin/partner-keys/issue', requireSuperadmin, async (req, res) => {
+  const agreementNote = (req.body.agreement_note || '').trim();
+  if (!agreementNote) {
+    return res.redirect('/admin/partner-keys?error=' + encodeURIComponent(
+      'Reference the signed data agreement before issuing — no agreement, no key.'));
+  }
+  const result = await issueKey({
+    partnerName: req.body.partner_name,
+    contactEmail: req.body.contact_email,
+    dailyQuota: req.body.daily_quota,
+    agreementNote,
+    adminUserId: req.session.user.id,
+  });
+  if (!result.ok) {
+    return res.redirect('/admin/partner-keys?error=' + encodeURIComponent('Partner name is required.'));
+  }
+  res.render('admin_partner_keys', {
+    keys: await listKeys(),
+    log: await recentLog(50),
+    issued: { keyId: result.keyId, rawKey: result.rawKey, partnerName: (req.body.partner_name || '').trim() },
+    error: null,
+    success: null,
+    user: req.session.user,
+  });
+});
+
+router.post('/admin/partner-keys/:id/revoke', requireSuperadmin, async (req, res) => {
+  await revokeKey(parseInt(req.params.id, 10), req.body.reason);
+  res.redirect('/admin/partner-keys?success=' + encodeURIComponent(
+    'Key revoked — it stops working on the next request.'));
 });
 
 

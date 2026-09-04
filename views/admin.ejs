@@ -143,6 +143,15 @@
     </div>
     <% } %>
 
+    <!-- Partner API Keys -->
+    <% if (user && user.role === 'superadmin') { %>
+    <div class="card glass-card">
+      <h3 style="color: #60a5fa; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">🔑 Partner API Keys</h3>
+      <p class="sub-text" style="margin-bottom: 1.5rem;">Issue and revoke keys for /api/v1/partner (schools verifying dancers' records). Every lookup is audited; quotas per key.</p>
+      <a href="/admin/partner-keys" class="btn btn-outline" style="display: block; text-align: center; border-color: #60a5fa; color: #60a5fa;">Manage Partner Keys</a>
+    </div>
+    <% } %>
+
     <!-- Feature Flags -->
     <% if (user && user.role === 'superadmin') { %>
     <div class="card glass-card">

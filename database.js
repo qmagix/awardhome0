@@ -696,6 +696,7 @@ async function initDb() {
     INSERT OR IGNORE INTO feature_flags (key, state) VALUES ('award_photos', 'off');
     INSERT OR IGNORE INTO feature_flags (key, state) VALUES ('auto_moderation', 'off');
     INSERT OR IGNORE INTO feature_flags (key, state) VALUES ('reactions', 'off');
+    INSERT OR IGNORE INTO feature_flags (key, state) VALUES ('partner_api', 'off');
 
     INSERT OR IGNORE INTO system_settings (key, value) VALUES ('openai_model', 'gpt-4o-mini');
     -- Card-content moderation mode: 'manual' (every item human-reviewed),

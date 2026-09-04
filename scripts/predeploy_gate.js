@@ -5,13 +5,16 @@
 //   2. mobile API contract test (test/api_mobile.js) against its OWN
 //      throwaway copy — the API's write paths mint awards, claims and
 //      evidence, so it must never touch a working database
-//   3. builds a THROWAWAY adversarial copy of the local DB — every pending
+//   3. partner API contract test (test/api_partner.js), own throwaway copy
+//      (keys, audit log, quotas, suppression, exact-match-only search)
+//   4. builds a THROWAWAY adversarial copy of the local DB — every pending
 //      ack/photo approved, a coin approved on a big logo-bearing org with a
-//      hostile colophon message, one org's custom_icons corrupted — the
-//      worst-case data states that single-entity checks never hit
-//   4. scripts/sweep_public_pages.js against the adversarial copy
-//      (data-state coverage: coin/corrupt/ack/photo/collab/... strata)
-//   5. scripts/audit_get_routes.js against the adversarial copy
+//      hostile colophon message, one org's custom_icons corrupted, a batch
+//      of group-award dancers safety-suppressed — the worst-case data
+//      states that single-entity checks never hit
+//   5. scripts/sweep_public_pages.js against the adversarial copy
+//      (data-state coverage: coin/corrupt/ack/photo/collab/suppressed strata)
+//   6. scripts/audit_get_routes.js against the adversarial copy
 //      (route coverage: every GET, superadmin + owner sessions, and the
 //      mobile API with a real bearer token)
 //
@@ -39,15 +42,19 @@ const run = (cmd, args, opts = {}) => new Promise(resolve => {
 async function main() {
   const results = {};
 
-  console.log('=== GATE 1/5: smoke suite ===');
+  console.log('=== GATE 1/6: smoke suite ===');
   results.smoke = await run('node', [path.join('test', 'smoke.js')]);
   if (results.smoke !== 0) return finish(results);
 
-  console.log('=== GATE 2/5: mobile API contract test ===');
+  console.log('=== GATE 2/6: mobile API contract test ===');
   results.api = await run('node', [path.join('test', 'api_mobile.js')]);
   if (results.api !== 0) return finish(results);
 
-  console.log('=== GATE 3/5: building adversarial DB copy ===');
+  console.log('=== GATE 3/6: partner API contract test ===');
+  results.partner = await run('node', [path.join('test', 'api_partner.js')]);
+  if (results.partner !== 0) return finish(results);
+
+  console.log('=== GATE 4/6: building adversarial DB copy ===');
   for (const ext of ['', '-wal', '-shm']) {
     const src = path.join(ROOT, 'database.sqlite' + ext);
     if (fs.existsSync(src)) fs.copyFileSync(src, GATE_DB + ext);
@@ -97,7 +104,7 @@ async function main() {
   }
   results.mutate = 0;
 
-  console.log('=== GATE 4/5: adversarial page sweep ===');
+  console.log('=== GATE 5/6: adversarial page sweep ===');
   const env = {
     ...process.env, DB_PATH: GATE_DB, SUBMISSIONS_DB_PATH: GATE_SUBMISSIONS_DB,
     MOBILE_AUTH_DB_PATH: GATE_AUTH_DB, EVIDENCE_DIR: GATE_EVIDENCE_DIR,
@@ -123,7 +130,7 @@ async function main() {
   server.kill();
   if (results.sweep !== 0) return finish(results);
 
-  console.log('=== GATE 5/5: authenticated route audit ===');
+  console.log('=== GATE 6/6: authenticated route audit ===');
   results.audit = await run('node', [path.join('scripts', 'audit_get_routes.js')], { env });
 
   return finish(results);

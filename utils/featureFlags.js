@@ -14,6 +14,7 @@ const FLAG_DEFS = [
   { key: 'auto_moderation', label: 'Auto-Moderation', description: 'Machine moderation of thank-you notes (mode set in /admin/settings).' },
   { key: 'reactions', label: 'Reactions', description: 'Cheer/love reaction chips on trophy-case award cards (stored in reactions.sqlite).' },
   { key: 'family_submissions', label: 'Family Submissions', description: 'Families add a missing award for a dancer they own; entries stage in submissions.sqlite and stay private until a reviewer promotes them.' },
+  { key: 'partner_api', label: 'Partner API', description: '/api/v1/partner — keyed dancer-award lookups for vetted partners (schools). Keys at /admin/partner-keys; every lookup audited. Note: this API has no session, so beta means OFF for it — flip to on when the first key ships.' },
 ];
 
 const VALID_STATES = ['off', 'beta', 'on'];
