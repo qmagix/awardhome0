@@ -52,7 +52,13 @@ async function listKeys() {
     SELECT k.*, u.email AS created_by_email,
       (SELECT COUNT(*) FROM partner_query_log l WHERE l.key_id = k.id) AS queries_total,
       (SELECT COUNT(*) FROM partner_query_log l WHERE l.key_id = k.id
-        AND l.status = 'ok' AND date(l.created_at) = date('now')) AS queries_today
+        AND l.status = 'ok' AND date(l.created_at) = date('now')) AS queries_today,
+      -- Billable per the data agreement §9: unique dancer records retrieved
+      -- this calendar month (detail endpoint only; searches are free).
+      (SELECT COUNT(DISTINCT l.dancer_unique_ids) FROM partner_query_log l
+        WHERE l.key_id = k.id AND l.status = 'ok'
+          AND l.endpoint = '/dancers/:uniqueId/awards'
+          AND strftime('%Y-%m', l.created_at) = strftime('%Y-%m', 'now')) AS billable_month
     FROM partner_keys k LEFT JOIN users u ON u.id = k.created_by
     ORDER BY k.created_at DESC`);
 }

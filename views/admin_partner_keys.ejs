@@ -27,8 +27,9 @@
   <div class="card glass-card" style="margin-top: 2rem; padding: 2rem;">
     <h3>Issue a Key</h3>
     <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.3rem;">
-      Only after the partner has signed the data agreement (purpose limitation, no retention/resale,
-      no re-identification, deletion propagation on suppression notices). Reference it below — no agreement, no key.
+      Only after the partner has signed the data agreement (template: <code>docs/partner_data_agreement.md</code> —
+      purpose limitation, no retention/resale, no re-identification, deletion propagation on suppression notices,
+      $10 per 100 dancer records prepaid). Reference the signed copy below — no agreement, no key.
     </p>
     <form action="/admin/partner-keys/issue" method="POST" style="margin-top: 1rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; align-items: end;">
       <div>
@@ -59,12 +60,13 @@
       <thead>
         <tr>
           <th>Partner</th><th>Contact</th><th>Quota/day</th><th>Today</th><th>Total</th>
+          <th title="Unique dancer records this calendar month — $10 per 100 (agreement §9)">Billable (mo.)</th>
           <th>Last used</th><th>Agreement</th><th>Status</th><th>Actions</th>
         </tr>
       </thead>
       <tbody>
         <% if (keys.length === 0) { %>
-          <tr><td colspan="9" style="text-align: center;">No keys issued.</td></tr>
+          <tr><td colspan="10" style="text-align: center;">No keys issued.</td></tr>
         <% } else { %>
           <% keys.forEach(function(k) { %>
             <tr>
@@ -73,6 +75,7 @@
               <td><%= k.daily_quota %></td>
               <td><%= k.queries_today %></td>
               <td><%= k.queries_total %></td>
+              <td><%= k.billable_month %> <span style="color: var(--text-muted); font-size: 0.8rem;">($<%= (k.billable_month * 0.10).toFixed(2) %>)</span></td>
               <td><%= k.last_used_at || 'never' %></td>
               <td style="max-width: 220px; font-size: 0.85rem;"><%= k.agreement_note || '—' %></td>
               <td><%= k.revoked_at ? ('revoked ' + k.revoked_at) : 'active' %></td>
