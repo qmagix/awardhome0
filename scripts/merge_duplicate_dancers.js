@@ -107,7 +107,10 @@ const DANCER_TABLES = [
 // Profile fields worth rescuing from the record being deleted: only ever
 // filled in where the survivor has nothing, never overwritten.
 const CARRY_FIELDS = ['birthday', 'headshot_url', 'graduation_year', 'instagram_handle',
-  'tiktok_handle', 'vanity_tag', 'card_photo_url'];
+  'tiktok_handle', 'vanity_tag', 'card_photo_url',
+  // Safety suppression must survive a merge: the awards move to the target,
+  // and republishing them would undo a protective action (utils/suppression.js).
+  'suppressed_at', 'suppressed_reason', 'suppressed_by'];
 
 const norm = (s) => String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
 

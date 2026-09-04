@@ -23,6 +23,9 @@ const {
 } = require('../utils/promotion');
 const bcrypt = require('bcrypt');
 const { runBackfillForEvent } = require('../backfill_utils');
+const {
+  suppressDancer, unsuppressDancer, listSuppressed, carrySuppressionOnMerge,
+} = require('../utils/suppression');
 const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
@@ -1439,6 +1442,45 @@ router.post('/admin/reviewers/:id/delete', requireSuperadmin, async (req, res) =
   res.redirect('/admin/reviewers');
 });
 
+// ---- Safety suppressions (utils/suppression.js) ----
+//
+// Superadmin-only BY DESIGN, and deliberately not reachable from any
+// user-facing surface: this is the protective-action tool (protective
+// orders, families fleeing someone), not a privacy preference — those are
+// the owner's hide_from_* toggles on the manage page. Suppressed dancers
+// read as nonexistent on every public surface; this page is where a
+// reviewer finds the row again to unsuppress it.
+router.get('/admin/suppressions', requireSuperadmin, async (req, res) => {
+  const suppressed = await listSuppressed();
+  res.render('admin_suppressions', {
+    suppressed,
+    error: req.query.error || null,
+    success: req.query.success || null,
+    user: req.session.user,
+  });
+});
+
+router.post('/admin/suppressions/add', requireSuperadmin, async (req, res) => {
+  const ref = (req.body.dancer_ref || '').trim();
+  const reason = (req.body.reason || '').trim();
+  if (!ref) return res.redirect('/admin/suppressions?error=' + encodeURIComponent('Enter a dancer unique ID or numeric id.'));
+  const db = await openDb();
+  const dancer = await db.get(
+    'SELECT id, name FROM dancers WHERE unique_id = ? OR id = ?',
+    [ref, parseInt(ref, 10) || -1]);
+  if (!dancer) return res.redirect('/admin/suppressions?error=' + encodeURIComponent('No dancer matches that ID.'));
+  const result = await suppressDancer(dancer.id, { reason, adminUserId: req.session.user.id });
+  const msg = result.already
+    ? `${dancer.name} was already suppressed.`
+    : `${dancer.name} is now suppressed everywhere public.`;
+  res.redirect('/admin/suppressions?success=' + encodeURIComponent(msg));
+});
+
+router.post('/admin/suppressions/:id/remove', requireSuperadmin, async (req, res) => {
+  await unsuppressDancer(parseInt(req.params.id, 10));
+  res.redirect('/admin/suppressions?success=' + encodeURIComponent('Suppression removed — the dancer is public again.'));
+});
+
 
 // Superadmin User Management
 router.get('/admin/users', requireSuperadmin, async (req, res) => {
@@ -1724,6 +1766,7 @@ router.post('/api/merge/dancers', requireAdmin, express.json(), async (req, res)
         await db.run(`DELETE FROM dancer_studios WHERE dancer_id = ? AND studio_id = ?`, [sourceId, link.studio_id]);
       }
     }
+    await carrySuppressionOnMerge(db, sourceId, targetId);
     await db.run(`DELETE FROM dancers WHERE id = ?`, [sourceId]);
     res.json({ success: true });
   } catch (e) {

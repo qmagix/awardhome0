@@ -47,6 +47,7 @@ const {
   routeDancerClaim, notifyStudioOfProfileClaim, householdStanding,
 } = require('../../utils/claims');
 const { studioDisplayNameSql, excludeIndependentSql } = require('../../utils/independents');
+const { notSuppressedSql } = require('../../utils/suppression');
 const { formatPlacement } = require('../../utils/format');
 const { sniff, stripMetadata, newObjectKey, currentDriver } = require('../../utils/evidence');
 const { issueGrant, storeEvidence, canServe, readEvidence, MAX_BYTES } = require('../../utils/evidence');
@@ -198,6 +199,7 @@ router.get('/dancers/search', async (req, res) => {
         JOIN studios s2 ON s2.id = ds.studio_id WHERE ds.dancer_id = d.id) AS studios
     FROM dancers d
     WHERE d.name LIKE ? AND COALESCE(d.hide_from_search, 0) = 0
+      AND ${notSuppressedSql('d')}
     ORDER BY award_count DESC
     LIMIT 25`, [`%${q}%`]);
   res.json({ dancers });
@@ -216,9 +218,16 @@ router.get('/dancers/search', async (req, res) => {
 router.get('/dancers/:id/awards', async (req, res) => {
   const db = await openDb();
   const dancer = await db.get(
-    'SELECT id, unique_id, name, is_claimed FROM dancers WHERE unique_id = ? OR id = ?',
+    'SELECT id, unique_id, name, is_claimed, claimed_by_user_id, suppressed_at FROM dancers WHERE unique_id = ? OR id = ?',
     [req.params.id, parseInt(req.params.id, 10) || -1]);
   if (!dancer) return fail(res, 404, 'not_found', 'No such dancer.');
+  // Safety-suppressed (utils/suppression.js): indistinguishable from
+  // nonexistent to everyone EXCEPT the owning household — suppression
+  // protects the family, so it must not lock them out of their own record.
+  if (dancer.suppressed_at &&
+      !(req.mobileUser && dancer.claimed_by_user_id === req.mobileUser.id)) {
+    return fail(res, 404, 'not_found', 'No such dancer.');
+  }
 
   // MOST RECENT FIRST, by the competition's year — not by award id, which is
   // import order and interleaves seasons badly (a real dancer's ids run 2023,

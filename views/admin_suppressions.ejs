@@ -1,0 +1,85 @@
+<%- include('partials/header') %>
+<div class="container" style="margin-top: 4rem;">
+  <div class="header-section">
+    <h1>Safety Suppressions</h1>
+    <p class="subtitle">Hide a dancer from every public surface — profile, search, rankings, studio pages, card embeds, and the partner API. The dancer reads as nonexistent to the public; admin tools and the family's own signed-in views keep working.</p>
+  </div>
+
+  <% if (error) { %>
+    <div class="card glass-card" style="margin-top: 1.5rem; padding: 1rem 1.5rem; border-color: rgba(239, 68, 68, 0.4);">
+      <p style="margin: 0; color: #ef4444;"><%= error %></p>
+    </div>
+  <% } %>
+  <% if (success) { %>
+    <div class="card glass-card" style="margin-top: 1.5rem; padding: 1rem 1.5rem; border-color: rgba(34, 197, 94, 0.4);">
+      <p style="margin: 0; color: #22c55e;"><%= success %></p>
+    </div>
+  <% } %>
+
+  <div class="card glass-card" style="margin-top: 2rem; padding: 2rem;">
+    <h3>Suppress a Dancer</h3>
+    <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.3rem;">
+      For protective situations (safety requests from a family, protective orders). This is not the tool for
+      ordinary privacy preferences — families set those themselves on their manage page.
+    </p>
+    <form action="/admin/suppressions/add" method="POST" style="margin-top: 1rem; display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+      <div style="flex: 1; min-width: 220px;">
+        <label for="dancer_ref" style="display: block; font-size: 0.9rem; margin-bottom: 0.3rem;">Dancer unique ID (or numeric id)</label>
+        <input type="text" id="dancer_ref" name="dancer_ref" class="form-control" required style="width: 100%;" placeholder="DNC-…">
+      </div>
+      <div style="flex: 2; min-width: 260px;">
+        <label for="reason" style="display: block; font-size: 0.9rem; margin-bottom: 0.3rem;">Reason (internal only)</label>
+        <input type="text" id="reason" name="reason" class="form-control" style="width: 100%;" placeholder="e.g. family safety request, ticket #…">
+      </div>
+      <div>
+        <button type="submit" class="btn btn-primary">Suppress</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="card glass-card" style="margin-top: 2rem; overflow-x: auto;">
+    <table class="premium-table">
+      <thead>
+        <tr>
+          <th>Dancer</th>
+          <th>Unique ID</th>
+          <th>Awards</th>
+          <th>Reason</th>
+          <th>Suppressed By</th>
+          <th>Since</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (suppressed.length === 0) { %>
+          <tr><td colspan="7" style="text-align: center;">No suppressed dancers.</td></tr>
+        <% } else { %>
+          <% suppressed.forEach(function(d) { %>
+            <tr>
+              <td><%= d.name %></td>
+              <td style="font-family: monospace; font-size: 0.85rem;"><%= d.unique_id %></td>
+              <td><%= d.award_count %></td>
+              <td><%= d.suppressed_reason || '—' %></td>
+              <td><%= d.suppressed_by_email || '—' %></td>
+              <td><%= d.suppressed_at %></td>
+              <td>
+                <form action="/admin/suppressions/<%= d.id %>/remove" method="POST" style="margin: 0;"
+                      onsubmit="return confirm('Make <%= d.name %> publicly visible again?');">
+                  <button type="submit" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">Unsuppress</button>
+                </form>
+              </td>
+            </tr>
+          <% }); %>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+
+  <p style="margin-top: 1.5rem; color: var(--text-muted); font-size: 0.9rem;">
+    Suppression takes effect immediately on profile pages and searches; homepage leaderboards refresh within
+    seconds. If the dancer's record was ever served through the partner API, the query log at
+    <a href="/admin/partner-keys" style="color: var(--primary);">Partner Keys</a> shows which partners fetched it,
+    so they can be asked to honor the removal.
+  </p>
+</div>
+<%- include('partials/footer') %>

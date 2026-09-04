@@ -256,6 +256,45 @@ async function main() {
       console.log(`${ok ? 'PASS' : 'FAIL'}  ${method.padEnd(4)} ${path}  -> ${status} (expected ${expected.join('/')})  ${desc}`);
     }
 
+    // Safety suppression (utils/suppression.js): a suppressed dancer must
+    // read as nonexistent on the public profile, search, the claim page and
+    // the card embed — and reappear after unsuppression. Fixture-based so it
+    // never touches a real dancer.
+    try {
+      const { openDb } = require('../database');
+      const db = await openDb();
+      await db.run("DELETE FROM dancer_studios WHERE dancer_id IN (SELECT id FROM dancers WHERE unique_id = 'smoke-suppressed-1')");
+      await db.run("DELETE FROM dancers WHERE unique_id = 'smoke-suppressed-1'");
+      const sd = await db.run(
+        "INSERT INTO dancers (unique_id, name, suppressed_at, suppressed_reason) VALUES ('smoke-suppressed-1', 'Smoke Suppressed Dancer', datetime('now'), 'smoke fixture')");
+      const anyStudio = await db.get("SELECT id FROM studios WHERE status = 'active' ORDER BY id LIMIT 1");
+      if (anyStudio) await db.run('INSERT INTO dancer_studios (dancer_id, studio_id) VALUES (?, ?)', [sd.lastID, anyStudio.id]);
+      const expect = async (desc, pathname, want) => {
+        const r = await fetch(BASE + pathname, { redirect: 'manual' });
+        const ok = r.status === want;
+        if (!ok) failures++;
+        console.log(`${ok ? 'PASS' : 'FAIL'}  GET  ${pathname}  -> ${r.status} (expected ${want})  ${desc}`);
+        return r;
+      };
+      await expect('suppressed dancer profile 404s', '/dancer/smoke-suppressed-1', 404);
+      await expect('suppressed dancer claim page 404s', `/claim/dancer/${sd.lastID}`, 404);
+      await expect('suppressed dancer card embed 404s', '/dance/card/smoke-suppressed-1/1', 404);
+      {
+        const r = await fetch(BASE + '/dance/api/search?q=Smoke%20Suppressed');
+        const body = await r.json().catch(() => ({ dancers: [] }));
+        const leaked = (body.dancers || []).some(d => d.unique_id === 'smoke-suppressed-1');
+        if (leaked) failures++;
+        console.log(`${leaked ? 'FAIL' : 'PASS'}  GET  /dance/api/search  suppressed dancer absent from search`);
+      }
+      await db.run("UPDATE dancers SET suppressed_at = NULL WHERE unique_id = 'smoke-suppressed-1'");
+      await expect('unsuppressed dancer renders again', '/dancer/smoke-suppressed-1', 200);
+      await db.run("DELETE FROM dancer_studios WHERE dancer_id = ?", [sd.lastID]);
+      await db.run("DELETE FROM dancers WHERE id = ?", [sd.lastID]);
+    } catch (e) {
+      failures++;
+      console.log('FAIL  suppression checks errored: ' + e.message);
+    }
+
     // Owner-flow checks: a real studio owner must be able to render the
     // manage surfaces with content (regression: /history threw on a bare
     // `app` reference the anonymous 302 check couldn't catch), and a

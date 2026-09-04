@@ -134,6 +134,15 @@
     </div>
     <% } %>
 
+    <!-- Safety Suppressions -->
+    <% if (user && user.role === 'superadmin') { %>
+    <div class="card glass-card">
+      <h3 style="color: #f87171; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">🛡️ Safety Suppressions</h3>
+      <p class="sub-text" style="margin-bottom: 1.5rem;">Hide a dancer from every public surface on a family's safety request. The dancer reads as nonexistent publicly; their own signed-in views keep working.</p>
+      <a href="/admin/suppressions" class="btn btn-outline" style="display: block; text-align: center; border-color: #f87171; color: #f87171;">Manage Suppressions</a>
+    </div>
+    <% } %>
+
     <!-- Feature Flags -->
     <% if (user && user.role === 'superadmin') { %>
     <div class="card glass-card">

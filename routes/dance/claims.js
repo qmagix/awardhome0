@@ -128,8 +128,12 @@ router.post('/claim/studio/:id/apply', applyLimiter, async (req, res) => {
 // manually reviewed (child-safety: an email domain proves nothing here).
 router.get('/claim/dancer/:id', async (req, res) => {
   const db = await openDb();
-  const dancer = await db.get('SELECT id, name, unique_id, is_claimed FROM dancers WHERE id = ?', [req.params.id]);
-  if (!dancer) return res.status(404).send('Dancer not found');
+  const dancer = await db.get('SELECT id, name, unique_id, is_claimed, suppressed_at FROM dancers WHERE id = ?', [req.params.id]);
+  // Suppressed reads as nonexistent — this route takes the SEQUENTIAL id, so
+  // without the guard it would be the walkable oracle that undoes the
+  // profile page's 404 (utils/suppression.js). A family who needs to claim
+  // a suppressed dancer is already talking to us: we suppressed it for them.
+  if (!dancer || dancer.suppressed_at) return res.status(404).send('Dancer not found');
   res.render('claim_dancer', { dancer, pageTitle: `Claim ${dancer.name}` });
 });
 
@@ -139,7 +143,7 @@ router.post('/claim/dancer/:id', requireAuth, async (req, res) => {
   const db = await openDb();
 
   const dancer = await db.get('SELECT * FROM dancers WHERE id = ?', [req.params.id]);
-  if (!dancer) return res.status(404).send('Dancer not found');
+  if (!dancer || dancer.suppressed_at) return res.status(404).send('Dancer not found');
 
   if (dancer.is_claimed) {
     return res.render('claim_dancer', { dancer, pageTitle: `Claim ${dancer.name}`, error: 'This dancer profile is already claimed.' });
@@ -209,8 +213,8 @@ router.post('/claim/dancer/:id/apply', applyLimiter, async (req, res) => {
   const { contact_name, email, password, relationship, proof, studio_code } = req.body || {};
   const db = await openDb();
 
-  const dancer = await db.get('SELECT id, name, unique_id, is_claimed FROM dancers WHERE id = ?', [req.params.id]);
-  if (!dancer) return res.status(404).send('Dancer not found');
+  const dancer = await db.get('SELECT id, name, unique_id, is_claimed, suppressed_at FROM dancers WHERE id = ?', [req.params.id]);
+  if (!dancer || dancer.suppressed_at) return res.status(404).send('Dancer not found');
   const fail = (error) => res.status(400).render('claim_dancer', { dancer, error, pageTitle: `Claim ${dancer.name}` });
 
   if (dancer.is_claimed) return fail('This dancer profile is already claimed.');
@@ -387,7 +391,8 @@ async function castInviteEvents(db, inv) {
     const rows = await db.all(`
       SELECT DISTINCT d.name FROM award_dancers ad
       JOIN awards a ON a.id = ad.award_id JOIN dancers d ON d.id = ad.dancer_id
-      WHERE a.studio_id = ? AND IFNULL(a.event_id, 0) = ?
+      WHERE d.suppressed_at IS NULL
+        AND a.studio_id = ? AND IFNULL(a.event_id, 0) = ?
         AND IFNULL(a.performance_name_key, LOWER(TRIM(IFNULL(a.performance_name, '')))) = ?
       ORDER BY d.name`, [inv.studio_id, ev.event_id, inv.routine_key]);
     ev.known_dancers = rows.map(r => r.name);

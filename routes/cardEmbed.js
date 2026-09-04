@@ -15,6 +15,7 @@ const rateLimit = require('express-rate-limit');
 const { resolveCardDesign } = require('../utils/cardDesign');
 const { flagOn } = require('../utils/featureFlags');
 const { studioDisplayNameSql } = require('../utils/independents');
+const { notSuppressedSql } = require('../utils/suppression');
 
 // Same shape and reason as the profile limiter in routes/dance/public.js:
 // award ids are sequential, so a card endpoint is an enumerable surface and
@@ -48,8 +49,11 @@ const cardLimiter = rateLimit({
 router.get('/dance/card/:dancerUniqueId/:awardId', cardLimiter, async (req, res) => {
   const db = await openDb();
   const dancer = await db.get(
-    'SELECT id, unique_id, name FROM dancers WHERE unique_id = ?', [req.params.dancerUniqueId]);
-  if (!dancer) return res.status(404).send('Not found');
+    'SELECT id, unique_id, name, suppressed_at FROM dancers WHERE unique_id = ?', [req.params.dancerUniqueId]);
+  // Safety-suppressed = same 404 as nonexistent (utils/suppression.js) —
+  // this route sits outside even the beta gate, so it must not be the one
+  // surface where a suppressed dancer still resolves.
+  if (!dancer || dancer.suppressed_at) return res.status(404).send('Not found');
   const awardId = parseInt(req.params.awardId, 10);
   if (!awardId) return res.status(404).send('Not found');
 
@@ -86,7 +90,8 @@ router.get('/dance/card/:dancerUniqueId/:awardId', cardLimiter, async (req, res)
   // Cast, for the group card's roster page.
   award.dancers = await db.all(`
     SELECT d.name, d.unique_id FROM award_dancers ad
-    JOIN dancers d ON ad.dancer_id = d.id WHERE ad.award_id = ? ORDER BY d.name`, [awardId]);
+    JOIN dancers d ON ad.dancer_id = d.id
+    WHERE ${notSuppressedSql('d')} AND ad.award_id = ? ORDER BY d.name`, [awardId]);
   if (!award.dancers.length) award.dancers = [{ name: dancer.name, unique_id: dancer.unique_id }];
 
   const cardDesign = await resolveCardDesign(req, db);
@@ -101,7 +106,7 @@ router.get('/dance/card/:dancerUniqueId/:awardId', cardLimiter, async (req, res)
         SELECT aa.id as ack_id, aa.award_id, aa.dancer_id, aa.message, d.name as dancer_name
         FROM award_acknowledgements aa
         JOIN dancers d ON aa.dancer_id = d.id
-        WHERE aa.status = 'approved' AND aa.award_id = ?
+        WHERE ${notSuppressedSql('d')} AND aa.status = 'approved' AND aa.award_id = ?
         ORDER BY (aa.dancer_id != ?), d.name`, [awardId, dancer.id]);
     } catch (e) { /* pre-migration */ }
   }

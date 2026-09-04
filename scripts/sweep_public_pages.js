@@ -65,6 +65,22 @@ const q = async (db, sql) => (await db.all(sql)).map(r => Object.values(r)[0]);
     HAVING SUM(CASE WHEN (SELECT COUNT(*) FROM award_dancers x WHERE x.award_id=a.id) > 1 THEN 1 ELSE 0 END) > 3 LIMIT 10`),
     'dancer:group-heavy', u => `/dancer/${u}`);
 
+  // Safety-suppressed dancers 404 by design (utils/suppression.js); the
+  // interesting render paths are their CASTMATES' pages and their studios,
+  // where shared group awards now render with one member filtered out.
+  add(await q(db, `SELECT unique_id FROM dancers WHERE suppressed_at IS NOT NULL LIMIT 10`),
+    'dancer:suppressed(404-by-design)', u => `/dancer/${u}`);
+  add(await q(db, `SELECT DISTINCT d2.unique_id FROM dancers d1
+    JOIN award_dancers ad1 ON ad1.dancer_id=d1.id
+    JOIN award_dancers ad2 ON ad2.award_id=ad1.award_id AND ad2.dancer_id!=d1.id
+    JOIN dancers d2 ON d2.id=ad2.dancer_id AND d2.suppressed_at IS NULL
+    WHERE d1.suppressed_at IS NOT NULL LIMIT 10`),
+    'dancer:castmate-of-suppressed', u => `/dancer/${u}`);
+  add(await q(db, `SELECT DISTINCT s.unique_id FROM studios s JOIN dancer_studios ds ON ds.studio_id=s.id
+    JOIN dancers d ON d.id=ds.dancer_id
+    WHERE d.suppressed_at IS NOT NULL AND COALESCE(s.is_independent,0)=0 LIMIT 10`),
+    'studio:has-suppressed', u => `/dance/studio/${u}`);
+
   // design variants for a subset of interesting dancers
   const variantTargets = [...urls.entries()].filter(([, l]) => l.startsWith('dancer:')).slice(0, 40).map(([u]) => u);
   for (const u of variantTargets) {

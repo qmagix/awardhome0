@@ -29,30 +29,34 @@ const STRATA = [
       JOIN awards a ON a.event_id = e.id
       JOIN award_dancers ad ON ad.award_id = a.id
       JOIN dancers d ON d.id = ad.dancer_id
-      WHERE o.custom_icons LIKE '%logo_approved":true%' LIMIT 1`,
+      WHERE d.suppressed_at IS NULL
+        AND o.custom_icons LIKE '%logo_approved":true%' LIMIT 1`,
     path: v => `/dancer/${v}` },
   { name: 'dancer:approved-ack', sql: `
       SELECT d.unique_id FROM award_acknowledgements aa
       JOIN dancers d ON d.id = aa.dancer_id
-      WHERE aa.status = 'approved' LIMIT 1`,
+      WHERE d.suppressed_at IS NULL AND aa.status = 'approved' LIMIT 1`,
     path: v => `/dancer/${v}` },
   { name: 'dancer:approved-photo', sql: `
       SELECT d.unique_id FROM award_card_photos p
       JOIN dancers d ON d.id = p.dancer_id
-      WHERE p.status = 'approved' LIMIT 1`,
+      WHERE d.suppressed_at IS NULL AND p.status = 'approved' LIMIT 1`,
     path: v => `/dancer/${v}` },
   { name: 'dancer:hidden-card', sql: `
       SELECT d.unique_id FROM dancer_card_hidden h
-      JOIN dancers d ON d.id = h.dancer_id LIMIT 1`,
+      JOIN dancers d ON d.id = h.dancer_id
+      WHERE d.suppressed_at IS NULL LIMIT 1`,
     path: v => `/dancer/${v}` },
   { name: 'dancer:default-photo', sql: `
       SELECT unique_id FROM dancers
-      WHERE card_photo_url IS NOT NULL AND card_photo_status = 'approved' LIMIT 1`,
+      WHERE suppressed_at IS NULL
+        AND card_photo_url IS NOT NULL AND card_photo_status = 'approved' LIMIT 1`,
     path: v => `/dancer/${v}` },
   { name: 'dancer:sampled', sql: `
       SELECT d.unique_id FROM dancers d
       JOIN award_dancers ad ON ad.dancer_id = d.id
-      WHERE d.id = (SELECT dancer_id FROM award_dancers
+      WHERE d.suppressed_at IS NULL
+        AND d.id = (SELECT dancer_id FROM award_dancers
                     LIMIT 1 OFFSET ABS(RANDOM()) % 10000)
       LIMIT 1`,
     path: v => `/dancer/${v}` },

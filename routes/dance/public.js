@@ -10,6 +10,7 @@ const { resolveCardDesign } = require('../../utils/cardDesign');
 const { flagOn } = require('../../utils/featureFlags');
 const { studioDisplayNameSql, excludeIndependentSql } = require('../../utils/independents');
 const { rankableAwardSql } = require('../../utils/promotion');
+const { notSuppressedSql } = require('../../utils/suppression');
 const { ensureUpcomingTable, upcomingForOrg, distanceMiles } = require('../../utils/upcoming');
 const { REACTION_TYPES, readReactorKey, ensureReactorKey, toggleReaction, countsForAwards, myReactions } = require('../../utils/reactions');
 const rateLimit = require('express-rate-limit');
@@ -49,7 +50,7 @@ router.get('/widget/studio/:id', profileLimiter, async (req, res) => {
     FROM awards a
     LEFT JOIN events e ON a.event_id = e.id
     LEFT JOIN award_dancers ad ON a.id = ad.award_id
-    LEFT JOIN dancers d ON ad.dancer_id = d.id
+    LEFT JOIN dancers d ON ad.dancer_id = d.id AND ${notSuppressedSql('d')}
     WHERE a.studio_id = ?
     GROUP BY a.id
     ORDER BY e.year DESC, e.date_string DESC
@@ -279,6 +280,7 @@ async function loadHomepageData() {
     JOIN award_dancers ad ON d.id = ad.dancer_id
     JOIN awards a ON ad.award_id = a.id
     WHERE COALESCE(d.hide_from_rankings, 0) = 0 AND COALESCE(d.hide_from_search, 0) = 0
+      AND ${notSuppressedSql('d')}
       AND ${rankableAwardSql('a')}
     GROUP BY d.id
     ORDER BY total_awards DESC
@@ -293,6 +295,7 @@ async function loadHomepageData() {
     JOIN events e ON a.event_id = e.id
     WHERE e.year = (SELECT MAX(year) FROM events)
       AND COALESCE(d.hide_from_rankings, 0) = 0 AND COALESCE(d.hide_from_search, 0) = 0
+      AND ${notSuppressedSql('d')}
       AND ${rankableAwardSql('a')}
     GROUP BY d.id
     ORDER BY total_awards DESC
@@ -307,6 +310,7 @@ async function loadHomepageData() {
     JOIN events e ON a.event_id = e.id
     WHERE a.is_first_place = 1 AND e.year = (SELECT MAX(year) FROM events)
       AND COALESCE(d.hide_from_rankings, 0) = 0 AND COALESCE(d.hide_from_search, 0) = 0
+      AND ${notSuppressedSql('d')}
       AND ${rankableAwardSql('a')}
     GROUP BY d.id
     ORDER BY total_awards DESC
@@ -904,6 +908,7 @@ router.get('/dance/api/search', searchLimiter, async (req, res) => {
         JOIN studios s2 ON s2.id = ds.studio_id WHERE ds.dancer_id = d.id) AS studios
     FROM dancers d
     WHERE d.name LIKE ? AND COALESCE(d.hide_from_search, 0) = 0
+      AND ${notSuppressedSql('d')}
     ORDER BY awards DESC LIMIT 6
   `, [like]);
 
@@ -1001,7 +1006,8 @@ router.get('/dance/studio/:id', profileLimiter, async (req, res) => {
   // one of them would assert an identity nobody has verified.
   if (studio.is_independent) {
     const roster = await db.all(
-      'SELECT d.unique_id FROM dancer_studios ds JOIN dancers d ON d.id = ds.dancer_id WHERE ds.studio_id = ?',
+      `SELECT d.unique_id FROM dancer_studios ds JOIN dancers d ON d.id = ds.dancer_id
+       WHERE ${notSuppressedSql('d')} AND ds.studio_id = ?`,
       [studio.id]);
     if (roster.length === 1) return res.redirect(302, `/dancer/${roster[0].unique_id}`);
     return res.status(404).send('Studio not found');
@@ -1083,10 +1089,10 @@ router.get('/dance/studio/:id', profileLimiter, async (req, res) => {
   const topHallOfFame = await db.all(`
     SELECT a.*, d.name as dancer_name, d.unique_id, e.name as event_name, e.year as event_year, e.date_string, o.name as org_name, o.logo_url, o.custom_icons
     FROM awards a
-    LEFT JOIN dancers d ON a.dancer_id = d.id
+    LEFT JOIN dancers d ON a.dancer_id = d.id AND ${notSuppressedSql('d')}
     LEFT JOIN events e ON a.event_id = e.id
     LEFT JOIN organizations o ON e.org_id = o.id
-    WHERE a.studio_id = ? 
+    WHERE a.studio_id = ?
     AND (
       a.is_hall_of_fame = 1 OR (
         (a.is_hall_of_fame IS NULL OR a.is_hall_of_fame = 0)
@@ -1115,7 +1121,7 @@ router.get('/dance/studio/:id', profileLimiter, async (req, res) => {
   
   if (topHallOfFame.length > 0) {
     const hofIds = topHallOfFame.map(a => a.id);
-    const hofDancers = await db.all(`SELECT ad.award_id, d.name, d.unique_id FROM award_dancers ad JOIN dancers d ON ad.dancer_id = d.id WHERE ad.award_id IN (${hofIds.map(()=>'?').join(',')})`, hofIds);
+    const hofDancers = await db.all(`SELECT ad.award_id, d.name, d.unique_id FROM award_dancers ad JOIN dancers d ON ad.dancer_id = d.id WHERE ${notSuppressedSql('d')} AND ad.award_id IN (${hofIds.map(()=>'?').join(',')})`, hofIds);
     const hofMap = {};
     hofDancers.forEach(ad => {
       if(!hofMap[ad.award_id]) hofMap[ad.award_id] = [];
@@ -1178,7 +1184,7 @@ router.get('/dance/studio/:id', profileLimiter, async (req, res) => {
     const firstYearAwards = await db.all(`
       SELECT a.*, d.name as dancer_name, d.unique_id, e.name as event_name, e.year as event_year, e.date_string, o.id as org_id, o.name as org_name, o.logo_url, o.custom_icons
       FROM awards a
-      LEFT JOIN dancers d ON a.dancer_id = d.id
+      LEFT JOIN dancers d ON a.dancer_id = d.id AND ${notSuppressedSql('d')}
       LEFT JOIN events e ON a.event_id = e.id
       LEFT JOIN organizations o ON e.org_id = o.id
       WHERE a.studio_id = ? AND e.year = ?
@@ -1191,7 +1197,7 @@ router.get('/dance/studio/:id', profileLimiter, async (req, res) => {
 
     const fyIds = firstYearAwards.map(a => a.id);
     if (fyIds.length > 0) {
-      const fyDancers = await db.all(`SELECT ad.award_id, d.name, d.unique_id, ad.status FROM award_dancers ad JOIN dancers d ON ad.dancer_id = d.id WHERE ad.award_id IN (${fyIds.map(()=>'?').join(',')})`, fyIds);
+      const fyDancers = await db.all(`SELECT ad.award_id, d.name, d.unique_id, ad.status FROM award_dancers ad JOIN dancers d ON ad.dancer_id = d.id WHERE ${notSuppressedSql('d')} AND ad.award_id IN (${fyIds.map(()=>'?').join(',')})`, fyIds);
       const fyDancerMap = {};
       fyDancers.forEach(ad => {
         if(!fyDancerMap[ad.award_id]) fyDancerMap[ad.award_id] = [];
@@ -1223,7 +1229,7 @@ router.get('/dance/studio/:id', profileLimiter, async (req, res) => {
     SELECT d.id, d.name, d.unique_id, ds.graduation_year, ds.headshot_url, ds.notes
     FROM dancer_studios ds
     JOIN dancers d ON ds.dancer_id = d.id
-    WHERE ds.studio_id = ? AND ds.graduation_year <= ?
+    WHERE ${notSuppressedSql('d')} AND ds.studio_id = ? AND ds.graduation_year <= ?
     ORDER BY ds.graduation_year DESC, d.name ASC
   `, [req.params.id, currentYear]);
 
@@ -1289,7 +1295,7 @@ router.get('/dance/studio/:id', profileLimiter, async (req, res) => {
       FROM award_dancers ad
       JOIN awards a ON ad.award_id = a.id
       JOIN dancers d ON ad.dancer_id = d.id
-      WHERE a.studio_id = ?
+      WHERE ${notSuppressedSql('d')} AND a.studio_id = ?
       GROUP BY d.id
       ORDER BY COUNT(*) DESC
       LIMIT 8
@@ -1321,7 +1327,7 @@ router.get('/api/studio/:id/year/:year', profileLimiter, async (req, res) => {
   const awards = await db.all(`
     SELECT a.*, d.name as dancer_name, d.unique_id, e.name as event_name, e.year as event_year, e.date_string, o.name as org_name, o.logo_url, o.custom_icons
     FROM awards a
-    LEFT JOIN dancers d ON a.dancer_id = d.id
+    LEFT JOIN dancers d ON a.dancer_id = d.id AND ${notSuppressedSql('d')}
     LEFT JOIN events e ON a.event_id = e.id
     LEFT JOIN organizations o ON e.org_id = o.id
     WHERE a.studio_id = ? AND e.year = ?
@@ -1338,7 +1344,8 @@ router.get('/api/studio/:id/year/:year', profileLimiter, async (req, res) => {
     SELECT ad.award_id, d.name, d.unique_id, ad.status
     FROM award_dancers ad
     JOIN dancers d ON ad.dancer_id = d.id
-    WHERE ad.award_id IN (SELECT id FROM awards WHERE studio_id = ? AND event_id IN (SELECT id FROM events WHERE year = ?))
+    WHERE ${notSuppressedSql('d')}
+      AND ad.award_id IN (SELECT id FROM awards WHERE studio_id = ? AND event_id IN (SELECT id FROM events WHERE year = ?))
   `, [req.params.id, req.params.year]);
 
   const awardDancersMap = {};
@@ -1379,7 +1386,10 @@ router.get('/dancer/:unique_id', profileLimiter, async (req, res) => {
     SELECT * FROM dancers WHERE unique_id = ?
   `, [req.params.unique_id]);
 
-  if (!dancer) return res.status(404).send('Dancer not found');
+  // Safety-suppressed reads exactly like nonexistent (utils/suppression.js) —
+  // same body, same status, no oracle. The family's own view lives on the
+  // auth-gated /manage/dancer route, which deliberately does not filter.
+  if (!dancer || dancer.suppressed_at) return res.status(404).send('Dancer not found');
 
   // Fetch all affiliated studios
   const studios = await db.all(`

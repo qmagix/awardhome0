@@ -96,6 +96,12 @@ async function main() {
   await db.run("INSERT INTO studios (unique_id, name, status) VALUES ('api-quiet-studio', 'API Quiet Studio', 'active')");
   const stranger = await db.run("INSERT INTO dancers (unique_id, name) VALUES ('DNC-api-stranger', 'API Stranger Dancer')");
   await db.run('INSERT INTO dancer_studios (dancer_id, studio_id) VALUES (?, ?)', [stranger.lastID, st.lastID]);
+  // Safety-suppressed dancer, owned by u1: publicly nonexistent, but the
+  // owning household keeps its authenticated view (utils/suppression.js).
+  const suppressedD = await db.run(
+    "INSERT INTO dancers (unique_id, name, is_claimed, claimed_by_user_id, suppressed_at, suppressed_reason) " +
+    "VALUES ('DNC-api-suppressed', 'API Suppressed Dancer', 1, ?, datetime('now'), 'test fixture')", [u1.lastID]);
+  await db.run('INSERT INTO dancer_studios (dancer_id, studio_id) VALUES (?, ?)', [suppressedD.lastID, st.lastID]);
   const event = await db.get('SELECT id, year FROM events WHERE year IS NOT NULL ORDER BY id LIMIT 1');
 
   // Three seasons, seeded so that ID ORDER DISAGREES WITH YEAR ORDER — which
@@ -234,6 +240,16 @@ async function main() {
     check(noAuth.status === 401 && noAuth.json.error === 'unauthorized',
       'writes still require a token', 'status ' + noAuth.status);
 
+    // ---- safety suppression (utils/suppression.js) ----
+    const supSearch = await api('GET', '/dancers/search?q=API%20Suppressed');
+    check(supSearch.status === 200 &&
+          !supSearch.json.dancers.some(d => d.unique_id === 'DNC-api-suppressed'),
+      'a suppressed dancer is absent from guest search', 'status ' + supSearch.status);
+    const supGuest = await api('GET', '/dancers/DNC-api-suppressed/awards');
+    check(supGuest.status === 404,
+      'a suppressed trophy case reads 404 to a guest — same as nonexistent',
+      'status ' + supGuest.status);
+
     // ---- sign in (no cookie, no CSRF token, anywhere) ----
     const codeReq = await api('POST', '/auth/request-code', { body: { email: 'api-family@test.invalid' } });
     const devCode = codeReq.json && codeReq.json.devCode;
@@ -281,6 +297,13 @@ async function main() {
 
     const replay = await api('POST', '/auth/verify', { body: { email: 'api-family@test.invalid', code: devCode } });
     check(replay.status === 401, 'a sign-in code works exactly once', 'status ' + replay.status);
+
+    // Suppression protects the family — it must not lock them out of their
+    // own record. The owning household still reads its suppressed dancer.
+    const supOwner = await api('GET', '/dancers/DNC-api-suppressed/awards', { token: access });
+    check(supOwner.status === 200 && supOwner.json.dancer.unique_id === 'DNC-api-suppressed',
+      "the owning household still sees its own suppressed dancer's trophy case",
+      'status ' + supOwner.status);
 
     // ---- a parent who has never heard of AwardHome ----
     // The journey that matters commercially: she hears about it from a friend,
@@ -518,9 +541,14 @@ async function main() {
 
     // ---- household ----
     const me = await api('GET', '/me', { token: access });
-    check(me.status === 200 && me.json.dancers.length === 1 && me.json.dancers[0].studios.length === 1,
+    const meMain = (me.json.dancers || []).find(d => d.unique_id === 'DNC-api-dancer');
+    check(me.status === 200 && !!meMain && meMain.studios.length === 1,
       'the household reads back its dancers with the studio the Add flow derives',
       'status ' + me.status + ' dancers=' + (me.json.dancers || []).length);
+    // The suppressed dancer is in the household list too — suppression hides
+    // her from the public, never from her own family's app.
+    check((me.json.dancers || []).some(d => d.unique_id === 'DNC-api-suppressed'),
+      "suppression does not remove a dancer from her own household's /me");
 
     // ---- claim ----
     const claim = await api('POST', `/dancers/${unclaimed.lastID}/claim`, {

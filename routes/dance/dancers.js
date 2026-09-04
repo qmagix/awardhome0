@@ -718,8 +718,10 @@ router.get('/api/check-dancer-studio', async (req, res) => {
 
   if (!unique_id || !studio_id) return res.json({ linked: false });
 
-  const dancer = await db.get('SELECT id FROM dancers WHERE unique_id = ?', [unique_id]);
-  if (!dancer) return res.json({ linked: false });
+  const dancer = await db.get('SELECT id, suppressed_at FROM dancers WHERE unique_id = ?', [unique_id]);
+  // Suppressed answers exactly like unknown — this endpoint is an
+  // unauthenticated existence oracle otherwise (utils/suppression.js).
+  if (!dancer || dancer.suppressed_at) return res.json({ linked: false });
 
   const link = await db.get('SELECT id FROM dancer_studios WHERE dancer_id = ? AND studio_id = ?', [dancer.id, studio_id]);
   return res.json({ linked: !!link });
@@ -744,8 +746,8 @@ router.post('/api/claim-award', claimAwardLimiter, async (req, res) => {
     let finalUniqueId = null;
 
     if (unique_id) {
-      const dancer = await db.get('SELECT id, name, unique_id FROM dancers WHERE unique_id = ?', [unique_id]);
-      if (!dancer) return res.status(404).json({ error: 'Dancer with that Unique ID not found.' });
+      const dancer = await db.get('SELECT id, name, unique_id, suppressed_at FROM dancers WHERE unique_id = ?', [unique_id]);
+      if (!dancer || dancer.suppressed_at) return res.status(404).json({ error: 'Dancer with that Unique ID not found.' });
       dancerId = dancer.id;
       dancerName = dancer.name;
       finalUniqueId = dancer.unique_id;

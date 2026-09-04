@@ -650,6 +650,46 @@ async function initDb() {
     CREATE INDEX IF NOT EXISTS idx_award_corrections_status ON award_corrections(status, created_at);
     CREATE INDEX IF NOT EXISTS idx_award_corrections_award ON award_corrections(award_id);
 
+    -- Partner API credentials (/api/v1/partner — see routes/api/partner.js).
+    -- Only the SHA-256 hash of a key is stored, same reasoning as
+    -- users.reset_token_hash and mobile_sessions: a database leak must not
+    -- hand anyone a working credential. Keys are issued by a superadmin at
+    -- /admin/partner-keys and shown exactly once. agreement_note records
+    -- that a signed data agreement exists BEFORE the key was issued — the
+    -- legal artifact lives outside the app, but issuance must reference it.
+    CREATE TABLE IF NOT EXISTS partner_keys (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      partner_name TEXT NOT NULL,
+      contact_email TEXT,
+      key_hash TEXT NOT NULL UNIQUE,
+      daily_quota INTEGER NOT NULL DEFAULT 200,
+      agreement_note TEXT,
+      created_by INTEGER REFERENCES users(id),
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      last_used_at DATETIME,
+      revoked_at DATETIME,
+      revoked_reason TEXT
+    );
+
+    -- Append-only audit of every partner lookup: which key, what was asked,
+    -- which dancers came back. This is the abuse-detection signal, the
+    -- quota ledger, and the answer to "who has looked up my child?" — so it
+    -- is never updated or deleted, only written. dancer_unique_ids is a
+    -- comma-joined list for search hits; detail fetches log the single id.
+    CREATE TABLE IF NOT EXISTS partner_query_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      key_id INTEGER NOT NULL REFERENCES partner_keys(id),
+      endpoint TEXT NOT NULL,
+      query_name TEXT,
+      query_studio TEXT,
+      dancer_unique_ids TEXT,
+      result_count INTEGER,
+      status TEXT NOT NULL DEFAULT 'ok',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE INDEX IF NOT EXISTS idx_partner_query_log_key_time
+      ON partner_query_log(key_id, created_at);
+
     -- Known flags ship dark; releases happen at /admin/features
     INSERT OR IGNORE INTO feature_flags (key, state) VALUES ('family_submissions', 'off');
     INSERT OR IGNORE INTO feature_flags (key, state) VALUES ('thank_you_notes', 'off');
@@ -817,6 +857,18 @@ async function initDb() {
   // Applied to existing data by scripts/migrate_independent_studios.js.
   try { await db.exec('ALTER TABLE studios ADD COLUMN is_independent INTEGER DEFAULT 0'); } catch(e) {}
   try { await db.exec('CREATE INDEX IF NOT EXISTS idx_studios_independent ON studios(is_independent)'); } catch(e) {}
+
+  // Safety suppression (superadmin-only, /admin/suppressions): hides the
+  // dancer from EVERY public surface — profile page, search, rankings,
+  // rosters, guest API reads, partner API — with no distinction from a
+  // dancer that never existed. Distinct from the owner-facing hide_from_*
+  // toggles above: those are display preferences a family sets themselves;
+  // this is a protective action (protective orders, families fleeing
+  // someone) that must not be reachable from any user-facing surface.
+  // Admin tools and the owner's own manage/mobile views still work.
+  try { await db.exec('ALTER TABLE dancers ADD COLUMN suppressed_at DATETIME'); } catch(e) {}
+  try { await db.exec('ALTER TABLE dancers ADD COLUMN suppressed_reason TEXT'); } catch(e) {}
+  try { await db.exec('ALTER TABLE dancers ADD COLUMN suppressed_by INTEGER REFERENCES users(id)'); } catch(e) {}
 
   // Director's private tag for a dancer within their studio ("Senior Mia",
   // "Mia 2018") — shown only on studio-management surfaces to distinguish

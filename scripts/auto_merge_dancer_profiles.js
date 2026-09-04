@@ -18,6 +18,7 @@
 // Usage: node scripts/auto_merge_dancer_profiles.js [--apply]
 
 const { openDb } = require('../database');
+const { carrySuppressionOnMerge } = require('../utils/suppression');
 
 async function mergeInto(db, primaryId, dupId) {
   await db.run(`INSERT OR IGNORE INTO award_dancers (award_id, dancer_id, status, source, created_at)
@@ -27,6 +28,7 @@ async function mergeInto(db, primaryId, dupId) {
   await db.run(`INSERT OR IGNORE INTO dancer_studios (dancer_id, studio_id, status, source)
                 SELECT ?, studio_id, status, source FROM dancer_studios WHERE dancer_id = ?`, [primaryId, dupId]);
   await db.run('DELETE FROM dancer_studios WHERE dancer_id = ?', [dupId]);
+  await carrySuppressionOnMerge(db, dupId, primaryId);
   await db.run('DELETE FROM dancers WHERE id = ?', [dupId]);
 }
 

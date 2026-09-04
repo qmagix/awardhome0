@@ -12,6 +12,7 @@ const { canonicalizeRoutine, routineKeySql, ensureRoutineAliasTable, ensureRouti
 const { ensureCastInviteTables, newInviteToken, inviteExpiry, sendCastInviteEmail } = require('../../utils/castInvites');
 const { flagOn } = require('../../utils/featureFlags');
 const { pendingForStudio, studioDecide, PHOTO_REASON_TEXT } = require('../../utils/cardPhotos');
+const { carrySuppressionOnMerge } = require('../../utils/suppression');
 const { sendEmail } = require('../../utils/mailer');
 const multer = require('multer');
 // CSV imports only (roster + awards). Rejections surface as 400s via the
@@ -911,7 +912,8 @@ router.post('/manage/studio/:id/roster/merge', requireAuth, requireStudioOwner, 
     await db.run('INSERT OR IGNORE INTO dancer_studios (dancer_id, studio_id, status, source) SELECT ?, studio_id, status, source FROM dancer_studios WHERE dancer_id = ?', [primary_id, duplicate_id]);
     await db.run('DELETE FROM dancer_studios WHERE dancer_id = ?', [duplicate_id]);
 
-    // 3. Delete the duplicate dancer record
+    // 3. Delete the duplicate dancer record (suppression rides to the survivor)
+    await carrySuppressionOnMerge(db, duplicate_id, primary_id);
     await db.run('DELETE FROM dancers WHERE id = ?', [duplicate_id]);
 
     await db.run('COMMIT');
@@ -978,6 +980,7 @@ router.post('/manage/studio/:id/roster/clean-duplicate-set', requireAuth, requir
       await db.run('INSERT OR IGNORE INTO dancer_studios (dancer_id, studio_id, status, source) SELECT ?, studio_id, status, source FROM dancer_studios WHERE dancer_id = ?', [primaryId, dupId]);
       await db.run('DELETE FROM dancer_studios WHERE dancer_id = ?', [dupId]);
 
+      await carrySuppressionOnMerge(db, dupId, primaryId);
       await db.run('DELETE FROM dancers WHERE id = ?', [dupId]);
     }
 
@@ -1034,6 +1037,7 @@ router.post('/manage/studio/:id/roster/clean-all-duplicates', requireAuth, requi
         await db.run('UPDATE awards SET dancer_id = ? WHERE dancer_id = ?', [primaryId, dup.id]);
         await db.run('INSERT OR IGNORE INTO dancer_studios (dancer_id, studio_id, status, source) SELECT ?, studio_id, status, source FROM dancer_studios WHERE dancer_id = ?', [primaryId, dup.id]);
         await db.run('DELETE FROM dancer_studios WHERE dancer_id = ?', [dup.id]);
+        await carrySuppressionOnMerge(db, dup.id, primaryId);
         await db.run('DELETE FROM dancers WHERE id = ?', [dup.id]);
         profilesMerged++;
       }

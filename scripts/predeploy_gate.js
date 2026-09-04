@@ -70,6 +70,12 @@ async function main() {
       WHERE id IN (SELECT dancer_id FROM award_dancers LIMIT 50);
     UPDATE dancers SET hide_from_search = 1
       WHERE id IN (SELECT dancer_id FROM award_dancers LIMIT 51 OFFSET 25);
+    UPDATE dancers SET suppressed_at = datetime('now'), suppressed_reason = 'gate QA'
+      WHERE id IN (
+        SELECT ad.dancer_id FROM award_dancers ad
+        WHERE ad.award_id IN (
+          SELECT award_id FROM award_dancers GROUP BY award_id HAVING COUNT(*) > 1 LIMIT 15)
+        LIMIT 30);
     UPDATE organizations SET custom_icons = '{corrupt json'
       WHERE id = (SELECT o.id FROM organizations o JOIN events e ON e.org_id=o.id
         JOIN awards a ON a.event_id=e.id GROUP BY o.id ORDER BY COUNT(*) DESC LIMIT 1 OFFSET 3);
