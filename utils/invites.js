@@ -9,6 +9,14 @@ const { BASE_URL, BETA_MODE, BETA_KEY } = require('../config');
 
 const SECRET = process.env.SESSION_SECRET || 'dev-only-secret';
 
+// Brand architecture (decided 2026-09-05): AwardHome is the family
+// award-and-milestone platform; the dance vertical is "AwardHome Dance" at
+// dance.awardhome.com. Letters name the vertical; the signature keeps the
+// parent ("Founder, AwardHome"). The displayed host is derived from
+// BASE_URL so letters are correct before AND after the domain cutover —
+// never hardcode a hostname in letter copy.
+const SITE_HOST = String(BASE_URL).replace(/^https?:\/\//, '');
+
 function unsubscribeToken(email) {
   return crypto.createHmac('sha256', SECRET)
     .update(String(email).trim().toLowerCase())
@@ -40,7 +48,7 @@ function buildStudioInvite({ studio, totalAwards, firstPlaces, rank, totals = {}
 
   let rankHtml = '';
   if (rank && rank <= 100) {
-    rankHtml = `<p>${name} currently ranks <strong>#${rank}</strong> on our all-time leaderboard — already featured on the AwardHome homepage.</p>`;
+    rankHtml = `<p>${name} currently ranks <strong>#${rank}</strong> on our all-time leaderboard — already featured on the AwardHome Dance homepage.</p>`;
   } else if (rank && rank <= 300) {
     rankHtml = `<p>${name} currently ranks <strong>#${rank}</strong> on our all-time leaderboard. The top 100 appear on our homepage — if some of your results are missing from our records, adding them after you claim could move you up the list.</p>`;
   }
@@ -49,9 +57,9 @@ function buildStudioInvite({ studio, totalAwards, firstPlaces, rank, totals = {}
   <div style="font-family: Arial, Helvetica, sans-serif; color: #222; max-width: 560px; margin: 0 auto; line-height: 1.55;">
     <p>Hi ${name} team,</p>
 
-    ${BETA_MODE ? '<p style="background: #faf6e8; border: 1px solid #d4af37; border-radius: 8px; padding: 10px 14px;"><strong>You\'re invited to our private beta.</strong> The link below is your early-access pass — AwardHome opens to the public on September 15, and beta studios get a head start.</p>' : ''}
+    ${BETA_MODE ? '<p style="background: #faf6e8; border: 1px solid #d4af37; border-radius: 8px; padding: 10px 14px;"><strong>You\'re invited to our private beta.</strong> The link below is your early-access pass — AwardHome Dance opens to the public on September 15, and beta studios get a head start.</p>' : ''}
     <p>Congratulations on a great season. Your competition results are already live on
-    <strong>AwardHome</strong> — we aggregate results from ${tOrgs} competitions (YAGP, KAR, Starpower,
+    <strong>AwardHome Dance</strong> — we aggregate results from ${tOrgs} competitions (YAGP, KAR, Starpower,
     NYCDA, Showstopper, Rainbow, and more) into a single digital trophy case: ${tAwards} awards
     from ${tStudios} studios, going back to 2011.</p>
 
@@ -75,7 +83,7 @@ function buildStudioInvite({ studio, totalAwards, firstPlaces, rank, totals = {}
     from your studio, star the events you're considering into a shortlist, and export it straight into
     your calendar. The season-planning spreadsheet, retired.</p>
 
-    <p>And if a competition you attend isn't on AwardHome yet, tell us — the <strong>Send
+    <p>And if a competition you attend isn't on AwardHome Dance yet, tell us — the <strong>Send
     Feedback</strong> button is right in the header once you're in. Name the event and we'll work on
     adding its results and tour dates, so your whole season lives in one place.</p>
 
@@ -86,10 +94,10 @@ function buildStudioInvite({ studio, totalAwards, firstPlaces, rank, totals = {}
     <p>Click <strong>"Claim Studio"</strong> on your page above. If your email matches your studio's
     website domain, approval is instant.</p>
 
-    <p>— Sam<br>Founder, AwardHome<br><a href="${BASE_URL}" style="color: #aa8529;">awardhome.com</a></p>
+    <p>— Sam<br>Founder, AwardHome<br><a href="${BASE_URL}" style="color: #aa8529;">${SITE_HOST}</a></p>
 
     <p style="font-size: 12px; color: #888; border-top: 1px solid #ddd; padding-top: 12px; margin-top: 28px;">
-      You're receiving this one-time note because your studio's public competition results appear on AwardHome.
+      You're receiving this one-time note because your studio's public competition results appear on AwardHome Dance.
       <a href="${unsubscribeLink(studio.email)}" style="color: #888;">Unsubscribe</a> and we won't email you again.
     </p>
   </div>`;
@@ -182,13 +190,13 @@ function buildOrgInviteTemplate({ org, eventCount = 0, awardCount = 0, totals = 
   // that it's a sample.
   const samplePageUrl = `${BASE_URL}/dance/org/peacock${betaSuffix}`;
   const alreadyLive = eventCount > 0
-    ? `In fact, ${n} is already there: ${eventCount.toLocaleString()} of your events, with ${awardCount.toLocaleString()} awards, are live on AwardHome today — see ${orgPageUrl}\nClaiming your organizer profile puts your branding on every one of those award cards.\n\n`
+    ? `In fact, ${n} is already there: ${eventCount.toLocaleString()} of your events, with ${awardCount.toLocaleString()} awards, are live on AwardHome Dance today — see ${orgPageUrl}\nClaiming your organizer profile puts your branding on every one of those award cards.\n\n`
     : `Want to see what your page would look like? We keep a live sample up — the "Peacock Cup," a fictitious competition — with the brand coin, champions wall, tour dates, and an award card you can actually flip, all in place: ${samplePageUrl}\n\n`;
 
-  const subject = `Featuring ${n} on AwardHome`;
+  const subject = `Featuring ${n} on AwardHome Dance`;
   const body = `Hi Competition Director,
 
-I'm Sam, founder of AwardHome — the award curation platform for competitive dance. We aggregate results from events nationwide into beautiful, shareable award pages for dancers and studios: today that's ${tAwards} awards from ${tEvents} events across ${tOrgs} competitions, including YAGP, Starpower, KAR, NYCDA, and Rainbow.
+I'm Sam, founder of AwardHome. AwardHome Dance is our award curation platform for competitive dance — we aggregate results from events nationwide into beautiful, shareable award pages for dancers and studios: today that's ${tAwards} awards from ${tEvents} events across ${tOrgs} competitions, including YAGP, Starpower, KAR, NYCDA, and Rainbow.
 
 We'd love to feature ${n} alongside them when we launch on September 15.
 
@@ -210,7 +218,7 @@ Claiming your free organizer account takes about two minutes with your private a
 
 Or if you have a recent results file or links handy, just reply with it attached — or with a Google Drive or Dropbox link — and we'll build a live demo page for ${n}, usually within a few days. And if you'd rather talk first, I'm happy to do a quick 15-minute call.
 
-However this lands, one thing is true either way: we'd welcome ${n} as a partner, not just a name in our archive. And if anything on AwardHome could serve you better — how your events are presented, a feature you wish existed, anything at all — just tell us. We're building this for the people who actually run competitions and for the dancers preserving those memories, so your thoughts and needs genuinely shape what we build next.
+However this lands, one thing is true either way: we'd welcome ${n} as a partner, not just a name in our archive. And if anything on AwardHome Dance could serve you better — how your events are presented, a feature you wish existed, anything at all — just tell us. We're building this for the people who actually run competitions and for the dancers preserving those memories, so your thoughts and needs genuinely shape what we build next.
 
 Thank you for everything you do for the dance community.
 
@@ -218,7 +226,7 @@ Best regards,
 
 Sam
 Founder, AwardHome
-https://awardhome.com
+${BASE_URL}
 hello@awardhome.com`;
 
   return { subject, body };
@@ -234,7 +242,7 @@ function orgInviteHtml(body, email) {
   <div style="font-family: Arial, Helvetica, sans-serif; color: #222; max-width: 560px; margin: 0 auto; line-height: 1.55;">
     <p>${linked}</p>
     <p style="font-size: 12px; color: #888; border-top: 1px solid #ddd; padding-top: 12px; margin-top: 28px;">
-      You're receiving this one-time note because your competition's public results appear on AwardHome.
+      You're receiving this one-time note because your competition's public results appear on AwardHome Dance.
       <a href="${unsubscribeLink(email)}" style="color: #888;">Unsubscribe</a> and we won't email you again.
     </p>
   </div>`;

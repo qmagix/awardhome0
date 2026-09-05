@@ -1,4 +1,15 @@
-# Draft: Organization Outreach Letters (v4, 2026-08-25)
+# Draft: Organization Outreach Letters (v6, 2026-09-05)
+
+*(v6: BRAND ARCHITECTURE (Q, 2026-09-05) — AwardHome is now the parent
+family award-and-milestone platform; the dance vertical is **"AwardHome
+Dance"** at **dance.awardhome.com** (danceawardhome.com purchased,
+redirects there). All letters name the product "AwardHome Dance"; the
+signature stays "Sam / Founder, AwardHome" (the parent is who you deal
+with — AwardHome LLC signs everything). URLs in the code template derive
+from BASE_URL, so letters carry whichever domain is live; the literal URLs
+below read dance.awardhome.com and are correct only after the subdomain
+cutover — send from /admin/orgs (which uses the live template), not by
+copy-pasting this file.)*
 
 *(v4: numbers refreshed to 1.1M awards / 3,200+ events / 17 competitions;
 the org page demo link now lands on the Rafters organizer edition — reach
@@ -126,7 +137,7 @@ Partners.
 
 **We put them to work for you:**
 
-- Each entry goes to a standout dancer on AwardHome as a **surprise
+- Each entry goes to a standout dancer on AwardHome Dance as a **surprise
   reward**, revealed on one of their own award cards and credited
   *"provided by [Competition Name]"*.
 - Winners are dancers with verified competitive records — exactly the
@@ -187,8 +198,8 @@ Subject: Re: [their subject]
 
 Hi [Name],
 
-Thanks for reaching out — and I want to start with what AwardHome is actually
-for, because I suspect we're on the same side. We built the platform so that
+Thanks for reaching out — and I want to start with what AwardHome Dance is
+actually for, because I suspect we're on the same side. We built the platform so that
 the achievements dancers earn at events like [Competition Name] don't
 disappear when a results page comes down — families keep a permanent, shareable
 record, and the competitions that awarded them stay visible and credited.
@@ -202,7 +213,7 @@ registration link in front of every family browsing results. Here's your page as
 link: [org page link] / [claim link].
 
 If after seeing that you'd still prefer not to have a public presence on
-AwardHome, I'll respect that — reply and I'll unlist [Competition Name]
+AwardHome Dance, I'll respect that — reply and I'll unlist [Competition Name]
 within [3] business days (details below). But I'd love 15 minutes to show you
 what your families already do with these pages before you decide.
 
@@ -212,7 +223,7 @@ what your families already do with these pages before you decide.
 
 Hi [Name],
 
-Done — [Competition Name] is now unlisted on AwardHome: your organization
+Done — [Competition Name] is now unlisted on AwardHome Dance: your organization
 page is no longer publicly accessible and [Competition Name] no longer
 appears in our public competition listings.
 
@@ -289,11 +300,11 @@ open Oct 15 (~1 month post-launch).)*
 
 Hi {FIRST_NAME},
 
-I'm Sam, founder of AwardHome — the award curation platform for competitive
-dance. We aggregate results from events nationwide into beautiful, shareable
-award pages for dancers and studios: today that's over 1.5 million awards from
-4,200+ events across 27 competitions, including YAGP, Starpower, KAR, NYCDA,
-and Rainbow.
+I'm Sam, founder of AwardHome. AwardHome Dance is our award curation platform
+for competitive dance — we aggregate results from events nationwide into
+beautiful, shareable award pages for dancers and studios: today that's over
+1.5 million awards from 4,200+ events across 27 competitions, including YAGP,
+Starpower, KAR, NYCDA, and Rainbow.
 
 We'd love to feature {ORG_NAME} alongside them when we launch on
 September 15.
@@ -327,7 +338,7 @@ What {ORG_NAME} gets:
 
 Curious how it all works? Our organizer FAQ covers the common questions — data
 formats, branding, what it costs — and includes a sample award card you can
-actually flip: https://awardhome.com/faq/organizer
+actually flip: https://dance.awardhome.com/faq/organizer
 
 Claiming your free organizer account takes about two minutes with your private
 access link — and your dashboard walks you through the whole setup in three
@@ -340,11 +351,11 @@ attached — or with a Google Drive or Dropbox link — and we'll build a live d
 page for {ORG_NAME}, usually within a few days.
 
 However this lands, one thing is true either way: we'd welcome {ORG_NAME} as a
-partner, not just a name in our archive. And if anything on AwardHome could
-serve you better — how your events are presented, a feature you wish existed,
-anything at all — just tell us. We're building this for the people who actually
-run competitions and for the dancers preserving those memories, so your
-thoughts and needs genuinely shape what we build next.
+partner, not just a name in our archive. And if anything on AwardHome Dance
+could serve you better — how your events are presented, a feature you wish
+existed, anything at all — just tell us. We're building this for the people who
+actually run competitions and for the dancers preserving those memories, so
+your thoughts and needs genuinely shape what we build next.
 
 Thank you for everything you do for the dance community.
 
@@ -352,5 +363,5 @@ Best regards,
 
 Sam
 Founder, AwardHome
-https://awardhome.com
+https://dance.awardhome.com
 hello@awardhome.com
