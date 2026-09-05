@@ -68,9 +68,13 @@ router.get('/robots.txt', (req, res) => {
   res.send('User-agent: *\nAllow: /\n\nSitemap: ' + BASE_URL + '/sitemap.xml\n');
 });
 
-// Everything below is crawl surface, so it simply does not exist while the
-// beta gate stands.
-router.use((req, res, next) => {
+// The crawl surface does not exist while the beta gate stands. SCOPED to
+// the sitemap paths explicitly: this router is mounted at the app root, so
+// a bare router.use() here would 404 every request in the app the moment
+// BETA_MODE is armed — which is exactly what took prod down on the first
+// deploy of this file (2026-09-05; smoke runs with BETA_MODE=false and
+// never sees the armed state).
+router.use(['/sitemap.xml', '/sitemaps'], (req, res, next) => {
   if (betaGateActive()) return res.status(404).send('Not found');
   next();
 });
