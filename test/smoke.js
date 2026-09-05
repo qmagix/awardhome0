@@ -1456,6 +1456,47 @@ async function main() {
     for (const ext of ['', '-wal', '-shm']) require('fs').rmSync(SUBMISSIONS_DB + ext, { force: true });
   }
 
+  // ---- ARMED-MODE boot: the configuration prod actually runs ----
+  // Everything above runs with BETA_MODE=false, which is how a root-mounted
+  // middleware that misbehaves only when the gate is armed 404'd all of
+  // prod on 2026-09-05 while every check here passed. Boot a second server
+  // with the gate armed and assert the app still works around it.
+  try {
+    const ARMED_PORT = Number(PORT) + 1;
+    const armed = spawn('node', ['server.js'], {
+      cwd: require('path').join(__dirname, '..'),
+      env: {
+        ...process.env, PORT: String(ARMED_PORT), SUBMISSIONS_DB_PATH: SUBMISSIONS_DB,
+        BETA_MODE: 'true', BETA_MODE_DEV: 'true', BETA_ACCESS_KEY: 'smoke-armed-key',
+        EMAIL_PROVIDER: '', ENABLE_NIGHTLY_BACKUPS: 'false', ENABLE_WEEKLY_SCRAPE: 'false',
+        ENABLE_SENTINEL: 'false',
+      },
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    let armedUp = false;
+    for (let i = 0; i < 60; i++) {
+      try { await fetch(`http://localhost:${ARMED_PORT}/healthz`); armedUp = true; break; }
+      catch { await new Promise(r => setTimeout(r, 250)); }
+    }
+    if (!armedUp) throw new Error('armed-mode server did not boot');
+    const armedCheck = async (desc, pathname, want, bodyNeedle) => {
+      const r = await fetch(`http://localhost:${ARMED_PORT}${pathname}`, { redirect: 'manual' });
+      const body = bodyNeedle ? await r.text() : '';
+      const ok = r.status === want && (!bodyNeedle || body.includes(bodyNeedle));
+      if (!ok) failures++;
+      console.log(`${ok ? 'PASS' : 'FAIL'}  GET  ${pathname}  -> ${r.status} (armed beta, expected ${want})  ${desc}`);
+    };
+    await armedCheck('healthz survives the armed gate', '/healthz', 200);
+    await armedCheck('homepage serves under the armed gate', '/', 200);
+    await armedCheck('gated page renders the gate, not an error', '/dance', 200);
+    await armedCheck('sitemap does not exist while armed', '/sitemap.xml', 404);
+    await armedCheck('robots refuses indexing while armed', '/robots.txt', 200, 'Disallow: /');
+    armed.kill();
+  } catch (e) {
+    failures++;
+    console.log('FAIL  armed-mode boot checks errored: ' + e.message);
+  }
+
   console.log(failures === 0 ? '\nAll smoke checks passed.' : `\n${failures} smoke check(s) FAILED.`);
   process.exit(failures === 0 ? 0 : 1);
 }
