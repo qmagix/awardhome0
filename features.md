@@ -8,6 +8,10 @@ This document outlines the core features of the Dance Awards Platform.
 - **Studio Profiles:** Public pages displaying bio, logo, social links, and a searchable awards table.
 - **Dancer Profiles:** Public pages displaying verified affiliations and a consolidated list of solo and group awards.
 
+## 1a. Crawl surface (`routes/sitemap.js`, self-arming at launch)
+- **robots.txt + sitemap.xml**, mounted with the no-cookie surfaces (never meets session or the beta gate). While `BETA_MODE` stands: robots answers `Disallow: /` and every sitemap file 404s — a password wall is never offered for indexing. The moment the gate lifts, robots flips to allow and the sitemap goes live; launch needs no extra step.
+- `/sitemap.xml` is an index over `/sitemaps/core.xml` + paginated `studios-N.xml` / `dancers-N.xml` (10k URLs/page, cached 6h stale-while-revalidate). Listed: active real studios (no merged rows, no independents' synthetic studios) and award-holding dancers minus safety-suppressed and `hide_from_search`. **Org pages deliberately absent** — org data stays low-profile until the org partners (the homepage-card rule). Once live, this replaces the admin-only directory as the crawl path.
+
 ## 1b. Partner API (`/api/v1/partner`, ships dark behind the `partner_api` flag)
 - **What it is:** keyed, audited, exact-match dancer-award lookups for vetted partner organizations (the driving case: a school verifying an applicant's competition record). Contract at `/api/v1/partner/openapi.json` (`docs/openapi_partner.json`).
 - **Two endpoints, deliberately no more:** `GET /dancers?name=&studio=` (exact name at a named studio → same-name dancers come back as minimal summaries with opaque `unique_id`s) and `GET /dancers/:uniqueId/awards` (the full public trophy case, structured). No prefix search, no roster listing, no pagination over the corpus — the partner must already know who they're asking about; this is what keeps a child-lookup API from being a dataset-export tool.

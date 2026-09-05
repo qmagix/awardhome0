@@ -82,6 +82,12 @@ app.use('/api/v1/partner', require('./routes/api/partner'));
 // beta gate or a CSRF token. They 404 until the real app IDs are configured;
 // see routes/wellknown.js for why a placeholder would be worse than nothing.
 app.use(require('./routes/wellknown'));
+
+// robots.txt + sitemap index (launch-day SEO). Mounted with the other
+// no-cookie surfaces: crawlers must never meet the session store or the
+// beta gate. Self-arming — Disallow-all + 404 while BETA_MODE stands,
+// live crawl map the moment it lifts. See routes/sitemap.js.
+app.use(require('./routes/sitemap'));
 const SESSION_SECRET = process.env.SESSION_SECRET || (() => {
   if (process.env.NODE_ENV === 'production') {
     console.error('FATAL: SESSION_SECRET must be set in production.');

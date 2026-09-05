@@ -256,6 +256,30 @@ async function main() {
       console.log(`${ok ? 'PASS' : 'FAIL'}  ${method.padEnd(4)} ${path}  -> ${status} (expected ${expected.join('/')})  ${desc}`);
     }
 
+    // Sitemap (routes/sitemap.js): smoke runs with BETA_MODE=false, so the
+    // crawl surfaces must be live and well-formed; the index must reference
+    // real page files that themselves return url entries.
+    try {
+      const expectBody = async (desc, pathname, needle) => {
+        const r = await fetch(BASE + pathname);
+        const body = await r.text();
+        const ok = r.status === 200 && body.includes(needle);
+        if (!ok) failures++;
+        console.log(`${ok ? 'PASS' : 'FAIL'}  GET  ${pathname}  -> ${r.status}  ${desc}`);
+        return body;
+      };
+      await expectBody('robots.txt allows and names the sitemap', '/robots.txt', 'Sitemap: ');
+      const idx = await expectBody('sitemap index is live outside beta', '/sitemap.xml', '<sitemapindex');
+      const okRefs = idx.includes('/sitemaps/core.xml') && idx.includes('/sitemaps/studios-1.xml') && idx.includes('/sitemaps/dancers-1.xml');
+      if (!okRefs) failures++;
+      console.log(`${okRefs ? 'PASS' : 'FAIL'}  sitemap index references core + studios + dancers pages`);
+      await expectBody('studio sitemap page serves url entries', '/sitemaps/studios-1.xml', '/dance/studio/');
+      await expectBody('dancer sitemap page serves url entries', '/sitemaps/dancers-1.xml', '/dancer/');
+    } catch (e) {
+      failures++;
+      console.log('FAIL  sitemap checks errored: ' + e.message);
+    }
+
     // Safety suppression (utils/suppression.js): a suppressed dancer must
     // read as nonexistent on the public profile, search, the claim page and
     // the card embed — and reappear after unsuppression. Fixture-based so it
