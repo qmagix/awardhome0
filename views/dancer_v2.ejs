@@ -355,7 +355,7 @@
     const text = btn.dataset.shareText;
     const url = window.location.href;
     if (navigator.share) {
-      navigator.share({ title: '<%= dancer.name %> | AwardHome', text: text, url: url })
+      navigator.share({ title: '<%= dancer.name %> | AwardHome Dance', text: text, url: url })
         .catch((error) => console.log('Error sharing', error));
     } else {
       navigator.clipboard.writeText(text + ' ' + url)
@@ -372,7 +372,7 @@
     if (navigator.share) {
       navigator.share({
         title: '<%= dancer.name %> | Digital Trophy Case',
-        text: 'Check out my competitive dance awards and stats on AwardHome!',
+        text: 'Check out my competitive dance awards and stats on AwardHome Dance!',
         url: window.location.href,
       }).catch((error) => console.log('Error sharing', error));
     } else {

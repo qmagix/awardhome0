@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= typeof pageTitle !== 'undefined' && pageTitle ? pageTitle + ' — AwardHome' : 'AwardHome | Dance' %></title>
+  <title><%= typeof pageTitle !== 'undefined' && pageTitle ? pageTitle + ' — AwardHome Dance' : 'AwardHome Dance' %></title>
   <% if (typeof pageDesc !== 'undefined' && pageDesc) { %><meta name="description" content="<%= pageDesc %>"><% } %>
   <% if (typeof csrfToken !== 'undefined' && csrfToken) { %><meta name="csrf-token" content="<%= csrfToken %>"><% } %>
   <%# Link previews. A shared trophy case should look like something in a text
@@ -13,7 +13,7 @@
       detail. Only pages that pass `share` opt in. %>
   <% if (typeof share !== 'undefined' && share) { %>
   <meta property="og:type" content="<%= share.type || 'website' %>">
-  <meta property="og:site_name" content="AwardHome">
+  <meta property="og:site_name" content="AwardHome Dance">
   <meta property="og:title" content="<%= share.title %>">
   <% if (share.description) { %><meta property="og:description" content="<%= share.description %>"><% } %>
   <% if (share.url) { %><meta property="og:url" content="<%= share.url %>"><% } %>
