@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-AwardHome — "digital trophy case" for competitive dance: ~900k awards scraped/imported from 14+ competitions, served as public dancer/studio/org pages plus claim-and-manage dashboards.
+AwardHome — family award & milestone platform. This repo is its first vertical, **"AwardHome Dance"** at **dance.awardhome.com** (brand split 2026-09-05; apex 301s there until the family app takes the apex — see `docs/rename_dance_vertical.md`): a "digital trophy case" for competitive dance, ~1.5M awards scraped/imported from 27 competitions, served as public dancer/studio/org pages plus claim-and-manage dashboards. Naming rule: the *service* is "AwardHome Dance"; the company/team/entity is "AwardHome" (AwardHome LLC).
 
 ## Commands
 
